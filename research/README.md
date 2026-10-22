@@ -1,6 +1,6 @@
 # Research
 
-Clean-room notes on how BDS 1.26.52 runs entities. The notes describe behaviour;
+Clean-room notes on how BDS 1.26.52 runs entities. Every claim comes from 1.26.52; the older 1.21.3 build is only used to put names on functions. The notes describe behaviour;
 they never contain decompiled code.
 
 | Area | Note | Status |

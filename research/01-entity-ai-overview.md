@@ -1,16 +1,16 @@
-# Entity AI: first overview
+# Entity AI: overview (BDS 1.26.52)
 
 Clean-room notes written in our own words. They contain no decompiled code,
 addresses or symbol dumps.
 
-**Builds read**
-- BDS 1.21.3 (Windows, with Mojang's PDB): used for names and structure.
-- BDS 1.26.52 (Linux class and vtable names, and Windows): used to confirm
-  that the classes still exist.
+**Build:** every claim comes from **BDS 1.26.52**. Most of it was read in the
+Linux build's IDA database, with names from its RTTI and vtables; the rest
+comes from its strings and the vanilla behaviour pack that ships with it. The
+older 1.21.3 build was used only to put names on functions.
 
 **Status as of 2026-10-22:** first pass. Every claim has a confidence level:
-- high: read directly in one build and consistent with the other;
-- medium: read in 1.21.3 only;
+- high: read directly in 1.26.52;
+- medium: read in 1.26.52, with part of the meaning inferred;
 - low: inferred.
 
 Nothing here has been checked in game yet; the [test list](#bds-test-list)
@@ -19,40 +19,39 @@ covers that.
 ## 1. Where an entity's instructions live
 
 An entity has no hand-written "brain". Its behaviour is the sum of the
-**components** that its behaviour-pack JSON switches on. The engine supplies
+**components** that its behaviour-pack JSON turns on. The engine supplies
 three things:
 
-1. **Component implementations.** These hold the data and state,
-   for example health, movement speed, navigation and breathable.
+1. **Component implementations.** These hold the data and state.
 2. **Systems.** These tick every entity that has a given component, for
-   example the goal selector system, the navigation system and the move
-   control system.
-3. **Goals.** These are the `minecraft:behavior.*` components, the AI tasks
-   such as wandering, attacking and following.
+   example the goal selector, navigation and move control systems.
+3. **Goals.** These are the `minecraft:behavior.*` components, the AI tasks.
 
-So "where the instructions are written" has two parts:
-- **What** a mob does is data: the JSON in `entities/*.json` of a behaviour
-  pack. Vanilla mobs come from Mojang's vanilla behaviour pack, and add-on
-  mobs use the same format.
-- **How** each piece works is engine code: one implementation per component
-  or goal name. Helix must therefore re-implement every component and goal
-  name. It can then load any vanilla or add-on entity file unchanged.
-  (high)
+So:
+- **What** a mob does is data: `entities/*.json` in a behaviour pack. Vanilla
+  mobs use Mojang's vanilla pack, and add-on mobs use the same format.
+- **How** each piece works is engine code, one implementation per component
+  or goal name.
 
-Scale in 1.26.52: about 187 goal classes and 13 move or body control kinds:
-- move controls: generic, fly, glide, hop, hover, swim, dolphin,
-  amphibious and slime;
-- body controls: legacy and agent;
-- jump controls: dynamic;
-- look controls: agent.
+If Helix implements every name, any vanilla or add-on entity file loads
+unchanged. (high)
 
-There is also a small behaviour-tree system, with selector and sequence
-nodes and a packet that sends a tree to the client. (high: class names in
-1.26.52)
+**Counts in 1.26.52** (high: from the build's strings and classes):
+
+| Kind | Count or names |
+|---|---|
+| `minecraft:behavior.*` names | **185** (about 187 goal classes) |
+| Navigation | `navigation.walk`, `climb`, `float`, `fly`, `hover`, `swim` and `generic` |
+| Movement | `movement.basic`, `amphibious`, `dolphin`, `fly`, `generic`, `glide`, `hover`, `jump`, `skip`, `sway` and `vex` |
+| Jump | `jump.static` and `jump.dynamic` |
+| Annotations | `annotation.break_door` and `annotation.open_door` |
+| Event response kinds | about 25 (see 2.4) |
+| Filter tests | about 95 (see 2.5) |
+| Behaviour trees | a small separate system with selector and sequence nodes and a packet that sends a tree to the client; probably for the education agent (low) |
 
 ## 2. Loading entity JSON (add-on compatibility)
 
-### File shape
+### 2.1 File shape
 The top level is `format_version` plus `minecraft:entity`, which contains:
 - `description`: identifier, spawnable and summonable flags, properties and
   more;
@@ -60,49 +59,66 @@ The top level is `format_version` plus `minecraft:entity`, which contains:
 - `components`;
 - `events`.
 
-The source is Mojang's bedrock-samples behaviour pack, which is public. (high)
+The source is the vanilla behaviour pack that ships with BDS 1.26.52, which is
+public data. (high)
 
-### Identifiers
+### 2.2 Identifiers
 Loading is rejected for:
 - an identifier that starts with a number;
 - a `minecraft:` identifier that does not override an existing entity.
 
-(high: the error messages are in both builds)
+(high: the error messages are in 1.26.52)
 
-### Components
-Each key under `components` is looked up in a factory table by name:
-- a name that is not registered gives an error that the component is not
-  parsed or no longer exists;
-- a value that is not a JSON object is an error.
+### 2.3 Components and component groups
+- **Components.** Each key under `components` is looked up by name in a
+  factory table:
+  - an unknown name gives a "not parsed" or "no longer exists" error;
+  - a value that is not an object is an error.
 
-Some old names are special-cased, for example balloon, `custom_hit_test` and
-two vex behaviours. (high)
+  (high)
+- **Component groups.** Named bundles that events add or remove at run time.
+  The live set of components is a stack: the base components plus every added
+  group, in order. When it changes, the combined description is rebuilt and
+  later groups override earlier ones. (medium)
+- **Versioned definitions.** Many component and goal definitions exist in
+  several **versioned copies**, one per `format_version` range. The version
+  tags in 1.26.52 include 1.21.120, 1.21.130, 1.26.0, 1.26.10, 1.26.20, 1.26.30
+  and 1.26.40. The parser picks the copy that matches the file's
+  `format_version`, so old add-ons keep their old behaviour. Helix must do the
+  same. (high that the copies exist; the exact ranges are open)
 
-### `component_groups`
-Named bundles of components that events add or remove at run time. The
-entity's live set of components is therefore a **stack** of definitions: the
-base components plus every group that has been added, in order. When groups
-change, the engine rebuilds the combined description, and later groups
-override earlier ones. (medium: inferred from the add, remove, rebuild and
-stack operations in the definition diff list)
-
-### `events`
+### 2.4 Events
 Each event is an object. Its keys are:
 
 | Key | Meaning |
 |---|---|
-| `add` / `remove` | `component_groups` lists to add or remove |
+| `add` / `remove` | component groups to add or remove |
 | `filters` | the event only runs if they pass |
 | `randomize` | a list of choices, each with a `weight` |
-| `sequence` | a list of steps; each runs if its own filters pass |
+| `sequence` | a list of steps, each with its own filters |
 | `trigger` | fire another event |
 
 If both `randomize` and `sequence` are present, `sequence` is ignored with a
-warning. (high: these are the loader's own strings) Later formats add more
-response kinds, such as set_property, queue_command, emit_vibration and
-reset_target. Those still need checking.
+warning. (high)
 
-### Filters
+**Response kinds in 1.26.52** (high: class names):
+- command and queue_command;
+- play_sound;
+- damage and die;
+- drop_item and spawn_loot;
+- emit_particle, particle_effect and emit_vibration;
+- add and remove mob effect;
+- reset_target and set_home_position;
+- set_property: it must target the entity itself and needs at least one
+  change;
+- shoot, swing and teleport;
+- stop_movement and unleash;
+- transform_item and decrement_stack;
+- execute_event_on_home_block.
+
+The JSON spelling of each one still needs checking against the vanilla pack.
+
+### 2.5 Filters
 A filter tree uses `all_of`, `any_of` and `none_of`, with tests at the leaves.
 A test has these fields:
 - `test`;
@@ -111,69 +127,46 @@ A test has these fields:
 - `domain`;
 - `value`.
 
-The known test names in 1.21.3 include:
-- is_family, has_component, is_biome and has_equipment;
-- is_daytime, is_difficulty, is_game_rule and is_owner;
-- is_target, is_underground, is_variant and is_altitude;
-- is_brightness, in_caravan and is_snow_covered;
-- many more in 1.26.52.
+There are about 95 test classes in 1.26.52. (high) Examples:
+- properties: bool, enum, float and int properties, and has_property;
+- equipment: has_equipment, has_equipment_tag and has_damaged_equipment;
+- state: is_baby, is_sitting, is_sleeping, is_sneaking, is_panicking and
+  is_navigating;
+- places: in_water, in_lava, in_nether, in_village and in_clouds;
+- distances: home_distance, owner_distance, target_distance and
+  distance_to_nearest_player;
+- world: moon_phase, light_level, temperature_type, dimension weather and
+  biome_has_tag;
+- newer tests: is_bound_to_creaking_heart and has_trade_supply.
 
-An old "legacy" filter format is still accepted and converted. (high)
-TODO: the full list of test names for 1.26.52.
-
-### Versioning
-In 1.26.52 many component and goal definitions exist in **several versioned
-copies**, one per `format_version` range. Examples are 1.21.130, 1.26.0 and
-1.26.10–1.26.40. The parser picks the copy that matches the file's
-`format_version`. Old add-ons therefore keep their old behaviour. Helix must
-do the same, or old add-ons will break. (high: the versioned type names are in
-1.26.52)
+An old "legacy" filter format is still accepted. TODO: list every JSON test
+name.
 
 ## 3. The core engine: components and tick order
 
-- **Storage.** Entities are EnTT-style entity IDs, with each component in its
-  own storage. Systems iterate over the entities that have the components they
+- **Storage.** Entities are EnTT entity IDs, and each component has its own
+  storage. Systems iterate over the entities that have the components they
   need. (high)
-- **AI systems.** These run in this order (medium; the exact order of the
-  whole system list is still open):
-  1. sensors and targeting;
-  2. the goal selector;
-  3. navigation (path following);
-  4. move control;
-  5. the travel and physics step.
-- The goal selector **skips** an entity that is dead (health 0 or less) or
-  that fails one other check, probably "AI disabled". (high)
+- **Goal selector skips.** The goal selector system visits each entity that
+  has its components (four storages, the smallest one is iterated) and skips
+  one that:
+  - has a "removed" flag set;
+  - is dead (health 0 or less);
+  - fails one virtual check, probably "is AI disabled" or "immobile".
+
+  (high for the checks; medium for what they mean)
+- **System order.** The full order is open. The likely order is sensors and
+  targeting, then goals, then navigation, then move control, then travel and
+  physics. (low)
 
 ## 4. Goals: how a mob picks what to do
 
-Each goal from the JSON becomes a prioritised goal: a priority from
-`"priority"`, where lower runs first, plus control flags.
+Each JSON goal becomes a prioritised goal with:
+- a **priority**: lower runs first;
+- **control flags**: a bit mask on the goal, such as move, look and jump;
+- a "used" (running) flag and a "to start" flag.
 
-**Control flags** are a bit mask such as move, look and jump. Two goals that
-share a flag cannot run together. (high)
-
-Every tick, the goal selector runs **two passes**: first the target goals
-(`nearest_attackable_target`, `hurt_by_target` and similar), then the normal
-goals. Each pass has two steps:
-
-1. **Try to start goals.** For each goal of the current kind:
-   - If it is already running, check whether it must stop. It stops if it can
-     no longer continue, or if another running goal blocks it. A goal is
-     blocked by any running goal of **higher priority** that it shares a
-     control flag with.
-   - If it is not running, it starts when both of these hold:
-     - No running goal blocks it. A lower-priority running goal that shares a
-       flag and can be interrupted does not block it; that goal is pushed out
-       instead.
-     - Its own "can use" check passes.
-   - After the loop, any running goal that the new goals now block is stopped.
-2. **Tick goals.** Each goal marked "to start" gets its start call. Then every
-   running goal gets its tick call.
-
-(high for the structure; the exact rule for equal priorities still needs to
-be confirmed)
-
-A goal therefore has a fixed set of hooks:
+**The goal hooks** (high):
 - can use;
 - can continue to use;
 - can be interrupted;
@@ -182,110 +175,181 @@ A goal therefore has a fixed set of hooks:
 - tick;
 - is target goal.
 
-This is the interface Helix goals need.
+### Per tick
+The goal selector runs **two passes**: target goals first (`hurt_by_target`,
+`nearest_attackable_target` and similar), then normal goals. Each pass tries
+to start goals, then ticks them. (high)
+
+**If the entity has a certain actor flag set, probably "no AI":** every goal
+of both kinds is stopped and nothing new starts. (high for the behaviour;
+medium for the flag's name)
+
+### Try to start
+For each goal of this pass's kind:
+
+1. **Running goals.** If the goal is running and is now blocked, or can no
+   longer continue, it gets its stop call and is marked not running.
+2. **Starting.** A goal that is not running starts when both hold:
+   - no other running goal blocks it;
+   - its "can use" check passes.
+
+   It is then marked running and "to start".
+3. **Clean-up.** At the end, any running goal that the new starts now block
+   is stopped.
+
+### The blocking rule
+Goal A is blocked by another **running** goal B in two cases:
+- **B's priority is the same or better** (equal or lower number): A is blocked
+  if both are the same kind (target or normal) and their control flags
+  overlap. **Ties block:** at equal priority, the goal that is already running
+  keeps running.
+- **B's priority is worse** (higher number): A is blocked only if **B cannot
+  be interrupted**. This is checked without looking at the flags, so a
+  non-interruptible low-priority goal blocks everything above it, even goals
+  with other flags. This is easy to get wrong.
+
+(high)
+
+### Tick
+For each goal of this pass's kind: if it is marked "to start", it gets its
+start call and the mark is cleared. Then, if it is running, it gets its tick
+call. If the goal list was replaced during the tick (an event changed the
+groups), every old goal is stopped. (high)
 
 ## 5. Navigation and pathfinding
 
-**Navigation types** come from the `minecraft:navigation.*` components:
+**Navigation components** set:
+- flags such as `can_open_doors`, `can_pass_doors`, `avoid_water`,
+  `can_float`, `can_path_over_lava`, `avoid_damage_blocks` and more;
+- one follower class: walk, climb (wall climber), float, fly, hover, swim
+  (water bound) or generic.
 
-| Navigation | Used by |
-|---|---|
-| walk | land mobs |
-| climb | spiders (wall climber) |
-| float | ghasts |
-| fly | bees, parrots |
-| hover | the vex and similar |
-| swim | water mobs (water bound) |
-| generic | mobs that can both walk and swim |
+(high)
 
-Each component sets flags, such as `can_open_doors`, `avoid_water`,
-`can_float`, `can_path_over_lava` and `avoid_damage_blocks`, plus one
-navigation class. (high)
+### 5.1 How a goal moves a mob
+1. The goal calls "move to" with a position or an entity and a speed.
+2. Navigation creates a path with A*.
+3. Each tick, navigation follows the path and gives a wanted position to the
+   move control.
+4. The move control turns that into a rotation, a forward speed and jumps.
 
-### How a goal moves a mob
-1. The goal asks navigation to "move to" a position or an entity at a speed.
-2. Navigation **creates a path** using the A* search described in the
-   private pathfinding note:
-   - weighted heuristic of ×1.5;
-   - an expansion cap of about 140 nodes;
-   - neighbour tables of 8 or 18 offsets;
-   - per-node costs, including `preferred_path`;
-   - a partial path to the closest node if the goal cannot be reached.
+### 5.2 A* search (high: confirmed in 1.26.52)
+- **Open set:** a binary heap ordered by estimated total cost.
+- **Heuristic:** the straight-line distance to the goal × **1.5**. This makes
+  the search greedy rather than always finding the shortest path.
+- **Expansion cap:** the loop stops after **140** expanded nodes.
+- **Max range:** a node is skipped when its squared distance to the start is
+  more than the square of the mob's path range, which is passed in.
+- **Neighbours:** a fixed table of **18** offsets. The first pass checks
+  which offsets are open and builds a bit mask. Diagonal and vertical moves
+  are only tried when the straight moves next to them are open.
+- **Neighbour buffer:** at most **32** candidate neighbours per node.
+- **Edge cost:** the distance between the two nodes, plus the parent's cost,
+  plus the neighbour node's cost (its malus), plus an extra per-node term.
+  A cheaper route updates the node's parent and cost; otherwise the node is
+  pushed onto the heap with the heuristic above.
+- **Unreachable goal:** when the heap empties or the cap is hit, the result is
+  a **partial path** to the node that got closest to the goal. If no node got
+  closer than the start, there is no path.
+- **Node costs:** blocked node types are impassable. `minecraft:preferred_path`
+  gives per-block costs, using the block under the node. Other nodes use a
+  default cost. (medium in 1.26.52; the full node-type list is open)
 
-   (medium, 1.21.3)
-3. Each tick, navigation **follows** the path:
-   - **Skip ahead.** Skip path nodes the mob has already reached. A walker
-     skips to the first node at a different Y; a flier skips a run of nodes
-     of the same type. A node counts as reached within
-     max(half the mob's width, 0.6) blocks.
-   - **Wanted position.** Work out the next point to aim for. Its height is
-     adjusted to the top of partial blocks under it (slabs, carpets and
-     similar). It is raised by 1 if the block can be climbed by jumping.
-   - **Hand off.** Give that point and the path speed to the **move
-     control**, which turns it into a rotation, a forward speed and a jump.
+### 5.3 Following a path each tick (high for the shape)
+1. The navigation tick counter goes up.
+2. If the mob has a path that is not finished and the follower says it can
+   update now (it is on the ground, or swimming, or flying, and so on), it
+   runs the path update below.
+3. **Path update.**
+   - **Walkers** skip ahead past nodes at the same block height as the mob.
+     Mobs with the "can fly" flag instead skip runs of nodes of the same node
+     type.
+   - Every node within **max(half the mob's width, 0.6)** blocks (compared
+     as squared distances) counts as reached and is skipped.
+   - The last node uses its own "arrival distance" setting instead.
+   - Door nodes are aimed at the middle of the block.
+   - **New in this build:** when a path node is a door-like block and the mob
+     can open doors (an actor flag or a door component), path following
+     handles it specially and can stop at that node. (medium)
+4. **Wanted position.** The target point is the current path node's centre:
+   - **Lowered:** if the mob is not flying and there is no air in a square
+     the mob's width around it, the point is lowered by 1.
+   - **Raised:**
+     - to the top of the collision shape of a partial block there (slabs,
+       carpets);
+     - to the top of the collision shape of the block below;
+     - by +1 when the mob is lower than the node and the block can be
+       climbed by jumping (ladders and scaffolding, depending on the mob's
+       climb components).
+5. **Hand-off.** The point and the navigation speed go to the move control's
+   "set wanted position".
 
-   (high for the shape; the constants are from 1.21.3)
-4. **Stuck check.** Navigation keeps a "last stuck check" position and
-   gives up or repaths when the mob has not moved. The timing is open.
+### 5.4 Open for navigation
+- The stuck check and repath timers.
+- The exact condition for "can update path" in each follower class.
+- The node-type list and each type's cost.
 
 ## 6. What a Helix in-game API needs to expose
 
-This follows from the above. It is for the API design, not decided yet.
+This follows from the above. It is for the API design, which is not decided
+yet.
 
 - **Definitions.**
-  - Load vanilla and add-on entity JSON.
-  - Register new component names and goal names.
-  - Look up an entity's definition stack, and add or remove component groups.
-  - Fire entity events.
+  - Load vanilla and add-on entity JSON, including the versioned behaviour
+    for each `format_version`.
+  - Register new components, goals, event responses and filter tests by name.
+  - Add or remove component groups, fire events, and read and set entity
+    properties.
 - **Goals.**
-  - The goal hook interface: can use, can continue, can be interrupted,
-    start, stop, tick and control flags.
+  - The hook interface: can use, can continue, can be interrupted, start,
+    stop, tick, is target goal, priority and control flags.
   - Add, remove or replace goals on one entity at run time.
-  - Let plugins write their own goals in Go.
+  - Plugins can write goals in Go.
 - **Navigation.**
   - Move to a position or an entity, and stop.
   - Read the current path.
   - Change the navigation flags.
-  - Plug in a custom node evaluator or cost function.
-- **Move, look and jump control.** Set a wanted position directly, for
+  - Custom node costs, including a custom evaluator.
+  - The search limits (cap and range) exposed, with vanilla as the default.
+- **Movement.** Move, look and jump control: set a wanted position for
   scripted movement.
-- **Filters.** Evaluate a filter tree against an entity and register new
-  filter tests.
+- **Filters.** Evaluate a filter tree against an entity and add new tests.
 - **Sensors and targeting.** Read and set the target, and add sensors.
 
 ## Open questions
 
 - The full system tick order and its position in the level tick.
-- The exact rule for blocking and interrupting between goals of equal
-  priority.
-- The repath and stuck timers in navigation.
-- All event response kinds and all filter test names in 1.26.52.
-- How `format_version` picks each versioned definition: the exact ranges.
-- Where the behaviour tree system is used (it may be education or agent only).
-- What changed in pathfinding between 1.21.3 and 1.26.52. All the A* numbers
-  above are from 1.21.3.
+- The exact actor flags behind "no AI", "can fly" and "can open doors"
+  (numbers 16, 21 and 81 in the actor flag list).
+- The JSON names of every event response and filter test.
+- The `format_version` range for each versioned definition.
+- The stuck and repath timers, and the node-type cost table.
+- The move control maths: turn speed and jump.
 
 ## BDS test list
 
 These are checks for a person in game.
 
 - **Goal priority.** Hit a zombie while it chases a villager. It should switch
-  target, through the hurt_by_target priority.
-- **Control flags.** A cow tempted by wheat should stop wandering at once and
-  should not look around randomly while following.
-- **Events and groups.** Feed a baby animal until it grows up: the `add` and
-  `remove` of groups. Name a villager, then trade, then check whether its
-  profession group stays.
-- **Randomize.** Spawn 100 sheep with `/summon` and count the wool colours
-  against the weights in the vanilla JSON.
-- **Add-on.** Load a third-party add-on entity with an old `format_version`
-  (1.16 or earlier) and check that it behaves the same as in BDS.
+  target to you.
+- **Ties.** Two goals with the same priority and the same flags: the one
+  already running keeps going until it stops by itself.
+- **Non-interruptible goal.** A mob in a non-interruptible low-priority goal
+  (for example, a fox sleeping) should not start a higher-priority goal until
+  that goal ends.
+- **No AI.** `/summon` a zombie with `minecraft:is_immobile`, or with AI off,
+  then turn AI back on. Its goals should start fresh.
+- **Events and groups.** A baby animal grows up: its groups are added and
+  removed. Test randomize by summoning 100 sheep and counting the wool colours
+  against the vanilla weights.
+- **Old add-on.** An add-on entity with an old `format_version` should behave
+  the same as in BDS.
 - **Path following.**
   - Zombie over slabs and carpets: it should not hop.
-  - Zombie over fences: it should not jump over them.
   - Spider climbing a wall.
   - Bee flying around a tree.
+  - Villager walking through a door.
 - **Partial path.** Put a player behind glass. The zombie should walk to the
   closest point and stay there.
-- **Long maze.** Does the mob give up beyond about 140 nodes? This confirms
-  the cap.
+- **Long maze.** The mob should give up or take a partial path once the route
+  needs more than 140 nodes.
