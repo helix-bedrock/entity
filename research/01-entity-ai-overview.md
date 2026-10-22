@@ -116,7 +116,43 @@ warning. (high)
 - transform_item and decrement_stack;
 - execute_event_on_home_block.
 
-The JSON spelling of each one still needs checking against the vanilla pack.
+**What the vanilla 1.26.52 entity files actually use** (high: counted in the
+vanilla pack that ships with BDS):
+
+| Key | Uses |
+|---|---|
+| `add` | 1227 |
+| `weight` | 477 |
+| `remove` | 459 |
+| `filters` | 287 |
+| `trigger` | 179 |
+| `sequence` | 129 |
+| `randomize` | 127 |
+| `set_property` | 92 |
+| `play_sound` | 23 |
+| `set_home_position` | 17 |
+| **`first_valid`** | 11 |
+| `emit_vibration` | 9 |
+| `drop_item` | 2 |
+| `execute_event_on_home_block` | 2 |
+| `emit_particle` | 1 |
+| `reset_target` | 1 |
+| `stop_movement` | 1 |
+
+`first_valid` is a list like `sequence`, but it runs only the first entry
+whose filters pass. (medium: inferred from the name and the data)
+
+The vanilla entity files use these `format_version`s:
+
+| `format_version` | Files |
+|---|---|
+| 1.26.50 | 56 |
+| 1.26.0 | 39 |
+| 1.26.30 | 19 |
+| 1.26.20 | 10 |
+| 1.26.10 | 8 |
+| 1.26.40 | 1 |
+| 1.21.90 | 1 |
 
 ### 2.5 Filters
 A filter tree uses `all_of`, `any_of` and `none_of`, with tests at the leaves.
@@ -139,8 +175,53 @@ There are about 95 test classes in 1.26.52. (high) Examples:
   biome_has_tag;
 - newer tests: is_bound_to_creaking_heart and has_trade_supply.
 
-An old "legacy" filter format is still accepted. TODO: list every JSON test
-name.
+An old "legacy" filter format is still accepted.
+
+**The 87 test names the vanilla 1.26.52 entity files use** (high):
+
+- **Equipment and items:** `has_equipment`, `has_equipment_tag`,
+  `has_damaged_equipment`, `has_same_equipment_in_slot_as`, `has_silk_touch`,
+  `has_ranged_weapon`, `actor_has_item_with_enchantment_in_slot`,
+  `all_slots_empty` and `has_container_open`.
+- **Family and identity:** `is_family`, `is_vehicle_family`,
+  `is_controlling_passenger_family`, `is_variant`, `is_mark_variant`,
+  `is_skin_id`, `is_color`, `is_owner`, `trusts` and `has_nametag`.
+- **Components and properties:** `has_component`, `bool_property`,
+  `int_property` and `enum_property`.
+- **Abilities:** `has_ability`.
+- **Entity state:**
+  - age and ownership: `is_baby`, `is_tamed` and `is_persistent`;
+  - posture: `is_sitting`, `is_sleeping`, `is_sneaking`, `is_sneak_held` and
+    `is_sprinting`;
+  - movement: `is_moving`, `is_navigating`, `is_panicking`,
+    `is_avoiding_mobs` and `on_ground`;
+  - riding and leashes: `is_riding`, `is_riding_self`, `rider_count`,
+    `is_leashed` and `is_leashed_to`;
+  - groups: `is_raider` and `in_caravan`;
+  - fire and visibility: `on_fire`, `on_hot_block`, `taking_fire_damage` and
+    `is_visible`;
+  - links: `is_bound_to_creaking_heart`.
+- **Health and damage:** `actor_health`, `is_missing_health`, `has_damage`,
+  `has_mob_effect` and `was_last_hurt_by`.
+- **Targets and distances:** `has_target`, `target_distance`,
+  `owner_distance`, `home_distance` and `distance_to_nearest_player`.
+- **Where it is:**
+  - liquids: `in_water`, `in_water_or_rain`, `in_lava`, `is_underwater` and
+    `in_contact_with_water`;
+  - dimensions: `in_nether` and `in_overworld`;
+  - surroundings: `is_underground`, `in_block`, `is_block`,
+    `is_waterlogged`, `is_in_village` and `y_rotation`.
+- **World:**
+  - biome: `is_biome`, `has_biome_tag` and `is_snow_covered`;
+  - time and weather: `is_daytime`, `hourly_clock_time`, `weather` and
+    `weather_at_position`;
+  - light and temperature: `is_brightness` and `is_temperature_value`;
+  - rules: `is_difficulty` and `is_game_rule`;
+  - redstone: `redstone_strength_at_position`.
+- **Other:** `random_chance`, `inactivity_timer` and `has_trade_supply`.
+
+The engine has about 95 test classes, so a few tests exist that vanilla files
+do not use. Add-ons may use them, so all of them must still be implemented.
 
 ## 3. The core engine: components and tick order
 
