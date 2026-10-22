@@ -5,11 +5,11 @@ they never contain decompiled code.
 
 | Area | Note | Status |
 |---|---|---|
-| Entity definition loading (behaviour pack JSON, component groups, events, filters) | | to do |
-| Component system and tick order | | to do |
-| Behaviour goals (selection, priorities, control flags) | | to do |
+| Entity definition loading (behaviour pack JSON, component groups, events, filters) | [01](01-entity-ai-overview.md) | first pass |
+| Component system and tick order | [01](01-entity-ai-overview.md) | first pass |
+| Behaviour goals (selection, priorities, control flags) | [01](01-entity-ai-overview.md) | first pass |
 | Sensors and targeting | | to do |
-| Navigation types (walk, climb, float, fly, swim, hover, generic) | | to do |
+| Navigation types (walk, climb, float, fly, swim, hover, generic) | [01](01-entity-ai-overview.md) | first pass |
 | Pathfinding (node evaluation, A*, path following) | | to do |
 | Movement and physics (controls, jump, collision) | | to do |
 | Spawn rules | | to do |
