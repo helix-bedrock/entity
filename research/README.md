@@ -10,6 +10,6 @@ they never contain decompiled code.
 | Behaviour goals (selection, priorities, control flags) | [01](01-entity-ai-overview.md) | first pass |
 | Sensors and targeting | | to do |
 | Navigation types (walk, climb, float, fly, swim, hover, generic) | [01](01-entity-ai-overview.md) | first pass |
-| Pathfinding (node evaluation, A*, path following) | | to do |
-| Movement and physics (controls, jump, collision) | | to do |
+| Pathfinding (node evaluation, A*, path following) | [01](01-entity-ai-overview.md), [02](02-movement-and-path-following.md) | first pass |
+| Movement and physics (controls, jump, collision) | [02](02-movement-and-path-following.md) | first pass |
 | Spawn rules | | to do |
