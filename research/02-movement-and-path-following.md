@@ -4,7 +4,7 @@ Clean-room notes in our own words, read in the 1.26.52 Linux build. They
 contain no decompiled code, addresses or symbol dumps. This note follows
 [01](01-entity-ai-overview.md), section 5.
 
-**Status as of 2026-10-22:** first pass. Nothing has been checked in game yet.
+**Status as of 2026-10-23:** first pass. Nothing has been checked in game yet.
 
 ## 1. When each entity ticks
 
@@ -19,9 +19,10 @@ climb, fly and so on. (high)
 ## 2. Path shortcutting (string pulling)
 
 After the "reached node" skip (01, 5.3), and when the current node is a
-walkable or door node (two of the node types), the follower tries to **skip
-ahead in a straight line**. (high for the shape; medium for the meaning of the
-node types)
+water node (a swimmer with no floor) or an air node (a flier), the follower
+tries to **skip ahead in a straight line**. Walkers on the ground never take
+this step; their diagonal moves come from the A* search itself. (high: the
+path stores the same node type the search uses)
 
 **Probe size:**
 - **Width:** the mob's width rounded up, but at least 2 when it is less than
@@ -34,7 +35,7 @@ current one. Each node gets the same centre offset as path following
 can reach in a straight line with that probe size becomes the new current
 node.
 
-The result is that mobs walk diagonally across open ground instead of
+The result is that swimmers and fliers move in straight lines instead of
 following the A* grid step by step.
 
 ## 3. The stuck check
@@ -112,8 +113,9 @@ which actor flag is which)
   full block it should jump.
 - **Turning.** Lure a cow with wheat while you walk in a circle. It should
   turn smoothly at its `max_turn` rate (compare the speed against BDS).
-- **Diagonal paths.** In an open field, a villager walking to a far point
-  should take a straight diagonal line, not a staircase.
+- **Straight swimming.** A dolphin or fish swimming to a far point should
+  swim in a straight line, not a staircase. A villager on open ground should
+  follow the A* path's diagonals.
 - **Stuck.** Trap a zombie's path with a block placed mid-walk. It should give
   up and repath after a short time; time how long in BDS.
 - **Flying arrival.** A bee or parrot reaching its target should slow down and
