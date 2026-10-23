@@ -15,6 +15,19 @@ linters:
     - unconvert
     - unparam
   settings:
+    staticcheck:
+      checks:
+        - all
+        # The code keeps BDS's comparisons as written: on floats !(a > b) and
+        # a <= b differ for NaN, so De Morgan rewrites could change output.
+        - -QF1001
+        # Defaults the "all" above would turn on.
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
     forbidigo:
       # Never panic, anywhere: see AGENT_RULES.md in helix-bedrock/.github.
       forbid:
