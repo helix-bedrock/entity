@@ -51,6 +51,9 @@ const (
 	// PropHurtsOnContact marks blocks that hurt mobs that touch them:
 	// cactus, sweet berry bushes.
 	PropHurtsOnContact Props = 1 << 27
+	// PropInnerFloor is bit 28: blocks with a floor inside them (cauldron,
+	// composter). A mob standing in one aims at the top of its box.
+	PropInnerFloor Props = 1 << 28
 	// PropNoStepBox is bit 30: the step-up test skips the block's box.
 	PropNoStepBox Props = 1 << 30
 	// PropNoStepUp is bit 38: standing on it, a mob cannot step up.
@@ -67,9 +70,9 @@ const (
 	MaterialLava  Material = 6
 	// Material10 makes a node type NodeAvoid.
 	Material10 Material = 10
-	// Material16 counts like a door for isFree and is blocked with
-	// FlagAvoidMaterial16.
-	Material16 Material = 16
+	// MaterialPortal counts like a door for isFree and is blocked with
+	// FlagAvoidMaterialPortal.
+	MaterialPortal Material = 16
 )
 
 // Kind is a block the pathfinder treats specially, by its identity rather
@@ -88,6 +91,7 @@ const (
 	KindShelf
 	KindScaffolding
 	KindWater // water and flowing water
+	KindChest
 )
 
 // BlockInfo is what the pathfinder knows about a block state. It must not
@@ -105,6 +109,11 @@ type BlockInfo struct {
 	// NoWaterRise is the block flag (byte 184 bit 0 in BDS) that stops a
 	// floating swimmer's start from rising through water.
 	NoWaterRise bool
+	// Flowing is set for flowing water; still water is the same Kind.
+	Flowing bool
+	// VisualTop is the top of the block's visual shape, as a height inside
+	// the block (still water is lower than a full block).
+	VisualTop float32
 }
 
 // World answers the pathfinder's block questions. A search calls it from one

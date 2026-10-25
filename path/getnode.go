@@ -199,7 +199,7 @@ func (f *Finder) finishNode(n *node, from Pos) *node {
 // Unlike getNode it adds no cost.
 func (f *Finder) waterNode(cur *node, p Pos, _ bool) *node {
 	below := Pos{p.X, p.Y - 1, p.Z}
-	if f.flags&FlagAirOverWater != 0 && f.info(f.world.Block(p)).Kind == KindAir && f.liquidMaterial(below) == MaterialWater {
+	if f.flags&FlagCanBreach != 0 && f.info(f.world.Block(p)).Kind == KindAir && f.liquidMaterial(below) == MaterialWater {
 		return f.nodeAt(p, NodeAirOverWater)
 	}
 	w := int32(f.s.Width + 1)
@@ -214,7 +214,7 @@ func (f *Finder) waterNode(cur *node, p Pos, _ bool) *node {
 					if _, ok := f.partialNode(cell, shifted); ok {
 						return nil
 					}
-					if f.flags&FlagAirOverWater != 0 && y > p.Y && f.info(f.world.Block(cell)).Kind == KindAir {
+					if f.flags&FlagCanBreach != 0 && y > p.Y && f.info(f.world.Block(cell)).Kind == KindAir {
 						continue
 					}
 					if f.liquidMaterial(cell) != MaterialWater {

@@ -286,7 +286,7 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 			}
 			return NodeBlocked
 		}
-		if s.Swim && f.flags&FlagAirOverWater != 0 && f.liquidMaterial(p) == MaterialWater {
+		if s.Swim && f.flags&FlagCanBreach != 0 && f.liquidMaterial(p) == MaterialWater {
 			return NodeAirOverWater
 		}
 		return NodeOpen
@@ -338,7 +338,7 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 	if in.Material == Material10 {
 		return NodeAvoid
 	}
-	if f.flags&FlagAvoidPortals != 0 && in.Material == Material16 {
+	if f.flags&FlagAvoidPortals != 0 && in.Material == MaterialPortal {
 		return NodeBlocked
 	}
 	if s.DoorBreaker || s.DoorOpener {
@@ -434,7 +434,7 @@ func (f *Finder) isFree(from, p, size Pos, canJump, canClimb bool) NodeType {
 				if f.flags&FlagAvoidPortals != 0 {
 					special = seen
 				} else {
-					special = seen || in.Material == Material16
+					special = seen || in.Material == MaterialPortal
 				}
 				shifted := Pos{from.X + x - p.X, from.Y + y - p.Y, from.Z + z - p.Z}
 				t := f.classify(shifted, b, cell, canJump, canClimb)

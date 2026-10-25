@@ -17,10 +17,10 @@ const (
 	FlagWalkInLava       Flags = 0x080 // can_walk_in_lava
 	FlagAmphibious       Flags = 0x100 // is_amphibious
 	FlagAvoidPortals     Flags = 0x200 // avoid_portals
-	// FlagAirOverWater makes air over water a node of its own for swimmers;
-	// its JSON field is not known yet.
-	FlagAirOverWater Flags = 0x400
-	FlagCanJump      Flags = 0x800 // can_jump
+	// FlagCanBreach (can_breach) makes air over water a node of its own for
+	// swimmers.
+	FlagCanBreach Flags = 0x400
+	FlagCanJump   Flags = 0x800 // can_jump
 )
 
 // CostEntry is one preferred_path entry: blocks and the cost of walking on
@@ -73,7 +73,8 @@ type Settings struct {
 	Avoid func(Block) bool
 	// ClimbPowderSnow lets the mob climb powder snow (BDS: components
 	// 0xB639C3B7 or 0x4EAC501F). ClimbScaffolding lets it climb scaffolding
-	// standing on something other than air or water (component 0xF95D258F).
+	// standing on something other than air or water; in BDS only players
+	// can (the player component).
 	ClimbPowderSnow, ClimbScaffolding bool
 	// HurtOverride, when set and returning ok, decides whether hurting
 	// blocks hurt this mob, instead of the blocks' own properties.
