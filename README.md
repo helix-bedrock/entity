@@ -10,9 +10,13 @@ the BDS goal selector does; `path` is the BDS 1.26.52 pathfinder for walking
 and swimming mobs (A* search, node classification and costs); `nav` has all
 seven navigation types (walk, float, generic, climb, swim, fly and hover:
 following a path, shortcuts, doors, sun avoidance, the stuck checks, fly
-gravity); `move` has the move controls (minecraft:movement.*). The swim and
-float navigation's travel (physics), the goals themselves and entity
-definitions are not built yet. Research notes go in [`research/`](research/).
+gravity); `move` has the move controls (minecraft:movement.*); `physics`
+moves mobs like the BDS movement pipeline (travel types and speeds, swept
+box collision with depenetration and auto-step, gravity, drag, friction,
+climbing, jumping, and the swim and float navigation's travel). Water
+currents, bouncy blocks, players, vehicles and gliding are not in
+`physics` yet; the goals themselves and entity definitions are not built
+yet. Research notes go in [`research/`](research/).
 
 Part of [Helix](https://github.com/helix-bedrock), an open-source Minecraft: Bedrock
 Edition server engine in Go.
