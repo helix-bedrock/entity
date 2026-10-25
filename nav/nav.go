@@ -163,7 +163,7 @@ type Actor interface {
 
 // The actor flags navigation reads and writes, by BDS's actor flag number.
 const (
-	ActorSprinting    = 3 // set by generic navigation on an air-over-water node
+	ActorSprinting    = 3 // set directly (no speed modifier) by generic navigation on an air-over-water node
 	ActorWallClimbing = 18
 	ActorCanSwim      = 20
 	ActorCanFly       = 21

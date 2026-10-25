@@ -32,9 +32,9 @@ type Navigation struct {
 	canPathFromAir bool
 	// gravity is the gravity flag fly navigation puts back when it stops.
 	gravity bool
-	// EndOffset moves hover navigation's target for the last node. BDS keeps
-	// it at component +40 and clears it on stop; what sets it is not found
-	// yet.
+	// EndOffset moves hover navigation's target for the last node. Vanilla
+	// never sets it: BDS only clears it when fly, generic or hover
+	// navigation stops, so it stays zero unless a plugin sets it.
 	EndOffset path.Vec3
 
 	// climbing and climbTarget are the climbing navigation's walk to a
