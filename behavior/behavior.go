@@ -1,0 +1,339 @@
+// Package behavior holds the vanilla goals (the minecraft:behavior.*
+// components) the way BDS 1.26.52 runs them: random_stroll, panic, tempt,
+// follow_owner, follow_parent, look_at_player and look_at_entity,
+// random_look_around, float, breed, avoid_mob_type, hurt_by_target,
+// nearest_attackable_target and melee_attack.
+//
+// Each goal implements goal.Goal and runs on the selector of the mob that
+// owns it. A goal reaches the world only through the Mob and World it was
+// made with, so every call it makes happens on that mob's tick.
+package behavior
+
+import (
+	"math"
+
+	"github.com/helix-bedrock/entity/goal"
+	"github.com/helix-bedrock/entity/path"
+)
+
+// Vec3 is the pathfinder's position type.
+type Vec3 = path.Vec3
+
+// Box is the pathfinder's box type.
+type Box = path.Box
+
+// Pos is a block position.
+type Pos = path.Pos
+
+// ID is an actor's unique ID. NoID is no actor.
+type ID int64
+
+// NoID is the ID of no actor; BDS stores it as -1.
+const NoID ID = -1
+
+// The actor flags the goals read and write, by BDS's actor flag number.
+const (
+	FlagTempted      = 6
+	FlagInLove       = 7
+	FlagBaby         = 11
+	FlagSilent       = 17
+	FlagSitting      = 24
+	FlagTamed        = 28
+	FlagLeashed      = 30
+	FlagFireImmune   = 50
+	FlagAvoidingMobs = 86
+	FlagCannotTarget = 98 // the target is dropped while it has this flag
+	FlagCanFly       = 21
+	FlagCanSwim      = 20
+)
+
+// The game modes the goals compare against.
+const (
+	GameModeCreative  = 1
+	GameModeDefault   = 5
+	GameModeSpectator = 6
+)
+
+// NoSound is the "undefined" level sound event; a goal with it plays nothing.
+const NoSound = 614
+
+// maxRideDepth is how far BDS follows a stack of riders.
+const maxRideDepth = 1023
+
+// ticksPerSecond turns the JSON's seconds into ticks.
+const ticksPerSecond = 20
+
+// Random is the level's random source. BDS draws every goal's random
+// numbers from it, so the order of draws decides the results.
+type Random interface {
+	// NextInt returns a number in [0, n); 0 when n is 0 or less.
+	NextInt(n int32) int32
+	// NextFloat returns a number in [0, 1).
+	NextFloat() float32
+}
+
+// Actor is another entity a goal looks at. A value is only valid for the
+// tick it was returned on.
+type Actor interface {
+	ID() ID
+	Pos() Vec3
+	// Box is the entity's collision box.
+	Box() Box
+	// Eyes is the entity's eye position (BDS getAttachPos with Eyes).
+	Eyes() Vec3
+	// Alive reports that the entity is not removed and has health left.
+	Alive() bool
+	// Removed reports that the entity is being removed.
+	Removed() bool
+	// Pickable is Actor::isPickable; false for entities goals must skip.
+	Pickable() bool
+	// IsMob reports that the entity is a mob (player or AI mob).
+	IsMob() bool
+	// IsPlayer reports that the entity is a player.
+	IsPlayer() bool
+	Flag(n int) bool
+	// Type is the entity's identifier, for the same-type checks.
+	Type() string
+	// GameMode is the player's game mode, or -1 for other entities.
+	GameMode() int
+	// Riders are the entities riding this one.
+	Riders() []ID
+	// Vehicle is the entity this one rides, or NoID.
+	Vehicle() ID
+	// Owner is the entity's owner, or NoID.
+	Owner() ID
+	// Team is the entity's team, 0 for none.
+	Team() int
+	// Dimension is the entity's dimension ID.
+	Dimension() int
+	// HeadRotation is the head pitch and yaw in degrees.
+	HeadRotation() (pitch, yaw float32)
+	// BodyYaw is the body rotation in degrees.
+	BodyYaw() float32
+	// Invulnerable reports the creative invulnerable ability.
+	Invulnerable() bool
+	// HasHealth reports that the entity has a health attribute.
+	HasHealth() bool
+	// Targetable is false for entities with the cannot-be-targeted bit.
+	Targetable() bool
+	// Monster reports the hostile-kind component that peaceful removes.
+	Monster() bool
+	// ArmourCoverage is the share of armour slots that are filled, 0 to 1.
+	ArmourCoverage() float32
+	// WearsHeadOf reports a player wearing the head of the mob type.
+	WearsHeadOf(mobType string) bool
+	// BlocksSpace is Actor::canBeCollidedWith for teleport checks (boats,
+	// shulkers).
+	BlocksSpace() bool
+}
+
+// World answers the goals' questions about the level. It is called from
+// the tick of the mob that owns the goal.
+type World interface {
+	// Random is the level's main random (Level::getRandom); IRandom and
+	// ThreadRandom are its other two sources. Each goal draws from the one
+	// BDS uses.
+	Random() Random
+	IRandom() Random
+	ThreadRandom() Random
+	// CurrentTick is the level tick.
+	CurrentTick() uint64
+	// Actor returns the entity with the ID, or nil when it is gone or the
+	// ID is NoID.
+	Actor(id ID) Actor
+	// Entities appends the entities whose boxes touch b to dst, excluding
+	// self. The order is BDS's getEntities order.
+	Entities(dst []Actor, self ID, b Box) []Actor
+	// Players appends every player in the dimension to dst.
+	Players(dst []Actor) []Actor
+	// DefaultGameMode is the world's default game mode.
+	DefaultGameMode() int
+	// Peaceful reports a peaceful difficulty.
+	Peaceful() bool
+	// Brightness is BlockSource::getBrightness at p, 0 to 1.
+	Brightness(p Pos) float32
+	// Block returns the block facts the goals use at p.
+	Block(p Pos) Block
+	// LiquidMaterial is the material of the liquid layer at p.
+	LiquidMaterial(p Pos) path.Material
+}
+
+// Block is what the goals know about a block.
+type Block struct {
+	// Name is the block's identifier.
+	Name string
+	// Material is the block's material type.
+	Material path.Material
+	// Ground is the stroll ground test: a material that blocks motion, is
+	// not liquid, and the block's solid flag (block flag 0x40000).
+	Ground bool
+	// Solid is Material::isSolid.
+	Solid bool
+	// Liquid is Material::isLiquid.
+	Liquid bool
+	// HasCollision is a non-empty collision shape.
+	HasCollision bool
+}
+
+// Navigator is the mob's navigation component.
+type Navigator interface {
+	// MoveTo paths to p at the speed multiplier; false when no path was
+	// found.
+	MoveTo(p Vec3, speed float32) bool
+	// MoveToActor paths to the entity; false when no path was found.
+	MoveToActor(a Actor, speed float32) bool
+	// PathTo makes a path to the entity without following it and returns
+	// its last node.
+	PathTo(a Actor) (end Pos, ok bool)
+	// PathEnd returns the last node of the path being followed.
+	PathEnd() (end Pos, ok bool)
+	// Done reports that there is no path or it is finished.
+	Done() bool
+	// Stop stops navigation and resets its speed to 1.
+	Stop()
+	// Flags and SetFlags are the navigation switches (nav.Flags).
+	Flags() uint32
+	SetFlags(f uint32)
+	// SetSpeed sets the speed multiplier of the path being followed.
+	SetSpeed(s float32)
+}
+
+// Mob is the mob that owns a goal.
+type Mob interface {
+	Actor
+	// Nav is the navigation component, nil when the mob has none.
+	Nav() Navigator
+	SetFlag(n int, on bool)
+	// WalkTargetValue is Mob::getWalkTargetValue (see WalkTarget).
+	WalkTargetValue(p Pos) float32
+	// LookAt points the look control at p; it does nothing while a higher
+	// priority look is set this tick.
+	LookAt(p Vec3, yawMax, pitchMax float32)
+	// LookBusy reports a look request made earlier this tick.
+	LookBusy() bool
+	// MaxHeadXRot is Mob::getMaxHeadXRot (40 for most mobs).
+	MaxHeadXRot() float32
+	// Target is the mob's target, NoID for none.
+	Target() ID
+	SetTarget(id ID)
+	// LastHurtBy is the entity that last hurt the mob and the tick it did.
+	LastHurtBy() (id ID, tick uint64)
+	ClearLastHurtBy()
+	// LastDamageCause is the cause of the last damage, -1 for none.
+	LastDamageCause() int
+	// PlaySound plays a level sound event at the mob's eyes.
+	PlaySound(sound int)
+	// Event fires a JSON event on the mob, with the other entity as target.
+	Event(name string, other ID)
+	// Teleport moves the mob to p.
+	Teleport(p Vec3)
+	// Home is the mob's home restriction, when it has one.
+	Home() (centre Pos, radius int32, ok bool)
+	// Leash is the leash holder's box centre and the leash's maximum
+	// distance, when the mob is leashed.
+	Leash() (centre Vec3, maxDist float32, ok bool)
+	// InLava is the lava test that stops stroll from snapping to the ground
+	// (BDS checks the mob's box against lava unless it ignores lava drag).
+	InLava() bool
+	// InWater is WasInWaterFlagComponent.
+	InWater() bool
+	// UnderWater reports the head under water (the float goal's dismount).
+	UnderWater() bool
+	// FloatJump asks the jump control for a float jump this tick.
+	FloatJump()
+	// DismountPassengers throws the riders off.
+	DismountPassengers()
+	// HeardVibration reports the tick of the last vibration the mob heard,
+	// when it heard one.
+	HeardVibration() (tick uint64, ok bool)
+	// CanMate reports that the mob can breed with the other entity.
+	CanMate(other Actor) bool
+	// SetPersistent stops the mob from despawning.
+	SetPersistent()
+	// CanSit reports the sittable component (follow_owner sits a pet down
+	// when its owner is in another dimension).
+	CanSit() bool
+}
+
+// The control flags of the goals, as BDS sets them in each constructor.
+const (
+	flagsMove     = goal.FlagMove
+	flagsMoveLook = goal.FlagMove | goal.FlagLook
+	flagsLook     = goal.FlagLook
+	flagsJump     = goal.FlagJump
+)
+
+// base holds the fields every goal shares.
+type base struct {
+	mob   Mob
+	world World
+	flags goal.Flags
+}
+
+// ControlFlags implements goal.Goal.
+func (b *base) ControlFlags() goal.Flags { return b.flags }
+
+// CanBeInterrupted implements goal.Goal.
+func (b *base) CanBeInterrupted() bool { return true }
+
+// IsTargetGoal implements goal.Goal.
+func (b *base) IsTargetGoal() bool { return false }
+
+// ref is BDS's weak actor reference: an ID that is looked up again on each
+// use.
+func (b *base) actor(id ID) Actor {
+	if id == NoID {
+		return nil
+	}
+	return b.world.Actor(id)
+}
+
+func dist2(a, b Vec3) float32 {
+	dx, dy, dz := a.X-b.X, a.Y-b.Y, a.Z-b.Z
+	return dz*dz + (dx*dx + dy*dy)
+}
+
+func floorInt(v float32) int32 { return int32(math.Floor(float64(v))) }
+
+func blockOf(v Vec3) Pos { return Pos{X: floorInt(v.X), Y: floorInt(v.Y), Z: floorInt(v.Z)} }
+
+// boxCentre is the middle of b.
+func boxCentre(b Box) Vec3 {
+	return Vec3{X: (b.Max.X-b.Min.X)*0.5 + b.Min.X, Y: (b.Max.Y-b.Min.Y)*0.5 + b.Min.Y, Z: (b.Max.Z-b.Min.Z)*0.5 + b.Min.Z}
+}
+
+// lookPoint is where goals aim the look control at an entity: the eyes of
+// a mob, the box centre height of anything else.
+func lookPoint(a Actor) Vec3 {
+	p := a.Pos()
+	if a.IsMob() {
+		e := a.Eyes()
+		return Vec3{X: p.X, Y: e.Y, Z: p.Z}
+	}
+	return Vec3{X: p.X, Y: boxCentre(a.Box()).Y, Z: p.Z}
+}
+
+// spectator reports a spectator, counting the default mode when the world
+// default is spectator.
+func spectator(w World, a Actor) bool {
+	m := a.GameMode()
+	return m == GameModeSpectator || m == GameModeDefault && w.DefaultGameMode() == GameModeSpectator
+}
+
+// Range is a JSON [min, max] pair.
+type Range[T int32 | float32] struct{ Min, Max T }
+
+// randomTicks is a random time from the range in seconds, in ticks, the way
+// the sound timers draw it.
+func randomTicks(r Random, s Range[float32]) uint64 {
+	return uint64(int32(((s.Max-s.Min)*r.NextFloat() + s.Min) * ticksPerSecond))
+}
+
+// randomInt is min plus a random number below max-min, or min when max is
+// not above it.
+func randomInt(r Random, min, max int32) int32 {
+	if max > min {
+		return min + r.NextInt(max-min)
+	}
+	return min
+}

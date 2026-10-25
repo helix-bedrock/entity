@@ -15,8 +15,14 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet; the goals themselves and entity definitions are not built
-yet. Research notes go in [`research/`](research/).
+`physics` yet. `behavior` has the common goals (random_stroll, panic,
+tempt, follow_owner, follow_parent, look_at_player and look_at_entity,
+random_look_around, float, breed, avoid_mob_type, hurt_by_target,
+nearest_attackable_target and melee_attack). These parts are not done yet:
+the panic start component, the float rider component, hurt_by_target's
+alert_same_type and breed's stop details. Entity definitions and the
+natural spawner (spawn rules) are not built yet; the spawner research has
+started. Research notes go in [`research/`](research/).
 
 Part of [Helix](https://github.com/helix-bedrock), an open-source Minecraft: Bedrock
 Edition server engine in Go.
