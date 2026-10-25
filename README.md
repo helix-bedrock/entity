@@ -20,9 +20,14 @@ tempt, follow_owner, follow_parent, look_at_player and look_at_entity,
 random_look_around, float, breed, avoid_mob_type, hurt_by_target,
 nearest_attackable_target and melee_attack). These parts are not done yet:
 the panic start component, the float rider component, hurt_by_target's
-alert_same_type and breed's stop details. Entity definitions and the
-natural spawner (spawn rules) are not built yet; the spawner research has
-started. Research notes go in [`research/`](research/).
+alert_same_type and breed's stop details. `spawn` is the BDS 1.26.52
+natural spawner: the per-chunk tick, floor search, population caps, spawn
+rules (biome filters, herds, permutes, delays, density) and each mob
+class's own spawn check, behind a `World` interface the host implements.
+Not in `spawn` yet: structure spawn lists, phantoms, the zombie special
+case, and the delay filter's first value; BDS's two random streams are one
+`Rand`, and the Guardian sky check uses sky light. Entity definitions are
+not built yet. Research notes go in [`research/`](research/).
 
 Part of [Helix](https://github.com/helix-bedrock), an open-source Minecraft: Bedrock
 Edition server engine in Go.
