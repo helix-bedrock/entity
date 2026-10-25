@@ -143,6 +143,39 @@ type World interface {
 	// IsDay reports whether the sky is bright enough for sun-avoiding mobs
 	// to hide: BDS's sky darkness below 4.
 	IsDay() bool
+	// BorderBlock reports whether the column x, z has a border block, and
+	// whether its chunk is loaded.
+	BorderBlock(x, z int32) (border, loaded bool)
+	// BlocksMotion is the climbing navigation's test for a block in its way:
+	// the block stops movement, or has block property bit 0x4000 (property
+	// byte 266, bit 0x40).
+	BlocksMotion(b path.Block) bool
+	// SwimClear reports whether a block clip from a to b, as the swimming
+	// navigation casts it, hits nothing.
+	SwimClear(a, b path.Vec3) bool
+}
+
+// Actor is the mob's actor flags, which some navigation types switch.
+type Actor interface {
+	Flag(n int) bool
+	SetFlag(n int, on bool)
+}
+
+// The actor flags navigation reads and writes, by BDS's actor flag number.
+const (
+	ActorSprinting    = 3 // set by generic navigation on an air-over-water node
+	ActorWallClimbing = 18
+	ActorCanSwim      = 20
+	ActorCanFly       = 21
+	ActorCanWalk      = 22
+	ActorHasGravity   = 49
+	ActorSwimming     = 57
+)
+
+// Breacher is a move control that can be asked to leap out of the water
+// (minecraft:movement.dolphin).
+type Breacher interface {
+	RequestBreach()
 }
 
 // Pathfinder finds paths for the mob being moved, with its settings.
@@ -168,7 +201,9 @@ type BreakDoors struct {
 // Mob is the state of the mob being moved. The host fills it before each
 // call; navigation only reads it.
 type Mob struct {
-	Pos           path.Vec3
+	Pos path.Vec3
+	// Vel is the mob's last movement (its position delta).
+	Vel           path.Vec3
 	Box           path.Box
 	Width, Height float32
 
@@ -180,6 +215,14 @@ type Mob struct {
 	NoNewPath bool
 
 	OnGround, VehicleOnGround, WasInWater, InLava bool
+	// Amphibious is set when the mob has minecraft:movement.amphibious.
+	Amphibious bool
+	// Riding is set while the mob rides something.
+	Riding bool
+	// HorizontalCollision is set when the mob bumped into a wall.
+	HorizontalCollision bool
+	// Actor is the mob's actor flags; nil leaves them alone.
+	Actor Actor
 	// Wither is set for the wither, which updates its path in the air.
 	Wither bool
 

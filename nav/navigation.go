@@ -2,10 +2,12 @@ package nav
 
 import "github.com/helix-bedrock/entity/path"
 
-// Navigation is a mob's walking navigation component. It is used only from
-// that mob's tick.
+// Navigation is a mob's navigation component. It is used only from that
+// mob's tick.
 type Navigation struct {
 	Flags Flags
+	// Kind is the navigation type, which the JSON component name picks.
+	Kind Kind
 	// StuckInterval is the ticks between stuck checks; StuckDistance the
 	// blocks the mob must move in that time.
 	StuckInterval int32
@@ -22,16 +24,27 @@ type Navigation struct {
 
 	path  *path.Path
 	index int
+
+	// canWalk and canSwim are can_walk and can_swim, which only generic
+	// navigation passes on to the mob.
+	canWalk, canSwim bool
+	// canPathFromAir is can_path_from_air, used by fly and hover.
+	canPathFromAir bool
+	// gravity is the gravity flag fly navigation puts back when it stops.
+	gravity bool
+	// EndOffset moves hover navigation's target for the last node. BDS keeps
+	// it at component +40 and clears it on stop; what sets it is not found
+	// yet.
+	EndOffset path.Vec3
+
+	// climbing and climbTarget are the climbing navigation's walk to a
+	// target without a path.
+	climbing    bool
+	climbTarget path.Pos
 }
 
 // New returns a walking navigation for the JSON description d.
-func New(d *Description) *Navigation {
-	return &Navigation{
-		Flags:         d.Flags(),
-		StuckInterval: DefaultStuckInterval,
-		StuckDistance: DefaultStuckDistance,
-	}
-}
+func New(d *Description) *Navigation { return NewKind(KindWalk, d) }
 
 // Path returns the path being followed and the index of the next node, or
 // nil.
@@ -56,7 +69,15 @@ func CanUpdatePath(m *Mob) bool {
 // CreatePath finds a path to the block at p, or returns nil when the mob
 // cannot move now.
 func (n *Navigation) CreatePath(m *Mob, pf Pathfinder, p path.Pos) *path.Path {
-	if !CanUpdatePath(m) {
+	switch n.Kind {
+	case KindFloat:
+		return nil
+	case KindFly:
+		n.saveGravity(m)
+	case KindClimb:
+		n.climbing, n.climbTarget = true, p
+	}
+	if !n.canUpdate(m) {
 		return nil
 	}
 	return pf.PathToBlock(p)
@@ -64,7 +85,15 @@ func (n *Navigation) CreatePath(m *Mob, pf Pathfinder, p path.Pos) *path.Path {
 
 // CreatePathToMob finds a path to a mob at pos.
 func (n *Navigation) CreatePathToMob(m *Mob, pf Pathfinder, pos path.Vec3) *path.Path {
-	if !CanUpdatePath(m) {
+	switch n.Kind {
+	case KindFloat:
+		return nil
+	case KindFly:
+		n.saveGravity(m)
+	case KindClimb:
+		n.climbing, n.climbTarget = true, blockAt(pos)
+	}
+	if !n.canUpdate(m) {
 		return nil
 	}
 	return pf.PathToMob(pos)
@@ -72,13 +101,25 @@ func (n *Navigation) CreatePathToMob(m *Mob, pf Pathfinder, pos path.Vec3) *path
 
 // MoveTo finds a path to pos and follows it at speed.
 func (n *Navigation) MoveTo(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float32) bool {
-	p := path.Pos{X: floorInt(pos.X), Y: floorInt(pos.Y), Z: floorInt(pos.Z)}
-	return n.Follow(w, m, n.CreatePath(m, pf, p), speed)
+	if n.Kind == KindFloat {
+		return false
+	}
+	return n.Follow(w, m, n.CreatePath(m, pf, blockAt(pos)), speed)
 }
 
-// MoveToMob finds a path to a mob at pos and follows it at speed.
+// MoveToMob finds a path to a mob at pos and follows it at speed. A climbing
+// mob with no path still walks to the mob.
 func (n *Navigation) MoveToMob(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float32) bool {
-	return n.Follow(w, m, n.CreatePathToMob(m, pf, pos), speed)
+	if n.Kind == KindFloat {
+		return false
+	}
+	p := n.CreatePathToMob(m, pf, pos)
+	if p == nil && n.Kind == KindClimb {
+		n.climbing, n.climbTarget = true, blockAt(pos)
+		n.speed = speed
+		return true
+	}
+	return n.Follow(w, m, p, speed)
 }
 
 // samePositions reports whether a and b visit the same blocks.
@@ -119,7 +160,14 @@ func (n *Navigation) Follow(w World, m *Mob, p *path.Path, speed float32) bool {
 
 // Stop drops the path and the mob's wanted position.
 func (n *Navigation) Stop(m *Mob) {
+	switch n.Kind {
+	case KindFly:
+		n.restoreGravity(m)
+	case KindGeneric:
+		setFlag(m, ActorSwimming, false)
+	}
 	n.path, n.index = nil, 0
+	n.EndOffset = path.Vec3{}
 	if m.MoveControl != nil {
 		m.MoveControl.ClearWanted()
 	}
@@ -164,9 +212,9 @@ func isWater(w World, p path.Pos) bool {
 	return w.Info(w.Block(p)).Material == path.MaterialWater || w.Info(w.Liquid(p)).Material == path.MaterialWater
 }
 
-// mobPos is the position navigation measures the mob from: its feet, or the
-// water surface above a floating mob.
-func (n *Navigation) mobPos(w World, m *Mob) path.Vec3 {
+// walkMobPos is the position walking navigation measures the mob from: its
+// feet, or the water surface above a floating mob.
+func (n *Navigation) walkMobPos(w World, m *Mob) path.Vec3 {
 	y := floorInt(m.Box.Min.Y)
 	if m.WasInWater && n.Flags&FlagCanFloat != 0 {
 		x, z := floorInt(m.Pos.X), floorInt(m.Pos.Z)

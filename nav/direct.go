@@ -28,75 +28,74 @@ func canMoveDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32) bool
 	if m.PreferredPath || !m.CanWalk {
 		return false
 	}
-	return walkDirectly(w, m, from, to, sx, sy, sz)
+	return walkDirectly(w, m, from, to, sx, sy, sz, false)
 }
 
 // floorOK reports whether the mob may stand on b: not lava, not water
-// unless it was in water, not magma when it burns on hot blocks.
+// unless it was in water, and not magma unless it is fire immune or on a
+// hot block already.
 func floorOK(w World, m *Mob, b path.Block) bool {
 	in := w.Info(b)
-	if !m.FireImmune && m.OnHotBlock && in.Kind == path.KindMagma {
+	if !m.FireImmune && !m.OnHotBlock && in.Kind == path.KindMagma {
 		return false
 	}
 	return (m.WasInWater || in.Material != path.MaterialWater) && in.Material != path.MaterialLava
 }
 
-// ray visits every block a line from a to b crosses, in order, and reports
-// whether ok holds for all of them. A line shorter than 0.001 fails.
+// ray walks the blocks a line from a to b crosses and reports whether ok
+// holds for each block after the first, up to and including the one b is
+// in. A line shorter than 0.001 fails.
 func ray(a, b path.Vec3, ok func(path.Pos) bool) bool {
 	d := [3]float32{b.X - a.X, b.Y - a.Y, b.Z - a.Z}
-	l2 := d[0]*d[0] + d[1]*d[1] + d[2]*d[2]
+	l2 := d[2]*d[2] + (d[0]*d[0] + d[1]*d[1])
 	if l2 < 1e-6 {
 		return false
 	}
-	l := float32(math.Sqrt(float64(l2)))
+	inv := 1 / float32(math.Sqrt(float64(l2)))
 	from := [3]float32{a.X, a.Y, a.Z}
 	cell := [3]int32{floorInt(a.X), floorInt(a.Y), floorInt(a.Z)}
 	last := [3]int32{floorInt(b.X), floorInt(b.Y), floorInt(b.Z)}
 	var step [3]int32
 	var tMax, tDelta [3]float32
-	inf := float32(math.Inf(1))
 	for i := range 3 {
-		dir := d[i] / l
-		switch {
-		case dir > 0:
+		dir := d[i] * inv
+		bound := float32(cell[i]) - from[i]
+		step[i] = -1
+		if dir >= 0 {
 			step[i] = 1
-			tDelta[i] = 1 / dir
-			tMax[i] = (float32(cell[i]+1) - from[i]) / dir
-		case dir < 0:
-			step[i] = -1
-			tDelta[i] = -1 / dir
-			tMax[i] = (float32(cell[i]) - from[i]) / dir
-		default:
-			tDelta[i], tMax[i] = inf, inf
 		}
+		if !(dir < 0) {
+			bound++
+		}
+		tMax[i] = bound / dir
+		tDelta[i] = 1 / float32(math.Abs(float64(dir)))
 	}
 	for {
+		if step[0]*(last[0]-cell[0]) <= 0 && step[1]*(last[1]-cell[1]) <= 0 && step[2]*(last[2]-cell[2]) <= 0 {
+			return true
+		}
+		// BDS steps x on a strict win over z, then y on a strict win over x.
+		switch {
+		case !(tMax[2] <= tMax[0] || tMax[1] < tMax[0]):
+			cell[0] += step[0]
+			tMax[0] += tDelta[0]
+		case !(tMax[0] <= tMax[1] || tMax[2] < tMax[1]):
+			cell[1] += step[1]
+			tMax[1] += tDelta[1]
+		default:
+			cell[2] += step[2]
+			tMax[2] += tDelta[2]
+		}
 		if !ok(path.Pos{X: cell[0], Y: cell[1], Z: cell[2]}) {
 			return false
 		}
-		if cell == last {
-			return true
-		}
-		i := 0
-		if tMax[1] < tMax[i] {
-			i = 1
-		}
-		if tMax[2] < tMax[i] {
-			i = 2
-		}
-		// Past the end of the line: every crossed block was checked.
-		if tMax[i] > l {
-			return true
-		}
-		cell[i] += step[i]
-		tMax[i] += tDelta[i]
 	}
 }
 
 // walkDirectly steps over the columns between from and to on the ground,
-// checking at each that the mob's box is free and has a floor.
-func walkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32) bool {
+// checking at each that the mob's box is free and has a floor. loose is the
+// climbing navigation's box test (see boxFree).
+func walkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32, loose bool) bool {
 	dx, dz := to.X-from.X, to.Z-from.Z
 	d2 := dx*dx + dz*dz
 	if d2 < 1e-6 {
@@ -105,7 +104,7 @@ func walkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32) bool {
 	l := float32(math.Sqrt(float64(d2)))
 	dx, dz = dx/l, dz/l
 	x, y, z := floorInt(from.X), floorInt(from.Y), floorInt(from.Z)
-	if !boxFree(w, m, x, y, z, sx+2, sy, sz+2, dx, dz, from) {
+	if !boxFree(w, m, x, y, z, sx+2, sy, sz+2, dx, dz, from, loose) {
 		return false
 	}
 	inf := float32(math.Inf(1))
@@ -133,7 +132,7 @@ func walkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32) bool {
 			tx += tdx
 			x += stepX
 		}
-		if !boxFree(w, m, x, y, z, sx, sy, sz, dx, dz, from) {
+		if !boxFree(w, m, x, y, z, sx, sy, sz, dx, dz, from, loose) {
 			return false
 		}
 	}
@@ -142,8 +141,10 @@ func walkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32) bool {
 
 // boxFree checks a box of sx, sy, sz blocks centred on column cx, cz from
 // height cy: the blocks ahead must be pathable, and stand on a floor unless
-// the mob flies.
-func boxFree(w World, m *Mob, cx, cy, cz, sx, sy, sz int32, dx, dz float32, from path.Vec3) bool {
+// the mob flies. With loose, a block is in the way when it blocks motion,
+// or is lava and the mob is not fire immune, instead of when it is not
+// pathable.
+func boxFree(w World, m *Mob, cx, cy, cz, sx, sy, sz int32, dx, dz float32, from path.Vec3, loose bool) bool {
 	x0, z0 := cx-sx/2, cz-sz/2
 	corner := path.Pos{X: x0, Y: cy, Z: z0}
 	ahead := func(x, z int32) bool {
@@ -157,7 +158,7 @@ func boxFree(w World, m *Mob, cx, cy, cz, sx, sy, sz int32, dx, dz float32, from
 			for y := cy; y < cy+sy; y++ {
 				p := path.Pos{X: x, Y: y, Z: z}
 				b := w.Block(p)
-				if !w.Pathable(b, corner, p) && w.Info(b).Kind != path.KindAir {
+				if !passable(w, m, b, corner, p, loose) && w.Info(b).Kind != path.KindAir {
 					return false
 				}
 			}
@@ -179,4 +180,14 @@ func boxFree(w World, m *Mob, cx, cy, cz, sx, sy, sz int32, dx, dz float32, from
 		}
 	}
 	return true
+}
+
+func passable(w World, m *Mob, b path.Block, corner, p path.Pos, loose bool) bool {
+	if !loose {
+		return w.Pathable(b, corner, p)
+	}
+	if w.Info(b).Material == path.MaterialLava {
+		return m.FireImmune
+	}
+	return !w.BlocksMotion(b)
 }

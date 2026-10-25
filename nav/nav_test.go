@@ -38,10 +38,13 @@ func (w *flatWorld) CollisionBox(b path.Block, p path.Pos) path.Box {
 	f := path.Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	return path.Box{Min: f, Max: path.Vec3{X: f.X + 1, Y: f.Y + 1, Z: f.Z + 1}}
 }
-func (w *flatWorld) Door(path.Block) (int32, bool, bool) { return 0, false, false }
-func (w *flatWorld) HeightRange() (int32, int32)         { return -64, 320 }
-func (w *flatWorld) Height(_, _ int32) (int32, bool)     { return 64 + 64, true }
-func (w *flatWorld) IsDay() bool                         { return true }
+func (w *flatWorld) Door(path.Block) (int32, bool, bool)   { return 0, false, false }
+func (w *flatWorld) HeightRange() (int32, int32)           { return -64, 320 }
+func (w *flatWorld) Height(_, _ int32) (int32, bool)       { return 64 + 64, true }
+func (w *flatWorld) IsDay() bool                           { return true }
+func (w *flatWorld) BorderBlock(int32, int32) (bool, bool) { return false, true }
+func (w *flatWorld) BlocksMotion(b path.Block) bool        { return b != air }
+func (w *flatWorld) SwimClear(path.Vec3, path.Vec3) bool   { return true }
 
 type control struct {
 	wanted path.Vec3
@@ -134,7 +137,7 @@ func TestPathFlags(t *testing.T) {
 func TestWalkDirectly(t *testing.T) {
 	w := newFlatWorld()
 	m := walker(0.5, 0.5, nil)
-	if !walkDirectly(w, m, path.Vec3{X: 0.5, Y: 64, Z: 0.5}, path.Vec3{X: 6.5, Y: 64, Z: 3.5}, 3, 3, 3) {
+	if !walkDirectly(w, m, path.Vec3{X: 0.5, Y: 64, Z: 0.5}, path.Vec3{X: 6.5, Y: 64, Z: 3.5}, 3, 3, 3, false) {
 		t.Fatal("open flat ground is not walkable")
 	}
 }
