@@ -1,8 +1,5 @@
 package behavior
 
-// The avoid goal's fixed numbers.
-const avoidTries = 10
-
 // AvoidType is one entry of avoid_mob_type's entity_types.
 type AvoidType struct {
 	Filters     Filter
@@ -125,7 +122,7 @@ func (g *Avoid) flee(e Actor) bool {
 	}
 	n := g.mob.Nav()
 	from := e.Pos()
-	p, ok := awayPos(g.world, g.mob, g.cfg.H, g.cfg.V, from, true, avoidTries)
+	p, ok := awayPos(g.world, g.mob, g.cfg.H, g.cfg.V, from, true)
 	if !ok {
 		if n != nil {
 			return false

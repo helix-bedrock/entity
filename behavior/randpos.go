@@ -176,11 +176,18 @@ func snap(w World, c Pos, lo, hi int32, collision bool) (int32, bool) {
 }
 
 // awayPos is BDS's away-from helper (0xBD0B530): a random position whose
-// offset points away from from.
-func awayPos(w World, m Mob, h, v int32, from Vec3, collision bool, tries int32) (Vec3, bool) {
+// offset points away from from. Every caller in 1.26.52 passes 10 tries.
+func awayPos(w World, m Mob, h, v int32, from Vec3, collision bool) (Vec3, bool) {
 	p := m.Pos()
 	d := Vec3{X: p.X - from.X, Y: p.Y - from.Y, Z: p.Z - from.Z}
-	return randomPos(w, m, posSearch{h: h, v: v, dir: &d, collision: collision, tries: tries})
+	return randomPos(w, m, posSearch{h: h, v: v, dir: &d, collision: collision, tries: landTries})
+}
+
+// towardsPos is BDS's towards helper (0xBD09C60): a random position whose
+// offset points towards to, with 10 tries and the ground test.
+func towardsPos(w World, m Mob, h, v int32, to Vec3) (Vec3, bool) {
+	d := sub(to, m.Pos())
+	return randomPos(w, m, posSearch{h: h, v: v, dir: &d, tries: landTries})
 }
 
 // landTries is how many spots the land position helper tries; every

@@ -9,8 +9,10 @@
 // stay_while_sitting, flee_sun, restrict_sun, swim_idle, swim_wander,
 // swim_up_for_breath, float_wander, timer_flag_1 to 3,
 // move_towards_home_restriction, move_towards_dwelling_restriction,
-// move_to_water, move_to_lava, move_to_liquid, move_to_land and
-// stomp_turtle_egg.
+// move_to_water, move_to_lava, move_to_liquid, move_to_land,
+// stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player,
+// move_towards_target, move_to_random_block, follow_mob, avoid_block and
+// move_to_block.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -54,9 +56,13 @@ const (
 	FlagCanFly       = 21
 	FlagResting      = 23
 	FlagCanSwim      = 20
-	FlagTimer1       = 115
-	FlagTimer2       = 116
-	FlagTimer3       = 117
+	// FlagTransitionSitting is the sitting transition flag random_sitting
+	// raises.
+	FlagTransitionSitting = 62
+	FlagAvoidingBlock     = 87
+	FlagTimer1            = 115
+	FlagTimer2            = 116
+	FlagTimer3            = 117
 )
 
 // The game modes the goals compare against.
@@ -224,6 +230,10 @@ type World interface {
 	// and, unless a handler cancels it, destroys the block as broken by
 	// the actor.
 	BreakBlock(p Pos, by ID)
+	// Passable is the block's pathing test at p for the mob: the block's
+	// cached answer when it has one, else BlockType::canBePathedThrough
+	// (by default the material does not block motion).
+	Passable(p Pos, by ID) bool
 }
 
 // Block is what the goals know about a block.
@@ -392,6 +402,9 @@ type Mob interface {
 	VerticalCollision() bool
 	// PlaySoundAt plays a level sound event at p.
 	PlaySoundAt(sound int, p Vec3)
+	// MoveWanted reports that the move control has a wanted position; ok
+	// is false when the mob has no move control.
+	MoveWanted() (wanted, ok bool)
 }
 
 // The control flags of the goals, as BDS sets them in each constructor.

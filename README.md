@@ -15,7 +15,7 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet. `behavior` has 43 of the 170 goals vanilla entities use:
+`physics` yet. `behavior` has 51 of the 170 goals vanilla entities use:
 random_stroll, random_swim, random_fly, random_breach, random_hover, panic,
 tempt, follow_owner, follow_parent, teleport_to_owner, look_at_player and
 look_at_entity, random_look_around and random_look_around_and_sit, float,
@@ -25,8 +25,11 @@ melee_box_attack, leap_at_target, mount_pathing, run_around_like_crazy,
 stay_while_sitting, flee_sun, restrict_sun, swim_idle, swim_wander,
 swim_up_for_breath, float_wander, timer_flag_1 to 3,
 move_towards_home_restriction, move_towards_dwelling_restriction,
-move_to_water, move_to_lava, move_to_liquid, move_to_land and
-stomp_turtle_egg. The other vanilla goals are not built yet. These parts
+move_to_water, move_to_lava, move_to_liquid, move_to_land,
+stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player
+(which never starts in BDS 1.26.52), move_towards_target,
+move_to_random_block, follow_mob, avoid_block and move_to_block. Block
+lists match by block name only, not by states or tags. The other vanilla goals are not built yet. These parts
 are not done yet:
 the panic start component, the float rider component, hurt_by_target's
 alert_same_type and breed's stop details. `spawn` is the BDS 1.26.52

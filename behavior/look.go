@@ -308,3 +308,62 @@ func (g *RandomLookSit) Tick() {
 	g.yaw = (g.cfg.Angle.Max-g.cfg.Angle.Min)*r.NextFloat() + g.cfg.Angle.Min + g.mob.BodyYaw()
 	g.timer = randomInt(r, g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
+
+// DefaultLookAtTarget is look_at_target's and look_at_trading_player's BDS
+// defaults; their JSON has only look_time.
+var DefaultLookAtTarget = DefaultLookAt
+
+// NewLookAtTarget makes look_at_target: LookAtActorGoal whose only filter
+// is BDS's is_target test, so the mob looks at its own target.
+func NewLookAtTarget(w World, m Mob, c LookAtConfig) *LookAt {
+	c.Filters = isTarget
+	return NewLookAt(w, m, c)
+}
+
+// isTarget is the is_target filter test with the candidate as subject.
+func isTarget(self Mob, other Actor) bool { return other.ID() == self.Target() }
+
+// Trader is optional on the mob: the player it trades with (actor data
+// item 68), NoID for none.
+type Trader interface {
+	TradingPlayer() ID
+}
+
+// LookAtTrading is LookAtTradingPlayerGoal. Its canUse records the trading
+// player as the look target and always fails, so in BDS 1.26.52 the goal
+// never starts.
+type LookAtTrading struct {
+	*LookAt
+}
+
+// NewLookAtTrading makes the goal.
+func NewLookAtTrading(w World, m Mob, c LookAtConfig) *LookAtTrading {
+	c.Filters = isTarget
+	return &LookAtTrading{LookAt: NewLookAt(w, m, c)}
+}
+
+// trader is the trading player, nil when there is none or it is gone.
+func (g *LookAtTrading) trader() Actor {
+	t, ok := g.mob.(Trader)
+	if !ok {
+		return nil
+	}
+	return g.actor(t.TradingPlayer())
+}
+
+// CanUse implements goal.Goal.
+func (g *LookAtTrading) CanUse() bool {
+	if p := g.trader(); p != nil && !p.Removed() && p.ID() != g.target {
+		g.target = p.ID()
+	}
+	return false
+}
+
+// CanContinueToUse implements goal.Goal.
+func (g *LookAtTrading) CanContinueToUse() bool {
+	if t := g.actor(g.target); t == nil || t.Removed() {
+		return false
+	}
+	p := g.trader()
+	return p != nil && !p.Removed()
+}

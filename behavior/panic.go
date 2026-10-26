@@ -10,7 +10,6 @@ const (
 	panicHurtTicks = 40 // how long after being hurt the mob panics
 	panicH         = 5
 	panicV         = 4
-	panicTries     = 10
 	panicRepath    = 8
 	// panicWaterDist scales the squared distance in the water search.
 	panicWaterDist = 0.01
@@ -75,7 +74,7 @@ func (g *Panic) CanUse() bool {
 	}
 	if !ok {
 		if a := g.actor(g.attacker); a != nil {
-			p, ok = awayPos(g.world, g.mob, panicH, panicV, a.Pos(), true, panicTries)
+			p, ok = awayPos(g.world, g.mob, panicH, panicV, a.Pos(), true)
 		} else {
 			p, ok = landPos(g.world, g.mob, panicH, panicV)
 		}
@@ -115,7 +114,7 @@ func (g *Panic) triggered() bool {
 // otherwise the best water block nearby.
 func (g *Panic) waterTarget() (Vec3, bool) {
 	if a := g.actor(g.attacker); a != nil && g.world.Block(blockOf(g.mob.Pos())).Material == path.MaterialWater {
-		return awayPos(g.world, g.mob, panicH, panicV, a.Pos(), false, panicTries)
+		return awayPos(g.world, g.mob, panicH, panicV, a.Pos(), false)
 	}
 	if g.mob.Nav() == nil {
 		return Vec3{}, false
