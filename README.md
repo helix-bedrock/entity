@@ -5,7 +5,7 @@ from Mojang's JSON files, components, behaviours (AI goals), sensors and
 targeting, navigation, pathfinding, movement and spawn rules. It is a one-to-one
 copy of how the Bedrock Dedicated Server (BDS) runs mobs.
 
-**Status as of 2026-10-25:** `goal` runs a mob's goals the way
+**Status as of 2026-10-26:** `goal` runs a mob's goals the way
 the BDS goal selector does; `path` is the BDS 1.26.52 pathfinder for walking
 and swimming mobs (A* search, node classification and costs); `nav` has all
 seven navigation types (walk, float, generic, climb, swim, fly and hover:
@@ -15,7 +15,7 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet. `behavior` has 51 of the 170 goals vanilla entities use:
+`physics` yet. `behavior` has 60 of the 170 goals vanilla entities use:
 random_stroll, random_swim, random_fly, random_breach, random_hover, panic,
 tempt, follow_owner, follow_parent, teleport_to_owner, look_at_player and
 look_at_entity, random_look_around and random_look_around_and_sit, float,
@@ -28,7 +28,10 @@ move_towards_home_restriction, move_towards_dwelling_restriction,
 move_to_water, move_to_lava, move_to_liquid, move_to_land,
 stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player
 (which never starts in BDS 1.26.52), move_towards_target,
-move_to_random_block, follow_mob, avoid_block and move_to_block. Block
+move_to_random_block, follow_mob, avoid_block, move_to_block, the five
+squid goals (squid_idle, squid_dive, squid_flee, squid_out_of_water,
+squid_move_away_from_ground) and the four slime goals (slime_attack,
+slime_float, slime_keep_on_jumping, slime_random_direction). Block
 lists match by block name only, not by states or tags. The other vanilla goals are not built yet. These parts
 are not done yet:
 the panic start component, the float rider component, hurt_by_target's

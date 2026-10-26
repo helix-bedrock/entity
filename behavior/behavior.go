@@ -11,8 +11,11 @@
 // move_towards_home_restriction, move_towards_dwelling_restriction,
 // move_to_water, move_to_lava, move_to_liquid, move_to_land,
 // stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player,
-// move_towards_target, move_to_random_block, follow_mob, avoid_block and
-// move_to_block.
+// move_towards_target, move_to_random_block, follow_mob, avoid_block,
+// move_to_block, the five squid goals (squid_idle, squid_dive, squid_flee,
+// squid_out_of_water, squid_move_away_from_ground) and the four slime goals
+// (slime_attack, slime_float, slime_keep_on_jumping,
+// slime_random_direction).
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -234,6 +237,9 @@ type World interface {
 	// cached answer when it has one, else BlockType::canBePathedThrough
 	// (by default the material does not block motion).
 	Passable(p Pos, by ID) bool
+	// Particle spawns the named particle effect at p
+	// (Level::spawnParticleEffect).
+	Particle(name string, p Vec3)
 }
 
 // Block is what the goals know about a block.
