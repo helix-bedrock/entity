@@ -6,8 +6,11 @@
 // avoid_mob_type, hurt_by_target, owner_hurt_by_target, owner_hurt_target,
 // nearest_attackable_target, melee_attack, melee_box_attack,
 // leap_at_target, mount_pathing, run_around_like_crazy,
-// stay_while_sitting, flee_sun, restrict_sun, swim_idle, timer_flag_1 to 3
-// and move_towards_home_restriction and move_towards_dwelling_restriction.
+// stay_while_sitting, flee_sun, restrict_sun, swim_idle, swim_wander,
+// swim_up_for_breath, float_wander, timer_flag_1 to 3,
+// move_towards_home_restriction, move_towards_dwelling_restriction,
+// move_to_water, move_to_lava, move_to_liquid, move_to_land and
+// stomp_turtle_egg.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -182,6 +185,9 @@ type World interface {
 	// ClearLine reports that no block is hit on the straight line from a
 	// to b (BlockSource::clip without liquids).
 	ClearLine(a, b Vec3) bool
+	// Clip is BlockSource::clip from a to b without liquids, at most 200
+	// blocks: the point where the line first hits a block.
+	Clip(a, b Vec3) (at Vec3, hit bool)
 	// IsDay is the sun test sun-avoiding mobs use: the sky darkening is
 	// below 4.
 	IsDay() bool
@@ -195,6 +201,29 @@ type World interface {
 	// SkyVisible reports that p is at or above the height map, so it is
 	// out in the open.
 	SkyVisible(p Pos) bool
+	// LiquidBlock is BlockSource::getLiquidBlock: the block in the liquid
+	// layer at p, or the block itself when that layer is air.
+	LiquidBlock(p Pos) Block
+	// BoxHasLiquid is BlockSource::containsAnyLiquid: a liquid block in the
+	// cells floor(min) to ceil(max) of b; false when b is flat on an axis.
+	BoxHasLiquid(b Box) bool
+	// BoxCollides reports that a block collision box touches b
+	// (BlockSource::fetchAABBs, unloaded chunks included).
+	BoxCollides(b Box) bool
+	// HeightMap is the chunk height map at the column, MinHeight when the
+	// chunk is not loaded.
+	HeightMap(x, z int32) int32
+	// MinHeight is the dimension's lowest y.
+	MinHeight() int32
+	// MobGriefing is the mobGriefing game rule.
+	MobGriefing() bool
+	// LevelEvent broadcasts the level event at p, with the block as its
+	// data.
+	LevelEvent(id int32, p Vec3, block string)
+	// BreakBlock fires the event for an actor destroying the block at p
+	// and, unless a handler cancels it, destroys the block as broken by
+	// the actor.
+	BreakBlock(p Pos, by ID)
 }
 
 // Block is what the goals know about a block.
@@ -212,6 +241,8 @@ type Block struct {
 	Liquid bool
 	// HasCollision is a non-empty collision shape.
 	HasCollision bool
+	// BlocksMotion is Material::getBlocksMotion.
+	BlocksMotion bool
 	// Tree is random_fly's perch test: block type flag 0x20 or one of the
 	// two block groups BDS keeps for logs (VanillaBlockTypeGroups).
 	Tree bool
@@ -231,6 +262,20 @@ type Navigator interface {
 	CanPathTo(p Vec3) bool
 	// PathEnd returns the last node of the path being followed.
 	PathEnd() (end Pos, ok bool)
+	// PathStart returns the first node of the path being followed; ok is
+	// false when there is no path or it is empty.
+	PathStart() (start Pos, ok bool)
+	// Held reports that the navigation holds a path, finished or not.
+	Held() bool
+	// PathToPoint makes a path to p without following it and returns its
+	// last node; ok is false when no path or an empty one was made.
+	PathToPoint(p Vec3) (end Pos, ok bool)
+	// SetEndOffset moves the target of the last node (the component's
+	// target offset).
+	SetEndOffset(o Vec3)
+	// SetLastNodeReach makes d2 the squared distance at which the last
+	// node counts as reached, until the next path.
+	SetLastNodeReach(d2 float32)
 	// Done reports that there is no path or it is finished.
 	Done() bool
 	// Stop stops navigation and resets its speed to 1.
@@ -327,6 +372,26 @@ type Mob interface {
 	SetPersistSit(on bool)
 	// HelmetEmpty reports that nothing is worn in the head slot.
 	HelmetEmpty() bool
+	// Move is the actor's move request for this tick (blocks per tick).
+	Move(v Vec3)
+	// Speed, UnderwaterSpeed and FollowRange are the current values of the
+	// movement, underwater_movement and follow_range attributes.
+	Speed() float32
+	UnderwaterSpeed() float32
+	FollowRange() float32
+	// PrevRotation is the pitch and yaw of ActorRotationComponent last
+	// tick; BDS's view vector with no partial tick uses it.
+	PrevRotation() (pitch, yaw float32)
+	// SetYaw sets the yaw of ActorRotationComponent.
+	SetYaw(yaw float32)
+	// Breathable reports BreathableComponent.
+	Breathable() bool
+	// AirSupply is the air supply actor data (item 7).
+	AirSupply() int16
+	// VerticalCollision is VerticalCollisionFlagComponent.
+	VerticalCollision() bool
+	// PlaySoundAt plays a level sound event at p.
+	PlaySoundAt(sound int, p Vec3)
 }
 
 // The control flags of the goals, as BDS sets them in each constructor.
@@ -430,3 +495,23 @@ func randomInt(r Random, min, max int32) int32 {
 }
 
 func sqrt32(v float32) float32 { return float32(math.Sqrt(float64(v))) }
+
+// minLength is the length below which BDS's normalize gives a zero vector.
+const minLength = 0.0001
+
+func sub(a, b Vec3) Vec3 { return Vec3{X: a.X - b.X, Y: a.Y - b.Y, Z: a.Z - b.Z} }
+
+func add(a, b Vec3) Vec3 { return Vec3{X: a.X + b.X, Y: a.Y + b.Y, Z: a.Z + b.Z} }
+
+func scale(v Vec3, s float32) Vec3 { return Vec3{X: v.X * s, Y: v.Y * s, Z: v.Z * s} }
+
+func length(v Vec3) float32 { return sqrt32(v.Z*v.Z + (v.X*v.X + v.Y*v.Y)) }
+
+// normalize is Vec3::normalized: zero below minLength.
+func normalize(v Vec3) Vec3 {
+	l := length(v)
+	if l < minLength {
+		return Vec3{}
+	}
+	return Vec3{X: v.X / l, Y: v.Y / l, Z: v.Z / l}
+}

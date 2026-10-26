@@ -92,6 +92,13 @@ func (n *fakeNav) Stop()                    { n.done = true }
 func (n *fakeNav) Flags() uint32            { return 0 }
 func (n *fakeNav) SetFlags(uint32)          {}
 func (n *fakeNav) SetSpeed(s float32)       { n.speed = s }
+func (n *fakeNav) Held() bool               { return n.moves != 0 }
+func (n *fakeNav) PathStart() (Pos, bool)   { return Pos{}, n.moves != 0 }
+func (n *fakeNav) SetEndOffset(Vec3)        {}
+func (n *fakeNav) SetLastNodeReach(float32) {}
+func (n *fakeNav) PathToPoint(p Vec3) (Pos, bool) {
+	return blockOf(p), true
+}
 
 type fakeMob struct {
 	Mob

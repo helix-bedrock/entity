@@ -15,18 +15,19 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet. `behavior` has 35 of the 170 goals vanilla entities use:
+`physics` yet. `behavior` has 43 of the 170 goals vanilla entities use:
 random_stroll, random_swim, random_fly, random_breach, random_hover, panic,
 tempt, follow_owner, follow_parent, teleport_to_owner, look_at_player and
 look_at_entity, random_look_around and random_look_around_and_sit, float,
 breed, avoid_mob_type, hurt_by_target, owner_hurt_by_target,
 owner_hurt_target, nearest_attackable_target, melee_attack,
 melee_box_attack, leap_at_target, mount_pathing, run_around_like_crazy,
-stay_while_sitting, flee_sun, restrict_sun, swim_idle, timer_flag_1 to 3,
-and move_towards_home_restriction and move_towards_dwelling_restriction.
-The other vanilla goals are not built yet; swim_wander,
-swim_up_for_breath, float_wander, move_to_water, move_to_land,
-move_to_lava, move_to_liquid and stomp_turtle_egg come next. These parts are not done yet:
+stay_while_sitting, flee_sun, restrict_sun, swim_idle, swim_wander,
+swim_up_for_breath, float_wander, timer_flag_1 to 3,
+move_towards_home_restriction, move_towards_dwelling_restriction,
+move_to_water, move_to_lava, move_to_liquid, move_to_land and
+stomp_turtle_egg. The other vanilla goals are not built yet. These parts
+are not done yet:
 the panic start component, the float rider component, hurt_by_target's
 alert_same_type and breed's stop details. `spawn` is the BDS 1.26.52
 natural spawner: the per-chunk tick, floor search, population caps, spawn

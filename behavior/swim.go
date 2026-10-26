@@ -270,7 +270,7 @@ func (g *RandomBreach) position() (Vec3, bool) {
 		return Vec3{}, false
 	}
 	at := Vec3{X: p.X, Y: y, Z: p.Z}
-	if t, ok := m.(Targeter); ok && m.Nav() != nil && sqrt32(dist2(at, m.Pos())) > t.FollowRange() {
+	if m.Nav() != nil && sqrt32(dist2(at, m.Pos())) > m.FollowRange() {
 		return Vec3{}, false
 	}
 	return at, true

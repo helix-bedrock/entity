@@ -46,8 +46,6 @@ type Targeter interface {
 	CanSee(a Actor) bool
 	// CanAttack is Actor::canAttack: families, peaceful rules and the like.
 	CanAttack(a Actor) bool
-	// FollowRange is the follow_range attribute.
-	FollowRange() float32
 	// Admiring is the admire item state, which switches attacking off.
 	Admiring() bool
 	// PlayersTargetable is the level rule that lets mobs target players.
