@@ -18,6 +18,11 @@ type posSearch struct {
 	// when snapping to the ground.
 	collision bool
 	tries     int32
+	// air treats the mob as a flier: no snapping to the ground.
+	air bool
+	// hover lifts a snapped spot by a random number of free blocks in
+	// [Min, Max) (random_hover's hover_height).
+	hover Range[int32]
 }
 
 // restriction is the leash or home limit on a search.
@@ -61,7 +66,7 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 	}
 	r := w.Random()
 	res := restrict(m, s.h)
-	flier, swimmer := m.Flag(FlagCanFly), m.Flag(FlagCanSwim)
+	flier, swimmer := s.air || m.Flag(FlagCanFly), m.Flag(FlagCanSwim)
 	mp := m.Pos()
 	base := blockOf(mp)
 	radius2 := int64(res.radius * res.radius)
@@ -96,8 +101,9 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 		}
 		c := Pos{X: base.X + dx, Y: base.Y + dy, Z: base.Z + dz}
 		if !flier && !swimmer && !m.InLava() && !m.InWater() {
+			lift := randomRange(r, s.hover.Min, s.hover.Max)
 			y, ok := snap(w, c, base.Y-s.v, base.Y+s.v, s.collision)
-			if !ok {
+			if !ok || !raise(w, c, &y, lift, s.collision) {
 				continue
 			}
 			c.Y = y
@@ -116,6 +122,19 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 		}
 	}
 	return Vec3{X: float32(out.X), Y: float32(out.Y), Z: float32(out.Z)}, found
+}
+
+// raise lifts a snapped height by n blocks, failing when ground is in the
+// way.
+func raise(w World, c Pos, y *int32, n int32, collision bool) bool {
+	for ; n > 0; n-- {
+		b := w.Block(Pos{X: c.X, Y: *y + 1, Z: c.Z})
+		if collision && b.HasCollision || !collision && b.Ground {
+			return false
+		}
+		*y++
+	}
+	return true
 }
 
 // snap moves c to the nearest standable height in [lo, hi]: first down
@@ -164,9 +183,13 @@ func awayPos(w World, m Mob, h, v int32, from Vec3, collision bool, tries int32)
 	return randomPos(w, m, posSearch{h: h, v: v, dir: &d, collision: collision, tries: tries})
 }
 
+// landTries is how many spots the land position helper tries; every
+// caller in 1.26.52 passes 10.
+const landTries = 10
+
 // landPos is BDS's land position helper (0xBD09940).
-func landPos(w World, m Mob, h, v, tries int32) (Vec3, bool) {
-	return randomPos(w, m, posSearch{h: h, v: v, tries: tries})
+func landPos(w World, m Mob, h, v int32) (Vec3, bool) {
+	return randomPos(w, m, posSearch{h: h, v: v, tries: landTries})
 }
 
 // WalkKind is the kind of Mob::getWalkTargetValue.

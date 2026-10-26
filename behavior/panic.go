@@ -77,7 +77,7 @@ func (g *Panic) CanUse() bool {
 		if a := g.actor(g.attacker); a != nil {
 			p, ok = awayPos(g.world, g.mob, panicH, panicV, a.Pos(), true, panicTries)
 		} else {
-			p, ok = landPos(g.world, g.mob, panicH, panicV, panicTries)
+			p, ok = landPos(g.world, g.mob, panicH, panicV)
 		}
 	}
 	if !ok {

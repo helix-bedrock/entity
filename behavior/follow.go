@@ -46,8 +46,7 @@ type FollowOwner struct {
 	owner  ID
 	repath int32
 	saved  uint32
-	spots  []Vec3
-	buf    []Actor
+	spots  spotFinder
 }
 
 // NewFollowOwner makes the goal.
@@ -160,7 +159,7 @@ func (g *FollowOwner) Tick() {
 
 // teleport moves the pet to a free spot 3 to 4 blocks from the owner.
 func (g *FollowOwner) teleport(o Actor) {
-	p, ok := g.teleportSpot(o)
+	p, ok := g.spots.find(g.world, g.mob, o, teleportRing, g.cfg.RandomTeleport)
 	if !ok {
 		return
 	}
@@ -174,10 +173,20 @@ func (g *FollowOwner) teleport(o Actor) {
 	}
 }
 
-func (g *FollowOwner) teleportSpot(o Actor) (Vec3, bool) {
+// spotFinder is BDS's teleport spot search (0xBDD0B10), with the buffers it
+// reuses.
+type spotFinder struct {
+	spots []Vec3
+	buf   []Actor
+}
+
+// find looks for a free spot ring to ring+1 blocks out from o, on the
+// owner's feet level. With random set the spots are shuffled and checked
+// for entities that block the mob's box.
+func (g *spotFinder) find(w World, m Mob, o Actor, ring int32, random bool) (Vec3, bool) {
 	op, ob := blockOf(o.Pos()), o.Box()
 	feet := floorInt(ob.Min.Y)
-	r, R := int32(teleportRing), int32(teleportRing+1)
+	r, R := ring, ring+1
 	g.spots = g.spots[:0]
 	for x := -R; x <= R; x++ {
 		outX := x < -r || x > r
@@ -186,13 +195,13 @@ func (g *FollowOwner) teleportSpot(o Actor) (Vec3, bool) {
 				continue
 			}
 			c := Pos{X: op.X + x, Y: feet, Z: op.Z + z}
-			below := g.world.Block(Pos{X: c.X, Y: c.Y - 1, Z: c.Z})
-			at, head := g.world.Block(c), g.world.Block(Pos{X: c.X, Y: c.Y + 1, Z: c.Z})
+			below := w.Block(Pos{X: c.X, Y: c.Y - 1, Z: c.Z})
+			at, head := w.Block(c), w.Block(Pos{X: c.X, Y: c.Y + 1, Z: c.Z})
 			if !below.Solid || at.Solid || at.Liquid || head.Solid || head.Liquid {
 				continue
 			}
 			spot := Vec3{X: float32(c.X) + 0.5, Y: float32(c.Y), Z: float32(c.Z) + 0.5}
-			if !g.cfg.RandomTeleport {
+			if !random {
 				return spot, true
 			}
 			g.spots = append(g.spots, spot)
@@ -201,18 +210,18 @@ func (g *FollowOwner) teleportSpot(o Actor) (Vec3, bool) {
 	if len(g.spots) == 0 {
 		return Vec3{}, false
 	}
-	rnd := g.world.Random()
+	rnd := w.Random()
 	for i := 1; i < len(g.spots); i++ {
 		if j := int(rnd.NextInt(int32(i + 1))); j != i {
 			g.spots[i], g.spots[j] = g.spots[j], g.spots[i]
 		}
 	}
-	mb := g.mob.Box()
+	mb := m.Box()
 	half := Vec3{X: (mb.Max.X - mb.Min.X) * 0.5, Y: (mb.Max.Y - mb.Min.Y) * 0.5, Z: (mb.Max.Z - mb.Min.Z) * 0.5}
 	for i := 0; i < min(len(g.spots), teleportTries); i++ {
 		s := g.spots[i]
 		b := Box{Min: Vec3{X: s.X - half.X, Y: s.Y - half.Y, Z: s.Z - half.Z}, Max: Vec3{X: s.X + half.X, Y: s.Y + half.Y, Z: s.Z + half.Z}}
-		if g.blocked(b) {
+		if g.blocked(w, b) {
 			continue
 		}
 		jx := rnd.NextFloat()*teleportJitter + teleportJitterOff
@@ -222,8 +231,8 @@ func (g *FollowOwner) teleportSpot(o Actor) (Vec3, bool) {
 	return Vec3{}, false
 }
 
-func (g *FollowOwner) blocked(b Box) bool {
-	g.buf = g.world.Entities(g.buf[:0], NoID, b)
+func (g *spotFinder) blocked(w World, b Box) bool {
+	g.buf = w.Entities(g.buf[:0], NoID, b)
 	defer clear(g.buf)
 	for _, e := range g.buf {
 		if !e.Removed() && e.BlocksSpace() {

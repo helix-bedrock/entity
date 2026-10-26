@@ -227,3 +227,84 @@ func (g *RandomLook) Tick() {
 
 // tableSin is entry i of BDS's 65536-entry sine table.
 func tableSin(i uint16) float32 { return float32(math.Sin(float64(i) * math.Pi * 2 / 65536)) }
+
+// RandomLookSitConfig is the JSON of
+// minecraft:behavior.random_look_around_and_sit.
+type RandomLookSitConfig struct {
+	RandomLookConfig
+	// Looks is min_look_count and max_look_count.
+	Looks Range[int32]
+	// Cooldown is random_look_around_cooldown in seconds.
+	Cooldown              int32
+	ContinueIfLeashed     bool `json:"continue_if_leashed"`
+	ContinueSittingReload bool `json:"continue_sitting_on_reload"`
+}
+
+// DefaultRandomLookSit is the goal's BDS defaults.
+var DefaultRandomLookSit = RandomLookSitConfig{RandomLookConfig: DefaultRandomLook, Looks: Range[int32]{1, 2}}
+
+// RandomLookSit is RandomLookAroundAndSitGoal: the mob sits down and looks
+// around a few times, then waits out a cooldown.
+type RandomLookSit struct {
+	RandomLook
+	sit   RandomLookSitConfig
+	looks int32
+	next  uint64
+}
+
+// NewRandomLookSit makes the goal.
+func NewRandomLookSit(w World, m Mob, c RandomLookSitConfig) *RandomLookSit {
+	return &RandomLookSit{RandomLook: *NewRandomLook(w, m, c.RandomLookConfig), sit: c}
+}
+
+// CanUse implements goal.Goal. A mob that sat down before a reload keeps
+// sitting when continue_sitting_on_reload is set.
+func (g *RandomLookSit) CanUse() bool {
+	m := g.mob
+	if g.cfg.Probability > g.world.IRandom().NextFloat() && !m.InWater() && g.actor(m.Target()) == nil &&
+		!m.Flag(FlagLeashed) && !m.Flag(FlagSitting) && g.world.CurrentTick() > g.next {
+		return true
+	}
+	return g.sit.ContinueSittingReload && m.Flag(FlagSitting)
+}
+
+// CanContinueToUse implements goal.Goal.
+func (g *RandomLookSit) CanContinueToUse() bool {
+	m := g.mob
+	if m.Flag(FlagLeashed) {
+		return g.sit.ContinueIfLeashed && !m.LeashStretched()
+	}
+	return g.looks > 0 && !m.InWater() && g.actor(m.Target()) == nil
+}
+
+// Start implements goal.Goal.
+func (g *RandomLookSit) Start() {
+	g.RandomLook.Start()
+	r := g.world.IRandom()
+	g.looks = randomInt(r, g.sit.Looks.Min, g.sit.Looks.Max)
+	g.mob.SetFlag(FlagSitting, true)
+	if g.sit.ContinueSittingReload {
+		g.mob.SetPersistSit(true)
+	}
+}
+
+// Stop implements goal.Goal.
+func (g *RandomLookSit) Stop() {
+	if g.sit.ContinueSittingReload {
+		g.mob.SetPersistSit(false)
+	}
+	g.mob.SetFlag(FlagSitting, false)
+	g.next = g.world.CurrentTick() + uint64(ticksPerSecond*g.sit.Cooldown)
+}
+
+// Tick implements goal.Goal: each finished look starts the next one.
+func (g *RandomLookSit) Tick() {
+	g.RandomLook.Tick()
+	if g.timer > 0 {
+		return
+	}
+	g.looks--
+	r := g.world.IRandom()
+	g.yaw = (g.cfg.Angle.Max-g.cfg.Angle.Min)*r.NextFloat() + g.cfg.Angle.Min + g.mob.BodyYaw()
+	g.timer = randomInt(r, g.cfg.LookTime.Min, g.cfg.LookTime.Max)
+}

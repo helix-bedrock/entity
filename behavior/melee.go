@@ -8,6 +8,7 @@ const (
 	meleeMinWidth    = 0.5
 	meleeRideWidth   = 1.39 // the widest vehicle that widens the reach
 	meleeRidePad     = 0.1
+	meleeBoxReach    = 0.8 // melee_box_attack's default horizontal_reach
 )
 
 // Attacker is the part of the mob melee_attack needs on top of Targeter.
@@ -38,6 +39,9 @@ type MeleeConfig struct {
 	FailIncrease        int32
 	XMaxRotation        float32 `json:"x_max_rotation"`
 	YMaxHeadRotation    float32 `json:"y_max_head_rotation"`
+	// HorizontalReach is melee_box_attack's reach: how far the mob's box
+	// is widened, on x and z only, to touch the target's box.
+	HorizontalReach float32 `json:"horizontal_reach"`
 	// AttackTypes, when set, limits the goal to targets of these types.
 	AttackTypes []string
 	OnAttack    string
@@ -51,6 +55,14 @@ var DefaultMelee = MeleeConfig{
 	InnerIncrease: 5, OuterIncrease: 10, FailIncrease: 15, XMaxRotation: 30, YMaxHeadRotation: 30,
 }
 
+// DefaultMeleeBox is melee_box_attack's BDS defaults: melee_attack's, with a
+// horizontal reach of 0.8.
+var DefaultMeleeBox = func() MeleeConfig {
+	c := DefaultMelee
+	c.HorizontalReach = meleeBoxReach
+	return c
+}()
+
 // Melee is MeleeAttackGoal: the mob chases its target and hits it in reach.
 type Melee struct {
 	base
@@ -60,11 +72,22 @@ type Melee struct {
 	cooldown int32
 	repath   int32
 	done     bool
+	// box is set for MeleeBoxAttackGoal, which only replaces the tick.
+	box bool
 }
 
 // NewMelee makes the goal.
 func NewMelee(w World, m Attacker, c MeleeConfig) *Melee {
 	return &Melee{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID}
+}
+
+// NewMeleeBox makes MeleeBoxAttackGoal: melee_attack whose reach is the
+// mob's box widened by horizontal_reach touching the target's box, and whose
+// hits need a clear line through blocks.
+func NewMeleeBox(w World, m Attacker, c MeleeConfig) *Melee {
+	g := NewMelee(w, m, c)
+	g.box = true
+	return g
 }
 
 // CanUse implements goal.Goal.
@@ -160,7 +183,11 @@ func (g *Melee) inFOV(t Actor) bool {
 // Tick implements goal.Goal.
 func (g *Melee) Tick() {
 	t := g.actor(g.target)
-	if t == nil {
+	if t == nil || ridesOn(g.world, t, g.m.ID()) {
+		return
+	}
+	if g.box {
+		g.boxTick(t)
 		return
 	}
 	g.cooldown--
@@ -171,11 +198,16 @@ func (g *Melee) Tick() {
 	seen := g.m.CanSee(t)
 	d2 := dist2(g.m.Pos(), t.Pos())
 	if (g.cfg.TrackTarget || seen) && g.repath <= 0 {
-		g.chase(t, d2)
+		g.chase(t, d2, d2 <= g.reach2(t))
 	}
 	if !seen || d2 > g.reach2(t) || !g.inFOV(t) || g.cooldown > 0 {
 		return
 	}
+	g.strike(t)
+}
+
+// strike is the attack step of 2.4 once the target is in reach and seen.
+func (g *Melee) strike(t Actor) {
 	g.cooldown = g.cfg.Cooldown
 	g.m.Swing()
 	hit, killed := g.m.Attack(t)
@@ -194,7 +226,7 @@ func (g *Melee) Tick() {
 }
 
 // chase is the repath step of 2.3.
-func (g *Melee) chase(t Actor, d2 float32) {
+func (g *Melee) chase(t Actor, d2 float32, inReach bool) {
 	n := g.m.Nav()
 	if n == nil {
 		return
@@ -203,7 +235,7 @@ func (g *Melee) chase(t Actor, d2 float32) {
 	if end, ok := n.PathEnd(); ok && end == blockOf(t.Pos()) && r.NextFloat() >= meleeReuseChance {
 		return
 	}
-	if d2 <= g.reach2(t) {
+	if inReach {
 		return
 	}
 	g.repath = randomInt(r, g.cfg.PathTime.Min, g.cfg.PathTime.Max)
@@ -216,4 +248,70 @@ func (g *Melee) chase(t Actor, d2 float32) {
 	if !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
 		g.repath += g.cfg.FailIncrease
 	}
+}
+
+// boxTick is MeleeBoxAttackGoal's tick (0x5271B30): the reach is a box
+// overlap with the cooldown spent, the path distances are flat to the
+// target's lowest vehicle, and a hit needs a block-free line between the
+// eyes.
+func (g *Melee) boxTick(t Actor) {
+	b := g.m.Box()
+	r := g.cfg.HorizontalReach
+	reach := Box{
+		Min: Vec3{X: min(b.Min.X-r, b.Max.X+r), Y: min(b.Min.Y, b.Max.Y), Z: min(b.Min.Z-r, b.Max.Z+r)},
+		Max: Vec3{X: max(b.Min.X-r, b.Max.X+r), Y: max(b.Min.Y, b.Max.Y), Z: max(b.Min.Z-r, b.Max.Z+r)},
+	}
+	ready := true
+	if g.cooldown > 0 {
+		g.cooldown--
+		ready = g.cooldown == 0
+	}
+	tb := t.Box()
+	inReach := ready && overlaps(reach, tb)
+	p, q := g.m.Pos(), rootVehicle(g.world, t).Pos()
+	d2 := (q.X-p.X)*(q.X-p.X) + (q.Z-p.Z)*(q.Z-p.Z)
+	clear := g.world.ClearLine(g.m.Eyes(), t.Eyes())
+	if !g.m.LookBusy() {
+		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
+	}
+	g.repath--
+	if (g.cfg.TrackTarget || g.m.CanSee(t)) && g.repath <= 0 {
+		g.chase(t, d2, inReach)
+	}
+	if inReach && clear && g.inFOV(t) {
+		g.strike(t)
+	}
+}
+
+// overlaps is the strict AABB intersection test.
+func overlaps(a, b Box) bool {
+	return a.Max.X > b.Min.X && b.Max.X > a.Min.X && a.Min.Y < b.Max.Y && b.Min.Y < a.Max.Y && a.Min.Z < b.Max.Z && b.Min.Z < a.Max.Z
+}
+
+// rootVehicle is the lowest entity of a's riding stack, or a itself.
+func rootVehicle(w World, a Actor) Actor {
+	for i := 0; i < maxRideDepth; i++ {
+		v := w.Actor(a.Vehicle())
+		if v == nil {
+			return a
+		}
+		a = v
+	}
+	return a
+}
+
+// ridesOn reports that a rides the entity with the ID, directly or further
+// down its stack.
+func ridesOn(w World, a Actor, id ID) bool {
+	for i := 0; i < maxRideDepth; i++ {
+		v := w.Actor(a.Vehicle())
+		if v == nil {
+			return false
+		}
+		if v.ID() == id {
+			return true
+		}
+		a = v
+	}
+	return false
 }

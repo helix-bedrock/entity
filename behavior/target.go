@@ -65,6 +65,8 @@ type target struct {
 	unseen      int32
 	reachTimer  int32
 	reached     reach
+	// candidate is the entity canUse picked for start to target.
+	candidate ID
 }
 
 // IsTargetGoal implements goal.Goal.

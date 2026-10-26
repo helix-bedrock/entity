@@ -1,8 +1,13 @@
 // Package behavior holds the vanilla goals (the minecraft:behavior.*
-// components) the way BDS 1.26.52 runs them: random_stroll, panic, tempt,
-// follow_owner, follow_parent, look_at_player and look_at_entity,
-// random_look_around, float, breed, avoid_mob_type, hurt_by_target,
-// nearest_attackable_target and melee_attack.
+// components) the way BDS 1.26.52 runs them: random_stroll, random_swim,
+// random_fly, random_breach, random_hover, panic, tempt, follow_owner,
+// follow_parent, teleport_to_owner, look_at_player and look_at_entity,
+// random_look_around and random_look_around_and_sit, float, breed,
+// avoid_mob_type, hurt_by_target, owner_hurt_by_target, owner_hurt_target,
+// nearest_attackable_target, melee_attack, melee_box_attack,
+// leap_at_target, mount_pathing, run_around_like_crazy,
+// stay_while_sitting, flee_sun, restrict_sun, swim_idle, timer_flag_1 to 3
+// and move_towards_home_restriction and move_towards_dwelling_restriction.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -44,7 +49,11 @@ const (
 	FlagAvoidingMobs = 86
 	FlagCannotTarget = 98 // the target is dropped while it has this flag
 	FlagCanFly       = 21
+	FlagResting      = 23
 	FlagCanSwim      = 20
+	FlagTimer1       = 115
+	FlagTimer2       = 116
+	FlagTimer3       = 117
 )
 
 // The game modes the goals compare against.
@@ -53,6 +62,10 @@ const (
 	GameModeDefault   = 5
 	GameModeSpectator = 6
 )
+
+// EffectLevitation is the levitation mob effect's ID; swimming fish stop
+// their idle goals while levitating.
+const EffectLevitation = 24
 
 // NoSound is the "undefined" level sound event; a goal with it plays nothing.
 const NoSound = 614
@@ -122,6 +135,16 @@ type Actor interface {
 	ArmourCoverage() float32
 	// WearsHeadOf reports a player wearing the head of the mob type.
 	WearsHeadOf(mobType string) bool
+	// Target is the entity's target, NoID for none.
+	Target() ID
+	// HijacksMount reports HijackMountNavigationComponent: a rider with it
+	// steers its mount itself.
+	HijacksMount() bool
+	// LastHurtByMob is the mob that last hurt this entity, NoID for none.
+	LastHurtByMob() ID
+	// LastHurtMob is the mob this entity last hurt and the time stamp of
+	// that hit, which changes with every hit.
+	LastHurtMob() (id ID, stamp int32)
 	// BlocksSpace is Actor::canBeCollidedWith for teleport checks (boats,
 	// shulkers).
 	BlocksSpace() bool
@@ -156,6 +179,22 @@ type World interface {
 	Block(p Pos) Block
 	// LiquidMaterial is the material of the liquid layer at p.
 	LiquidMaterial(p Pos) path.Material
+	// ClearLine reports that no block is hit on the straight line from a
+	// to b (BlockSource::clip without liquids).
+	ClearLine(a, b Vec3) bool
+	// IsDay is the sun test sun-avoiding mobs use: the sky darkening is
+	// below 4.
+	IsDay() bool
+	// RainLevel is the dimension's rain level, 0 to 1.
+	RainLevel() float32
+	// AboveTopSolid is BlockSource::getAboveTopSolidBlock: the height just
+	// above the highest solid block of the column.
+	AboveTopSolid(x, z int32) int32
+	// MaxHeight is the dimension's build height limit.
+	MaxHeight() int32
+	// SkyVisible reports that p is at or above the height map, so it is
+	// out in the open.
+	SkyVisible(p Pos) bool
 }
 
 // Block is what the goals know about a block.
@@ -173,6 +212,9 @@ type Block struct {
 	Liquid bool
 	// HasCollision is a non-empty collision shape.
 	HasCollision bool
+	// Tree is random_fly's perch test: block type flag 0x20 or one of the
+	// two block groups BDS keeps for logs (VanillaBlockTypeGroups).
+	Tree bool
 }
 
 // Navigator is the mob's navigation component.
@@ -185,6 +227,8 @@ type Navigator interface {
 	// PathTo makes a path to the entity without following it and returns
 	// its last node.
 	PathTo(a Actor) (end Pos, ok bool)
+	// CanPathTo reports that a path to p can be made.
+	CanPathTo(p Vec3) bool
 	// PathEnd returns the last node of the path being followed.
 	PathEnd() (end Pos, ok bool)
 	// Done reports that there is no path or it is finished.
@@ -213,8 +257,6 @@ type Mob interface {
 	LookBusy() bool
 	// MaxHeadXRot is Mob::getMaxHeadXRot (40 for most mobs).
 	MaxHeadXRot() float32
-	// Target is the mob's target, NoID for none.
-	Target() ID
 	SetTarget(id ID)
 	// LastHurtBy is the entity that last hurt the mob and the tick it did.
 	LastHurtBy() (id ID, tick uint64)
@@ -227,7 +269,11 @@ type Mob interface {
 	Event(name string, other ID)
 	// Teleport moves the mob to p.
 	Teleport(p Vec3)
-	// Home is the mob's home restriction, when it has one.
+	// Dwelling is the village dwelling the mob is bound to and whether the
+	// mob is inside its restriction, when it has one.
+	Dwelling() (centre Pos, inside, ok bool)
+	// Home is the mob's home restriction, when it has one in the mob's
+	// dimension.
 	Home() (centre Pos, radius int32, ok bool)
 	// Leash is the leash holder's box centre and the leash's maximum
 	// distance, when the mob is leashed.
@@ -253,6 +299,34 @@ type Mob interface {
 	// CanSit reports the sittable component (follow_owner sits a pet down
 	// when its owner is in another dimension).
 	CanSit() bool
+	// OnGround is OnGroundFlagComponent.
+	OnGround() bool
+	// OnFire is Actor::isOnFire.
+	OnFire() bool
+	// Velocity and SetVelocity are the mob's motion in blocks per tick.
+	Velocity() Vec3
+	SetVelocity(v Vec3)
+	// HasEffect reports an active mob effect by its ID.
+	HasEffect(id int) bool
+	// SetHijackable adds or removes CanBeHijackedByPassengerComponent: while
+	// it is on, the rider's navigation moves this mount.
+	SetHijackable(on bool)
+	// OverWater is Actor::isInWaterOrOverWater (0xB2D4000): in water, or
+	// the first non-air block below the mob is water.
+	OverWater() bool
+	// NoActionTime is the ticks since the mob last did something
+	// (NoActionTimeComponent).
+	NoActionTime() int32
+	// ResetFlock clears the mob's flocking state, as swim_idle's start
+	// does to FlockingComponent.
+	ResetFlock()
+	// LeashStretched reports a leash pulled past its distance.
+	LeashStretched() bool
+	// SetPersistSit adds or removes PersistSitComponent, which keeps the
+	// mob sitting over a reload.
+	SetPersistSit(on bool)
+	// HelmetEmpty reports that nothing is worn in the head slot.
+	HelmetEmpty() bool
 }
 
 // The control flags of the goals, as BDS sets them in each constructor.
@@ -272,6 +346,14 @@ type base struct {
 
 // ControlFlags implements goal.Goal.
 func (b *base) ControlFlags() goal.Flags { return b.flags }
+
+// SetControlFlags replaces the goal's control flags, as a JSON
+// control_flags list does; 0 keeps the goal's own.
+func (b *base) SetControlFlags(f goal.Flags) {
+	if f != 0 {
+		b.flags = f
+	}
+}
 
 // CanBeInterrupted implements goal.Goal.
 func (b *base) CanBeInterrupted() bool { return true }
@@ -329,6 +411,15 @@ func randomTicks(r Random, s Range[float32]) uint64 {
 	return uint64(int32(((s.Max-s.Min)*r.NextFloat() + s.Min) * ticksPerSecond))
 }
 
+// randomRange is BDS's random integer in [min, max): min plus a random
+// number below max-min, drawn only when max-min is above 1.
+func randomRange(r Random, min, max int32) int32 {
+	if min < max-1 {
+		return min + r.NextInt(max-min)
+	}
+	return min
+}
+
 // randomInt is min plus a random number below max-min, or min when max is
 // not above it.
 func randomInt(r Random, min, max int32) int32 {
@@ -337,3 +428,5 @@ func randomInt(r Random, min, max int32) int32 {
 	}
 	return min
 }
+
+func sqrt32(v float32) float32 { return float32(math.Sqrt(float64(v))) }

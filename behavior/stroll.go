@@ -1,8 +1,5 @@
 package behavior
 
-// strollTries is how many positions random_stroll tries.
-const strollTries = 10
-
 // StrollConfig is the JSON of minecraft:behavior.random_stroll.
 type StrollConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
@@ -21,12 +18,32 @@ type Stroll struct {
 	cfg    StrollConfig
 	wanted Vec3
 	done   bool
+	// finder is the goal's findPosition virtual: the stroll itself, or the
+	// variant built on it.
+	finder positionFinder
+}
+
+// positionFinder is RandomStrollGoal's findPosition virtual (slot 12).
+type positionFinder interface {
+	position() (Vec3, bool)
 }
 
 // NewStroll makes the goal. Distances below 1 are raised to 1, as BDS does.
 func NewStroll(w World, m Mob, c StrollConfig) *Stroll {
+	g := &Stroll{}
+	g.init(w, m, c, g)
+	return g
+}
+
+// init sets up a stroll, or a variant whose findPosition is f.
+func (g *Stroll) init(w World, m Mob, c StrollConfig, f positionFinder) {
 	c.XZDist, c.YDist = max(c.XZDist, 1), max(c.YDist, 1)
-	return &Stroll{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c}
+	*g = Stroll{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, finder: f}
+}
+
+// position is random_stroll's findPosition (0xBDC91E0).
+func (g *Stroll) position() (Vec3, bool) {
+	return landPos(g.world, g.mob, g.cfg.XZDist, g.cfg.YDist)
 }
 
 // CanUse implements goal.Goal.
@@ -37,7 +54,7 @@ func (g *Stroll) CanUse() bool {
 	if g.cfg.Interval != 0 && g.world.IRandom().NextInt(g.cfg.Interval) != 0 {
 		return false
 	}
-	p, ok := landPos(g.world, g.mob, g.cfg.XZDist, g.cfg.YDist, strollTries)
+	p, ok := g.finder.position()
 	if ok {
 		g.wanted = p
 	}
