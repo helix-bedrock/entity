@@ -20,8 +20,10 @@
 // nearest_prioritized_attackable_target, defend_trusted_target,
 // defend_village_target, ocelotattack, fire_at_target,
 // jump_around_target, move_around_target, aquatic_charge_attack,
-// ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack and
-// circle_around_anchor.
+// ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack,
+// circle_around_anchor, the six warden goals (emerge, dig, roar, sniff,
+// investigate_suspicious_location, sonic_boom), croak and
+// rise_to_liquid_level.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -277,6 +279,9 @@ type World interface {
 	SeaLevel() int32
 	// BuiltOver is Block::canBeBuiltOver for the block at p.
 	BuiltOver(p Pos) bool
+	// LiquidDepth is the liquid_depth state of the block at p; ok is false
+	// when the block has no such state.
+	LiquidDepth(p Pos) (depth int32, ok bool)
 }
 
 // Block is what the goals know about a block.

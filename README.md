@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-26: **the AI core runs, and 80 of the 170 vanilla goals are built**, ported from
+Status as of 2026-10-26: **the AI core runs, and 88 of the 170 vanilla goals are built**, ported from
 BDS 1.26.52.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,17 +28,17 @@ BDS 1.26.52.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 80 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 88 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
-  nautilus, cat). The [roadmap](#roadmap) lists them all.
+  nautilus, cat, the warden, frog and strider). The [roadmap](#roadmap) lists them all.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **The other 90 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 82 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
 - **Physics:** water currents, bouncy blocks, players, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
@@ -125,7 +125,9 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Attacks: melee_attack, melee_box_attack, leap_at_target, ranged_attack, delayed_attack, stomp_attack, charge_attack, hold_ground, swell | ✅ written from BDS |
 | Mob attacks: ocelotattack, fire_at_target, jump_around_target, move_around_target, aquatic_charge_attack, ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack, circle_around_anchor | ✅ written from BDS |
 | Squid and slime goals (9) | ✅ written from BDS |
-| The other 90 goals (villagers, raids, the dragon, the warden, items, ...) | ⬜ not started |
+| Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
+| Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
+| The other 82 goals (villagers, raids, the dragon, items, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 
