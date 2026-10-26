@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-26: **the AI core runs, and 88 of the 170 vanilla goals are built**, ported from
+Status as of 2026-10-26: **the AI core runs, and 96 of the 170 vanilla goals are built**, ported from
 BDS 1.26.52.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,17 +28,17 @@ BDS 1.26.52.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 88 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 96 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
-  nautilus, cat, the warden, frog and strider). The [roadmap](#roadmap) lists them all.
+  nautilus, cat, the warden, frog, strider, panda, axolotl and wolf). The [roadmap](#roadmap) lists them all.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **The other 82 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 74 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
 - **Physics:** water currents, bouncy blocks, players, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
@@ -127,7 +127,8 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Squid and slime goals (9) | ✅ written from BDS |
 | Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
 | Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
-| The other 82 goals (villagers, raids, the dragon, items, ...) | ⬜ not started |
+| Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
+| The other 74 goals (villagers, raids, the dragon, items, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 

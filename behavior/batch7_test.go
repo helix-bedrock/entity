@@ -8,7 +8,10 @@ type b7World struct {
 	depth map[Pos]int32
 }
 
-func (w *b7World) LiquidDepth(p Pos) (int32, bool) {
+func (w *b7World) BlockState(p Pos, s string) (int32, bool) {
+	if s != stateLiquidDepth {
+		return 0, false
+	}
 	d, ok := w.depth[p]
 	return d, ok
 }

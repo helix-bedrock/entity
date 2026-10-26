@@ -315,8 +315,12 @@ func (g *MoveToLand) moveToBlock() {
 	}
 }
 
-// find is BaseMoveToBlockGoal's findTargetBlock (0x48C8B20).
-func (g *MoveToLand) find() bool {
+// find is the goal's findTargetBlock: BaseMoveToBlockGoal's search.
+func (g *MoveToLand) find() bool { return g.findBlock() }
+
+// findBlock is BaseMoveToBlockGoal's findTargetBlock (0x48C8B20), which
+// tests each spot with the goal's isValidTarget and path check.
+func (g *moveTo) findBlock() bool {
 	m := g.mob
 	mp := blockOf(m.Pos())
 	if g.cfg.SearchCount > 0 {
@@ -336,11 +340,11 @@ func (g *MoveToLand) find() bool {
 				}
 				for ; z <= i; z = ringNext(z) {
 					c := Pos{X: mp.X + x, Y: mp.Y - 1 + k, Z: mp.Z + z}
-					if !g.valid(c) {
+					if !g.hooks.valid(c) {
 						continue
 					}
 					d := float32(blockDist2(mp, c))
-					if moveToFar > d && g.reachable(c) {
+					if moveToFar > d && g.hooks.reachable(c) {
 						g.target, found = c, true
 						if d <= g.radius2 {
 							return true
@@ -355,7 +359,7 @@ func (g *MoveToLand) find() bool {
 
 // findRandom is the search_count branch: random land spots; the last one
 // that passes wins.
-func (g *MoveToLand) findRandom(mp Pos) bool {
+func (g *moveTo) findRandom(mp Pos) bool {
 	found := false
 	for i := int32(0); i < g.cfg.SearchCount; i++ {
 		p, ok := randomPos(g.world, g.mob, posSearch{h: g.cfg.SearchRange, v: g.cfg.SearchHeight, tries: 1, collision: true})
@@ -363,7 +367,7 @@ func (g *MoveToLand) findRandom(mp Pos) bool {
 			continue
 		}
 		c := blockOf(Vec3{X: p.X, Y: p.Y - 1, Z: p.Z})
-		if g.valid(c) && moveToFar > float32(blockDist2(mp, c)) && g.reachable(c) {
+		if g.hooks.valid(c) && moveToFar > float32(blockDist2(mp, c)) && g.hooks.reachable(c) {
 			g.target, found = c, true
 		}
 	}

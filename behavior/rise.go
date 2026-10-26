@@ -12,6 +12,9 @@ const (
 	riseFullDepth = 8
 )
 
+// stateLiquidDepth is the liquid_depth block state.
+const stateLiquidDepth = "liquid_depth"
+
 // RiseToLiquidLevelConfig is the JSON of
 // minecraft:behavior.rise_to_liquid_level.
 type RiseToLiquidLevelConfig struct {
@@ -70,7 +73,7 @@ func (g *RiseToLiquidLevel) Tick() {
 		top = y
 	}
 	h := float32(1)
-	if d, ok := g.world.LiquidDepth(Pos{X: x, Y: floorInt(top), Z: z}); ok && d < riseFullDepth {
+	if d, ok := g.world.BlockState(Pos{X: x, Y: floorInt(top), Z: z}, stateLiquidDepth); ok && d < riseFullDepth {
 		h = float32(d + 1)
 	}
 	want := top + (h/-riseDepthSteps + 1) - riseSurface - g.cfg.LiquidYOffset

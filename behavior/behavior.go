@@ -22,8 +22,9 @@
 // jump_around_target, move_around_target, aquatic_charge_attack,
 // ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack,
 // circle_around_anchor, the six warden goals (emerge, dig, roar, sniff,
-// investigate_suspicious_location, sonic_boom), croak and
-// rise_to_liquid_level.
+// investigate_suspicious_location, sonic_boom), croak,
+// rise_to_liquid_level, lay_down, scared, sneeze, nap, find_cover,
+// play_dead, beg and ocelot_sit_on_block.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -279,9 +280,15 @@ type World interface {
 	SeaLevel() int32
 	// BuiltOver is Block::canBeBuiltOver for the block at p.
 	BuiltOver(p Pos) bool
-	// LiquidDepth is the liquid_depth state of the block at p; ok is false
-	// when the block has no such state.
-	LiquidDepth(p Pos) (depth int32, ok bool)
+	// BlockState is the named state of the block at p (liquid_depth,
+	// head_piece_bit and the like); ok is false when the block has no such
+	// state.
+	BlockState(p Pos, state string) (v int32, ok bool)
+	// ChestOpen reports a chest block entity at p that someone has open.
+	ChestOpen(p Pos) bool
+	// ThunderLevel is the dimension's rain level times its lightning
+	// level, 0 in a dimension without weather (Dimension +224 off).
+	ThunderLevel() float32
 }
 
 // Block is what the goals know about a block.
@@ -314,6 +321,9 @@ type Block struct {
 	// +266 bit 0x40) that keeps jump_around_target from landing in the
 	// block.
 	NoJumpLanding bool
+	// ShapeTop is the top of the block's collision shape inside the block
+	// (BlockType::getCollisionShape max y), 0 for none.
+	ShapeTop float32
 }
 
 // Navigator is the mob's navigation component.
