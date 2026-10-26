@@ -15,7 +15,7 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet. `behavior` has 60 of the 170 goals vanilla entities use:
+`physics` yet. `behavior` has 70 of the 170 goals vanilla entities use:
 random_stroll, random_swim, random_fly, random_breach, random_hover, panic,
 tempt, follow_owner, follow_parent, teleport_to_owner, look_at_player and
 look_at_entity, random_look_around and random_look_around_and_sit, float,
@@ -30,8 +30,12 @@ stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player
 (which never starts in BDS 1.26.52), move_towards_target,
 move_to_random_block, follow_mob, avoid_block, move_to_block, the five
 squid goals (squid_idle, squid_dive, squid_flee, squid_out_of_water,
-squid_move_away_from_ground) and the four slime goals (slime_attack,
-slime_float, slime_keep_on_jumping, slime_random_direction). Block
+squid_move_away_from_ground), the four slime goals (slime_attack,
+slime_float, slime_keep_on_jumping, slime_random_direction), ranged_attack
+(bursts, back-off, crossbow charging), swell, delayed_attack, stomp_attack,
+charge_attack, hold_ground, target_when_pushed,
+nearest_prioritized_attackable_target, defend_trusted_target and
+defend_village_target. Block
 lists match by block name only, not by states or tags. The other vanilla goals are not built yet. These parts
 are not done yet:
 the panic start component, the float rider component, hurt_by_target's

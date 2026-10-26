@@ -30,6 +30,9 @@ type EntityType struct {
 	MustSeeForget int32
 	// Cooldown is the ticks before the same entry may pick again.
 	Cooldown int32
+	// Priority ranks the entries for nearest_prioritized_attackable_target;
+	// the lowest wins.
+	Priority int32 `json:"priority"`
 }
 
 // visibility is the goal's target_sneak_visibility_multiplier and
@@ -70,8 +73,9 @@ type target struct {
 // IsTargetGoal implements goal.Goal.
 func (t *target) IsTargetGoal() bool { return true }
 
-// canAttack is TargetGoal::_canAttack (0xBDD87A0) without the entry match.
-func (t *target) canAttack(a Actor, allowInvulnerable bool) bool {
+// canAttack is TargetGoal::_canAttack (0xBDD87A0) without the entry match,
+// as every goal calls it: invulnerable players are not targets.
+func (t *target) canAttack(a Actor) bool {
 	m := t.m
 	if a == nil || a.ID() == m.ID() || a.Removed() || m.Removed() || !a.Targetable() || !a.Alive() {
 		return false
@@ -85,7 +89,7 @@ func (t *target) canAttack(a Actor, allowInvulnerable bool) bool {
 	if !t.attackOwner && m.Team() != 0 {
 		return a.Team() != m.Team()
 	}
-	if !allowInvulnerable && a.IsPlayer() && (a.Invulnerable() || !m.PlayersTargetable()) {
+	if a.IsPlayer() && (a.Invulnerable() || !m.PlayersTargetable()) {
 		return false
 	}
 	return true
@@ -215,6 +219,9 @@ type NearestAttackable struct {
 	cooldown []uint64
 	cand     []Actor
 	sorted   []near
+	// prioritized makes the search pick by entry priority
+	// (NearestPrioritizedAttackableTargetGoal).
+	prioritized bool
 }
 
 // NewNearestAttackable makes the goal.
@@ -280,9 +287,11 @@ func (g *NearestAttackable) search() (Actor, int) {
 	sortNear(g.sorted)
 	defer clear(g.sorted)
 	now := g.world.CurrentTick()
+	var best Actor
+	pick := -1
 	for _, c := range g.sorted {
 		a := c.a
-		if !g.canAttack(a, false) {
+		if !g.canAttack(a) {
 			continue
 		}
 		i := g.match(a)
@@ -298,13 +307,19 @@ func (g *NearestAttackable) search() (Actor, int) {
 		if !inRange(g.m, a, &g.cfg.EntityTypes[i], g.vis(), g.cfg.TargetSearchHeight) {
 			continue
 		}
-		return a, i
+		if !g.prioritized {
+			return a, i
+		}
+		if pick < 0 || g.cfg.EntityTypes[i].Priority < g.cfg.EntityTypes[pick].Priority {
+			best, pick = a, i
+		}
 	}
-	return nil, -1
+	return best, pick
 }
 
 func (g *NearestAttackable) pick(a Actor, i int) {
-	if g.cfg.SetPersistent {
+	// The prioritized search only makes the mob persistent for players.
+	if g.cfg.SetPersistent && (!g.prioritized || a.IsPlayer()) {
 		g.m.SetPersistent()
 	}
 	g.m.SetTarget(a.ID())
@@ -312,16 +327,19 @@ func (g *NearestAttackable) pick(a Actor, i int) {
 	g.cooldown[i] = g.world.CurrentTick() + uint64(max(g.cfg.EntityTypes[i].Cooldown, 0))
 }
 
+// due is the scan timing of canUse: one chance in attack_interval, or every
+// scan_interval ticks.
+func (g *NearestAttackable) due() bool {
+	if g.cfg.RandomInterval > 0 {
+		return g.world.Random().NextInt(g.cfg.RandomInterval) == 0
+	}
+	s := uint64(max(g.cfg.ScanInterval, 1))
+	return (g.m.RuntimeID()+g.world.CurrentTick())%s == 0
+}
+
 // CanUse implements goal.Goal.
 func (g *NearestAttackable) CanUse() bool {
-	if g.m.Admiring() || len(g.cfg.EntityTypes) == 0 {
-		return false
-	}
-	if g.cfg.RandomInterval > 0 {
-		if g.world.Random().NextInt(g.cfg.RandomInterval) != 0 {
-			return false
-		}
-	} else if s := uint64(max(g.cfg.ScanInterval, 1)); (g.m.RuntimeID()+g.world.CurrentTick())%s != 0 {
+	if g.m.Admiring() || len(g.cfg.EntityTypes) == 0 || !g.due() {
 		return false
 	}
 	if g.cfg.Probability < 1 && g.world.Random().NextFloat() >= g.cfg.Probability {
@@ -412,7 +430,7 @@ func (g *HurtBy) matches(a Actor) bool {
 // CanUse implements goal.Goal.
 func (g *HurtBy) CanUse() bool {
 	a := g.attacker()
-	if a == nil || !g.canAttack(a, false) || !g.matches(a) {
+	if a == nil || !g.canAttack(a) || !g.matches(a) {
 		return false
 	}
 	return !g.mustReach || g.canReach(a)

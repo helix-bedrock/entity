@@ -13,9 +13,12 @@
 // stomp_turtle_egg, random_sitting, look_at_target, look_at_trading_player,
 // move_towards_target, move_to_random_block, follow_mob, avoid_block,
 // move_to_block, the five squid goals (squid_idle, squid_dive, squid_flee,
-// squid_out_of_water, squid_move_away_from_ground) and the four slime goals
+// squid_out_of_water, squid_move_away_from_ground), the four slime goals
 // (slime_attack, slime_float, slime_keep_on_jumping,
-// slime_random_direction).
+// slime_random_direction), ranged_attack, swell, delayed_attack,
+// stomp_attack, charge_attack, hold_ground, target_when_pushed,
+// nearest_prioritized_attackable_target, defend_trusted_target and
+// defend_village_target.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -66,6 +69,14 @@ const (
 	FlagTimer1            = 115
 	FlagTimer2            = 116
 	FlagTimer3            = 117
+	FlagIgnited           = 10
+	FlagCharged           = 27 // the crossbow charge pose
+	FlagStanding          = 39 // a polar bear standing up to stomp
+	FlagCharging          = 43
+	FlagDelayedAttacking  = 85
+	// FlagRangedAttacking is raised while ranged_attack runs (BDS's facing
+	// target to range attack flag).
+	FlagRangedAttacking = 88
 )
 
 // The game modes the goals compare against.
@@ -160,6 +171,8 @@ type Actor interface {
 	// BlocksSpace is Actor::canBeCollidedWith for teleport checks (boats,
 	// shulkers).
 	BlocksSpace() bool
+	// AttachPos is Actor::getAttachPos for a BDS actor location number.
+	AttachPos(loc int) Vec3
 }
 
 // World answers the goals' questions about the level. It is called from
@@ -411,6 +424,10 @@ type Mob interface {
 	// MoveWanted reports that the move control has a wanted position; ok
 	// is false when the mob has no move control.
 	MoveWanted() (wanted, ok bool)
+	// SetMoveWanted gives the move control a wanted position and speed;
+	// ClearMoveWanted drops it. Both do nothing without a move control.
+	SetMoveWanted(p Vec3, speed float32)
+	ClearMoveWanted()
 }
 
 // The control flags of the goals, as BDS sets them in each constructor.

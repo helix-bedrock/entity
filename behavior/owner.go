@@ -34,7 +34,7 @@ func (t *target) owner() Actor {
 
 // valid is TargetGoal::isValidTarget plus the must_reach cache (0xBDD60E0).
 func (t *target) valid(a Actor) bool {
-	return a != nil && t.canAttack(a, false) && (!t.mustReach || t.canReach(a))
+	return a != nil && t.canAttack(a) && (!t.mustReach || t.canReach(a))
 }
 
 // CanUse implements goal.Goal.

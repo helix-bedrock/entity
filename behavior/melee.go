@@ -72,6 +72,9 @@ type Melee struct {
 	cooldown int32
 	repath   int32
 	done     bool
+	// last is where the chase step last saw the target (MeleeAttackBaseGoal
+	// +136); delayed_attack and stomp_attack measure their reach from it.
+	last Vec3
 	// box is set for MeleeBoxAttackGoal, which only replaces the tick.
 	box bool
 }
@@ -174,10 +177,14 @@ func (g *Melee) reach2(t Actor) float32 {
 }
 
 // inFOV is the melee_fov test.
-func (g *Melee) inFOV(t Actor) bool {
-	p, q := g.m.Pos(), t.Pos()
-	yaw := float32(math.Atan2(float64(q.Z-p.Z), float64(q.X-p.X)))*degPerRad - 90 - g.m.BodyYaw()
-	return wrap180(yaw+180) <= g.cfg.MeleeFOV*0.5
+func (g *Melee) inFOV(t Actor) bool { return inFOV(g.m, t.Pos(), g.cfg.MeleeFOV) }
+
+// inFOV is the field of view test (0x7267140): q lies within fov degrees
+// of the mob's body yaw.
+func inFOV(m Mob, q Vec3, fov float32) bool {
+	p := m.Pos()
+	yaw := float32(math.Atan2(float64(q.Z-p.Z), float64(q.X-p.X)))*degPerRad - 90 - m.BodyYaw()
+	return wrap180(yaw+180) <= fov*0.5
 }
 
 // Tick implements goal.Goal.
@@ -222,6 +229,23 @@ func (g *Melee) strike(t Actor) {
 	}
 	if g.cfg.AttackOnce {
 		g.done = true
+	}
+}
+
+// step is the chase step the melee goals share (0x526F3A0): look at the
+// target, count the repath timer down, and while the target is tracked or
+// seen remember where it is and repath when the timer runs out.
+func (g *Melee) step(t Actor, inReach bool, d2 float32) {
+	if !g.m.LookBusy() {
+		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
+	}
+	g.repath--
+	if !g.cfg.TrackTarget && !g.m.CanSee(t) {
+		return
+	}
+	g.last = t.Pos()
+	if g.repath <= 0 {
+		g.chase(t, d2, inReach)
 	}
 }
 
