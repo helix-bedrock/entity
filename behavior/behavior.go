@@ -17,8 +17,11 @@
 // (slime_attack, slime_float, slime_keep_on_jumping,
 // slime_random_direction), ranged_attack, swell, delayed_attack,
 // stomp_attack, charge_attack, hold_ground, target_when_pushed,
-// nearest_prioritized_attackable_target, defend_trusted_target and
-// defend_village_target.
+// nearest_prioritized_attackable_target, defend_trusted_target,
+// defend_village_target, ocelotattack, fire_at_target,
+// jump_around_target, move_around_target, aquatic_charge_attack,
+// ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack and
+// circle_around_anchor.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
@@ -75,8 +78,20 @@ const (
 	FlagCharging          = 43
 	FlagDelayedAttacking  = 85
 	// FlagRangedAttacking is raised while ranged_attack runs (BDS's facing
-	// target to range attack flag).
+	// target to range attack flag). fire_at_target raises it too.
 	FlagRangedAttacking = 88
+	FlagSprinting       = 3
+	FlagAngry           = 25
+	FlagInterested      = 26
+	// FlagBlockedUsingShield cuts ram_attack's knockback to 0.4.
+	FlagBlockedUsingShield = 74
+	FlagStunned            = 83 // a fox stuck after a pounce
+	FlagRoaring            = 84
+	FlagStalking           = 91
+	FlagRamAttack          = 97
+	FlagJumpGoal           = 103
+	// FlagHasDashTimeout is raised while aquatic_charge_attack cools down.
+	FlagHasDashTimeout = 108
 )
 
 // The game modes the goals compare against.
@@ -106,6 +121,11 @@ type Random interface {
 	NextInt(n int32) int32
 	// NextFloat returns a number in [0, 1).
 	NextFloat() float32
+	// NextBool is Random::nextBoolean.
+	NextBool() bool
+	// NextGaussian is Random::nextGaussian, which keeps the second number
+	// of each pair for the next call.
+	NextGaussian() float32
 }
 
 // Actor is another entity a goal looks at. A value is only valid for the
@@ -253,6 +273,10 @@ type World interface {
 	// Particle spawns the named particle effect at p
 	// (Level::spawnParticleEffect).
 	Particle(name string, p Vec3)
+	// SeaLevel is the dimension's sea level (Dimension +172).
+	SeaLevel() int32
+	// BuiltOver is Block::canBeBuiltOver for the block at p.
+	BuiltOver(p Pos) bool
 }
 
 // Block is what the goals know about a block.
@@ -275,6 +299,16 @@ type Block struct {
 	// Tree is random_fly's perch test: block type flag 0x20 or one of the
 	// two block groups BDS keeps for logs (VanillaBlockTypeGroups).
 	Tree bool
+	// BlockSolid is Block::isSolid, the block's own solid bit (Block +113),
+	// which is not Material::isSolid.
+	BlockSolid bool
+	// NoJumpStart is the unnamed block type flag 0x40000000 (BlockType
+	// +264) that keeps jump_around_target from starting on the block.
+	NoJumpStart bool
+	// NoJumpLanding is the unnamed block type flag 0x400000 (BlockType
+	// +266 bit 0x40) that keeps jump_around_target from landing in the
+	// block.
+	NoJumpLanding bool
 }
 
 // Navigator is the mob's navigation component.
@@ -542,6 +576,16 @@ func add(a, b Vec3) Vec3 { return Vec3{X: a.X + b.X, Y: a.Y + b.Y, Z: a.Z + b.Z}
 func scale(v Vec3, s float32) Vec3 { return Vec3{X: v.X * s, Y: v.Y * s, Z: v.Z * s} }
 
 func length(v Vec3) float32 { return sqrt32(v.Z*v.Z + (v.X*v.X + v.Y*v.Y)) }
+
+// approachDegrees turns from towards to by at most limit degrees, by the
+// shorter way (0xED49160).
+func approachDegrees(from, to, limit float32) float32 {
+	d := float32(math.Mod(float64(to-from+180), 360))
+	if d < 0 {
+		d += 360
+	}
+	return min(limit, max32(-limit, d-180)) + from
+}
 
 // normalize is Vec3::normalized: zero below minLength.
 func normalize(v Vec3) Vec3 {

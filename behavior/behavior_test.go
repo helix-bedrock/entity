@@ -8,6 +8,8 @@ import (
 type seqRandom struct {
 	ints   []int32
 	floats []float32
+	bools  []bool
+	gauss  []float32
 }
 
 func (r *seqRandom) NextInt(n int32) int32 {
@@ -25,6 +27,22 @@ func (r *seqRandom) NextFloat() float32 {
 	v := float32(0)
 	if len(r.floats) != 0 {
 		v, r.floats = r.floats[0], r.floats[1:]
+	}
+	return v
+}
+
+func (r *seqRandom) NextBool() bool {
+	v := false
+	if len(r.bools) != 0 {
+		v, r.bools = r.bools[0], r.bools[1:]
+	}
+	return v
+}
+
+func (r *seqRandom) NextGaussian() float32 {
+	v := float32(0)
+	if len(r.gauss) != 0 {
+		v, r.gauss = r.gauss[0], r.gauss[1:]
 	}
 	return v
 }

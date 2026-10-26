@@ -15,7 +15,7 @@ moves mobs like the BDS movement pipeline (travel types and speeds, swept
 box collision with depenetration and auto-step, gravity, drag, friction,
 climbing, jumping, and the swim and float navigation's travel). Water
 currents, bouncy blocks, players, vehicles and gliding are not in
-`physics` yet. `behavior` has 70 of the 170 goals vanilla entities use:
+`physics` yet. `behavior` has 80 of the 170 goals vanilla entities use:
 random_stroll, random_swim, random_fly, random_breach, random_hover, panic,
 tempt, follow_owner, follow_parent, teleport_to_owner, look_at_player and
 look_at_entity, random_look_around and random_look_around_and_sit, float,
@@ -34,8 +34,12 @@ squid_move_away_from_ground), the four slime goals (slime_attack,
 slime_float, slime_keep_on_jumping, slime_random_direction), ranged_attack
 (bursts, back-off, crossbow charging), swell, delayed_attack, stomp_attack,
 charge_attack, hold_ground, target_when_pushed,
-nearest_prioritized_attackable_target, defend_trusted_target and
-defend_village_target. Block
+nearest_prioritized_attackable_target, defend_trusted_target,
+defend_village_target, ocelotattack, fire_at_target, jump_around_target
+(the breeze's ballistic jump), move_around_target, aquatic_charge_attack
+(with its swim-about between charges), ram_attack (run-up, wind-up and
+knockback; the goat horn drop is the host's), stalk_and_pounce_on_target,
+knockback_roar, swoop_attack and circle_around_anchor. Block
 lists match by block name only, not by states or tags. The other vanilla goals are not built yet. These parts
 are not done yet:
 the panic start component, the float rider component, hurt_by_target's
