@@ -151,7 +151,7 @@ func (g *MoveToRandomBlock) Tick() {
 	d2 := d.Z*d.Z + (d.X*d.X + d.Y*d.Y)
 	dir := facing(d, d2)
 	if g.stuck >= randomBlockTurn {
-		dir = g.turn(dir)
+		dir = turnAside(g.world, dir)
 	}
 	follow := m.FollowRange()
 	var aim Vec3
@@ -174,13 +174,13 @@ func (g *MoveToRandomBlock) Tick() {
 	}
 }
 
-// turn is how a stuck mob changes direction: up and down flip, a side
-// turns one of two ways by a coin flip.
-func (g *MoveToRandomBlock) turn(dir uint8) uint8 {
+// turnAside is how a stuck mob changes direction: up and down flip, a
+// side turns one of two ways by a coin flip from IRandom.
+func turnAside(w World, dir uint8) uint8 {
 	if dir <= dirUp {
 		return dir ^ 1
 	}
-	if g.world.IRandom().NextInt(2) == 1 {
+	if w.IRandom().NextInt(2) == 1 {
 		return randomBlockTurnA[dir]
 	}
 	return randomBlockTurnB[dir]

@@ -97,8 +97,7 @@ func TestFacingAndTurns(t *testing.T) {
 		}
 	}
 	w := newB3World(&seqRandom{ints: []int32{1, 0}})
-	g := NewMoveToRandomBlock(w, newB3Mob(w, 1, Vec3{}, "x"), DefaultMoveToRandomBlock())
-	if g.turn(dirDown) != dirUp || g.turn(dirNorth) != dirEast || g.turn(dirNorth) != dirWest {
+	if turnAside(w, dirDown) != dirUp || turnAside(w, dirNorth) != dirEast || turnAside(w, dirNorth) != dirWest {
 		t.Fatal("stuck turns differ from BDS's tables")
 	}
 }
