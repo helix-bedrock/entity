@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-26: **the AI core runs, and 96 of the 170 vanilla goals are built**, ported from
+Status as of 2026-10-26: **the AI core runs, and 106 of the 170 vanilla goals are built**, ported from
 BDS 1.26.52.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -128,7 +128,8 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
 | Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
 | Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
-| The other 74 goals (villagers, raids, the dragon, items, ...) | ⬜ not started |
+| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS; the item and component rules they call (shareables, inventory, admire, barter, food) are hooks on the mob |
+| The other 64 goals (villagers, raids, the dragon, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 

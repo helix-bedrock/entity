@@ -24,7 +24,9 @@
 // circle_around_anchor, the six warden goals (emerge, dig, roar, sniff,
 // investigate_suspicious_location, sonic_boom), croak,
 // rise_to_liquid_level, lay_down, scared, sneeze, nap, find_cover,
-// play_dead, beg and ocelot_sit_on_block.
+// play_dead, beg, ocelot_sit_on_block, and the item goals (drink_milk,
+// drink_potion, eat_carried_item, charge_held_item, snacking, equip_item,
+// admire_item, barter, pickup_items, share_items).
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was
