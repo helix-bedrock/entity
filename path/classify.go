@@ -400,6 +400,13 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 	return NodeBlocked
 }
 
+// NodeType is isFree for a box of size at p seen from from, with jumping
+// and climbing on, the way goals ask it outside a path search (0xC899DB0).
+func (f *Finder) NodeType(w World, s *Settings, flags Flags, from, p, size Pos) NodeType {
+	f.reset(w, s, flags)
+	return f.isFree(from, p, size, true, true)
+}
+
 // isFree is PathFinder::isFree: the worst node type over the mob's box at p,
 // with blocks that are only partly passable turning the answer into
 // NodeWalkable.

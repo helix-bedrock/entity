@@ -26,7 +26,9 @@
 // rise_to_liquid_level, lay_down, scared, sneeze, nap, find_cover,
 // play_dead, beg, ocelot_sit_on_block, and the item goals (drink_milk,
 // drink_potion, eat_carried_item, charge_held_item, snacking, equip_item,
-// admire_item, barter, pickup_items, share_items).
+// admire_item, barter, pickup_items, share_items), roll, lay_egg,
+// jump_to_block, silverfish_merge_with_stone and
+// silverfish_wake_up_friends.
 //
 // Items holds the item components those goals read (minecraft:shareables,
 // minecraft:admire_item, minecraft:barter and minecraft:equip_item) with
@@ -297,6 +299,24 @@ type World interface {
 	// ThunderLevel is the dimension's rain level times its lightning
 	// level, 0 in a dimension without weather (Dimension +224 off).
 	ThunderLevel() float32
+	// SetBlock is BlockSource::setBlock with update flags 3, followed by
+	// the block change game event sent by the actor.
+	SetBlock(p Pos, b PlacedBlock, by ID)
+	// GriefAllowed fires the cancellable gameplay event for an actor
+	// changing the block at p and reports that no handler cancelled it.
+	GriefAllowed(p Pos, by ID) bool
+	// BaseGameAtLeast reports a world base game version at or above
+	// major.minor.patch.
+	BaseGameAtLeast(major, minor, patch int) bool
+}
+
+// PlacedBlock is a block a goal places: a block name and at most one of its
+// states set to a value.
+type PlacedBlock struct {
+	Name string
+	// State is the state to set, "" for the block's default state.
+	State string
+	Value int32
 }
 
 // Block is what the goals know about a block.
@@ -332,6 +352,21 @@ type Block struct {
 	// ShapeTop is the top of the block's collision shape inside the block
 	// (BlockType::getCollisionShape max y), 0 for none.
 	ShapeTop float32
+	// ShapeHeight is the height of the block's AABB (BlockType vt+64, max y
+	// less min y), 0 for none.
+	ShapeHeight float32
+	// Stairs, Slab and Trapdoor are the block type property bits 0, 1 and
+	// 13 (BlockType +264).
+	Stairs, Slab, Trapdoor bool
+	// Fence reports a block type of BDS's wooden and nether brick fence
+	// group.
+	Fence bool
+	// Infested is the infested block a silverfish turns this block into
+	// (BlockType vt+896), "" for blocks it cannot hide in.
+	Infested string
+	// Host is the block an infested block hides (BlockType vt+904), "" for
+	// other blocks.
+	Host string
 }
 
 // Navigator is the mob's navigation component.

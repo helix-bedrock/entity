@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-26: **the AI core runs, and 106 of the 170 vanilla goals are built**, ported from
+Status as of 2026-10-26: **the AI core runs, and 111 of the 170 vanilla goals are built**, ported from
 BDS 1.26.52.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,17 +28,18 @@ BDS 1.26.52.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 106 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 111 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
-  nautilus, cat, the warden, frog, strider, panda, axolotl and wolf). The [roadmap](#roadmap) lists them all.
+  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle and silverfish). The
+  [roadmap](#roadmap) lists them all.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **The other 64 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 59 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
 - **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
@@ -142,7 +143,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
 | Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
 | Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, admire_item, barter and equip_item rules (`Items`); the inventory (`Container`), item data (stack sizes, damage, armor slots, recipes) and food use come from the engine |
-| The other 64 goals (villagers, raids, the dragon, ...) | ⬜ not started |
+| Roll, lay_egg, jump_to_block, silverfish_merge_with_stone, silverfish_wake_up_friends | ✅ written from BDS |
+| The other 59 goals (villagers, raids, the dragon, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 

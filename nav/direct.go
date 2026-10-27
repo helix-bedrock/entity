@@ -92,6 +92,13 @@ func ray(a, b path.Vec3, ok func(path.Pos) bool) bool {
 	}
 }
 
+// WalkDirectly is the walker's straight line test (0x721AFF0) for goals
+// outside path following, such as roll: the box of size sx, sy, sz can walk
+// from from to to. loose uses the softer block checks.
+func WalkDirectly(w World, m *Mob, from, to path.Vec3, sx, sy, sz int32, loose bool) bool {
+	return walkDirectly(w, m, from, to, sx, sy, sz, loose)
+}
+
 // walkDirectly steps over the columns between from and to on the ground,
 // checking at each that the mob's box is free and has a floor. loose is the
 // climbing navigation's box test (see boxFree).
