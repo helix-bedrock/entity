@@ -38,9 +38,9 @@ BDS 1.26.52.
 
 What is left:
 
-- **The other 74 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 64 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
-- **Physics:** water currents, bouncy blocks, players, vehicles and gliding.
+- **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
   first value. BDS's two random streams are one `Rand` here, and the Guardian sky check uses sky
   light.
@@ -99,6 +99,19 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`physics`](physics) | Mob movement and collision |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
+### What belongs where
+
+entity is mob AI: what a mob decides to do and how it moves there. The things players, mobs and
+blocks share belong to the engine, and entity reaches them only through interfaces:
+
+- **Items and inventories** are the engine's: item stacks, stacking, damage, recipes
+  (`behavior.ItemRules`) and containers (`behavior.Container`). entity keeps only the mob's own
+  item decisions from its JSON components: which items it wants, shares, admires, barters for or
+  equips.
+- **Physics** is shared with players, but stays here until the engine API is designed. `physics`
+  depends on no AI package (only the shared types in `path`), so it can move into the engine
+  whole. Player movement itself is the engine's.
+
 ## Features
 
 - **Same mobs as vanilla:** goals, paths, movement and spawning follow BDS's own code.
@@ -114,7 +127,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Goal selector | ✅ done |
 | Pathfinding (walk, swim) | ✅ done |
 | Navigation (all seven types) | ✅ done |
-| Move controls, physics | 🟡 done except water currents, bouncy blocks, players, vehicles, gliding |
+| Move controls, physics | 🟡 done except water currents, bouncy blocks, vehicles, gliding |
 | Wandering: random_stroll, random_swim, random_fly, random_breach, random_hover, float_wander, swim_idle, swim_wander, random_look_around (and _and_sit), random_sitting | ✅ written from BDS |
 | Following: follow_owner, follow_parent, follow_mob, teleport_to_owner, tempt, mount_pathing | ✅ written from BDS |
 | Looking: look_at_player, look_at_entity, look_at_target, look_at_trading_player | ✅ written from BDS |
@@ -128,7 +141,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
 | Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
 | Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
-| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, inventory, admire_item, barter and equip_item components (`Items`); item data (stack sizes, damage, armor slots, recipes) and food use are hooks |
+| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, admire_item, barter and equip_item rules (`Items`); the inventory (`Container`), item data (stack sizes, damage, armor slots, recipes) and food use come from the engine |
 | The other 64 goals (villagers, raids, the dragon, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |

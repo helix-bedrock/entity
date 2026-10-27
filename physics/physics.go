@@ -5,12 +5,12 @@
 //
 // Players, vehicles, boats and gliding are not covered. The host fills a
 // Body before each tick and reads it back after.
+//
+// Players and mobs share this code in BDS, so physics depends on no AI
+// package, only on path's shared types, and can move into the engine whole.
 package physics
 
-import (
-	"github.com/helix-bedrock/entity/move"
-	"github.com/helix-bedrock/entity/path"
-)
+import "github.com/helix-bedrock/entity/path"
 
 // Vec3 is the pathfinder's position type.
 type Vec3 = path.Vec3
@@ -159,7 +159,7 @@ type Body struct {
 	// YOffset is the height of Pos above the box bottom.
 	YOffset float32
 	Yaw     float32
-	Flags   move.Flags
+	Flags   path.ActorFlags
 
 	// Input is the move input the move control set (strafe, up, forward).
 	Input Vec3

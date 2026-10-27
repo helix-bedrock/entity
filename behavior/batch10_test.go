@@ -53,11 +53,85 @@ func (b *b10Body) ItemOwner(Actor) ID      { return NoID }
 func (b *b10Body) SendTakeItem(Actor)      { b.takes++ }
 func (b *b10Body) ItemsOf(a Actor) *Items  { return b.others[a.ID()] }
 
+// b10Inv is the engine's container, cut down to what the tests need,
+// stacking by b10Rules.
+type b10Inv struct{ Slots []Item }
+
+func inv(i *Items) *b10Inv {
+	v, _ := i.Inventory.(*b10Inv)
+	return v
+}
+
+func (v *b10Inv) Size() int              { return len(v.Slots) }
+func (v *b10Inv) Slot(k int) Item        { return v.Slots[k] }
+func (v *b10Inv) SetSlot(k int, it Item) { v.Slots[k] = it }
+
+func (v *b10Inv) Count(it Item) int32 {
+	var n int32
+	for _, s := range v.Slots {
+		if !s.Empty() && (b10Rules{}).SameKind(s, it) {
+			n += s.Count
+		}
+	}
+	return n
+}
+
+func (v *b10Inv) CanAdd(it Item) bool {
+	r := b10Rules{}
+	for _, s := range v.Slots {
+		if s.Empty() || r.Stacks(s, it) && s.Count < r.MaxStack(s) {
+			return true
+		}
+	}
+	return false
+}
+
+func (v *b10Inv) Add(it Item) (Item, bool) {
+	r, fit := b10Rules{}, false
+	for k, s := range v.Slots {
+		if it.Empty() {
+			break
+		}
+		if s.Empty() {
+			v.Slots[k] = it
+			return Item{}, true
+		}
+		if !r.Stacks(s, it) || s.Count >= r.MaxStack(s) {
+			continue
+		}
+		t := min(it.Count, r.MaxStack(s)-s.Count)
+		s.Count += t
+		it.Count -= t
+		v.Slots[k], fit = s, true
+	}
+	if it.Count <= 0 {
+		it = Item{}
+	}
+	return it, fit
+}
+
+func (v *b10Inv) Take(kind Item, n int32) {
+	for k, s := range v.Slots {
+		if n <= 0 {
+			return
+		}
+		if s.Empty() || !(b10Rules{}).SameKind(s, kind) {
+			continue
+		}
+		t := min(n, s.Count)
+		if s.Count -= t; s.Count <= 0 {
+			s = Item{}
+		}
+		v.Slots[k] = s
+		n -= t
+	}
+}
+
 func newB10(w World, id ID, kind string, s *ShareablesConfig, inv int) (*Items, *b10Body) {
 	b := &b10Body{b9Mob: newB9Mob(w, id, Vec3{Y: 64}, kind), others: map[ID]*Items{}}
 	i := &Items{Body: b, World: w, Rules: b10Rules{}, Shareables: s}
 	if inv > 0 {
-		i.Inventory = NewInventory(inv)
+		i.Inventory = &b10Inv{Slots: make([]Item, inv)}
 	}
 	return i, b
 }
@@ -68,31 +142,12 @@ func b10Entry(name string, want, surplus int32) ShareableItem {
 	return e
 }
 
-func TestInventoryStacksThenFillsEmpty(t *testing.T) {
-	r := b10Rules{}
-	v := NewInventory(3)
-	v.Slots[1] = Item{Name: b10Wheat, Count: 60}
-	rest, ok := v.Add(r, Item{Name: b10Wheat, Count: 10})
-	if !ok || !rest.Empty() || v.Slots[0].Count != 10 || v.Slots[1].Count != 60 {
-		t.Fatalf("add: %v rest %v", v.Slots, rest)
-	}
-	v.Slots[0] = Item{Name: b10Carrot, Count: 1}
-	v.Slots[2] = Item{Name: b10Carrot, Count: 1}
-	if rest, _ = v.Add(r, Item{Name: b10Wheat, Count: 10}); rest.Count != 6 || v.Slots[1].Count != 64 {
-		t.Fatalf("full: %v rest %v", v.Slots, rest)
-	}
-	v.Take(r, Item{Name: b10Carrot}, 2)
-	if v.Count(r, Item{Name: b10Carrot}) != 0 || !v.Slots[2].Empty() {
-		t.Fatalf("take: %v", v.Slots)
-	}
-}
-
 func TestShareablesWantAndShareAmounts(t *testing.T) {
 	w := newB8World(&seqRandom{})
 	s := DefaultShareables
 	s.Items = []ShareableItem{b10Entry(b10Bread, 3, 6)}
 	i, _ := newB10(w, 1, "minecraft:villager", &s, 4)
-	i.Inventory.Slots[0] = Item{Name: b10Bread, Count: 1}
+	inv(i).Slots[0] = Item{Name: b10Bread, Count: 1}
 	if n := i.WantAmount(Item{Name: b10Bread}); n != 2 {
 		t.Fatalf("want %d, want 2", n)
 	}
@@ -103,12 +158,12 @@ func TestShareablesWantAndShareAmounts(t *testing.T) {
 	if n := i.WantAmount(Item{Name: b10Carrot}); n != 5 {
 		t.Fatalf("all items want %d", n)
 	}
-	i.Inventory.Slots[0].Count = 12
-	if n, out := i.shareAmount(i.Inventory.Slots[0], false); n != 3 || out.Count != 3 {
+	inv(i).Slots[0].Count = 12
+	if n, out := i.shareAmount(inv(i).Slots[0], false); n != 3 || out.Count != 3 {
 		t.Fatalf("share %d %v, want a third of 9", n, out)
 	}
 	i.Rules = b10Rules{legacy: true}
-	if n, _ := i.shareAmount(i.Inventory.Slots[0], false); n != 6 {
+	if n, _ := i.shareAmount(inv(i).Slots[0], false); n != 6 {
 		t.Fatalf("legacy share %d, want half", n)
 	}
 }
@@ -120,8 +175,8 @@ func TestShareOffersCraftAndTake(t *testing.T) {
 	s := DefaultShareables
 	s.Items = []ShareableItem{wheat, b10Entry(b10Bread, 3, 0)}
 	i, b := newB10(w, 1, "minecraft:villager", &s, 4)
-	i.Inventory.Slots[0] = Item{Name: b10Wheat, Count: 64}
-	i.Inventory.Slots[2] = Item{Name: b10Wheat, Count: 64}
+	inv(i).Slots[0] = Item{Name: b10Wheat, Count: 64}
+	inv(i).Slots[2] = Item{Name: b10Wheat, Count: 64}
 	// BDS checks for repeats against the stack it gives, so both wheat
 	// slots offer bread.
 	offers := i.ShareOffers(nil)
@@ -134,7 +189,7 @@ func TestShareOffersCraftAndTake(t *testing.T) {
 		t.Fatal("the other villager does not want bread")
 	}
 	i.TakeShare(offers[0])
-	if c := i.Inventory.Count(b10Rules{}, Item{Name: b10Wheat}); c != 116 {
+	if c := i.Inventory.Count(Item{Name: b10Wheat}); c != 116 {
 		t.Fatalf("wheat left %d, want 116", c)
 	}
 }
@@ -157,7 +212,7 @@ func TestPickUpAdmiresAndBarters(t *testing.T) {
 		t.Fatalf("admire %v barter %v count %d takes %d", i.Admire, i.Barter, it.item.Count, b.takes)
 	}
 	i.KeepAdmired(i.AdmiredItem())
-	if i.Admiring() || i.Inventory.Count(b10Rules{}, Item{Name: b10Gold}) != 0 {
+	if i.Admiring() || i.Inventory.Count(Item{Name: b10Gold}) != 0 {
 		t.Fatal("admire end kept gold the shareables do not store")
 	}
 }
@@ -192,11 +247,11 @@ func TestPickUpReplacesAWorseSlot(t *testing.T) {
 	s := DefaultShareables
 	s.Items = []ShareableItem{gold, carrot}
 	i, b := newB10(w, 1, "minecraft:piglin", &s, 1)
-	i.Inventory.Slots[0] = Item{Name: b10Carrot, Count: 1}
+	inv(i).Slots[0] = Item{Name: b10Carrot, Count: 1}
 	b.slots[0] = Item{Name: b10Gold, Count: 64}
 	it := newB9Item(w, 2, Vec3{Y: 64}, Item{Name: b10Gold, Count: 2})
 	i.PickUp(it, PickupFlags{ToHand: true})
-	if len(b.dropped) != 1 || b.dropped[0].Name != b10Carrot || i.Inventory.Slots[0] != (Item{Name: b10Gold, Count: 2}) {
-		t.Fatalf("dropped %v slots %v", b.dropped, i.Inventory.Slots)
+	if len(b.dropped) != 1 || b.dropped[0].Name != b10Carrot || inv(i).Slots[0] != (Item{Name: b10Gold, Count: 2}) {
+		t.Fatalf("dropped %v slots %v", b.dropped, inv(i).Slots)
 	}
 }

@@ -80,17 +80,17 @@ type PickupFlags struct {
 	SameItems, ToHand, AnyItem, StopIfHolding bool
 }
 
-// Items is a mob's item components (minecraft:shareables, the inventory,
-// minecraft:admire_item, minecraft:barter and minecraft:equip_item) with
-// the BDS rules the item goals use. A nil field is a component the mob does
-// not have. Embedding *Items in a mob gives it the item goals' component
+// Items is a mob's item components (minecraft:shareables, the engine's
+// inventory, minecraft:admire_item, minecraft:barter and
+// minecraft:equip_item) with the BDS rules the item goals use. A nil field is
+// a component the mob does not have. Embedding *Items in a mob gives it the item goals' component
 // hooks; only the goals of the mob that owns it may call it.
 type Items struct {
 	Body       ItemBody
 	World      World
 	Rules      ItemRules
 	Shareables *ShareablesConfig
-	Inventory  *Inventory
+	Inventory  Container
 	Admire     *AdmireState
 	Barter     *BarterState
 	Equip      *EquipState
@@ -111,7 +111,7 @@ func (i *Items) AddToInventory(it Item) bool {
 	if i.Inventory == nil {
 		return false
 	}
-	_, ok := i.Inventory.Add(i.Rules, it)
+	_, ok := i.Inventory.Add(it)
 	return ok
 }
 
@@ -122,7 +122,7 @@ func (i *Items) StoreItem(it Item) { i.AddToInventory(it) }
 // it (0x5757660).
 func (i *Items) CanStoreHand() bool {
 	h := i.Body.Slot(SlotMainhand)
-	return i.Inventory != nil && !h.Empty() && i.Inventory.CanAdd(i.Rules, h)
+	return i.Inventory != nil && !h.Empty() && i.Inventory.CanAdd(h)
 }
 
 // PickupWanted is pickup_items' test of one item entity (0x57577A0).
@@ -186,8 +186,8 @@ func (i *Items) PickUp(a Actor, f PickupFlags) {
 	switch {
 	case i.Inventory != nil && i.Shareables != nil && i.storeRoute(it, f.ToHand):
 		if k := i.replaceSlot(it); k >= 0 {
-			b.DropItem(i.Inventory.Slots[k])
-			i.Inventory.Slots[k] = Item{}
+			b.DropItem(i.Inventory.Slot(k))
+			i.Inventory.SetSlot(k, Item{})
 		}
 		if admired {
 			b.SetItemCount(a, it.Count-n)
@@ -218,7 +218,7 @@ func (i *Items) addFrom(a Actor, it Item, n int32) {
 	}
 	c := it
 	c.Count = n
-	rest, _ := i.Inventory.Add(i.Rules, c)
+	rest, _ := i.Inventory.Add(c)
 	i.Body.SetItemCount(a, it.Count-n+rest.Count)
 }
 
@@ -276,7 +276,7 @@ func (i *Items) EndAdmiring() {
 // the shareables store it, and the component is cleared.
 func (i *Items) KeepAdmired(it Item) {
 	if i.Inventory != nil && i.Shareables != nil && i.storeRoute(it, true) {
-		i.Inventory.Add(i.Rules, it)
+		i.Inventory.Add(it)
 	}
 	i.EndAdmiring()
 }
@@ -328,7 +328,8 @@ func (i *Items) ShareOffers(dst []ShareOffer) []ShareOffer {
 		return dst
 	}
 	start := len(dst)
-	for k, v := range i.Inventory.Slots {
+	for k := range i.Inventory.Size() {
+		v := i.Inventory.Slot(k)
 		if v.Empty() || i.offered(dst[start:], v) {
 			continue
 		}
@@ -372,14 +373,14 @@ func (i *Items) ShareWanted(other Actor, it Item) bool {
 // TakeShare takes the offered stack out of the inventory: the slot's own
 // item by count, a crafted one by its recipe's share of the slot's item.
 func (i *Items) TakeShare(o ShareOffer) Item {
-	if o.Slot < 0 || i.Inventory == nil || int(o.Slot) >= len(i.Inventory.Slots) {
+	if o.Slot < 0 || i.Inventory == nil || int(o.Slot) >= i.Inventory.Size() {
 		return i.Body.Slot(SlotMainhand)
 	}
-	s := i.Inventory.Slots[o.Slot]
+	s := i.Inventory.Slot(int(o.Slot))
 	if o.Item.Name == s.Name {
-		i.Inventory.Take(i.Rules, s, o.Item.Count)
+		i.Inventory.Take(s, o.Item.Count)
 	} else if k, ok := i.Rules.Recipe(o.Item, s); ok {
-		i.Inventory.Take(i.Rules, s, o.Item.Count*k)
+		i.Inventory.Take(s, o.Item.Count*k)
 	}
 	return o.Item
 }

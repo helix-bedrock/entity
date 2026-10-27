@@ -29,9 +29,10 @@
 // admire_item, barter, pickup_items, share_items).
 //
 // Items holds the item components those goals read (minecraft:shareables,
-// the inventory, minecraft:admire_item, minecraft:barter and
-// minecraft:equip_item) with their BDS rules; a mob that embeds *Items gets
-// the goals' component hooks.
+// minecraft:admire_item, minecraft:barter and minecraft:equip_item) with
+// their BDS rules; a mob that embeds *Items gets the goals' component
+// hooks. Item stacks and inventories are the engine's: Items reaches them
+// through ItemRules and Container.
 //
 // Each goal implements goal.Goal and runs on the selector of the mob that
 // owns it. A goal reaches the world only through the Mob and World it was

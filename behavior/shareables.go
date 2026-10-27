@@ -94,7 +94,7 @@ func (i *Items) WantAmount(it Item) int32 {
 	}
 	var have int32
 	if i.Inventory != nil {
-		have = i.Inventory.Count(i.Rules, it)
+		have = i.Inventory.Count(it)
 	} else if !i.hand(it).Empty() {
 		return 0
 	}
@@ -128,7 +128,7 @@ func (i *Items) shareAmount(it Item, withCount bool) (int32, Item) {
 	}
 	var have int32
 	if i.Inventory != nil {
-		have = i.Inventory.Count(r, it)
+		have = i.Inventory.Count(it)
 	} else {
 		h := i.hand(it)
 		if !r.SameKind(it, h) {
@@ -249,10 +249,10 @@ func (i *Items) WantsPickup(it Item, sameItems, toHand bool) bool {
 	switch {
 	case store:
 		if maxAmount < 0 {
-			return i.Inventory.CanAdd(r, one)
+			return i.Inventory.CanAdd(one)
 		}
-		n := i.Inventory.Count(r, it)
-		if maxAmount > n && i.Inventory.CanAdd(r, one) {
+		n := i.Inventory.Count(it)
+		if maxAmount > n && i.Inventory.CanAdd(one) {
 			return true
 		}
 		tail = maxAmount < n
@@ -286,8 +286,8 @@ func (i *Items) WantsPickup(it Item, sameItems, toHand bool) bool {
 	case worn:
 		return i.better(i.Body.Armor(slot), one, sameItems)
 	case store:
-		for _, v := range i.Inventory.Slots {
-			if i.better(v, one, sameItems) {
+		for k := range i.Inventory.Size() {
+			if i.better(i.Inventory.Slot(k), one, sameItems) {
 				return true
 			}
 		}
@@ -309,7 +309,7 @@ func (i *Items) pickupCount(it Item) int32 {
 	if maxAmount >= 0 {
 		var have int32
 		if i.Inventory != nil {
-			have = i.Inventory.Count(r, it)
+			have = i.Inventory.Count(it)
 		} else if h := i.hand(it); r.SameItem(h, it) {
 			have = h.Count
 		}
@@ -324,12 +324,12 @@ func (i *Items) pickupCount(it Item) int32 {
 // replaceSlot is the inventory slot a full inventory gives up for the item
 // (0x6D96AA0): the first one holding something it likes less, or -1.
 func (i *Items) replaceSlot(it Item) int {
-	if i.Inventory.CanAdd(i.Rules, it) {
+	if i.Inventory.CanAdd(it) {
 		return -1
 	}
 	p := i.priority(it)
-	for k, v := range i.Inventory.Slots {
-		if p < i.priority(v) {
+	for k := range i.Inventory.Size() {
+		if p < i.priority(i.Inventory.Slot(k)) {
 			return k
 		}
 	}
