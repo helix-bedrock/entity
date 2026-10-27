@@ -17,9 +17,9 @@ type Picker interface {
 	// component.
 	Admiring() bool
 	// PickupWanted is the candidate test for one item entity (0x57577A0):
-	// not removed, its pickup delay over, wanted by the shareables with the
-	// two flags, and with anyItem the hand's stacking rules.
-	PickupWanted(item Actor, sameItems, toHand, anyItem bool) bool
+	// not removed, its pickup delay over, wanted by the shareables, and with
+	// AnyItem the hand's stacking rules. Items implements it.
+	PickupWanted(item Actor, f PickupFlags) bool
 	// ItemOf is the stack an item entity holds; ok is false for other
 	// entities.
 	ItemOf(a Actor) (Item, bool)
@@ -27,8 +27,8 @@ type Picker interface {
 	CanSee(a Actor) bool
 	// PickUp takes the item entity the way the goal's tick does once there:
 	// the admire hand-off, barter, the shareables slot, the inventory, the
-	// equip_item hand-over and the take packet.
-	PickUp(item Actor, anyItem, toHand bool)
+	// equip_item hand-over and the take packet. Items implements it.
+	PickUp(item Actor, f PickupFlags)
 	// EntitiesOfType appends the entities of the BDS actor type whose boxes
 	// touch b to dst, excluding self.
 	EntitiesOfType(dst []Actor, actorType int, self ID, b Box) []Actor
@@ -100,6 +100,12 @@ func (g *PickupItems) calm() bool {
 	return !g.m.RecentlyHurt(g.cfg.HurtCooldown*ticksPerSecond) && !g.m.Admiring()
 }
 
+// flags are the switches the pick-up rules read.
+func (g *PickupItems) flags() PickupFlags {
+	c := &g.cfg
+	return PickupFlags{SameItems: c.SameItemsAsInHand, ToHand: c.ToHandOrEquipment, AnyItem: c.AnyItem, StopIfHolding: c.StopIfHolding}
+}
+
 // search fills the queue with the wanted item entities around the mob.
 func (g *PickupItems) search() {
 	m := g.m
@@ -113,7 +119,7 @@ func (g *PickupItems) search() {
 	}
 	sortNear(g.buf)
 	for _, n := range g.buf {
-		if m.PickupWanted(n.a, g.cfg.SameItemsAsInHand, g.cfg.ToHandOrEquipment, g.cfg.AnyItem) {
+		if m.PickupWanted(n.a, g.flags()) {
 			g.queue = append(g.queue, n.a.ID())
 		}
 	}
@@ -236,7 +242,7 @@ func (g *PickupItems) Tick() {
 	}
 	m.SetPersistent()
 	if !t.Removed() {
-		m.PickUp(t, g.cfg.AnyItem, g.cfg.ToHandOrEquipment)
+		m.PickUp(t, g.flags())
 	}
 	g.target = NoID
 }

@@ -111,7 +111,7 @@ func (m *b9Mob) CanPickUpLoot() bool                       { return m.loot2 }
 func (m *b9Mob) HasShareables() bool                       { return true }
 func (m *b9Mob) CanStoreHand() bool                        { return false }
 func (m *b9Mob) CanSee(Actor) bool                         { return m.see }
-func (m *b9Mob) PickUp(a Actor, _, _ bool)                 { m.pickedUp = append(m.pickedUp, a.ID()) }
+func (m *b9Mob) PickUp(a Actor, _ PickupFlags)             { m.pickedUp = append(m.pickedUp, a.ID()) }
 func (m *b9Mob) Shareable() bool                           { return m.share }
 func (m *b9Mob) SharesWith(a Actor) bool                   { _, ok := a.(*b9Mob); return ok }
 func (m *b9Mob) ShareWanted(a Actor, _ Item) bool          { return m.wants[a.ID()] }
@@ -119,7 +119,7 @@ func (m *b9Mob) TakeShare(o ShareOffer) Item               { return o.Item }
 func (m *b9Mob) StoreItem(it Item)                         { m.stored = append(m.stored, it) }
 func (m *b9Mob) ThrowItem(it Item, _ Vec3)                 { m.thrown = append(m.thrown, it) }
 func (m *b9Mob) ShareOffers(dst []ShareOffer) []ShareOffer { return append(dst, m.offers...) }
-func (m *b9Mob) PickupWanted(a Actor, _, _, _ bool) bool {
+func (m *b9Mob) PickupWanted(a Actor, _ PickupFlags) bool {
 	_, ok := m.ItemOf(a)
 	return ok
 }

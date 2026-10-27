@@ -28,7 +28,7 @@ BDS 1.26.52.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 96 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 106 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
   nautilus, cat, the warden, frog, strider, panda, axolotl and wolf). The [roadmap](#roadmap) lists them all.
@@ -128,7 +128,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
 | Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
 | Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
-| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS; the item and component rules they call (shareables, inventory, admire, barter, food) are hooks on the mob |
+| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, inventory, admire_item, barter and equip_item components (`Items`); item data (stack sizes, damage, armor slots, recipes) and food use are hooks |
 | The other 64 goals (villagers, raids, the dragon, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
