@@ -193,3 +193,96 @@ func TestMakeLovePairsWithAWillingVillager(t *testing.T) {
 		t.Fatalf("babies %d, willing %v", m.babies, m.willing)
 	}
 }
+
+// b12Pet adds the pet sleep and mount hooks to b12Mob.
+type b12Pet struct {
+	*b12Mob
+	bed      Pos
+	inBed    bool
+	claimed  bool
+	told     int
+	yaw      float32
+	body     float32
+	vel      Vec3
+	accepts  bool
+	riding   ID
+	gaveUp   int
+	followed int
+}
+
+func newB12Pet(w World, p Vec3) *b12Pet {
+	return &b12Pet{b12Mob: newB12Mob(w, p), accepts: true, riding: NoID}
+}
+
+func (m *b12Pet) OwnerBed() (Pos, bool)          { return m.bed, m.inBed }
+func (m *b12Pet) OwnerSleeping() bool            { return m.inBed }
+func (m *b12Pet) ClaimBed(Pos) bool              { m.claimed = true; return true }
+func (m *b12Pet) TellOwner()                     { m.told++ }
+func (m *b12Pet) SetExactPathEnd(float32)        {}
+func (m *b12Pet) SetPathSpeed(float32)           {}
+func (m *b12Pet) Velocity() Vec3                 { return m.vel }
+func (m *b12Pet) SetVelocity(v Vec3)             { m.vel = v }
+func (m *b12Pet) Yaw() float32                   { return m.yaw }
+func (m *b12Pet) SetYaw(y float32)               { m.yaw = y }
+func (m *b12Pet) BodyYaw() float32               { return m.body }
+func (m *b12Pet) SetBodyYaw(y float32)           { m.body = y }
+func (m *b12Pet) AcceptsRider(ID) bool           { return m.accepts }
+func (m *b12Pet) Sleeping(ID) bool               { return false }
+func (m *b12Pet) Wet(ID) bool                    { return false }
+func (m *b12Pet) CanRide(ID) bool                { return true }
+func (m *b12Pet) StartRiding(id ID)              { m.riding = id }
+func (m *b12Pet) GiveUpRiding()                  { m.gaveUp++ }
+func (m *b12Pet) PathToActor(Actor) (bool, bool) { return true, true }
+func (m *b12Pet) FollowPath(float32)             { m.followed++ }
+func (m *b12Pet) Vehicle() ID                    { return m.riding }
+
+func TestPetSleepWithOwnerHopsOntoTheBed(t *testing.T) {
+	w := newB11World(&seqRandom{})
+	m := newB12Pet(w, Vec3{X: 0.5, Y: 64, Z: 0.5})
+	owner := newB12Mob(w, Vec3{X: 3.5, Y: 64, Z: 0.5})
+	owner.id = 8
+	w.entities = append(w.entities, owner)
+	m.owner = owner.id
+	m.flags[FlagTamed] = true
+	m.bed, m.inBed = Pos{X: 3, Y: 64}, true
+	g := NewPetSleepWithOwner(w, m, DefaultPetSleepWithOwner())
+	if !g.CanUse() || !m.claimed {
+		t.Fatal("did not go to the owner's bed")
+	}
+	g.Start()
+	if m.told != 1 || g.state != petSleepApproach {
+		t.Fatalf("state %d, told %d", g.state, m.told)
+	}
+	m.pos = Vec3{X: 3.5, Y: 63.6, Z: 0.5} // box middle at the bed centre
+	for range petSleepHop + 2 {
+		g.Tick()
+	}
+	if g.state != petSleepSleeping || !m.Flag(FlagResting) {
+		t.Fatalf("state %d after the hop", g.state)
+	}
+	g.Stop()
+	if m.Flag(FlagResting) || g.state != petSleepWalk {
+		t.Fatal("still lying down after stop")
+	}
+}
+
+func TestFindMountRidesTheNearestMount(t *testing.T) {
+	w := newB11World(&seqRandom{})
+	m := newB12Pet(w, Vec3{X: 0.5, Y: 64, Z: 0.5})
+	far := newB12Mob(w, Vec3{X: 6.5, Y: 64, Z: 0.5})
+	near := newB12Mob(w, Vec3{X: 1.5, Y: 64, Z: 0.5})
+	far.id, near.id = 20, 21
+	w.entities = append(w.entities, far, near)
+	m.near = []Actor{far, near}
+	c := DefaultFindMount()
+	c.WithinRadius = 10
+	g := NewFindMount(w, m, c)
+	if !g.CanUse() || g.mount != near.id {
+		t.Fatalf("picked %d", g.mount)
+	}
+	g.Start()
+	g.Tick()
+	if m.riding != near.id {
+		t.Fatalf("riding %d", m.riding)
+	}
+}
