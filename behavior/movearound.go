@@ -12,10 +12,12 @@ type MoveAroundTargetConfig struct {
 	VerticalSearchDistance   int32   `json:"vertical_search_distance"`
 }
 
-// DefaultMoveAroundTarget is the goal's BDS defaults.
-var DefaultMoveAroundTarget = MoveAroundTargetConfig{
-	MovementSpeed: 0.6, Spread: 90, Range: Range[float32]{4, 8}, HeightDifferenceLimit: 10,
-	HorizontalSearchDistance: 5, VerticalSearchDistance: 5,
+// DefaultMoveAroundTarget returns the goal's BDS defaults.
+func DefaultMoveAroundTarget() MoveAroundTargetConfig {
+	return MoveAroundTargetConfig{
+		MovementSpeed: 0.6, Spread: 90, Range: Range[float32]{4, 8}, HeightDifferenceLimit: 10,
+		HorizontalSearchDistance: 5, VerticalSearchDistance: 5,
+	}
 }
 
 // MoveAroundTarget is MoveAroundTargetGoal: the mob keeps moving to a new

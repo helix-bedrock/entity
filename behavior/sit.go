@@ -16,8 +16,10 @@ type RandomSitConfig struct {
 	MinSitTime float32 `json:"min_sit_time"`
 }
 
-// DefaultRandomSit is the goal's BDS defaults.
-var DefaultRandomSit = RandomSitConfig{StartChance: 0.1, StopChance: 0.3, Cooldown: 100, MinSitTime: 10}
+// DefaultRandomSit returns the goal's BDS defaults.
+func DefaultRandomSit() RandomSitConfig {
+	return RandomSitConfig{StartChance: 0.1, StopChance: 0.3, Cooldown: 100, MinSitTime: 10}
+}
 
 // RandomSit is RandomSitGoal: now and then the mob sits down for a while.
 type RandomSit struct {

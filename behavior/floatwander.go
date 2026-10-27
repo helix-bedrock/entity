@@ -33,9 +33,11 @@ type FloatWanderConfig struct {
 	NavigateThroughLiquids bool  `json:"allow_navigating_through_liquids"`
 }
 
-// DefaultFloatWander is the goal's BDS defaults.
-var DefaultFloatWander = FloatWanderConfig{XZDist: 10, YDist: 7, UseHomeRestriction: true, HasMoveControl: true,
-	SurfaceXZDist: 8, SurfaceYDist: 8}
+// DefaultFloatWander returns the goal's BDS defaults.
+func DefaultFloatWander() FloatWanderConfig {
+	return FloatWanderConfig{XZDist: 10, YDist: 7, UseHomeRestriction: true, HasMoveControl: true,
+		SurfaceXZDist: 8, SurfaceYDist: 8}
+}
 
 // FloatWander is FloatWanderGoal: a floating mob (a ghast, a happy ghast)
 // pushes itself toward a random target in the air.

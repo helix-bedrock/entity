@@ -65,9 +65,11 @@ type RangedAttackConfig struct {
 	InRangeMovement int32
 }
 
-// DefaultRangedAttack is the goal's BDS defaults.
-var DefaultRangedAttack = RangedAttackConfig{
-	BurstShots: 1, TargetInSightTime: 20, XMaxRotation: 30, YMaxHeadRotation: 30, RangedFOV: 90, SpeedMultiplier: 1,
+// DefaultRangedAttack returns the goal's BDS defaults.
+func DefaultRangedAttack() RangedAttackConfig {
+	return RangedAttackConfig{
+		BurstShots: 1, TargetInSightTime: 20, XMaxRotation: 30, YMaxHeadRotation: 30, RangedFOV: 90, SpeedMultiplier: 1,
+	}
 }
 
 // RangedAttack is RangedAttackGoal: the mob keeps its distance, faces the

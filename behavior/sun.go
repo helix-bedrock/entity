@@ -22,8 +22,10 @@ type FleeSunConfig struct {
 	Cooldown int32
 }
 
-// DefaultFleeSun is the goal's BDS defaults.
-var DefaultFleeSun = FleeSunConfig{SpeedMultiplier: 1}
+// DefaultFleeSun returns the goal's BDS defaults.
+func DefaultFleeSun() FleeSunConfig {
+	return FleeSunConfig{SpeedMultiplier: 1}
+}
 
 // FleeSun is FleeSunGoal: a mob burning in daylight runs into the shade.
 type FleeSun struct {

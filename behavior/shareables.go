@@ -21,9 +21,11 @@ type ShareableItem struct {
 	PickupOnly        bool  `json:"pickup_only"`
 }
 
-// DefaultShareableItem is an entry's BDS defaults (0x6D93CA0): every amount
+// DefaultShareableItem returns an entry's BDS defaults (0x6D93CA0): every amount
 // unset.
-var DefaultShareableItem = ShareableItem{WantAmount: -1, SurplusAmount: -1, MaxAmount: -1, PickupLimit: -1}
+func DefaultShareableItem() ShareableItem {
+	return ShareableItem{WantAmount: -1, SurplusAmount: -1, MaxAmount: -1, PickupLimit: -1}
+}
 
 // ShareablesConfig is the JSON of minecraft:shareables. Items match top to
 // bottom: the first entry that matches an item is the only one used.
@@ -38,8 +40,10 @@ type ShareablesConfig struct {
 	SingularPickup        bool  `json:"singular_pickup"`
 }
 
-// DefaultShareables is the component's BDS defaults.
-var DefaultShareables = ShareablesConfig{AllItemsWantAmount: -1, AllItemsSurplusAmount: -1, AllItemsMaxAmount: -1}
+// DefaultShareables returns the component's BDS defaults.
+func DefaultShareables() ShareablesConfig {
+	return ShareablesConfig{AllItemsWantAmount: -1, AllItemsSurplusAmount: -1, AllItemsMaxAmount: -1}
+}
 
 // noPriority is the priority of an item no entry matches.
 const noPriority = math.MaxInt32

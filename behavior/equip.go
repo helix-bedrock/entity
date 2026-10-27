@@ -124,8 +124,10 @@ type AdmireItemConfig struct {
 	OnStop        string `json:"on_admire_item_stop"`
 }
 
-// DefaultAdmireItem is the goal's BDS defaults: no sound.
-var DefaultAdmireItem = AdmireItemConfig{Sound: NoSound}
+// DefaultAdmireItem returns the goal's BDS defaults: no sound.
+func DefaultAdmireItem() AdmireItemConfig {
+	return AdmireItemConfig{Sound: NoSound}
+}
 
 // AdmireItem is AdmireItemGoal: the piglin holds up gold to look at it.
 type AdmireItem struct {

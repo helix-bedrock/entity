@@ -33,8 +33,10 @@ type NapConfig struct {
 	WakeMobExceptions Filter
 }
 
-// DefaultNap is the goal's BDS defaults.
-var DefaultNap = NapConfig{MobDetectDist: 6, MobDetectHeight: 6}
+// DefaultNap returns the goal's BDS defaults.
+func DefaultNap() NapConfig {
+	return NapConfig{MobDetectDist: 6, MobDetectHeight: 6}
+}
 
 // Nap is NapGoal: the fox sleeps until a mob comes near.
 type Nap struct {
@@ -141,8 +143,10 @@ type FindCoverConfig struct {
 	Cooldown        int32
 }
 
-// DefaultFindCover is the goal's BDS defaults.
-var DefaultFindCover = FindCoverConfig{SpeedMultiplier: 1}
+// DefaultFindCover returns the goal's BDS defaults.
+func DefaultFindCover() FindCoverConfig {
+	return FindCoverConfig{SpeedMultiplier: 1}
+}
 
 // FindCover is FindCoverGoal: a mob out in the open walks to a covered
 // spot it likes.

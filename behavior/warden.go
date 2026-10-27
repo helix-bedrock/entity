@@ -128,9 +128,11 @@ type EmergeConfig struct {
 	OnDone   string
 }
 
-// DefaultEmerge is the goal's BDS defaults: duration 5 s, cooldown_time
+// DefaultEmerge returns the goal's BDS defaults: duration 5 s, cooldown_time
 // 0.5 s.
-var DefaultEmerge = EmergeConfig{Duration: 100, Cooldown: 10}
+func DefaultEmerge() EmergeConfig {
+	return EmergeConfig{Duration: 100, Cooldown: 10}
+}
 
 // Emerge is EmergeGoal: the warden climbs out of the ground.
 type Emerge struct {
@@ -194,8 +196,10 @@ type DigConfig struct {
 	OnStart                string
 }
 
-// DefaultDig is the goal's BDS defaults: every value zero or off.
-var DefaultDig = DigConfig{}
+// DefaultDig returns the goal's BDS defaults: every value zero or off.
+func DefaultDig() DigConfig {
+	return DigConfig{}
+}
 
 // Dig is DigGoal: the warden digs back into the ground and is removed.
 type Dig struct {
@@ -276,8 +280,10 @@ type RoarConfig struct {
 	Duration int32
 }
 
-// DefaultRoar is the goal's BDS defaults: duration 0.
-var DefaultRoar = RoarConfig{}
+// DefaultRoar returns the goal's BDS defaults: duration 0.
+func DefaultRoar() RoarConfig {
+	return RoarConfig{}
+}
 
 // Roar is RoarGoal: the warden roars at the angriest suspect, then makes
 // it its target.
@@ -355,11 +361,13 @@ type SniffConfig struct {
 	Cooldown                  Range[float32]
 }
 
-// DefaultSniff is the goal's BDS defaults: duration 1 s, radius 5,
+// DefaultSniff returns the goal's BDS defaults: duration 1 s, radius 5,
 // suspicion radii 3 and 3, cooldown 3 to 10 s.
-var DefaultSniff = SniffConfig{
-	Duration: 20, SniffingRadius: 5, SuspicionRadiusHorizontal: 3, SuspicionRadiusVertical: 3,
-	Cooldown: Range[float32]{Min: 3, Max: 10},
+func DefaultSniff() SniffConfig {
+	return SniffConfig{
+		Duration: 20, SniffingRadius: 5, SuspicionRadiusHorizontal: 3, SuspicionRadiusVertical: 3,
+		Cooldown: Range[float32]{Min: 3, Max: 10},
+	}
 }
 
 // Sniff is SniffGoal: the warden sniffs for the nearest suspect and marks
@@ -419,8 +427,10 @@ type InvestigateConfig struct {
 	GoalRadius      float32 `json:"goal_radius"`
 }
 
-// DefaultInvestigate is the goal's BDS defaults.
-var DefaultInvestigate = InvestigateConfig{SpeedMultiplier: 1, GoalRadius: 1.5}
+// DefaultInvestigate returns the goal's BDS defaults.
+func DefaultInvestigate() InvestigateConfig {
+	return InvestigateConfig{SpeedMultiplier: 1, GoalRadius: 1.5}
+}
 
 // Investigate is InvestigateSuspiciousLocationGoal: the warden walks to
 // the suspect_tracking location.

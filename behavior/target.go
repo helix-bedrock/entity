@@ -200,10 +200,12 @@ type NearestAttackableConfig struct {
 	SneakMultiplier, InvisibleMultiplier float32
 }
 
-// DefaultNearestAttackable is the goal's BDS defaults.
-var DefaultNearestAttackable = NearestAttackableConfig{
-	ScanInterval: 10, Probability: 1, WithinRadius: -1, TargetSearchHeight: -1, MustSeeForget: 60,
-	SneakMultiplier: 0.8, InvisibleMultiplier: 0.7,
+// DefaultNearestAttackable returns the goal's BDS defaults.
+func DefaultNearestAttackable() NearestAttackableConfig {
+	return NearestAttackableConfig{
+		ScanInterval: 10, Probability: 1, WithinRadius: -1, TargetSearchHeight: -1, MustSeeForget: 60,
+		SneakMultiplier: 0.8, InvisibleMultiplier: 0.7,
+	}
 }
 
 func (g *NearestAttackable) vis() visibility {
@@ -403,7 +405,7 @@ type HurtBy struct {
 // NewHurtBy makes the goal.
 func NewHurtBy(w World, m Targeter, c HurtByConfig) *HurtBy {
 	return &HurtBy{target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m,
-		attackOwner: c.HurtOwner, mustReach: c.MustReach, mustSee: c.MustSee, forget: DefaultNearestAttackable.MustSeeForget}, types: c.EntityTypes}
+		attackOwner: c.HurtOwner, mustReach: c.MustReach, mustSee: c.MustSee, forget: DefaultNearestAttackable().MustSeeForget}, types: c.EntityTypes}
 }
 
 func (g *HurtBy) attacker() Actor {

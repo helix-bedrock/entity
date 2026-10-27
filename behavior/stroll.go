@@ -8,8 +8,10 @@ type StrollConfig struct {
 	Interval        int32   `json:"interval"`
 }
 
-// DefaultStroll is the goal's BDS defaults.
-var DefaultStroll = StrollConfig{SpeedMultiplier: 1, XZDist: 10, YDist: 7, Interval: 120}
+// DefaultStroll returns the goal's BDS defaults.
+func DefaultStroll() StrollConfig {
+	return StrollConfig{SpeedMultiplier: 1, XZDist: 10, YDist: 7, Interval: 120}
+}
 
 // Stroll is RandomStrollGoal: now and then the mob walks to a random spot
 // nearby.

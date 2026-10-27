@@ -56,10 +56,12 @@ type StalkAndPounceConfig struct {
 	StuckBlocks   BlockFilter
 }
 
-// DefaultStalkAndPounce is the goal's BDS defaults.
-var DefaultStalkAndPounce = StalkAndPounceConfig{
-	StalkSpeed: 1.2, MaxStalkDist: 100, LeapHeight: 0.9, LeapDist: 0.8, PounceMaxDist: 25, StrikeDist: 4,
-	InterestTime: 40, StuckTime: 40,
+// DefaultStalkAndPounce returns the goal's BDS defaults.
+func DefaultStalkAndPounce() StalkAndPounceConfig {
+	return StalkAndPounceConfig{
+		StalkSpeed: 1.2, MaxStalkDist: 100, LeapHeight: 0.9, LeapDist: 0.8, PounceMaxDist: 25, StrikeDist: 4,
+		InterestTime: 40, StuckTime: 40,
+	}
 }
 
 // StalkAndPounce is StalkAndPounceOnTargetGoal: the fox creeps up on its

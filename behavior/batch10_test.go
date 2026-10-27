@@ -137,14 +137,14 @@ func newB10(w World, id ID, kind string, s *ShareablesConfig, inv int) (*Items, 
 }
 
 func b10Entry(name string, want, surplus int32) ShareableItem {
-	e := DefaultShareableItem
+	e := DefaultShareableItem()
 	e.Item, e.WantAmount, e.SurplusAmount = name, want, surplus
 	return e
 }
 
 func TestShareablesWantAndShareAmounts(t *testing.T) {
 	w := newB8World(&seqRandom{})
-	s := DefaultShareables
+	s := DefaultShareables()
 	s.Items = []ShareableItem{b10Entry(b10Bread, 3, 6)}
 	i, _ := newB10(w, 1, "minecraft:villager", &s, 4)
 	inv(i).Slots[0] = Item{Name: b10Bread, Count: 1}
@@ -172,7 +172,7 @@ func TestShareOffersCraftAndTake(t *testing.T) {
 	w := newB8World(&seqRandom{})
 	wheat := b10Entry(b10Wheat, 12, 24)
 	wheat.CraftInto = b10Bread
-	s := DefaultShareables
+	s := DefaultShareables()
 	s.Items = []ShareableItem{wheat, b10Entry(b10Bread, 3, 0)}
 	i, b := newB10(w, 1, "minecraft:villager", &s, 4)
 	inv(i).Slots[0] = Item{Name: b10Wheat, Count: 64}
@@ -196,13 +196,13 @@ func TestShareOffersCraftAndTake(t *testing.T) {
 
 func TestPickUpAdmiresAndBarters(t *testing.T) {
 	w := newB8World(&seqRandom{})
-	gold := DefaultShareableItem
+	gold := DefaultShareableItem()
 	gold.Item, gold.Admire, gold.Barter = b10Gold, true, true
-	s := DefaultShareables
+	s := DefaultShareables()
 	s.Items = []ShareableItem{gold}
 	i, b := newB10(w, 1, "minecraft:piglin", &s, 8)
-	i.Admire = &AdmireState{Config: DefaultAdmire, Giver: NoID}
-	i.Barter = &BarterState{Config: DefaultBarter}
+	i.Admire = &AdmireState{Config: DefaultAdmire(), Giver: NoID}
+	i.Barter = &BarterState{Config: DefaultBarter()}
 	it := newB9Item(w, 2, Vec3{Y: 64}, Item{Name: b10Gold, Count: 1})
 	if !i.PickupWanted(it, PickupFlags{ToHand: true}) {
 		t.Fatal("piglin does not want gold")
@@ -221,7 +221,7 @@ func TestPickUpHandsOverToEquip(t *testing.T) {
 	w := newB8World(&seqRandom{})
 	carrot := b10Entry(b10Carrot, 1, 0)
 	carrot.MaxAmount, carrot.PickupLimit = 10, 3
-	s := DefaultShareables
+	s := DefaultShareables()
 	s.Items = []ShareableItem{carrot}
 	i, b := newB10(w, 1, "minecraft:zombie", &s, 0)
 	i.Equip = &EquipState{}
@@ -244,7 +244,7 @@ func TestPickUpReplacesAWorseSlot(t *testing.T) {
 	w := newB8World(&seqRandom{})
 	gold, carrot := b10Entry(b10Gold, 1, 0), b10Entry(b10Carrot, 1, 0)
 	gold.StoredInInventory, carrot.Priority = true, 5
-	s := DefaultShareables
+	s := DefaultShareables()
 	s.Items = []ShareableItem{gold, carrot}
 	i, b := newB10(w, 1, "minecraft:piglin", &s, 1)
 	inv(i).Slots[0] = Item{Name: b10Carrot, Count: 1}

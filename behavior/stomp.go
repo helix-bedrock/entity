@@ -24,8 +24,10 @@ type StompEggConfig struct {
 	Interval int32 `json:"interval"`
 }
 
-// DefaultStompEgg is the goal's BDS defaults.
-var DefaultStompEgg = StompEggConfig{MoveToConfig: DefaultMoveTo, Interval: stompInterval}
+// DefaultStompEgg returns the goal's BDS defaults.
+func DefaultStompEgg() StompEggConfig {
+	return StompEggConfig{MoveToConfig: DefaultMoveTo(), Interval: stompInterval}
+}
 
 // StompEgg is StompEggGoal: a mob walks to a turtle egg and jumps on it
 // until it breaks.

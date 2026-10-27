@@ -39,7 +39,7 @@ func TestRandomSitTimesAndFlags(t *testing.T) {
 	w := newB3World(&seqRandom{ints: []int32{10, 7, 9}, floats: []float32{0.05}})
 	w.tick = 100
 	m := newB3Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:cat")
-	g := NewRandomSit(w, m, DefaultRandomSit)
+	g := NewRandomSit(w, m, DefaultRandomSit())
 	if g.CanUse() || g.next != 100+2000+10 {
 		t.Fatalf("first start at %d, want 2110", g.next)
 	}
@@ -66,7 +66,7 @@ func TestLookAtTradingNeverStarts(t *testing.T) {
 	p := newMob(w, 2, Vec3{X: 2}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.trader = 2
-	g := NewLookAtTrading(w, m, DefaultLookAtTarget)
+	g := NewLookAtTrading(w, m, DefaultLookAtTarget())
 	if g.CanUse() {
 		t.Fatal("look_at_trading_player started")
 	}
@@ -81,7 +81,7 @@ func TestLookAtTargetOnlyLooksAtTarget(t *testing.T) {
 	a, b := newB3Mob(w, 2, Vec3{X: 1}, "minecraft:pig"), newB3Mob(w, 3, Vec3{X: 2}, "minecraft:player")
 	w.entities = []Actor{m, a, b}
 	m.target = 3
-	g := NewLookAtTarget(w, m, DefaultLookAtTarget)
+	g := NewLookAtTarget(w, m, DefaultLookAtTarget())
 	if !g.CanUse() || g.target != 3 {
 		t.Fatalf("look target %d, want the mob's target 3", g.target)
 	}
@@ -97,7 +97,7 @@ func TestFacingAndTurns(t *testing.T) {
 		}
 	}
 	w := newB3World(&seqRandom{ints: []int32{1, 0}})
-	g := NewMoveToRandomBlock(w, newB3Mob(w, 1, Vec3{}, "x"), DefaultMoveToRandomBlock)
+	g := NewMoveToRandomBlock(w, newB3Mob(w, 1, Vec3{}, "x"), DefaultMoveToRandomBlock())
 	if g.turn(dirDown) != dirUp || g.turn(dirNorth) != dirEast || g.turn(dirNorth) != dirWest {
 		t.Fatal("stuck turns differ from BDS's tables")
 	}
@@ -106,7 +106,7 @@ func TestFacingAndTurns(t *testing.T) {
 func TestMoveToRandomBlockAimsHalfFollowRange(t *testing.T) {
 	w := newB3World(&seqRandom{ints: []int32{16, 16, 8}})
 	m := newB3Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:pig")
-	g := NewMoveToRandomBlock(w, m, DefaultMoveToRandomBlock)
+	g := NewMoveToRandomBlock(w, m, DefaultMoveToRandomBlock())
 	if !g.CanUse() || g.target.Y != 64 {
 		t.Fatalf("target %v", g.target)
 	}
@@ -130,7 +130,7 @@ func TestFollowMobDefaultFilterAndPreferred(t *testing.T) {
 	squid.families = []string{"squid"}
 	turtle, frog := newB3Mob(w, 4, Vec3{X: 3}, "minecraft:turtle"), newB3Mob(w, 5, Vec3{X: 4}, "minecraft:frog")
 	w.entities = []Actor{m, same, squid, turtle, frog}
-	c := DefaultFollowMob
+	c := DefaultFollowMob()
 	c.SearchRange, c.PreferredType = 8, "minecraft:frog"
 	g := NewFollowMob(w, m, c)
 	if !g.CanUse() || g.target != 5 {
@@ -149,7 +149,7 @@ func TestAvoidBlockRunsAwayAndSprints(t *testing.T) {
 	cactus := Pos{X: -1, Y: 64}
 	w.blocks[cactus] = Block{Name: "minecraft:cactus", HasCollision: true}
 	m := newB3Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:rabbit")
-	c := DefaultAvoidBlock
+	c := DefaultAvoidBlock()
 	c.SearchRange, c.SearchHeight, c.SprintSpeed = 4, 1, 1.5
 	c.TargetBlocks, c.OnEscape = []string{"minecraft:cactus"}, []string{"escaped"}
 	g := NewAvoidBlock(w, m, c)
@@ -178,7 +178,7 @@ func TestMoveToBlockReachesAndFires(t *testing.T) {
 	bed := Pos{X: 3, Y: 64}
 	w.blocks[bed] = Block{Name: "minecraft:bed", HasCollision: true}
 	m := newB3Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:cat")
-	c := DefaultMoveToBlock
+	c := DefaultMoveToBlock()
 	c.SearchRange, c.TargetBlocks, c.OnReach = 4, []string{"minecraft:bed"}, []string{"reached"}
 	c.TargetOffset = Vec3{Y: -0.5}
 	g := NewMoveToBlock(w, m, c)

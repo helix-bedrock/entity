@@ -69,12 +69,14 @@ type JumpAroundTargetConfig struct {
 	JumpAngles      []float32 `json:"jump_angles"`
 }
 
-// DefaultJumpAroundTarget is the goal's BDS defaults.
-var DefaultJumpAroundTarget = JumpAroundTargetConfig{
-	JumpCooldown: 10, JumpCooldownHurt: 2, LastHurtDuration: 40, PrepareJump: 10, MaxJumpVelocity: 1.4,
-	BoxScale: 0.7, LOSIgnoreHeight: 4, ValidDistance: Range[float32]{16, 400}, Spread: 90,
-	LandingDistance: Range[float32]{4, 8}, VerticalSpace: 4, SnapRange: 10,
-	JumpAngles: []float32{40, 55, 60, 75, 80},
+// DefaultJumpAroundTarget returns the goal's BDS defaults.
+func DefaultJumpAroundTarget() JumpAroundTargetConfig {
+	return JumpAroundTargetConfig{
+		JumpCooldown: 10, JumpCooldownHurt: 2, LastHurtDuration: 40, PrepareJump: 10, MaxJumpVelocity: 1.4,
+		BoxScale: 0.7, LOSIgnoreHeight: 4, ValidDistance: Range[float32]{16, 400}, Spread: 90,
+		LandingDistance: Range[float32]{4, 8}, VerticalSpace: 4, SnapRange: 10,
+		JumpAngles: []float32{40, 55, 60, 75, 80},
+	}
 }
 
 // JumpAroundTarget is JumpAroundTargetGoal: the breeze picks a landing spot

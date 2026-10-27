@@ -47,8 +47,10 @@ type ShareItemsConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
 }
 
-// DefaultShareItems is the goal's BDS defaults.
-var DefaultShareItems = ShareItemsConfig{GoalRadius: 0.5, MaxDist: 1, SpeedMultiplier: 1}
+// DefaultShareItems returns the goal's BDS defaults.
+func DefaultShareItems() ShareItemsConfig {
+	return ShareItemsConfig{GoalRadius: 0.5, MaxDist: 1, SpeedMultiplier: 1}
+}
 
 // The share_items goal's fixed numbers.
 const (

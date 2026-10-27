@@ -119,7 +119,7 @@ func TestOcelotSneaksSprintsAndHits(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 10, Y: 64}, "minecraft:chicken")
 	w.entities = []Actor{c, p}
 	c.target = 2
-	g := NewOcelotAttack(w, c, DefaultOcelotAttack)
+	g := NewOcelotAttack(w, c, DefaultOcelotAttack())
 	if !g.CanUse() {
 		t.Fatal("did not start with a target")
 	}
@@ -149,7 +149,7 @@ func TestFireAtTargetShootsOnce(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 5, Y: 64}, "minecraft:player")
 	w.entities = []Actor{b, p}
 	b.target = 2
-	c := DefaultFireAtTarget
+	c := DefaultFireAtTarget()
 	c.AttackRange = Range[float32]{0, 16}
 	c.ProjectileDef = "minecraft:breeze_wind_charge_projectile"
 	g := NewFireAtTarget(w, b, c)
@@ -216,7 +216,7 @@ func TestJumpAroundTargetJumpsAndRestores(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 6.5, Y: 64, Z: 0.5}, "minecraft:player")
 	w.entities = []Actor{b, p}
 	b.target = 2
-	g := NewJumpAroundTarget(w, b, DefaultJumpAroundTarget)
+	g := NewJumpAroundTarget(w, b, DefaultJumpAroundTarget())
 	if !g.CanUse() {
 		t.Fatal("did not find a landing spot")
 	}
@@ -257,7 +257,7 @@ func TestMoveAroundTargetPicksASpot(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 10, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	g := NewMoveAroundTarget(w, m, DefaultMoveAroundTarget)
+	g := NewMoveAroundTarget(w, m, DefaultMoveAroundTarget())
 	g.Start()
 	if !nearVec(m.nav.to, Vec3{X: 10, Y: 64, Z: -6}) || m.nav.speed != 0.6 {
 		t.Fatalf("behind: to %v speed %v, want (10, 64, -6) at 0.6", m.nav.to, m.nav.speed)
@@ -280,7 +280,7 @@ func TestAquaticChargeHitsAndCools(t *testing.T) {
 	w.entities = []Actor{m, p}
 	m.target = 2
 	m.wet[1], m.wet[2] = true, true
-	c := DefaultAquaticChargeAttack
+	c := DefaultAquaticChargeAttack()
 	c.AttackReach = 0
 	g := NewAquaticChargeAttack(w, m, c)
 	if !g.CanUse() {
@@ -311,7 +311,7 @@ func TestRamAttackRunsUpAndRams(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	c := DefaultRamAttack
+	c := DefaultRamAttack()
 	c.Cooldown = Range[float32]{}
 	g := NewRamAttack(w, m, c)
 	if !g.CanUse() {
@@ -354,7 +354,7 @@ func TestStalkAndPounceLeapsAndStrikes(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{X: 6, Y: 64}, "minecraft:chicken")
 	w.entities = []Actor{f, p}
 	f.target, f.ground = 2, true
-	g := NewStalkAndPounce(w, f, DefaultStalkAndPounce)
+	g := NewStalkAndPounce(w, f, DefaultStalkAndPounce())
 	if !g.CanUse() {
 		t.Fatal("did not start at 6 blocks")
 	}
@@ -385,7 +385,7 @@ func TestKnockbackRoarHitsAtAttackTime(t *testing.T) {
 	r := newB6Mob(w, 1, Vec3{Y: 64}, "minecraft:ravager")
 	e := newB6Mob(w, 2, Vec3{X: 2, Y: 64}, "minecraft:pillager")
 	w.entities = []Actor{r, e}
-	c := DefaultKnockbackRoar
+	c := DefaultKnockbackRoar()
 	c.OnRoarEnd = "minecraft:end_roar"
 	g := NewKnockbackRoar(w, r, c)
 	if g.CanUse() || !g.CanUse() {
@@ -421,7 +421,7 @@ func TestSwoopAttackDelayAndHit(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	g := NewSwoopAttack(w, m, DefaultSwoopAttack)
+	g := NewSwoopAttack(w, m, DefaultSwoopAttack())
 	if !g.CanUse() || g.delay != 2200 {
 		t.Fatalf("delay %d, want 2200 (the span is turned into ticks twice)", g.delay)
 	}
@@ -446,7 +446,7 @@ func TestCircleAroundAnchorCircles(t *testing.T) {
 	p := newB6Mob(w, 2, Vec3{Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	g := NewCircleAroundAnchor(w, m, DefaultCircleAroundAnchor)
+	g := NewCircleAroundAnchor(w, m, DefaultCircleAroundAnchor())
 	g.Start()
 	if g.radius != 10 || g.dir != 1 || g.anchor != (Vec3{Y: 64}) {
 		t.Fatalf("start: radius %v dir %v anchor %v", g.radius, g.dir, g.anchor)

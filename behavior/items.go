@@ -35,8 +35,10 @@ type AdmireConfig struct {
 	HurtCooldown int32 `json:"cooldown_after_being_attacked"`
 }
 
-// DefaultAdmire is the component's BDS defaults.
-var DefaultAdmire = AdmireConfig{Duration: 10, HurtCooldown: 10}
+// DefaultAdmire returns the component's BDS defaults.
+func DefaultAdmire() AdmireConfig {
+	return AdmireConfig{Duration: 10, HurtCooldown: 10}
+}
 
 // AdmireState is AdmireItemComponent: the item the mob is admiring.
 type AdmireState struct {
@@ -56,8 +58,10 @@ type BarterConfig struct {
 	HurtCooldown int32 `json:"cooldown_after_being_attacked"`
 }
 
-// DefaultBarter is the component's BDS defaults.
-var DefaultBarter = BarterConfig{HurtCooldown: 10}
+// DefaultBarter returns the component's BDS defaults.
+func DefaultBarter() BarterConfig {
+	return BarterConfig{HurtCooldown: 10}
+}
 
 // BarterState is BarterComponent: an item handed over to barter for.
 type BarterState struct {

@@ -19,8 +19,10 @@ type LeapConfig struct {
 	SetPersistent  bool    `json:"set_persistent"`
 }
 
-// DefaultLeap is the goal's BDS defaults.
-var DefaultLeap = LeapConfig{MustBeOnGround: true}
+// DefaultLeap returns the goal's BDS defaults.
+func DefaultLeap() LeapConfig {
+	return LeapConfig{MustBeOnGround: true}
+}
 
 // Leap is LeapAtTargetGoal: the mob jumps at a target 2 to 4 blocks away.
 type Leap struct {

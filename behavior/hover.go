@@ -16,8 +16,10 @@ type RandomHoverConfig struct {
 	HoverHeight Range[int32]
 }
 
-// DefaultRandomHover is the goal's BDS defaults.
-var DefaultRandomHover = RandomHoverConfig{SpeedMultiplier: 1, Interval: 120, XZDist: 10, YDist: 7}
+// DefaultRandomHover returns the goal's BDS defaults.
+func DefaultRandomHover() RandomHoverConfig {
+	return RandomHoverConfig{SpeedMultiplier: 1, Interval: 120, XZDist: 10, YDist: 7}
+}
 
 // RandomHover is RandomHoverGoal: a hovering mob drifts to random spots
 // ahead of it, lifted above the ground, and picks a new one each time it

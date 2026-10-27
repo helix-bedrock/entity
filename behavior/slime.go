@@ -40,8 +40,10 @@ type SlimeKeepOnJumpingConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
 }
 
-// DefaultSlimeKeepOnJumping is the goal's BDS defaults.
-var DefaultSlimeKeepOnJumping = SlimeKeepOnJumpingConfig{SpeedMultiplier: 1}
+// DefaultSlimeKeepOnJumping returns the goal's BDS defaults.
+func DefaultSlimeKeepOnJumping() SlimeKeepOnJumpingConfig {
+	return SlimeKeepOnJumpingConfig{SpeedMultiplier: 1}
+}
 
 // SlimeKeepOnJumping is SlimeKeepOnJumpingGoal: the slime's move control
 // keeps hopping every tick.
@@ -81,8 +83,10 @@ type SlimeFloatConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
 }
 
-// DefaultSlimeFloat is the goal's BDS defaults.
-var DefaultSlimeFloat = SlimeFloatConfig{JumpChance: 0.8, SpeedMultiplier: 1.2}
+// DefaultSlimeFloat returns the goal's BDS defaults.
+func DefaultSlimeFloat() SlimeFloatConfig {
+	return SlimeFloatConfig{JumpChance: 0.8, SpeedMultiplier: 1.2}
+}
 
 // SlimeFloat is SlimeFloatGoal: in water or lava the slime jumps up at
 // random and keeps hopping.
@@ -132,8 +136,10 @@ type SlimeRandomDirectionConfig struct {
 	TurnRange     int32   `json:"turn_range"`
 }
 
-// DefaultSlimeRandomDirection is the goal's BDS defaults.
-var DefaultSlimeRandomDirection = SlimeRandomDirectionConfig{AddRandomTime: 3, MinChangeTime: 2, TurnRange: 360}
+// DefaultSlimeRandomDirection returns the goal's BDS defaults.
+func DefaultSlimeRandomDirection() SlimeRandomDirectionConfig {
+	return SlimeRandomDirectionConfig{AddRandomTime: 3, MinChangeTime: 2, TurnRange: 360}
+}
 
 // SlimeRandomDirection is SlimeRandomDirectionGoal: with no target, the
 // slime turns to a new random yaw every so often.
@@ -208,8 +214,10 @@ type SlimeAttackConfig struct {
 	SetPersistent bool    `json:"set_persistent"`
 }
 
-// DefaultSlimeAttack is the goal's BDS defaults.
-var DefaultSlimeAttack = SlimeAttackConfig{XMaxRotation: 10, YMaxRotation: 10, SpeedMultiplier: 1, GrowTiredTime: 15}
+// DefaultSlimeAttack returns the goal's BDS defaults.
+func DefaultSlimeAttack() SlimeAttackConfig {
+	return SlimeAttackConfig{XMaxRotation: 10, YMaxRotation: 10, SpeedMultiplier: 1, GrowTiredTime: 15}
+}
 
 // SlimeAttack is SlimeAttackGoal: the slime faces its target and paths to
 // it every tick.

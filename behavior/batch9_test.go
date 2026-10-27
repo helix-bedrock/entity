@@ -273,7 +273,7 @@ func TestSnackingPicksUpFood(t *testing.T) {
 	m := newB9Mob(w, 1, Vec3{Y: 64}, "minecraft:panda")
 	food := newB9Item(w, 2, Vec3{X: 1, Y: 64}, Item{Name: "minecraft:bamboo", Aux: 3, Count: 2})
 	w.entities = []Actor{m, food}
-	g := NewSnacking(w, m, DefaultSnacking)
+	g := NewSnacking(w, m, DefaultSnacking())
 	g.cfg.Items = []string{"minecraft:bamboo"}
 	if !g.CanUse() || g.target != 2 {
 		t.Fatal("did not find the bamboo on the ground")
@@ -370,7 +370,7 @@ func TestPickupItemsWalksAndTakes(t *testing.T) {
 	m := newB9Mob(w, 1, Vec3{Y: 64}, "minecraft:piglin")
 	it := newB9Item(w, 2, Vec3{X: 0.2, Y: 64}, Item{Name: "minecraft:gold_ingot", Count: 1})
 	w.entities = []Actor{m, it}
-	c := DefaultPickupItems
+	c := DefaultPickupItems()
 	c.ExcludedItems = []string{"minecraft:stone"}
 	g := NewPickupItems(w, m, c)
 	if !g.CanUse() || g.target != 2 {

@@ -38,8 +38,10 @@ type PlayDeadConfig struct {
 	Filters Filter
 }
 
-// DefaultPlayDead is the goal's BDS defaults: duration 1 s.
-var DefaultPlayDead = PlayDeadConfig{Duration: 20, RandomStartChance: 1}
+// DefaultPlayDead returns the goal's BDS defaults: duration 1 s.
+func DefaultPlayDead() PlayDeadConfig {
+	return PlayDeadConfig{Duration: 20, RandomStartChance: 1}
+}
 
 // PlayDead is PlayDeadGoal: a hurt axolotl plays dead, sometimes healing
 // as it does.
@@ -138,8 +140,10 @@ type BegConfig struct {
 	LookTime     Range[int32]
 }
 
-// DefaultBeg is the goal's BDS defaults: look_time 2 to 4 s.
-var DefaultBeg = BegConfig{LookDistance: 8, LookTime: Range[int32]{Min: 40, Max: 80}}
+// DefaultBeg returns the goal's BDS defaults: look_time 2 to 4 s.
+func DefaultBeg() BegConfig {
+	return BegConfig{LookDistance: 8, LookTime: Range[int32]{Min: 40, Max: 80}}
+}
 
 // Beg is BegGoal: the wolf stares at a nearby player holding food it
 // likes.

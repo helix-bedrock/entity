@@ -38,8 +38,10 @@ type FollowMobConfig struct {
 	Filters Filter
 }
 
-// DefaultFollowMob is the goal's BDS defaults.
-var DefaultFollowMob = FollowMobConfig{SpeedMultiplier: 1, StopDistance: followMobStopDist}
+// DefaultFollowMob returns the goal's BDS defaults.
+func DefaultFollowMob() FollowMobConfig {
+	return FollowMobConfig{SpeedMultiplier: 1, StopDistance: followMobStopDist}
+}
 
 // defaultFollowFilter is the filter BDS builds when filters is empty: all
 // of, on the other entity, not the mob's own type family, none of

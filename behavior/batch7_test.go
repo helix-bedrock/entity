@@ -89,7 +89,7 @@ func (m *b7Mob) EntitiesOfType(dst []Actor, t int, self ID, b Box) []Actor {
 func TestEmergeRunsForItsDuration(t *testing.T) {
 	w := newB7World(&seqRandom{})
 	m := newB7Mob(w, 1, Vec3{Y: 64}, wardenType)
-	c := DefaultEmerge
+	c := DefaultEmerge()
 	c.OnDone = "minecraft:emerged"
 	g := NewEmerge(w, m, c)
 	if !g.CanUse() {
@@ -147,7 +147,7 @@ func TestDigInWaterRemovesAtOnce(t *testing.T) {
 	w := newB7World(&seqRandom{})
 	m := newB7Mob(w, 1, Vec3{Y: 64}, wardenType)
 	m.wet[1] = true
-	g := NewDig(w, m, DefaultDig)
+	g := NewDig(w, m, DefaultDig())
 	if !g.CanUse() {
 		t.Fatal("did not dig in water")
 	}
@@ -194,7 +194,7 @@ func TestSniffMarksTheNearestPlayer(t *testing.T) {
 	p.player = true
 	w.entities = []Actor{m, pig, p}
 	m.target = NoID
-	g := NewSniff(w, m, DefaultSniff)
+	g := NewSniff(w, m, DefaultSniff())
 	if !g.CanUse() {
 		t.Fatal("sniff found nothing")
 	}
@@ -252,7 +252,7 @@ func TestSonicBoomChargesThenFires(t *testing.T) {
 	v := newB7Mob(w, 2, Vec3{X: 4, Y: 64}, "minecraft:cow")
 	w.entities = []Actor{m, v}
 	m.target = 2
-	c := DefaultSonicBoom
+	c := DefaultSonicBoom()
 	c.Duration, c.KnockbackHorizontalStrength, c.KnockbackVerticalStrength = 60, 2.5, 0.5
 	g := NewSonicBoom(w, m, c)
 	if !g.CanUse() {
@@ -291,7 +291,7 @@ func TestCroakDrawsItsTimes(t *testing.T) {
 	w := newB7World(&seqRandom{floats: []float32{0.5, 0}})
 	m := newB7Mob(w, 1, Vec3{Y: 64}, "minecraft:frog")
 	dry := true
-	c := DefaultCroak
+	c := DefaultCroak()
 	c.Filters = func(Mob, Actor) bool { return dry }
 	g := NewCroak(w, m, c)
 	if g.CanUse() || g.next != 300 {

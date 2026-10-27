@@ -27,10 +27,12 @@ type OcelotAttackConfig struct {
 	WalkSpeed        float32 `json:"walk_speed_multiplier"`
 }
 
-// DefaultOcelotAttack is the goal's BDS defaults.
-var DefaultOcelotAttack = OcelotAttackConfig{
-	Cooldown: 20, XMaxRotation: 30, YMaxHeadRotation: 30, MaxDistance: 15, MaxSneakRange: 15,
-	MaxSprintRange: 4, ReachMultiplier: 2, SneakSpeed: 0.6, SprintSpeed: 1.33, WalkSpeed: 0.8,
+// DefaultOcelotAttack returns the goal's BDS defaults.
+func DefaultOcelotAttack() OcelotAttackConfig {
+	return OcelotAttackConfig{
+		Cooldown: 20, XMaxRotation: 30, YMaxHeadRotation: 30, MaxDistance: 15, MaxSneakRange: 15,
+		MaxSprintRange: 4, ReachMultiplier: 2, SneakSpeed: 0.6, SprintSpeed: 1.33, WalkSpeed: 0.8,
+	}
 }
 
 // OcelotAttack is OcelotAttackGoal: the cat sneaks up on its target, then

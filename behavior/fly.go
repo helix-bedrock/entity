@@ -17,8 +17,10 @@ type RandomFlyConfig struct {
 	CanLandOnTrees bool `json:"can_land_on_trees"`
 }
 
-// DefaultRandomFly is the goal's BDS defaults.
-var DefaultRandomFly = RandomFlyConfig{StrollConfig: DefaultStroll, CanLandOnTrees: true}
+// DefaultRandomFly returns the goal's BDS defaults.
+func DefaultRandomFly() RandomFlyConfig {
+	return RandomFlyConfig{StrollConfig: DefaultStroll(), CanLandOnTrees: true}
+}
 
 // RandomFly is RandomFlyingGoal: random_stroll for fliers, which may pick
 // a perch on a tree.

@@ -23,10 +23,12 @@ type CircleAroundAnchorConfig struct {
 	HeightAbove     Range[float32]
 }
 
-// DefaultCircleAroundAnchor is the goal's BDS defaults.
-var DefaultCircleAroundAnchor = CircleAroundAnchorConfig{
-	RadiusChange: 1, RadiusAdjustmentChance: 0.004, HeightAdjustmentChance: 0.002857, GoalRadius: 0.25,
-	SpeedMultiplier: 1, AngleChange: 15, RadiusRange: Range[float32]{5, 15},
+// DefaultCircleAroundAnchor returns the goal's BDS defaults.
+func DefaultCircleAroundAnchor() CircleAroundAnchorConfig {
+	return CircleAroundAnchorConfig{
+		RadiusChange: 1, RadiusAdjustmentChance: 0.004, HeightAdjustmentChance: 0.002857, GoalRadius: 0.25,
+		SpeedMultiplier: 1, AngleChange: 15, RadiusRange: Range[float32]{5, 15},
+	}
 }
 
 // CircleAroundAnchor is CircleAroundAnchorGoal: the phantom flies circles

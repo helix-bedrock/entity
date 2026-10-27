@@ -198,7 +198,7 @@ func TestSlimeRandomDirectionTurns(t *testing.T) {
 	w := newB4World(&seqRandom{ints: []int32{10, 90}})
 	s := newB4Slime(w)
 	s.ground = true
-	g := NewSlimeRandomDirection(w, s, DefaultSlimeRandomDirection)
+	g := NewSlimeRandomDirection(w, s, DefaultSlimeRandomDirection())
 	if !g.CanUse() {
 		t.Fatal("slime_random_direction did not start")
 	}
@@ -221,7 +221,7 @@ func TestSlimeRandomDirectionTurns(t *testing.T) {
 func TestSlimeFloatAndKeepJumping(t *testing.T) {
 	w := newB4World(&seqRandom{floats: []float32{0.5, 0.9}})
 	s := newB4Slime(w)
-	f := NewSlimeFloat(w, s, DefaultSlimeFloat)
+	f := NewSlimeFloat(w, s, DefaultSlimeFloat())
 	if f.CanUse() {
 		t.Fatal("slime_float started on land")
 	}
@@ -234,7 +234,7 @@ func TestSlimeFloatAndKeepJumping(t *testing.T) {
 	if s.jumps != 1 || s.moving != 1.2 {
 		t.Fatalf("jumps %d speed %v, want 1 jump at 1.2", s.jumps, s.moving)
 	}
-	k := NewSlimeKeepOnJumping(w, s, DefaultSlimeKeepOnJumping)
+	k := NewSlimeKeepOnJumping(w, s, DefaultSlimeKeepOnJumping())
 	k.Tick()
 	if s.moving != 1 {
 		t.Fatalf("keep jumping speed %v, want 1", s.moving)
@@ -251,7 +251,7 @@ func TestSlimeAttackPathsAndTires(t *testing.T) {
 	p := &eyedMob{newB3Mob(w, 2, Vec3{X: 4, Y: 64}, "minecraft:player")}
 	w.entities = []Actor{s, p}
 	s.target = 2
-	c := DefaultSlimeAttack
+	c := DefaultSlimeAttack()
 	c.GrowTiredTime = 0.1
 	g := NewSlimeAttack(w, s, c)
 	if !g.CanUse() {

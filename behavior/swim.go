@@ -27,8 +27,10 @@ type SwimIdleConfig struct {
 	SuccessRate float32 `json:"success_rate"`
 }
 
-// DefaultSwimIdle is the goal's BDS defaults: 5 seconds and 0.1.
-var DefaultSwimIdle = SwimIdleConfig{IdleTime: 5 * ticksPerSecond, SuccessRate: 0.1}
+// DefaultSwimIdle returns the goal's BDS defaults: 5 seconds and 0.1.
+func DefaultSwimIdle() SwimIdleConfig {
+	return SwimIdleConfig{IdleTime: 5 * ticksPerSecond, SuccessRate: 0.1}
+}
 
 // SwimIdle is SwimIdleGoal: a fish that is not moving now and then stays
 // still for a while.
@@ -78,8 +80,10 @@ type RandomSwimConfig struct {
 	AvoidSurface bool `json:"avoid_surface"`
 }
 
-// DefaultRandomSwim is the goal's BDS defaults.
-var DefaultRandomSwim = RandomSwimConfig{StrollConfig: DefaultStroll, AvoidSurface: true}
+// DefaultRandomSwim returns the goal's BDS defaults.
+func DefaultRandomSwim() RandomSwimConfig {
+	return RandomSwimConfig{StrollConfig: DefaultStroll(), AvoidSurface: true}
+}
 
 // RandomSwim is RandomSwimmingGoal: random_stroll for swimmers, aiming at a
 // random depth below the surface that is not too steep to reach.
@@ -179,8 +183,10 @@ type RandomBreachConfig struct {
 	Cooldown int32
 }
 
-// DefaultRandomBreach is the goal's BDS defaults.
-var DefaultRandomBreach = RandomBreachConfig{StrollConfig: DefaultStroll}
+// DefaultRandomBreach returns the goal's BDS defaults.
+func DefaultRandomBreach() RandomBreachConfig {
+	return RandomBreachConfig{StrollConfig: DefaultStroll()}
+}
 
 // RandomBreach is RandomBreachingGoal: a swimmer heads for the air just
 // above the surface, to jump out of the water.

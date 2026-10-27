@@ -60,7 +60,7 @@ func (m *b8Mob) Teleport(p Vec3)                          { m.teleport = append(
 func TestLayDownStartsAndStopsByChance(t *testing.T) {
 	w := newB8World(&seqRandom{ints: []int32{3, 0, 5, 0}})
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:panda")
-	g := NewLayDown(w, m, DefaultLayDown)
+	g := NewLayDown(w, m, DefaultLayDown())
 	if g.CanUse() || !g.CanUse() {
 		t.Fatal("lay_down should start on a 0 draw only")
 	}
@@ -104,7 +104,7 @@ func TestSneezeStartlesAndDrops(t *testing.T) {
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:panda")
 	o := newB8Mob(w, 2, Vec3{X: 2, Y: 64}, "minecraft:panda")
 	w.entities = []Actor{m, o}
-	c := DefaultSneeze
+	c := DefaultSneeze()
 	c.Cooldown, c.Sound, c.PrepareSound, c.LootTable, c.WithinRadius = 2, 7, 8, "loot/panda", 4
 	c.EntityTypes = []Filter{func(_ Mob, a Actor) bool { return a.Type() == "minecraft:panda" }}
 	g := NewSneeze(w, m, c)
@@ -137,7 +137,7 @@ func TestNapWakesForMobs(t *testing.T) {
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:fox")
 	o := newB8Mob(w, 2, Vec3{X: 3, Y: 64}, "minecraft:chicken")
 	w.entities = []Actor{m}
-	c := DefaultNap
+	c := DefaultNap()
 	c.WakeMobExceptions = func(_ Mob, a Actor) bool { return a.Type() == "minecraft:fox" }
 	g := NewNap(w, m, c)
 	if !g.CanUse() {
@@ -173,7 +173,7 @@ func TestFindCoverPicksACoveredSpot(t *testing.T) {
 func TestPlayDeadOncePerHit(t *testing.T) {
 	w := newB8World(&seqRandom{floats: []float32{0.1}, ints: []int32{1}})
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:axolotl")
-	c := DefaultPlayDead
+	c := DefaultPlayDead()
 	c.Duration, c.RandomStartChance, c.ForceBelowHealth = 200, 0.33, 8
 	c.RandomDamageRange = Range[int32]{Min: 0, Max: 2}
 	c.ApplyRegeneration = true
@@ -235,7 +235,7 @@ func TestBegStaresAtFood(t *testing.T) {
 func TestOcelotSitOnBlockValidBlocks(t *testing.T) {
 	w := newB8World(&seqRandom{})
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:cat")
-	g := NewOcelotSitOnBlock(w, m, DefaultMoveTo)
+	g := NewOcelotSitOnBlock(w, m, DefaultMoveTo())
 	chest, bed := Pos{X: 1, Y: 64}, Pos{X: 2, Y: 64}
 	w.blocks[chest] = Block{Name: blockChest, ShapeTop: 0.875}
 	w.blocks[bed] = Block{Name: blockBed}

@@ -83,10 +83,12 @@ type RamAttackConfig struct {
 	OnStart  string
 }
 
-// DefaultRamAttack is the goal's BDS defaults.
-var DefaultRamAttack = RamAttackConfig{
-	RamDistance: 7, MinRamDistance: 4, KnockbackForce: 5, KnockbackHeight: 0.1, BabyModifier: 1.0 / 3,
-	RunSpeed: 1, RamSpeed: 2, PreRamSound: NoSound, RamImpactSound: NoSound, Cooldown: Range[float32]{10, 20},
+// DefaultRamAttack returns the goal's BDS defaults.
+func DefaultRamAttack() RamAttackConfig {
+	return RamAttackConfig{
+		RamDistance: 7, MinRamDistance: 4, KnockbackForce: 5, KnockbackHeight: 0.1, BabyModifier: 1.0 / 3,
+		RunSpeed: 1, RamSpeed: 2, PreRamSound: NoSound, RamImpactSound: NoSound, Cooldown: Range[float32]{10, 20},
+	}
 }
 
 // ramSpot is a run-up spot in one direction from the target.

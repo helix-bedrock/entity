@@ -9,8 +9,10 @@ type FloatConfig struct {
 	DismountTicks int32
 }
 
-// DefaultFloat is the goal's BDS defaults.
-var DefaultFloat = FloatConfig{ChancePerTickToFloat: 0.8}
+// DefaultFloat returns the goal's BDS defaults.
+func DefaultFloat() FloatConfig {
+	return FloatConfig{ChancePerTickToFloat: 0.8}
+}
 
 // Float is FloatGoal: a mob in water or lava jumps to stay afloat.
 type Float struct {

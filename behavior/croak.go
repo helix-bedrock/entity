@@ -9,11 +9,13 @@ type CroakConfig struct {
 	Filters Filter
 }
 
-// DefaultCroak is the goal's BDS defaults: interval 10 to 20 s, duration
+// DefaultCroak returns the goal's BDS defaults: interval 10 to 20 s, duration
 // 4.5 s.
-var DefaultCroak = CroakConfig{
-	Interval: Range[float32]{Min: 10, Max: 20},
-	Duration: Range[float32]{Min: 4.5, Max: 4.5},
+func DefaultCroak() CroakConfig {
+	return CroakConfig{
+		Interval: Range[float32]{Min: 10, Max: 20},
+		Duration: Range[float32]{Min: 4.5, Max: 4.5},
+	}
 }
 
 // Croak is CroakGoal: the frog croaks now and then while its filters pass.
@@ -39,7 +41,7 @@ func (g *Croak) CanUse() bool {
 		return false
 	}
 	if g.cfg.Interval.Min > g.cfg.Interval.Max {
-		g.cfg.Interval = DefaultCroak.Interval
+		g.cfg.Interval = DefaultCroak().Interval
 	}
 	if g.next == 0 {
 		g.next = g.world.CurrentTick() + randomTicks(g.world.IRandom(), g.cfg.Interval)
@@ -54,7 +56,7 @@ func (g *Croak) CanContinueToUse() bool { return g.pass() && g.world.CurrentTick
 func (g *Croak) Start() {
 	g.mob.SetFlag(FlagCroaking, true)
 	if g.cfg.Duration.Min > g.cfg.Duration.Max {
-		g.cfg.Duration = DefaultCroak.Duration
+		g.cfg.Duration = DefaultCroak().Duration
 	}
 	g.until = g.world.CurrentTick() + randomTicks(g.world.IRandom(), g.cfg.Duration)
 }

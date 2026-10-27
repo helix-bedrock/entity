@@ -42,10 +42,12 @@ type KnockbackRoarConfig struct {
 	FilterOnRoarer bool
 }
 
-// DefaultKnockbackRoar is the goal's BDS defaults.
-var DefaultKnockbackRoar = KnockbackRoarConfig{
-	Duration: 20, AttackTime: 10, KnockbackDamage: 6, HorizontalStrength: 4, VerticalStrength: 4,
-	KnockbackHeightCap: 0.4, KnockbackRange: 4, Cooldown: 2, FilterOnRoarer: true,
+// DefaultKnockbackRoar returns the goal's BDS defaults.
+func DefaultKnockbackRoar() KnockbackRoarConfig {
+	return KnockbackRoarConfig{
+		Duration: 20, AttackTime: 10, KnockbackDamage: 6, HorizontalStrength: 4, VerticalStrength: 4,
+		KnockbackHeightCap: 0.4, KnockbackRange: 4, Cooldown: 2, FilterOnRoarer: true,
+	}
 }
 
 // KnockbackRoar is KnockbackRoarGoal: the ravager roars, knocking back and

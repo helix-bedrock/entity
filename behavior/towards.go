@@ -13,9 +13,11 @@ type MoveTowardsTargetConfig struct {
 	WithinRadius    float32 `json:"within_radius"`
 }
 
-// DefaultMoveTowardsTarget is the goal's BDS defaults. With within_radius 0
+// DefaultMoveTowardsTarget returns the goal's BDS defaults. With within_radius 0
 // the goal only starts on a target at the mob's exact position.
-var DefaultMoveTowardsTarget = MoveTowardsTargetConfig{SpeedMultiplier: 1}
+func DefaultMoveTowardsTarget() MoveTowardsTargetConfig {
+	return MoveTowardsTargetConfig{SpeedMultiplier: 1}
+}
 
 // MoveTowardsTarget is MoveTowardsTargetGoal: the mob walks to a random
 // spot on the way to its target while the target is within the radius.

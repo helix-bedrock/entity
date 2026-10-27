@@ -27,11 +27,15 @@ type AvoidConfig struct {
 	OnEscape               string
 }
 
-// DefaultAvoid is the goal's BDS defaults (the avoid_mob_type schema).
-var DefaultAvoid = AvoidConfig{H: 16, V: 7, MaxDist: 3, MaxFlee: 10, ProbabilityPerStrength: 1, SprintDistance: 7, Sound: NoSound}
+// DefaultAvoid returns the goal's BDS defaults (the avoid_mob_type schema).
+func DefaultAvoid() AvoidConfig {
+	return AvoidConfig{H: 16, V: 7, MaxDist: 3, MaxFlee: 10, ProbabilityPerStrength: 1, SprintDistance: 7, Sound: NoSound}
+}
 
-// DefaultAvoidType is an entry's BDS defaults.
-var DefaultAvoidType = AvoidType{WalkSpeed: 1, SprintSpeed: 1}
+// DefaultAvoidType returns an entry's BDS defaults.
+func DefaultAvoidType() AvoidType {
+	return AvoidType{WalkSpeed: 1, SprintSpeed: 1}
+}
 
 // Avoider is optional on the mob: the strength and mark variant the avoid
 // goal reads. A mob without it has no strength and mark variant 1.

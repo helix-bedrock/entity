@@ -17,15 +17,15 @@ type DelayedAttackConfig struct {
 	Sound int
 }
 
-// DefaultDelayedAttack is the goal's BDS defaults: melee_attack's with a
+// DefaultDelayedAttack returns the goal's BDS defaults: melee_attack's with a
 // reach of 1.5 and track_target on, and a 0.75 second attack that hits
 // halfway.
-var DefaultDelayedAttack = func() DelayedAttackConfig {
-	c := DelayedAttackConfig{MeleeConfig: DefaultMelee, AttackDuration: 15, HitDelay: 7, Sound: delayedAttackSound}
+func DefaultDelayedAttack() DelayedAttackConfig {
+	c := DelayedAttackConfig{MeleeConfig: DefaultMelee(), AttackDuration: 15, HitDelay: 7, Sound: delayedAttackSound}
 	c.ReachMultiplier = 1.5
 	c.TrackTarget = true
 	return c
-}()
+}
 
 // DelayedAttack is DelayedAttackGoal: melee_attack whose hit lands part way
 // through an attack that, once started, runs to its end.
@@ -114,8 +114,10 @@ type StompAttackConfig struct {
 	NoDamageRangeMultiplier float32 `json:"no_damage_range_multiplier"`
 }
 
-// DefaultStompAttack is the goal's BDS defaults.
-var DefaultStompAttack = StompAttackConfig{MeleeConfig: DefaultMelee, StompRangeMultiplier: 2, NoDamageRangeMultiplier: 2}
+// DefaultStompAttack returns the goal's BDS defaults.
+func DefaultStompAttack() StompAttackConfig {
+	return StompAttackConfig{MeleeConfig: DefaultMelee(), StompRangeMultiplier: 2, NoDamageRangeMultiplier: 2}
+}
 
 // StompAttack is StompAttackGoal: melee_attack where the mob stands up
 // (FlagStanding) when the target is near and stomps when it is in range.

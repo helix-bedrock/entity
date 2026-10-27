@@ -32,10 +32,12 @@ type FollowOwnerConfig struct {
 	RandomTeleport, RepathAfterTeleport bool
 }
 
-// DefaultFollowOwner is the goal's BDS defaults.
-var DefaultFollowOwner = FollowOwnerConfig{
-	SpeedMultiplier: 1, StartDistance: 10, StopDistance: 2, MaxDistance: 60,
-	CanTeleport: true, IgnoreVibration: true, RandomTeleport: true, RepathAfterTeleport: true,
+// DefaultFollowOwner returns the goal's BDS defaults.
+func DefaultFollowOwner() FollowOwnerConfig {
+	return FollowOwnerConfig{
+		SpeedMultiplier: 1, StartDistance: 10, StopDistance: 2, MaxDistance: 60,
+		CanTeleport: true, IgnoreVibration: true, RandomTeleport: true, RepathAfterTeleport: true,
+	}
 }
 
 // FollowOwner is FollowOwnerGoal: a pet walks after its owner and

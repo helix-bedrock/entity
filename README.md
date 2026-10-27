@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-26: **the AI core runs, and 111 of the 170 vanilla goals are built**, ported from
+Status as of 2026-10-27: **the AI core runs, and 113 of the 182 vanilla goals are built**, ported from
 BDS 1.26.52.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control

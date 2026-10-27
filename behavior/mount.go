@@ -17,8 +17,10 @@ type MountPathingConfig struct {
 	TrackTarget bool    `json:"track_target"`
 }
 
-// DefaultMountPathing is the goal's BDS defaults.
-var DefaultMountPathing = MountPathingConfig{SpeedMultiplier: 1}
+// DefaultMountPathing returns the goal's BDS defaults.
+func DefaultMountPathing() MountPathingConfig {
+	return MountPathingConfig{SpeedMultiplier: 1}
+}
 
 // MountPathing is MountPathingGoal: a mount carrying a mob walks toward its
 // rider's target.

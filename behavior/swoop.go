@@ -22,8 +22,10 @@ type SwoopAttackConfig struct {
 	DelayRange Range[float32]
 }
 
-// DefaultSwoopAttack is the goal's BDS defaults.
-var DefaultSwoopAttack = SwoopAttackConfig{DamageReach: 0.2, SpeedMultiplier: 1, DelayRange: Range[float32]{200, 400}}
+// DefaultSwoopAttack returns the goal's BDS defaults.
+func DefaultSwoopAttack() SwoopAttackConfig {
+	return SwoopAttackConfig{DamageReach: 0.2, SpeedMultiplier: 1, DelayRange: Range[float32]{200, 400}}
+}
 
 // SwoopAttack is SwoopAttackGoal: the phantom dives at its target and
 // pulls up after one hit.

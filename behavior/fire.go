@@ -47,10 +47,12 @@ type FireAtTargetConfig struct {
 	RotateOffset bool
 }
 
-// DefaultFireAtTarget is the goal's BDS defaults.
-var DefaultFireAtTarget = FireAtTargetConfig{
-	AttackCooldown: 10, PreShootDelay: 15, PostShootDelay: 4, MaxHeadRotationX: 30, MaxHeadRotationY: 30,
-	RangedFOV: 90, OwnerAnchor: fireAnchorBody, TargetAnchor: fireAnchorBody, RotateOffset: true,
+// DefaultFireAtTarget returns the goal's BDS defaults.
+func DefaultFireAtTarget() FireAtTargetConfig {
+	return FireAtTargetConfig{
+		AttackCooldown: 10, PreShootDelay: 15, PostShootDelay: 4, MaxHeadRotationX: 30, MaxHeadRotationY: 30,
+		RangedFOV: 90, OwnerAnchor: fireAnchorBody, TargetAnchor: fireAnchorBody, RotateOffset: true,
+	}
 }
 
 // FireAtTarget is FireAtTargetGoal: the mob turns to its target and fires

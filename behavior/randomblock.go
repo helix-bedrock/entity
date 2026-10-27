@@ -41,8 +41,10 @@ type MoveToRandomBlockConfig struct {
 	BlockDistance   float32 `json:"block_distance"`
 }
 
-// DefaultMoveToRandomBlock is the goal's BDS defaults.
-var DefaultMoveToRandomBlock = MoveToRandomBlockConfig{SpeedMultiplier: 1, BlockDistance: 16}
+// DefaultMoveToRandomBlock returns the goal's BDS defaults.
+func DefaultMoveToRandomBlock() MoveToRandomBlockConfig {
+	return MoveToRandomBlockConfig{SpeedMultiplier: 1, BlockDistance: 16}
+}
 
 // MoveToRandomBlock is MoveToRandomBlockGoal: the mob walks to a random
 // block on the ground, turning aside when it gets stuck.

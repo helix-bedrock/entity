@@ -28,8 +28,10 @@ type DefendTrustedConfig struct {
 	OnDefendStart string
 }
 
-// DefaultDefendTrusted is the goal's BDS defaults.
-var DefaultDefendTrusted = DefendTrustedConfig{NearestAttackableConfig: DefaultNearestAttackable, AggroSound: NoSound}
+// DefaultDefendTrusted returns the goal's BDS defaults.
+func DefaultDefendTrusted() DefendTrustedConfig {
+	return DefendTrustedConfig{NearestAttackableConfig: DefaultNearestAttackable(), AggroSound: NoSound}
+}
 
 // DefendTrusted is DefendTrustedTargetGoal: the mob targets whatever last
 // hurt one of the entities it trusts.
@@ -113,8 +115,10 @@ type DefendVillageConfig struct {
 	AttackChance float32 `json:"attack_chance"`
 }
 
-// DefaultDefendVillage is the goal's BDS defaults.
-var DefaultDefendVillage = DefendVillageConfig{NearestAttackableConfig: DefaultNearestAttackable, AttackChance: 0.05}
+// DefaultDefendVillage returns the goal's BDS defaults.
+func DefaultDefendVillage() DefendVillageConfig {
+	return DefendVillageConfig{NearestAttackableConfig: DefaultNearestAttackable(), AttackChance: 0.05}
+}
 
 // DefendVillage is DefendVillageTargetGoal: the mob now and then targets
 // the village's nearest aggressor, or a player the village dislikes.

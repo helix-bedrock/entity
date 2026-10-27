@@ -15,7 +15,7 @@ type OwnerHurtBy struct{ target }
 // defaults: they read nothing from their JSON.
 func NewOwnerHurtBy(w World, m Targeter) *OwnerHurtBy {
 	return &OwnerHurtBy{target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m,
-		forget: DefaultNearestAttackable.MustSeeForget}}
+		forget: DefaultNearestAttackable().MustSeeForget}}
 }
 
 // owner is the pet's owner, when the pet is tamed, has no target and is
@@ -82,7 +82,7 @@ type OwnerHurt struct {
 // NewOwnerHurt makes the goal.
 func NewOwnerHurt(w World, m Targeter) *OwnerHurt {
 	return &OwnerHurt{target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m,
-		forget: DefaultNearestAttackable.MustSeeForget}}
+		forget: DefaultNearestAttackable().MustSeeForget}}
 }
 
 // CanUse implements goal.Goal.
@@ -123,8 +123,10 @@ type TeleportToOwnerConfig struct {
 	Cooldown int32
 }
 
-// DefaultTeleportToOwner is the goal's BDS defaults.
-var DefaultTeleportToOwner = TeleportToOwnerConfig{Cooldown: teleportOwnerCooldown}
+// DefaultTeleportToOwner returns the goal's BDS defaults.
+func DefaultTeleportToOwner() TeleportToOwnerConfig {
+	return TeleportToOwnerConfig{Cooldown: teleportOwnerCooldown}
+}
 
 // TeleportToOwner is TeleportToOwnerGoal: when its filters pass, a pet
 // jumps to a free spot next to its owner. It runs for one tick.

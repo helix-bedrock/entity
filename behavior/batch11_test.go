@@ -55,7 +55,7 @@ func (m *b11Mob) WalkDirectly(_, to Vec3, _, _, _ int32) bool {
 func TestRollSimulatesThePathOnFlatGround(t *testing.T) {
 	w := newB11World(&seqRandom{floats: []float32{0.005}})
 	m := newB11Mob(w, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:panda")
-	g := NewRoll(w, m, DefaultRoll)
+	g := NewRoll(w, m, DefaultRoll())
 	if !g.CanUse() || len(m.walkTo) != 1 {
 		t.Fatalf("roll did not start: %v", m.walkTo)
 	}
@@ -83,7 +83,7 @@ func TestRollStepsHopAndStop(t *testing.T) {
 	w := newB11World(&seqRandom{})
 	m := newB11Mob(w, Vec3{Y: 64}, "minecraft:panda")
 	m.hasCount, m.ground = true, true
-	g := NewRoll(w, m, DefaultRoll)
+	g := NewRoll(w, m, DefaultRoll())
 	g.Tick()
 	if m.vel.Y != rollHop || m.vel.Z != rollSpeed {
 		t.Fatalf("first step %+v", m.vel)
@@ -154,7 +154,7 @@ func TestLayEggLaysOnSand(t *testing.T) {
 	w.blocks[sand] = Block{Name: "minecraft:sand", Solid: true}
 	m := newB11Mob(w, Vec3{X: 2, Y: 64}, "minecraft:turtle")
 	m.flags[FlagHasEgg] = true
-	c := DefaultLayEgg
+	c := DefaultLayEgg()
 	c.SearchRange, c.SearchHeight, c.GoalRadius, c.OnLay = 4, 2, 1.5, []string{"laid_egg"}
 	g := NewLayEgg(w, m, c)
 	if !g.CanUse() || g.target != sand {
@@ -191,7 +191,7 @@ func TestJumpToBlockPicksTurnsAndJumps(t *testing.T) {
 		}
 		return path.NodeOpen
 	}
-	g := NewJumpToBlock(w, m, DefaultJumpToBlock)
+	g := NewJumpToBlock(w, m, DefaultJumpToBlock())
 	if g.CanUse() {
 		t.Fatal("jumped during the first cooldown")
 	}

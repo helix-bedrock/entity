@@ -31,8 +31,10 @@ type MoveToBlockConfig struct {
 // target as target, and the block at p.
 type BlockFilter func(self Mob, target Actor, p Pos) bool
 
-// DefaultMoveToBlock is the goal's BDS defaults.
-var DefaultMoveToBlock = MoveToBlockConfig{SpeedMultiplier: 1, SearchHeight: 1, TickInterval: 20, GoalRadius: 0.5, StartChance: 1}
+// DefaultMoveToBlock returns the goal's BDS defaults.
+func DefaultMoveToBlock() MoveToBlockConfig {
+	return MoveToBlockConfig{SpeedMultiplier: 1, SearchHeight: 1, TickInterval: 20, GoalRadius: 0.5, StartChance: 1}
+}
 
 // MoveToBlock is MoveToBlockGoal: the mob walks to a block of a list, fires
 // on_reach there and on_stay_completed after staying.

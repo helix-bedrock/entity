@@ -33,8 +33,10 @@ type LookAtConfig struct {
 	Filters  Filter
 }
 
-// DefaultLookAt is the goal's BDS defaults.
-var DefaultLookAt = LookAtConfig{LookDistance: 8, Probability: 0.02, AngleVertical: 360, AngleHorizontal: 360, LookTime: Range[int32]{40, 80}}
+// DefaultLookAt returns the goal's BDS defaults.
+func DefaultLookAt() LookAtConfig {
+	return LookAtConfig{LookDistance: 8, Probability: 0.02, AngleVertical: 360, AngleHorizontal: 360, LookTime: Range[int32]{40, 80}}
+}
 
 // LookAt is LookAtActorGoal: now and then the mob looks at a nearby entity
 // in its view.
@@ -180,8 +182,10 @@ type RandomLookConfig struct {
 	Probability float32 `json:"probability"`
 }
 
-// DefaultRandomLook is the goal's BDS defaults.
-var DefaultRandomLook = RandomLookConfig{LookTime: Range[int32]{20, 40}, Angle: Range[float32]{-180, 180}, Probability: 0.02}
+// DefaultRandomLook returns the goal's BDS defaults.
+func DefaultRandomLook() RandomLookConfig {
+	return RandomLookConfig{LookTime: Range[int32]{20, 40}, Angle: Range[float32]{-180, 180}, Probability: 0.02}
+}
 
 // RandomLook is RandomLookAroundGoal: the mob turns its head to a random
 // direction for a while.
@@ -240,8 +244,10 @@ type RandomLookSitConfig struct {
 	ContinueSittingReload bool `json:"continue_sitting_on_reload"`
 }
 
-// DefaultRandomLookSit is the goal's BDS defaults.
-var DefaultRandomLookSit = RandomLookSitConfig{RandomLookConfig: DefaultRandomLook, Looks: Range[int32]{1, 2}}
+// DefaultRandomLookSit returns the goal's BDS defaults.
+func DefaultRandomLookSit() RandomLookSitConfig {
+	return RandomLookSitConfig{RandomLookConfig: DefaultRandomLook(), Looks: Range[int32]{1, 2}}
+}
 
 // RandomLookSit is RandomLookAroundAndSitGoal: the mob sits down and looks
 // around a few times, then waits out a cooldown.
@@ -309,9 +315,11 @@ func (g *RandomLookSit) Tick() {
 	g.timer = randomInt(r, g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
 
-// DefaultLookAtTarget is look_at_target's and look_at_trading_player's BDS
+// DefaultLookAtTarget returns look_at_target's and look_at_trading_player's BDS
 // defaults; their JSON has only look_time.
-var DefaultLookAtTarget = DefaultLookAt
+func DefaultLookAtTarget() LookAtConfig {
+	return DefaultLookAt()
+}
 
 // NewLookAtTarget makes look_at_target: LookAtActorGoal whose only filter
 // is BDS's is_target test, so the mob looks at its own target.

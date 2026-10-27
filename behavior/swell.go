@@ -22,8 +22,10 @@ type SwellConfig struct {
 	StopDistance  float32 `json:"stop_distance"`
 }
 
-// DefaultSwell is the goal's BDS defaults.
-var DefaultSwell = SwellConfig{StartDistance: 10, StopDistance: 2}
+// DefaultSwell returns the goal's BDS defaults.
+func DefaultSwell() SwellConfig {
+	return SwellConfig{StartDistance: 10, StopDistance: 2}
+}
 
 // Swell is SwellGoal: a creeper near its target stands still and swells
 // while it is ignited, close and can see the target.

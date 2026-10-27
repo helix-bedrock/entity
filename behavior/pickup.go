@@ -53,8 +53,10 @@ type PickupItemsConfig struct {
 	OnEnd             string `json:"on_pickup_item_end"`
 }
 
-// DefaultPickupItems is the goal's BDS defaults.
-var DefaultPickupItems = PickupItemsConfig{SpeedMultiplier: 1, MaxDist: 1, SearchHeight: 1, GoalRadius: 0.5, ToHandOrEquipment: true}
+// DefaultPickupItems returns the goal's BDS defaults.
+func DefaultPickupItems() PickupItemsConfig {
+	return PickupItemsConfig{SpeedMultiplier: 1, MaxDist: 1, SearchHeight: 1, GoalRadius: 0.5, ToHandOrEquipment: true}
+}
 
 // PickupItems is PickupItemsGoal: the mob walks to an item on the ground
 // and takes it.

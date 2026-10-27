@@ -65,9 +65,11 @@ type AvoidBlockConfig struct {
 	SoundInterval Range[float32]
 }
 
-// DefaultAvoidBlock is the goal's BDS defaults.
-var DefaultAvoidBlock = AvoidBlockConfig{WalkSpeed: 1, SprintSpeed: 1, TickInterval: 1, Sound: NoSound,
-	SoundInterval: Range[float32]{3, 8}}
+// DefaultAvoidBlock returns the goal's BDS defaults.
+func DefaultAvoidBlock() AvoidBlockConfig {
+	return AvoidBlockConfig{WalkSpeed: 1, SprintSpeed: 1, TickInterval: 1, Sound: NoSound,
+		SoundInterval: Range[float32]{3, 8}}
+}
 
 // AvoidBlock is AvoidBlockGoal: the mob runs from the nearest (or a random)
 // block of a list.

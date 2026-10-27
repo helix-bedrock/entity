@@ -48,20 +48,22 @@ type MeleeConfig struct {
 	OnKill      string
 }
 
-// DefaultMelee is the goal's BDS defaults (MeleeAttackGoal's constructor).
-var DefaultMelee = MeleeConfig{
-	SpeedMultiplier: 1, ReachMultiplier: 2, MeleeFOV: 90, Cooldown: 20,
-	PathTime: Range[int32]{4, 11}, InnerBoundary: 16, OuterBoundary: 32,
-	InnerIncrease: 5, OuterIncrease: 10, FailIncrease: 15, XMaxRotation: 30, YMaxHeadRotation: 30,
+// DefaultMelee returns the goal's BDS defaults (MeleeAttackGoal's constructor).
+func DefaultMelee() MeleeConfig {
+	return MeleeConfig{
+		SpeedMultiplier: 1, ReachMultiplier: 2, MeleeFOV: 90, Cooldown: 20,
+		PathTime: Range[int32]{4, 11}, InnerBoundary: 16, OuterBoundary: 32,
+		InnerIncrease: 5, OuterIncrease: 10, FailIncrease: 15, XMaxRotation: 30, YMaxHeadRotation: 30,
+	}
 }
 
-// DefaultMeleeBox is melee_box_attack's BDS defaults: melee_attack's, with a
+// DefaultMeleeBox returns melee_box_attack's BDS defaults: melee_attack's, with a
 // horizontal reach of 0.8.
-var DefaultMeleeBox = func() MeleeConfig {
-	c := DefaultMelee
+func DefaultMeleeBox() MeleeConfig {
+	c := DefaultMelee()
 	c.HorizontalReach = meleeBoxReach
 	return c
-}()
+}
 
 // Melee is MeleeAttackGoal: the mob chases its target and hits it in reach.
 type Melee struct {

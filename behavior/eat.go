@@ -144,8 +144,10 @@ type SnackingConfig struct {
 	StopChance  float32 `json:"snacking_stop_chance"`
 }
 
-// DefaultSnacking is the goal's BDS defaults.
-var DefaultSnacking = SnackingConfig{Cooldown: 7.5, CooldownMin: 0.5, StopChance: 1.0 / 600}
+// DefaultSnacking returns the goal's BDS defaults.
+func DefaultSnacking() SnackingConfig {
+	return SnackingConfig{Cooldown: 7.5, CooldownMin: 0.5, StopChance: 1.0 / 600}
+}
 
 // The snacking goal's fixed numbers.
 const (

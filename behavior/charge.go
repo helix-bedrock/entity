@@ -13,8 +13,10 @@ type ChargeAttackConfig struct {
 	SoundEvent      int     `json:"sound_event"`
 }
 
-// DefaultChargeAttack is the goal's BDS defaults.
-var DefaultChargeAttack = ChargeAttackConfig{MinDistance: 2, MaxDistance: 3, SpeedMultiplier: 1, SuccessRate: 0.1428, SoundEvent: 134}
+// DefaultChargeAttack returns the goal's BDS defaults.
+func DefaultChargeAttack() ChargeAttackConfig {
+	return ChargeAttackConfig{MinDistance: 2, MaxDistance: 3, SpeedMultiplier: 1, SuccessRate: 0.1428, SoundEvent: 134}
+}
 
 // ChargeAttack is ChargeAttackGoal: a flying mob dashes at its target with
 // the move control and hits it when their boxes touch.

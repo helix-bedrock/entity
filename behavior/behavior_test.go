@@ -181,7 +181,7 @@ func TestSnap(t *testing.T) {
 func TestStrollPicksGround(t *testing.T) {
 	w := &flatWorld{r: &seqRandom{ints: []int32{0, 3, 4, 2}}}
 	m := newMob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:cow")
-	g := NewStroll(w, m, DefaultStroll)
+	g := NewStroll(w, m, DefaultStroll())
 	if !g.CanUse() {
 		t.Fatal("stroll did not start")
 	}
@@ -196,7 +196,7 @@ func TestAvoidFleesAndEscapes(t *testing.T) {
 	m := newMob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:sheep")
 	wolf := newMob(w, 2, Vec3{X: -1.5, Y: 64, Z: 0.5}, "minecraft:wolf")
 	w.entities = []Actor{m, wolf}
-	c := DefaultAvoid
+	c := DefaultAvoid()
 	c.OnEscape = "escaped"
 	c.Types = []AvoidType{{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:wolf" }, WalkSpeed: 0.8, SprintSpeed: 1.2}}
 	g := NewAvoid(w, m, c)
@@ -227,7 +227,7 @@ func TestAvoidFleesAndEscapes(t *testing.T) {
 func BenchmarkStrollCanUse(b *testing.B) {
 	w := &flatWorld{r: &seqRandom{}}
 	m := newMob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:cow")
-	c := DefaultStroll
+	c := DefaultStroll()
 	c.Interval = 0
 	g := NewStroll(w, m, c)
 	b.ReportAllocs()

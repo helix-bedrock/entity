@@ -62,11 +62,13 @@ type LayEggConfig struct {
 	OnLay    []string
 }
 
-// DefaultLayEgg is the goal's BDS defaults.
-var DefaultLayEgg = LayEggConfig{
-	MoveToConfig: DefaultMoveTo, TargetBlocks: []string{"minecraft:sand"},
-	MaterialsAbove: []path.Material{path.MaterialAir}, UseDefaultAnimation: true, LaySeconds: 10,
-	EggType: turtleEggName, LaySound: soundLayEgg,
+// DefaultLayEgg returns the goal's BDS defaults.
+func DefaultLayEgg() LayEggConfig {
+	return LayEggConfig{
+		MoveToConfig: DefaultMoveTo(), TargetBlocks: []string{"minecraft:sand"},
+		MaterialsAbove: []path.Material{path.MaterialAir}, UseDefaultAnimation: true, LaySeconds: 10,
+		EggType: turtleEggName, LaySound: soundLayEgg,
+	}
 }
 
 // LayEgg is LayEggGoal: a mob that carries eggs walks to a nest block and

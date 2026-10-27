@@ -25,8 +25,10 @@ type HoldGroundConfig struct {
 	WithinRadiusEvent string
 }
 
-// DefaultHoldGround is the goal's BDS defaults.
-var DefaultHoldGround = HoldGroundConfig{MinRadius: 10}
+// DefaultHoldGround returns the goal's BDS defaults.
+func DefaultHoldGround() HoldGroundConfig {
+	return HoldGroundConfig{MinRadius: 10}
+}
 
 // HoldGround is HoldGroundGoal: the mob stands still and watches a target
 // that is far away, and stops when the target comes close.

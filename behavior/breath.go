@@ -18,8 +18,10 @@ type SwimUpForBreathConfig struct {
 	Material path.Material
 }
 
-// DefaultSwimUpForBreath is the goal's BDS defaults.
-var DefaultSwimUpForBreath = SwimUpForBreathConfig{SpeedMod: 1.4, SearchRadius: 4, SearchHeight: 16, Material: path.MaterialWater}
+// DefaultSwimUpForBreath returns the goal's BDS defaults.
+func DefaultSwimUpForBreath() SwimUpForBreathConfig {
+	return SwimUpForBreathConfig{SpeedMod: 1.4, SearchRadius: 4, SearchHeight: 16, Material: path.MaterialWater}
+}
 
 // SwimUpForBreath is SwimUpForBreathGoal: a mob running out of air swims to
 // an air block just above the liquid.

@@ -15,8 +15,10 @@ type LayDownConfig struct {
 	RandomStopInterval int32
 }
 
-// DefaultLayDown is the goal's BDS defaults.
-var DefaultLayDown = LayDownConfig{Interval: 120, RandomStopInterval: 120}
+// DefaultLayDown returns the goal's BDS defaults.
+func DefaultLayDown() LayDownConfig {
+	return LayDownConfig{Interval: 120, RandomStopInterval: 120}
+}
 
 // LayDown is LayDownGoal: the panda lies down now and then.
 type LayDown struct {
@@ -63,8 +65,10 @@ type ScaredConfig struct {
 	SoundInterval int32
 }
 
-// DefaultScared is the goal's BDS defaults: no sound.
-var DefaultScared = ScaredConfig{}
+// DefaultScared returns the goal's BDS defaults: no sound.
+func DefaultScared() ScaredConfig {
+	return ScaredConfig{}
+}
 
 // Scared is ScaredGoal: the panda covers its eyes in a thunderstorm.
 type Scared struct {
@@ -147,9 +151,11 @@ type SneezeConfig struct {
 	WithinRadius float32 `json:"within_radius"`
 }
 
-// DefaultSneeze is the goal's BDS defaults.
-var DefaultSneeze = SneezeConfig{
-	Probability: 0.02, DropItemChance: 1, Sound: NoSound, PrepareSound: NoSound, PrepareTime: 1,
+// DefaultSneeze returns the goal's BDS defaults.
+func DefaultSneeze() SneezeConfig {
+	return SneezeConfig{
+		Probability: 0.02, DropItemChance: 1, Sound: NoSound, PrepareSound: NoSound, PrepareTime: 1,
+	}
 }
 
 // Sneeze is SneezeGoal: the baby panda gets ready, sneezes, startles the

@@ -155,7 +155,7 @@ func TestMoveToLandRingFindsShore(t *testing.T) {
 	w.blocks[Pos{X: 2, Y: 63}] = Block{Name: "minecraft:stone", BlocksMotion: true, Ground: true, HasCollision: true}
 	m := newSwimMob(w, Vec3{X: 0.5, Y: 64, Z: 0.5})
 	m.inWater = true
-	c := DefaultMoveTo
+	c := DefaultMoveTo()
 	c.SearchCount, c.SearchRange = 0, 4
 	g := NewMoveToLand(w, m, c)
 	if !g.CanUse() || g.target != (Pos{X: 2, Y: 63}) {
@@ -169,7 +169,7 @@ func TestSwimUpForBreathThreshold(t *testing.T) {
 		w.blocks[Pos{Y: y}] = water
 	}
 	m := newSwimMob(w, Vec3{X: 0.5, Y: 64, Z: 0.5})
-	c := DefaultSwimUpForBreath
+	c := DefaultSwimUpForBreath()
 	c.SearchRadius = 0
 	g := NewSwimUpForBreath(w, m, c)
 	m.air = 200
@@ -196,7 +196,7 @@ func TestStompEggBreaksAfter61Ticks(t *testing.T) {
 	egg := Pos{X: 2, Y: 64}
 	w.blocks[egg] = Block{Name: turtleEggName, HasCollision: true}
 	m := newSwimMob(w, Vec3{X: 2.5, Y: 64, Z: 0.5})
-	c := DefaultStompEgg
+	c := DefaultStompEgg()
 	c.SearchRange = 3
 	g := NewStompEgg(w, m, c)
 	if !g.CanUse() || g.target != egg {
@@ -219,7 +219,7 @@ func TestStompEggBreaksAfter61Ticks(t *testing.T) {
 func TestFloatWanderPicksInBoxAndPushes(t *testing.T) {
 	w := newBlockWorld(&seqRandom{floats: []float32{1, 0.75, 0.5}})
 	m := newSwimMob(w, Vec3{X: 0, Y: 80, Z: 0})
-	c := DefaultFloatWander
+	c := DefaultFloatWander()
 	c.UseHomeRestriction = false
 	g := NewFloatWander(w, m, c)
 	g.Tick()
@@ -234,7 +234,7 @@ func TestFloatWanderPicksInBoxAndPushes(t *testing.T) {
 func TestSwimWanderTurnsBackWhenBoxedIn(t *testing.T) {
 	w := &clipWorld{blockWorld: newBlockWorld(&seqRandom{})}
 	m := newSwimMob(w, Vec3{X: 0.5, Y: 70, Z: 0.5})
-	g := NewSwimWander(w, m, DefaultSwimWander)
+	g := NewSwimWander(w, m, DefaultSwimWander())
 	g.steer()
 	// Every ray hits at the start, so no way out is chosen and the view
 	// (yaw 0 looks along +z) is reversed.

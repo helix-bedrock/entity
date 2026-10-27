@@ -23,8 +23,10 @@ type RiseToLiquidLevelConfig struct {
 	SinkDelta     float32 `json:"sink_delta"`
 }
 
-// DefaultRiseToLiquidLevel is the goal's BDS defaults: all zero.
-var DefaultRiseToLiquidLevel = RiseToLiquidLevelConfig{}
+// DefaultRiseToLiquidLevel returns the goal's BDS defaults: all zero.
+func DefaultRiseToLiquidLevel() RiseToLiquidLevelConfig {
+	return RiseToLiquidLevelConfig{}
+}
 
 // RiseToLiquidLevel is RiseToLiquidLevelGoal: the strider bobs up to the
 // top of the lava it stands in.

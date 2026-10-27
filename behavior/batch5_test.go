@@ -124,7 +124,7 @@ func TestSwellStartsAndSwells(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 5}, "minecraft:player")
 	w.entities = []Actor{c, p}
 	c.target, c.wanted = 2, true
-	g := NewSwell(w, c, DefaultSwell)
+	g := NewSwell(w, c, DefaultSwell())
 	if !g.CanUse() {
 		t.Fatal("swell did not start within 10 blocks")
 	}
@@ -155,7 +155,7 @@ func TestHoldGround(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 12}, "minecraft:player")
 	w.entities = []Actor{m, p, k}
 	m.target = 2
-	c := DefaultHoldGround
+	c := DefaultHoldGround()
 	c.Broadcast, c.BroadcastRange, c.WithinRadiusEvent = true, 4, "near"
 	g := NewHoldGround(w, m, c)
 	if !g.CanUse() {
@@ -189,7 +189,7 @@ func TestChargeAttack(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 2.5}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	g := NewChargeAttack(w, m, DefaultChargeAttack)
+	g := NewChargeAttack(w, m, DefaultChargeAttack())
 	if !g.CanUse() {
 		t.Fatal("charge_attack did not start")
 	}
@@ -213,7 +213,7 @@ func TestDelayedAttackHitsPartWay(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 1, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target, m.body = 2, -90
-	g := NewDelayedAttack(w, m, DefaultDelayedAttack)
+	g := NewDelayedAttack(w, m, DefaultDelayedAttack())
 	g.target = 2
 	// The first tick measures from the stored position (0, 0, 0).
 	g.Tick()
@@ -246,7 +246,7 @@ func TestStompAttackStandsThenStomps(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 1.2, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	g := NewStompAttack(w, m, DefaultStompAttack)
+	g := NewStompAttack(w, m, DefaultStompAttack())
 	g.target = 2
 	g.Tick()
 	// No cooldown yet: it resets to 20, which is above half, so no stand.
@@ -277,7 +277,7 @@ func TestRangedAttackBurstAndPower(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 8, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target, m.body = 2, -90
-	c := DefaultRangedAttack
+	c := DefaultRangedAttack()
 	c.AttackRadius, c.AttackIntervalMin, c.AttackIntervalMax, c.TargetInSightTime = 16, 20, 40, 1
 	c.Swing = true
 	g := NewRangedAttack(w, m, c)
@@ -309,7 +309,7 @@ func TestRangedAttackBacksOff(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 2, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target = 2
-	c := DefaultRangedAttack
+	c := DefaultRangedAttack()
 	c.AttackRadius, c.AttackRadiusMin = 16, 4
 	g := NewRangedAttack(w, m, c)
 	g.CanUse()
@@ -327,7 +327,7 @@ func TestRangedAttackCrossbow(t *testing.T) {
 	p := newB5Mob(w, 2, Vec3{X: 8, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
 	m.target, m.body, m.held = 2, -90, true
-	c := DefaultRangedAttack
+	c := DefaultRangedAttack()
 	c.AttackRadius, c.ChargeChargedTrigger, c.ChargeShootTrigger = 16, 2, 4
 	g := NewRangedAttack(w, m, c)
 	if g.CanUse() {
@@ -360,7 +360,7 @@ func TestNearestPrioritizedPicksLowestPriority(t *testing.T) {
 	near := newB5Mob(w, 2, Vec3{X: 2}, "minecraft:zombie")
 	far := newB5Mob(w, 3, Vec3{X: 5}, "minecraft:player")
 	w.entities = []Actor{m, near, far}
-	c := DefaultNearestAttackable
+	c := DefaultNearestAttackable()
 	c.EntityTypes = []EntityType{
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:zombie" }, MaxDist: 16, Priority: 1},
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:player" }, MaxDist: 16, Priority: 0},
@@ -380,7 +380,7 @@ func TestDefendTrusted(t *testing.T) {
 	friend := newB5Mob(w, 2, Vec3{X: 1}, "minecraft:player")
 	wolf := newB5Mob(w, 3, Vec3{X: 4}, "minecraft:wolf")
 	w.entities = []Actor{fox, friend, wolf}
-	c := DefaultDefendTrusted
+	c := DefaultDefendTrusted()
 	c.OnDefendStart, c.AggroSound = "defend", 7
 	g := NewDefendTrusted(w, fox, c)
 	if g.CanUse() {
@@ -410,7 +410,7 @@ func TestDefendVillage(t *testing.T) {
 	player := newB5Mob(w, 3, Vec3{X: 2}, "minecraft:player")
 	player.player = true
 	w.entities = []Actor{golem, zombie, player}
-	g := NewDefendVillage(w, golem, DefaultDefendVillage)
+	g := NewDefendVillage(w, golem, DefaultDefendVillage())
 	if g.CanUse() {
 		t.Fatal("started without a village")
 	}

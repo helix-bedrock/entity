@@ -61,10 +61,12 @@ type AquaticChargeAttackConfig struct {
 	HasSpeedMultiplier bool
 }
 
-// DefaultAquaticChargeAttack is the goal's BDS defaults.
-var DefaultAquaticChargeAttack = AquaticChargeAttackConfig{
-	MaxChargeDistance: 16, AttackReach: 10, KnockbackForce: 0.05, Overshoot: 2, ChargeSpeed: 1.5,
-	Cooldown: Range[float32]{2, 6},
+// DefaultAquaticChargeAttack returns the goal's BDS defaults.
+func DefaultAquaticChargeAttack() AquaticChargeAttackConfig {
+	return AquaticChargeAttackConfig{
+		MaxChargeDistance: 16, AttackReach: 10, KnockbackForce: 0.05, Overshoot: 2, ChargeSpeed: 1.5,
+		Cooldown: Range[float32]{2, 6},
+	}
 }
 
 // AquaticChargeAttack is AquaticChargeAttackGoal: the mob charges through

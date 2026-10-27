@@ -39,8 +39,10 @@ type SwimWanderConfig struct {
 	WanderTime int32
 }
 
-// DefaultSwimWander is the goal's BDS defaults.
-var DefaultSwimWander = SwimWanderConfig{Interval: 0.00833, LookAhead: 5, SpeedMultiplier: 1, WanderTime: 5 * ticksPerSecond}
+// DefaultSwimWander returns the goal's BDS defaults.
+func DefaultSwimWander() SwimWanderConfig {
+	return SwimWanderConfig{Interval: 0.00833, LookAhead: 5, SpeedMultiplier: 1, WanderTime: 5 * ticksPerSecond}
+}
 
 // SwimWander is SwimWanderGoal: a fish swims along its view, steering away
 // from blocks ahead and around it.

@@ -39,9 +39,11 @@ type MoveToConfig struct {
 	SearchRange  int32 `json:"search_range"`
 }
 
-// DefaultMoveTo is the BDS defaults of move_to_water, move_to_lava,
+// DefaultMoveTo returns the BDS defaults of move_to_water, move_to_lava,
 // move_to_liquid and move_to_land.
-var DefaultMoveTo = MoveToConfig{SpeedMultiplier: 1, GoalRadius: 0.5, SearchCount: 10, SearchHeight: 1}
+func DefaultMoveTo() MoveToConfig {
+	return MoveToConfig{SpeedMultiplier: 1, GoalRadius: 0.5, SearchCount: 10, SearchHeight: 1}
+}
 
 // moveToHooks is the virtuals BaseMoveToGoal's subclasses replace.
 type moveToHooks interface {
@@ -201,9 +203,9 @@ type MoveToLiquidConfig struct {
 // DefaultMoveToWater, DefaultMoveToLava and DefaultMoveToLiquid are the
 // goals' BDS defaults; move_to_liquid's default material type is "any".
 var (
-	DefaultMoveToWater  = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo, Material: path.MaterialWater}
-	DefaultMoveToLava   = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo, Material: path.MaterialLava}
-	DefaultMoveToLiquid = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo, Material: materialAny}
+	DefaultMoveToWater  = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo(), Material: path.MaterialWater}
+	DefaultMoveToLava   = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo(), Material: path.MaterialLava}
+	DefaultMoveToLiquid = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo(), Material: materialAny}
 )
 
 // MoveToLiquid is MoveToLiquidGoal, which move_to_water and move_to_lava

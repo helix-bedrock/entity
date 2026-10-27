@@ -42,11 +42,13 @@ type SonicBoomConfig struct {
 	ChargeSound                 int
 }
 
-// DefaultSonicBoom is the goal's BDS defaults: attack_cooldown 5 s and
+// DefaultSonicBoom returns the goal's BDS defaults: attack_cooldown 5 s and
 // duration_until_attack_sound 1.7 s; the sounds are "undefined".
-var DefaultSonicBoom = SonicBoomConfig{
-	SpeedMultiplier: 1, AttackDamage: 30, AttackRangeHorizontal: 15, AttackRangeVertical: 20,
-	AttackCooldown: 100, DurationUntilAttackSound: 34, AttackSound: NoSound, ChargeSound: NoSound,
+func DefaultSonicBoom() SonicBoomConfig {
+	return SonicBoomConfig{
+		SpeedMultiplier: 1, AttackDamage: 30, AttackRangeHorizontal: 15, AttackRangeVertical: 20,
+		AttackCooldown: 100, DurationUntilAttackSound: 34, AttackSound: NoSound, ChargeSound: NoSound,
+	}
 }
 
 // timer is one of BDS's optional tick stamps.

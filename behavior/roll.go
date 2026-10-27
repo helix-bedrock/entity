@@ -21,8 +21,10 @@ type RollConfig struct {
 	Probability float32 `json:"probability"`
 }
 
-// DefaultRoll is the goal's BDS defaults.
-var DefaultRoll = RollConfig{Probability: 0.01}
+// DefaultRoll returns the goal's BDS defaults.
+func DefaultRoll() RollConfig {
+	return RollConfig{Probability: 0.01}
+}
 
 // Roller is the part of the mob roll needs on top of Mob.
 type Roller interface {

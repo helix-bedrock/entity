@@ -85,7 +85,7 @@ func TestLeapNeedsTwoToFourBlocks(t *testing.T) {
 	prey := newMob(w, 2, Vec3{X: 1, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, prey}
 	m.target = 2
-	if NewLeap(w, m, DefaultLeap).CanUse() {
+	if NewLeap(w, m, DefaultLeap()).CanUse() {
 		t.Fatal("leapt at a target 1 block away")
 	}
 }

@@ -82,10 +82,12 @@ type JumpToBlockConfig struct {
 	ForbiddenBlocks []string `json:"forbidden_blocks"`
 }
 
-// DefaultJumpToBlock is the goal's BDS defaults.
-var DefaultJumpToBlock = JumpToBlockConfig{
-	SearchWidth: jumpBlockWidth, SearchHeight: jumpBlockHeight, MinPathLength: 5, MinDistance: 2,
-	Cooldown: Range[float32]{10, 20}, ScaleFactor: 0.7, MaxVelocity: 1.5, PreferredChance: 1,
+// DefaultJumpToBlock returns the goal's BDS defaults.
+func DefaultJumpToBlock() JumpToBlockConfig {
+	return JumpToBlockConfig{
+		SearchWidth: jumpBlockWidth, SearchHeight: jumpBlockHeight, MinPathLength: 5, MinDistance: 2,
+		Cooldown: Range[float32]{10, 20}, ScaleFactor: 0.7, MaxVelocity: 1.5, PreferredChance: 1,
+	}
 }
 
 // jumpCandidate is a landing block with the launch velocity that reaches it
