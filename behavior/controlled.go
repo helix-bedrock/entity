@@ -4,8 +4,8 @@ import "math"
 
 // The controlled_by_player numbers.
 const (
-	rideAirFriction    = 0.91  // the friction off the ground
-	rideFrictionScale  = 0.91  // the block friction share on the ground
+	rideAirFriction    = 0.91 // the friction off the ground
+	rideFrictionScale  = 0.91 // the block friction share on the ground
 	rideFrictionNorm   = 0.16277139271896832
 	rideFrictionMin    = 0.00000011920929
 	rideMoveMin2       = 0.0001 // squared move below which the mob does not move
