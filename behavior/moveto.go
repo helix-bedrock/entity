@@ -73,12 +73,19 @@ type moveTo struct {
 	target      Pos
 	offset      Vec3
 	hits        []blockHit
+	// aim, when useAim is set, is the float target the POI and village
+	// goals keep at +100 in place of the target block; aimHalf adds half a
+	// block on each axis for the target point (MoveToPOI's slot 17).
+	aim              Vec3
+	useAim, aimHalf  bool
+	repath, restTime int32
+	maxStay          int32
 }
 
 // init sets up the base for a goal whose virtuals are h.
 func (g *moveTo) init(w World, m Mob, c MoveToConfig, flags goal.Flags, h moveToHooks) {
 	*g = moveTo{base: base{mob: m, world: w, flags: flags}, cfg: c, radius2: c.GoalRadius * c.GoalRadius,
-		interval: moveToInterval, hooks: h, offset: Vec3{Y: 1}}
+		interval: moveToInterval, hooks: h, offset: Vec3{Y: 1}, repath: moveToRepath, restTime: moveToCooldown * ticksPerSecond, maxStay: moveToMaxStay}
 }
 
 // canStart is the base canUse (0x48C86F0) without findTargetBlock.
@@ -105,14 +112,33 @@ func (g *moveTo) keep() bool {
 			return false
 		}
 	}
-	if g.cooldown != 0 || g.stay > moveToMaxStay || g.tries > moveToGiveUp {
+	return g.keepLite()
+}
+
+// keepLite is the base canContinue without the path end check (0x48C8A40).
+func (g *moveTo) keepLite() bool {
+	if g.cooldown != 0 || g.stay > g.maxStay || g.tries > moveToGiveUp {
 		return false
 	}
-	return g.hooks.valid(g.target)
+	return g.hooks.valid(g.targetBlock())
+}
+
+// targetBlock is the target floored, what isValidTarget is asked about.
+func (g *moveTo) targetBlock() Pos {
+	if g.useAim {
+		return blockOf(g.aim)
+	}
+	return g.target
 }
 
 // targetPos is the target block plus the offset (slot 17).
 func (g *moveTo) targetPos() Vec3 {
+	if g.useAim {
+		if g.aimHalf {
+			return add(g.aim, Vec3{X: 0.5, Y: 0.5, Z: 0.5})
+		}
+		return g.aim
+	}
 	return Vec3{X: float32(g.target.X) + g.offset.X, Y: float32(g.target.Y) + g.offset.Y, Z: float32(g.target.Z) + g.offset.Z}
 }
 
@@ -161,12 +187,12 @@ func (g *moveTo) Tick() {
 	}
 	g.reached = false
 	g.tries++
-	if n := g.mob.Nav(); n != nil && !n.Done() && g.tries%moveToRepath != 0 {
+	if n := g.mob.Nav(); n != nil && !n.Done() && g.tries%g.repath != 0 {
 		return
 	}
 	g.hooks.moveToBlock()
 	if g.stuck() {
-		g.cooldown = moveToCooldown * ticksPerSecond
+		g.cooldown = g.restTime
 	}
 }
 

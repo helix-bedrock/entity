@@ -105,6 +105,10 @@ const (
 	FlagJumpGoal           = 103
 	// FlagHasDashTimeout is raised while aquatic_charge_attack cools down.
 	FlagHasDashTimeout = 108
+	// FlagWantsToWake asks a sleeping villager to get up.
+	FlagWantsToWake   = 77
+	FlagTradeInterest = 78
+	FlagCelebrating   = 93
 )
 
 // The game modes the goals compare against.
