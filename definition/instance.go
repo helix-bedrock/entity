@@ -234,6 +234,15 @@ func (in *Instance) Trigger(event string, ctx Tester, g *Guard) bool {
 	return true
 }
 
+// RunTrigger sends a component's trigger (a sensor's or timer's event) to
+// its target with a fresh loop guard, without testing its filters: the
+// caller tests them first, as BDS's sensors do before forceExecuteTrigger.
+func (in *Instance) RunTrigger(t *Trigger, ctx Tester) {
+	if t != nil {
+		in.runTrigger(t, ctx, &Guard{})
+	}
+}
+
 // runTrigger sends a trigger to its target (0xB30FB40). player, parent,
 // damager, holder and item do nothing in BDS.
 func (in *Instance) runTrigger(t *Trigger, ctx Tester, g *Guard) {

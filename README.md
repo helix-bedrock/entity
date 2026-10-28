@@ -17,8 +17,8 @@
 ## Status
 
 Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
-entity definitions load and run their events, and a mob's goals are built from its definition, ported from BDS 1.26.52 and
-1.26.60.
+entity definitions load and run their events, a mob's goals are built from its definition, and its sensors and timers fire
+its events, ported from BDS 1.26.52 and 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -47,14 +47,21 @@ entity definitions load and run their events, and a mob's goals are built from i
   component name maps to a factory in a `Registry` that servers can change, `minecraft:` names
   included. Sounds, damage causes, filter tests, item and block descriptors and Molang go to the
   engine through a `Resolver`.
+- **Sensors:** `sensor` runs `minecraft:timer`, `scheduler`, `environment_sensor`,
+  `entity_sensor`, `target_nearby_sensor` and `damage_sensor`, which decide when the mob's events
+  fire, and holds the `on_*` event components (`on_hurt`, `on_target_acquired` and the rest) for
+  the engine or a goal to fire. The damage sensor decides whether damage is dealt and by how much;
+  the damage itself is the engine's. `component.Sensors` reads them from the definition.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **Non-goal components:** sensors, timers, ageable, tameable and so on are not ported. Some goal
-  JSON members that only a few goals use are not read yet and keep their BDS defaults.
+- **Mob state components:** ageable, breedable, tameable, angry and the other components that are
+  not goals or sensors are not ported. Some goal JSON members that only a few goals use are not
+  read yet and keep their BDS defaults. The sensors' tick logic is from BDS 1.21.3, not yet
+  checked against 1.26.60.
 - **Definition gaps:** the engine answers every filter test and runs every response except
   `set_property`; legacy filter members and the component order of equal-priority goals after
   group changes are not ported.
@@ -123,7 +130,8 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`move`](move) | The move controls |
 | [`physics`](physics) | Mob movement and collision |
 | [`definition`](definition) | Entity files: component groups, events, filters, properties |
-| [`component`](component) | Builds a mob's goals, navigation and movement from its components |
+| [`component`](component) | Builds a mob's goals, navigation, movement and sensors from its components |
+| [`sensor`](sensor) | Timers, the scheduler and the sensors that fire a mob's events |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where
@@ -180,6 +188,7 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions: groups, events, filters, properties | ✅ written from BDS 1.26.60 |
 | Building goals, navigation and movement from a definition | 🟡 written from BDS 1.26.60; some rarely used goal members keep their defaults |
+| Sensors and timers: timer, scheduler, environment_sensor, entity_sensor, target_nearby_sensor, damage_sensor, on_* events | 🟡 defaults from BDS 1.26.60, tick logic from 1.21.3 |
 | Non-goal components | ⬜ not started |
 | Entity packets | ⬜ not started |
 

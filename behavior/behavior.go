@@ -595,8 +595,10 @@ func lookPoint(a Actor) Vec3 {
 	return Vec3{X: p.X, Y: boxCentre(a.Box()).Y, Z: p.Z}
 }
 
-// spectator reports a spectator, counting the default mode when the world
+// Spectator reports a spectator, counting the default mode when the world
 // default is spectator.
+func Spectator(w World, a Actor) bool { return spectator(w, a) }
+
 func spectator(w World, a Actor) bool {
 	m := a.GameMode()
 	return m == GameModeSpectator || m == GameModeDefault && w.DefaultGameMode() == GameModeSpectator
