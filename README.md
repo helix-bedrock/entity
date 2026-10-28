@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-28: **the AI core runs, and 170 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
+Status as of 2026-10-28: **the AI core runs, and all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
 BDS 1.26.52 and checked against 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,10 +28,10 @@ BDS 1.26.52 and checked against 1.26.60.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 170 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has all 178 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
-  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle, silverfish, guardian, vex, allay, cat gifts and the copper golem),
+  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle, silverfish, guardian, vex, allay, cat gifts, the copper golem, the wither and the ender dragon),
   the spell goals (summon_entity, send_event), and the
   villager and village goals (sleep, work, mingle, farming, hiding, trading, celebrating). The
   [roadmap](#roadmap) lists them all.
@@ -158,7 +158,7 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | The allay: stay_near_noteblock, go_and_give_items_to_noteblock, go_and_give_items_to_owner | ✅ written from BDS 1.26.60 |
 | drop_item_for, transport_items (moving items is the engine's, through hooks) | ✅ written from BDS 1.26.60 |
 | use_kinetic_weapon, wither_random_attack_pos_goal, wither_target_highest_damage (the weapon, dash state and damage tally are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
-| The other 5 goals (the dragon) | ⬜ not started |
+| The ender dragon: dragonholdingpattern, dragontakeoff, dragonlanding, dragonscanning, dragonflaming, dragonchargeplayer, dragonstrafeplayer, dragondeath (the node graph, path search, crystals and flight state are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 
