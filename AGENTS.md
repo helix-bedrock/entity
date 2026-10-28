@@ -47,8 +47,9 @@ go test -run=^$ -bench=. -benchmem ./...   # benchmarks
 | `move` | The move controls (`minecraft:movement.*`) |
 | `physics` | Mob movement and collision |
 | `definition` | Entity files: component groups, events, filters, properties |
-| `component` | Builds a mob's goals, navigation, movement and sensors from its components |
+| `component` | Builds a mob's goals, navigation, movement, sensors and state from its components |
 | `sensor` | Timers, the scheduler and the sensors that fire a mob's events |
+| `state` | A mob's own state: age, breeding, taming, anger, healing, despawning, flag components |
 | `spawn` | The natural spawner (moving to Helix) |
 
 ## Invariants: do not break these
