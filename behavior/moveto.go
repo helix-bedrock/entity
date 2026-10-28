@@ -75,11 +75,12 @@ type moveTo struct {
 	hits        []blockHit
 	// aim, when useAim is set, is the float target the POI and village
 	// goals keep at +100 in place of the target block; aimHalf adds half a
-	// block on each axis for the target point (MoveToPOI's slot 17).
-	aim              Vec3
-	useAim, aimHalf  bool
-	repath, restTime int32
-	maxStay          int32
+	// block on each axis for the target point (MoveToPOI's slot 17);
+	// aimOffset adds the offset instead (BaseMoveToBlockGoal's slot 17).
+	aim                        Vec3
+	useAim, aimHalf, aimOffset bool
+	repath, restTime           int32
+	maxStay                    int32
 }
 
 // init sets up the base for a goal whose virtuals are h.
@@ -136,6 +137,9 @@ func (g *moveTo) targetPos() Vec3 {
 	if g.useAim {
 		if g.aimHalf {
 			return add(g.aim, Vec3{X: 0.5, Y: 0.5, Z: 0.5})
+		}
+		if g.aimOffset {
+			return add(g.aim, g.offset)
 		}
 		return g.aim
 	}
