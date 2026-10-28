@@ -1,6 +1,7 @@
 package behavior
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -233,5 +234,28 @@ func BenchmarkStrollCanUse(b *testing.B) {
 	b.ReportAllocs()
 	for b.Loop() {
 		g.CanUse()
+	}
+}
+
+func TestRangeJSON(t *testing.T) {
+	cases := map[string]Range[float32]{
+		`[1, 2]`:                           {1, 2},
+		`3`:                                {3, 3},
+		`{"range_min": 4, "range_max": 5}`: {4, 5},
+		`{"min": 6, "max": 7}`:             {6, 7},
+		`{"max": 8}`:                       {0, 8},
+	}
+	for src, want := range cases {
+		var r Range[float32]
+		if err := json.Unmarshal([]byte(src), &r); err != nil || r != want {
+			t.Errorf("%s: got %v %v, want %v", src, r, err, want)
+		}
+	}
+	var r Range[int32]
+	if err := json.Unmarshal([]byte(`[1.9, 2.9]`), &r); err != nil || r != (Range[int32]{1, 2}) {
+		t.Errorf("int range %v %v", r, err)
+	}
+	if err := json.Unmarshal([]byte(`[1]`), &r); err == nil {
+		t.Error("one number should fail")
 	}
 }

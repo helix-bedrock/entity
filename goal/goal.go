@@ -58,8 +58,10 @@ func (s *Selector) Add(priority int32, g Goal) {
 }
 
 // SetGoals replaces every goal, as a JSON event that adds or removes
-// component groups does. Called during a tick, the old goals are stopped
-// when the pass ends.
+// component groups does (Mob::createAIGoals, 1.21.3 0x14190DC30): target
+// goals are dropped as they are, running non-target goals are stopped,
+// then the new list is used. Called during a tick, the swap happens when
+// the pass ends.
 func (s *Selector) SetGoals(goals []Goal, priorities []int32) {
 	list := make([]entry, 0, len(goals))
 	for i, g := range goals {
@@ -73,12 +75,20 @@ func (s *Selector) SetGoals(goals []Goal, priorities []int32) {
 		s.replaced = list
 		return
 	}
-	for i := range s.entries {
-		if s.entries[i].running {
-			s.entries[i].goal.Stop()
-		}
-	}
+	stopNonTarget(s.entries)
 	s.entries = list
+}
+
+// stopNonTarget stops the running goals that are not target goals, as
+// GoalSelectorComponent::stopNonTargetedGoals does before a rebuild.
+func stopNonTarget(entries []entry) {
+	for i := range entries {
+		e := &entries[i]
+		if e.running && !e.goal.IsTargetGoal() {
+			e.goal.Stop()
+		}
+		e.running, e.toStart = false, false
+	}
 }
 
 // Goals returns the goals in the order they were added.
@@ -197,10 +207,7 @@ func (s *Selector) tick(target bool) {
 	}
 	s.ticking = false
 	if s.replaced != nil {
-		for i := range entries {
-			entries[i].goal.Stop()
-			entries[i].running, entries[i].toStart = false, false
-		}
+		stopNonTarget(entries)
 		s.entries, s.replaced = s.replaced, nil
 	}
 }

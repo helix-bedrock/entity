@@ -183,3 +183,11 @@ func (g *SkeletonHorseTrap) enchantLevel() int32 {
 	}
 	return l
 }
+
+// The base Goal methods SkeletonHorseTrap keeps (1.26.60 vtable: start and stop are no-ops).
+
+// Start implements goal.Goal.
+func (g *SkeletonHorseTrap) Start() {}
+
+// Stop implements goal.Goal.
+func (g *SkeletonHorseTrap) Stop() {}

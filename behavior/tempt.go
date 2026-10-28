@@ -33,6 +33,12 @@ type TemptConfig struct {
 	OnTemptEnd    string
 }
 
+// DefaultTempt returns BDS 1.26.60's tempt defaults (legacy goal parser
+// 0xBF93840): speed 1, no sound.
+func DefaultTempt() TemptConfig {
+	return TemptConfig{SpeedMultiplier: 1, Sound: NoSound}
+}
+
 // Tempt is TemptGoal: the mob follows the nearest player holding one of its
 // items.
 type Tempt struct {

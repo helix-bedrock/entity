@@ -237,3 +237,11 @@ func (g *MakeLove) Tick() {
 		m.ActorEvent(actorEventLove, 0)
 	}
 }
+
+// The base Goal methods ReceiveLove keeps (1.26.60 vtable: start and stop are no-ops).
+
+// Start implements goal.Goal.
+func (g *ReceiveLove) Start() {}
+
+// Stop implements goal.Goal.
+func (g *ReceiveLove) Stop() {}

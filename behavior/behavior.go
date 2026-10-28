@@ -42,6 +42,8 @@
 package behavior
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 
 	"github.com/helix-bedrock/entity/goal"
@@ -602,6 +604,38 @@ func spectator(w World, a Actor) bool {
 
 // Range is a JSON [min, max] pair.
 type Range[T int32 | float32] struct{ Min, Max T }
+
+// UnmarshalJSON reads a range the ways BDS writes one: [min, max],
+// {"range_min", "range_max"}, {"min", "max"}, or one number for both ends.
+// Integer ranges truncate.
+func (r *Range[T]) UnmarshalJSON(b []byte) error {
+	var f float64
+	if json.Unmarshal(b, &f) == nil {
+		r.Min, r.Max = T(f), T(f)
+		return nil
+	}
+	var arr []float64
+	if json.Unmarshal(b, &arr) == nil {
+		if len(arr) != 2 {
+			return fmt.Errorf("range: %d numbers, want 2", len(arr))
+		}
+		r.Min, r.Max = T(arr[0]), T(arr[1])
+		return nil
+	}
+	var obj map[string]float64
+	if err := json.Unmarshal(b, &obj); err != nil {
+		return fmt.Errorf("range: %w", err)
+	}
+	for _, k := range [][2]string{{"range_min", "range_max"}, {"min", "max"}} {
+		lo, ok1 := obj[k[0]]
+		hi, ok2 := obj[k[1]]
+		if ok1 || ok2 {
+			r.Min, r.Max = T(lo), T(hi)
+			return nil
+		}
+	}
+	return fmt.Errorf("range: no range_min/range_max or min/max")
+}
 
 // randomTicks is a random time from the range in seconds, in ticks, the way
 // the sound timers draw it.

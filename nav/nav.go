@@ -7,6 +7,8 @@
 package nav
 
 import (
+	"encoding/json"
+	"fmt"
 	"math"
 
 	"github.com/helix-bedrock/entity/path"
@@ -85,6 +87,34 @@ type Description struct {
 	CanJump             bool `json:"can_jump"`
 	UsingDoorAnnotation bool `json:"using_door_annotation"`
 	CanPathFromAir      bool `json:"can_path_from_air"`
+}
+
+// DefaultDescription returns the switches a minecraft:navigation.*
+// component has when its JSON leaves them out (1.21.3 deserializeData
+// 0x140631B20): it can sink, pass doors, walk and jump.
+func DefaultDescription() Description {
+	return Description{CanSink: true, CanPassDoors: true, CanWalk: true, CanJump: true}
+}
+
+// ParseDescription reads a navigation component's JSON over the defaults.
+// can_path_over_water defaults to the can_float value, as BDS reads it
+// after can_float. Members of the wrong type keep their defaults and are
+// reported in err.
+func ParseDescription(raw []byte) (Description, error) {
+	d := DefaultDescription()
+	var probe struct {
+		CanFloat         *bool `json:"can_float"`
+		CanPathOverWater *bool `json:"can_path_over_water"`
+	}
+	_ = json.Unmarshal(raw, &probe)
+	err := json.Unmarshal(raw, &d)
+	if probe.CanPathOverWater == nil {
+		d.CanPathOverWater = d.CanFloat
+	}
+	if err != nil {
+		err = fmt.Errorf("nav: description: %w", err)
+	}
+	return d, err
 }
 
 // Flags returns the component switches d sets.

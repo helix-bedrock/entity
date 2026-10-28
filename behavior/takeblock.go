@@ -233,3 +233,27 @@ func chance(r Random, p float32) bool {
 }
 
 func add3(a, b Pos) Pos { return Pos{X: a.X + b.X, Y: a.Y + b.Y, Z: a.Z + b.Z} }
+
+// The base Goal methods TakeBlock keeps (1.26.60 vtable).
+
+// Start implements goal.Goal.
+func (g *TakeBlock) Start() {}
+
+// Stop implements goal.Goal.
+func (g *TakeBlock) Stop() {}
+
+// CanContinueToUse implements goal.Goal: the base Goal asks CanUse again
+// (0xBF8F520).
+func (g *TakeBlock) CanContinueToUse() bool { return g.CanUse() }
+
+// The base Goal methods PlaceBlock keeps (1.26.60 vtable).
+
+// Start implements goal.Goal.
+func (g *PlaceBlock) Start() {}
+
+// Stop implements goal.Goal.
+func (g *PlaceBlock) Stop() {}
+
+// CanContinueToUse implements goal.Goal: the base Goal asks CanUse again
+// (0xBF8F520).
+func (g *PlaceBlock) CanContinueToUse() bool { return g.CanUse() }

@@ -92,6 +92,7 @@ type Instance struct {
 	// the ones set during a Refresh, applied after it.
 	pending, pendingLocked map[int]Value
 	components             Group
+	order                  []string
 }
 
 // New makes an actor's state. initEvent is used only with InitEvent.
@@ -108,6 +109,12 @@ func (in *Instance) Changed() bool { return in.stack.changed }
 
 // Components returns the components as of the last Refresh.
 func (in *Instance) Components() Group { return in.components }
+
+// Order returns the names of Components in the order they were added: the
+// base components sorted by name, then each added group's new components
+// sorted by name. A replaced component keeps its place. Goals of equal
+// priority start in this order.
+func (in *Instance) Order() []string { return in.order }
 
 // Refresh rebuilds the actor the way Actor::reload does: on the first call
 // it sets the property defaults and runs the init event; then it folds the
@@ -128,6 +135,7 @@ func (in *Instance) Refresh(ctx Tester, rebuild func(Group)) {
 		}
 	}
 	in.components = in.stack.components()
+	in.order = in.stack.order(nil)
 	in.stack.changed = false
 	in.stack.lock()
 	for i, v := range in.pending {

@@ -422,3 +422,24 @@ func (g *PlayerRideTamed) CanUse() bool { return len(g.mob.Riders()) > 0 && g.mo
 
 // CanContinueToUse implements goal.Goal (0x575C200).
 func (g *PlayerRideTamed) CanContinueToUse() bool { return g.CanUse() }
+
+// The base Goal methods DoorInteract keeps (1.26.60 vtable: stop is a no-op).
+
+// Stop implements goal.Goal.
+func (g *DoorInteract) Stop() {}
+
+// The base Goal methods RestrictOpenDoor keeps (1.26.60 vtable: tick is a no-op).
+
+// Tick implements goal.Goal.
+func (g *RestrictOpenDoor) Tick() {}
+
+// The base Goal methods PlayerRideTamed keeps (start, stop and tick are not overridden; the vtable was not re-read).
+
+// Start implements goal.Goal.
+func (g *PlayerRideTamed) Start() {}
+
+// Stop implements goal.Goal.
+func (g *PlayerRideTamed) Stop() {}
+
+// Tick implements goal.Goal.
+func (g *PlayerRideTamed) Tick() {}

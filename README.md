@@ -16,8 +16,9 @@
 
 ## Status
 
-Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs), and
-entity definitions load and run their events, ported from BDS 1.26.52 and 1.26.60.
+Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
+entity definitions load and run their events, and a mob's goals are built from its definition, ported from BDS 1.26.52 and
+1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -39,15 +40,21 @@ entity definitions load and run their events, ported from BDS 1.26.52 and 1.26.6
   stack of component groups events add and remove, events (filters, randomize, sequence,
   first_valid, triggers, responses), filter groups and their operators, and entity properties
   with `set_property`.
+- **Components:** `component` turns a mob's components into its goals the way BDS 1.26.60 does
+  when its groups change: each `minecraft:behavior.*` becomes a goal with its JSON `priority` and
+  `control_flags`, in the order the definition added them, and the old goals are dropped (running
+  non-target goals are stopped first). It also reads the navigation and movement components. Every
+  component name maps to a factory in a `Registry` that servers can change, `minecraft:` names
+  included. Sounds, damage causes, filter tests, item and block descriptors and Molang go to the
+  engine through a `Resolver`.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **Building components from a definition:** `definition` hands over each mob's components as
-  raw JSON; turning them into goals, navigation and move controls (the component registry) is
-  next. The non-goal components (sensors, timers, ageable, tameable and so on) are not ported.
+- **Non-goal components:** sensors, timers, ageable, tameable and so on are not ported. Some goal
+  JSON members that only a few goals use are not read yet and keep their BDS defaults.
 - **Definition gaps:** the engine answers every filter test and runs every response except
   `set_property`; legacy filter members and the component order of equal-priority goals after
   group changes are not ported.
@@ -116,6 +123,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`move`](move) | The move controls |
 | [`physics`](physics) | Mob movement and collision |
 | [`definition`](definition) | Entity files: component groups, events, filters, properties |
+| [`component`](component) | Builds a mob's goals, navigation and movement from its components |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where
@@ -171,7 +179,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | The ender dragon: dragonholdingpattern, dragontakeoff, dragonlanding, dragonscanning, dragonflaming, dragonchargeplayer, dragonstrafeplayer, dragondeath (the node graph, path search, crystals and flight state are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions: groups, events, filters, properties | ✅ written from BDS 1.26.60 |
-| Building components from a definition, non-goal components | ⬜ not started |
+| Building goals, navigation and movement from a definition | 🟡 written from BDS 1.26.60; some rarely used goal members keep their defaults |
+| Non-goal components | ⬜ not started |
 | Entity packets | ⬜ not started |
 
 **The goal is to match the latest Minecraft version exactly**, and to follow each Minecraft update.

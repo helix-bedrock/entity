@@ -1,5 +1,7 @@
 package definition
 
+import "slices"
+
 // entry is one step of an actor's group stack: a group added or removed.
 type entry struct {
 	added bool
@@ -107,6 +109,28 @@ func (s *stack) components() Group {
 		}
 	}
 	return out
+}
+
+// order appends the folded components' names to dst in the order they were
+// added. BDS keeps them in an entt map whose removals swap the last entry
+// into the gap; that order is not modelled.
+func (s *stack) order(dst []string) []string {
+	for _, e := range s.entries {
+		names := sortedKeys(e.group)
+		if e.added {
+			for _, n := range names {
+				if !slices.Contains(dst, n) {
+					dst = append(dst, n)
+				}
+			}
+			continue
+		}
+		dst = slices.DeleteFunc(dst, func(n string) bool {
+			_, ok := e.group[n]
+			return ok
+		})
+	}
+	return dst
 }
 
 // lock starts queueing adds and removes; unlock replays them.

@@ -146,6 +146,13 @@ func (p *Parser) parseChildren(raw json.RawMessage, warn func(error)) []*Event {
 	return out
 }
 
+// ParseTrigger reads a trigger as found in a component, such as a goal's
+// on_reach: an event name, or an object with event, target and filters. It
+// returns nil when raw is neither.
+func (p *Parser) ParseTrigger(raw json.RawMessage, warn func(error)) *Trigger {
+	return p.parseTrigger(raw, warn)
+}
+
 // parseTrigger reads a trigger: an event name, or an object with event,
 // target and filters (0xBFF93C0).
 func (p *Parser) parseTrigger(raw json.RawMessage, warn func(error)) *Trigger {

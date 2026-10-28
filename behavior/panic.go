@@ -35,6 +35,12 @@ type PanicConfig struct {
 	SoundInterval Range[float32]
 }
 
+// DefaultPanic returns BDS 1.26.60's panic defaults (legacy goal parser
+// 0xBF93840): speed 1 and, with no damage_sources, every damage cause.
+func DefaultPanic() PanicConfig {
+	return PanicConfig{SpeedMultiplier: 1, DamageSources: []int{DamageAll}, Sound: NoSound}
+}
+
 // Panic is PanicGoal: a hurt mob runs to a random spot, away from what hit
 // it, or to water.
 type Panic struct {

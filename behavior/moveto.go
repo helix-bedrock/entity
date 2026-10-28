@@ -28,6 +28,10 @@ const (
 // materialAny is BDS's "any" material type.
 const materialAny path.Material = 25
 
+// MaterialAny is BDS's "any" material type, which a material_type that is
+// not water or lava reads as.
+const MaterialAny = materialAny
+
 // MoveToConfig is the JSON the move-to-block goals share.
 type MoveToConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`

@@ -203,6 +203,11 @@ func (f *Filter) Eval(t Tester) bool {
 	return true
 }
 
+// ParseFilter reads a filter group as found in a component, such as a
+// goal's "filters" member. The group read before an error is returned with
+// it.
+func (p *Parser) ParseFilter(raw json.RawMessage) (*Filter, error) { return p.parseFilter(raw) }
+
 // parseFilter reads a "filters" member into a new All group. BDS stops at
 // the first member that fails to parse and keeps what it read before it, so
 // the group is returned with the error.
@@ -297,23 +302,37 @@ func (p *Parser) parseTest(f *Filter, obj map[string]json.RawMessage) error {
 	}
 	t := Test{Name: name, Domain: obj["domain"], Value: obj["value"]}
 	if raw, ok := obj["subject"]; ok {
+		var known bool
 		var s string
-		if json.Unmarshal(raw, &s) != nil {
+		var n int
+		switch {
+		case json.Unmarshal(raw, &s) == nil:
+			t.Subject, known = parseSubject(s)
+		case json.Unmarshal(raw, &n) == nil:
+			// Files written back out of BDS (such as helix-data's) hold the
+			// enum number.
+			t.Subject, known = Subject(n), n >= 0 && n < len(subjectNames())
+		default:
 			return fmt.Errorf("filter: test %s: subject is not a string", name)
 		}
-		var known bool
-		if t.Subject, known = parseSubject(s); !known {
-			return fmt.Errorf("filter: test %s: unknown subject %q", name, s)
+		if !known {
+			return fmt.Errorf("filter: test %s: unknown subject %s", name, raw)
 		}
 	}
 	if raw, ok := obj["operator"]; ok {
+		var known bool
 		var s string
-		if json.Unmarshal(raw, &s) != nil {
+		var n int
+		switch {
+		case json.Unmarshal(raw, &s) == nil:
+			t.Operator, known = parseOperator(s)
+		case json.Unmarshal(raw, &n) == nil:
+			t.Operator, known = Operator(n), n >= 0 && n <= int(OpLessOrEqual)
+		default:
 			return fmt.Errorf("filter: test %s: operator is not a string", name)
 		}
-		var known bool
-		if t.Operator, known = parseOperator(s); !known {
-			return fmt.Errorf("filter: test %s: unknown operator %q", name, s)
+		if !known {
+			return fmt.Errorf("filter: test %s: unknown operator %s", name, raw)
 		}
 	}
 	f.Tests = append(f.Tests, t)

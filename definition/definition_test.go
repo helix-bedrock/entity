@@ -273,3 +273,43 @@ func checkGroups(t *testing.T, def *Definition, where string, ev *Event) {
 		checkGroups(t, def, where, c)
 	}
 }
+
+func TestOrder(t *testing.T) {
+	def := mustParse(t, `{"format_version": "1.26.60", "minecraft:entity": {
+		"description": {"identifier": "test:order"},
+		"components": {"minecraft:c": {}, "minecraft:a": {}},
+		"component_groups": {
+			"g1": {"minecraft:b": {}, "minecraft:a": {"v": 2}},
+			"g2": {"minecraft:c": {}}
+		}
+	}}`)
+	in := New(def, &host{}, InitLoaded, "")
+	in.AddGroup("g1")
+	in.Refresh(tester{}, nil)
+	if got, want := in.Order(), []string{"minecraft:a", "minecraft:c", "minecraft:b"}; !slices.Equal(got, want) {
+		t.Fatalf("order %v, want %v (base sorted, replaced kept in place, new appended)", got, want)
+	}
+	in.RemoveGroup("g2")
+	in.Refresh(tester{}, nil)
+	if got, want := in.Order(), []string{"minecraft:a", "minecraft:b"}; !slices.Equal(got, want) {
+		t.Fatalf("order after remove %v, want %v", got, want)
+	}
+	for _, n := range in.Order() {
+		if _, ok := in.Components()[n]; !ok {
+			t.Errorf("%s in order but not in components", n)
+		}
+	}
+}
+
+func TestNumericFilterInputs(t *testing.T) {
+	f, err := NewParser().ParseFilter(json.RawMessage(`{"test": "is_family", "subject": 1, "operator": 1, "value": "x"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Tests) != 1 || f.Tests[0].Subject != SubjectOther || f.Tests[0].Operator != OpNotEquals {
+		t.Fatalf("got %+v", f.Tests)
+	}
+	if _, err := NewParser().ParseFilter(json.RawMessage(`{"test": "is_family", "subject": 99}`)); err == nil {
+		t.Fatal("subject 99 should fail")
+	}
+}
