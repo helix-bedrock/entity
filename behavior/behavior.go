@@ -123,7 +123,8 @@ const (
 const EffectLevitation = 24
 
 // NoSound is the "undefined" level sound event; a goal with it plays nothing.
-const NoSound = 614
+// 1.26.60 added ice_ball.break as 614 and moved undefined to 615.
+const NoSound = 615
 
 // maxRideDepth is how far BDS follows a stack of riders.
 const maxRideDepth = 1023

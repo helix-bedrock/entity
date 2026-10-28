@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-27: **the AI core runs, and 156 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
+Status as of 2026-10-28: **the AI core runs, and 162 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
 BDS 1.26.52 and checked against 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,10 +28,11 @@ BDS 1.26.52 and checked against 1.26.60.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 156 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 162 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
-  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle and silverfish), and the
+  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle, silverfish, guardian and vex),
+  the spell goals (summon_entity, send_event), and the
   villager and village goals (sleep, work, mingle, farming, hiding, trading, celebrating). The
   [roadmap](#roadmap) lists them all.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
@@ -40,7 +41,7 @@ BDS 1.26.52 and checked against 1.26.60.
 
 What is left:
 
-- **The other 19 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 13 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
 - **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
@@ -52,7 +53,8 @@ What is left:
   the end.
 - **1.26.60 check:** a scan of every goal's code against 1.26.52 found panic changed (it keeps
   running while the hurt still counts and picks a new spot when its path ends) and vanilla moved
-  ranged_attack to its `attack_range`/`attack_interval` objects; both are in. The scan compares
+  ranged_attack to its `attack_range`/`attack_interval` objects; both are in. 1.26.60 also added a
+  sound event and moved "undefined" from 614 to 615, which every goal's "no sound" now uses. The scan compares
   constants, strings and calls, not every line, so a small change can still be missed.
 - **Not tested in game yet.** The goals are unit tested but not yet used by a running server or
   compared with BDS mob by mob.
@@ -152,7 +154,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Roll, lay_egg, jump_to_block, silverfish_merge_with_stone, silverfish_wake_up_friends | ✅ written from BDS |
 | Villagers and villages: move_to_poi, sleep, work, work_composter, mingle, hide, move_to_village, stroll_towards_village, move_through_village, explore_outskirts, move_indoors, move_outdoors, go_home, harvest_farm_block, fertilize_farm_block, raid_garden, inspect_bookshelf, celebrate, celebrate_survive, offer_flower, take_flower, trade_interest, trade_with_player | 🟡 written from BDS; POIs, villages, crops, items and trades come from the engine; trade_interest's item cycling and some defaults are simplified |
 | Caravans, leaders, hovering: follow_caravan, follow_target_leader, hover, float_tempt | ✅ written from BDS 1.26.60 |
-| The other 19 goals (noteblocks, the dragon, the wither, the vex, ...) | ⬜ not started |
+| Spells, guardian, vex, play: summon_entity, send_event, guardian_attack, vex_copy_owner_target, vex_random_move, play | ✅ written from BDS 1.26.60 |
+| The other 13 goals (the allay's noteblock goals, items, the dragon, the wither, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 
