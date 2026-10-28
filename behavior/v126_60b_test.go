@@ -356,3 +356,139 @@ func TestSendEventStages(t *testing.T) {
 		t.Fatal("still casting after cast_duration")
 	}
 }
+
+// fakeInv is a slice of stacks.
+type fakeInv struct {
+	Container
+	slots []Item
+}
+
+func (c *fakeInv) Size() int              { return len(c.slots) }
+func (c *fakeInv) Slot(k int) Item        { return c.slots[k] }
+func (c *fakeInv) SetSlot(k int, it Item) { c.slots[k] = it }
+
+// thrown is one ThrowItem call.
+type thrown struct {
+	it Item
+	v  Vec3
+}
+
+// allayMob is a b2Mob with a note block memory and items.
+type allayMob struct {
+	*b2Mob
+	heard      *Pos
+	heardTick  uint64
+	inv        *fakeInv
+	throws     []thrown
+	noteblocks map[Pos]bool
+}
+
+func (m *allayMob) HeardNoteblock() (Pos, uint64, bool) {
+	p, ok := derefPos(m.heard)
+	return p, m.heardTick, ok
+}
+func (m *allayMob) ForgetNoteblock()                    { m.heard = nil }
+func (m *allayMob) MatchesBlock(p Pos, _ []string) bool { return m.noteblocks[p] }
+func (m *allayMob) Inventory() Container {
+	if m.inv == nil {
+		return nil
+	}
+	return m.inv
+}
+func (m *allayMob) ThrowItem(it Item, v Vec3, _ bool) bool {
+	m.throws = append(m.throws, thrown{it, v})
+	return true
+}
+
+func newAllay(w World, p Vec3) *allayMob {
+	return &allayMob{b2Mob: newB2Mob(w, 1, p, "minecraft:allay"), noteblocks: map[Pos]bool{}}
+}
+
+func TestStayNearNoteblock(t *testing.T) {
+	w := &flatWorld{r: &seqRandom{}, tick: 1000}
+	m := newAllay(w, Vec3{X: 20.5, Y: 64, Z: 0.5})
+	g := NewStayNearNoteblock(w, m, DefaultStayNearNoteblock())
+	if g.CanUse() {
+		t.Fatal("started with no note block heard")
+	}
+	nb := Pos{Y: 64}
+	m.heard, m.heardTick, m.noteblocks[nb] = &nb, 500, true
+	if !g.CanUse() {
+		t.Fatal("did not go back to a note block 20 blocks away")
+	}
+	g.Start()
+	g.Tick()
+	if m.nav.to != (Vec3{X: 0.5, Y: 64.5, Z: 0.5}) || len(m.lookedAt) != 1 {
+		t.Fatalf("walked to %v, looked %d times", m.nav.to, len(m.lookedAt))
+	}
+	w.tick = 500 + 30*20 + 1
+	if g.CanUse() || m.heard != nil {
+		t.Fatal("kept a memory older than listen_time")
+	}
+}
+
+func TestGiveToNoteblockThrows(t *testing.T) {
+	w := &flatWorld{r: &seqRandom{floats: []float32{0.5}}, tick: 700}
+	m := newAllay(w, Vec3{X: 1.5, Y: 64, Z: 0.5})
+	nb := Pos{Y: 64}
+	m.heard, m.heardTick, m.noteblocks[nb] = &nb, 690, true
+	m.inv = &fakeInv{slots: []Item{{Name: "minecraft:cake", Count: 2}, {}, {Name: "minecraft:stick", Count: 1}}}
+	g := NewGiveToNoteblock(w, m, DefaultGiveToNoteblock())
+	if !g.CanUse() {
+		t.Fatal("did not start")
+	}
+	g.Start()
+	g.Tick()
+	if len(m.throws) != 2 || m.inv.slots[0].Count != 1 || !m.inv.slots[2].Empty() {
+		t.Fatalf("throws %+v, slots %+v", m.throws, m.inv.slots)
+	}
+	if v := m.throws[0].v; v.X >= 0 || v.Y <= 0 {
+		t.Fatalf("throw velocity %v, want back towards the block and up", v)
+	}
+	if len(m.sounds) != 2 {
+		t.Fatalf("sounds %v, want one per throw on a tick that divides by 7", m.sounds)
+	}
+}
+
+func TestGiveToOwnerWalksThenThrows(t *testing.T) {
+	w := &flatWorld{r: &seqRandom{}, tick: 1}
+	m := newAllay(w, Vec3{X: 0.5, Y: 64, Z: 0.5})
+	p := newB2Mob(w, 2, Vec3{X: 10.5, Y: 64, Z: 0.5}, "minecraft:player")
+	w.entities = []Actor{m, p}
+	m.owner = 2
+	m.inv = &fakeInv{slots: []Item{{Name: "minecraft:diamond", Count: 1}}}
+	g := NewGiveToOwner(w, pathAllay{m}, DefaultGiveToOwner())
+	if g.CanUse() {
+		t.Fatal("started with an owner that is not a player")
+	}
+	pl := &playerMob{b2Mob: p}
+	w.entities = []Actor{m, pl}
+	if !g.CanUse() {
+		t.Fatal("did not start")
+	}
+	g.Start()
+	g.Tick()
+	if len(m.throws) != 0 || m.nav.to != pl.pos {
+		t.Fatalf("threw %d from 10 blocks, walked to %v", len(m.throws), m.nav.to)
+	}
+	m.pos = Vec3{X: 8.5, Y: 64, Z: 0.5}
+	g.Tick()
+	if len(m.throws) != 1 || !m.inv.slots[0].Empty() {
+		t.Fatalf("throws %+v", m.throws)
+	}
+}
+
+// playerMob is a b2Mob that is a player.
+type playerMob struct{ *b2Mob }
+
+func (p *playerMob) IsPlayer() bool { return true }
+
+// pathNav is a fakeNav that always finds a path to an entity.
+type pathNav struct{ *fakeNav }
+
+func (n pathNav) PathTo(a Actor) (Pos, bool) { return blockOf(a.Pos()), true }
+
+// pathAllay is an allayMob with pathNav.
+type pathAllay struct{ *allayMob }
+
+func (m pathAllay) Nav() Navigator { return pathNav{m.nav} }
