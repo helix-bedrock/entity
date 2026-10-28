@@ -1,6 +1,11 @@
 package behavior
 
-import "math"
+import (
+	"encoding/json"
+	"fmt"
+	"math"
+	"slices"
+)
 
 // The ranged_attack goal's fixed numbers.
 const (
@@ -36,10 +41,10 @@ type Ranged interface {
 	RangedAttack(t Actor, power float32)
 }
 
-// RangedAttackConfig is the JSON of minecraft:behavior.ranged_attack.
-// Times are in ticks.
+// RangedAttackConfig is the JSON of minecraft:behavior.ranged_attack; its
+// UnmarshalJSON reads both JSON formats. Times are in ticks.
 type RangedAttackConfig struct {
-	BurstShots        int32 `json:"burst_shots"`
+	BurstShots        int32
 	TargetInSightTime int32
 	BurstInterval     int32
 	// ChargeChargedTrigger and ChargeShootTrigger are the crossbow charge
@@ -50,19 +55,155 @@ type RangedAttackConfig struct {
 	// them out.
 	AttackIntervalMin int32
 	AttackIntervalMax int32
-	AttackRadiusMin   float32 `json:"attack_radius_min"`
-	AttackRadius      float32 `json:"attack_radius"`
+	// AttackRadiusMin and AttackRadius are attack_range's min and max
+	// (attack_radius_min and attack_radius in the old format).
+	AttackRadiusMin float32
+	AttackRadius    float32
 	// XMaxRotation and YMaxHeadRotation are the look control's speeds
 	// (map?: which JSON field feeds which).
-	XMaxRotation     float32 `json:"x_max_rotation"`
-	YMaxHeadRotation float32 `json:"y_max_head_rotation"`
-	RangedFOV        float32 `json:"ranged_fov"`
-	SpeedMultiplier  float32 `json:"speed_multiplier"`
-	SetPersistent    bool    `json:"set_persistent"`
-	Swing            bool    `json:"swing"`
+	XMaxRotation     float32
+	YMaxHeadRotation float32
+	RangedFOV        float32
+	SpeedMultiplier  float32
+	SetPersistent    bool
+	Swing            bool
 	// InRangeMovement is the in-range movement mode; 1 keeps walking
 	// until the target is within attack_radius + 0.5.
 	InRangeMovement int32
+}
+
+// rangedMoveModes are the in_range_movement_mode names, in BDS's order.
+func rangedMoveModes() []string { return []string{"hold_position", "follow_target"} }
+
+// rangedJSON is the JSON of minecraft:behavior.ranged_attack in both of the
+// formats BDS 1.26.60 reads: the old attack_interval_min/_max and
+// attack_radius_min/attack_radius fields, and the attack_interval and
+// attack_range {min, max} objects vanilla uses since 1.26.60. Times are in
+// seconds.
+type rangedJSON struct {
+	BurstShots           *int32          `json:"burst_shots"`
+	TargetInSightTime    *float32        `json:"target_in_sight_time"`
+	BurstInterval        *float32        `json:"burst_interval"`
+	ChargeChargedTrigger *float32        `json:"charge_charged_trigger"`
+	ChargeShootTrigger   *float32        `json:"charge_shoot_trigger"`
+	AttackInterval       json.RawMessage `json:"attack_interval"`
+	AttackIntervalMin    *float32        `json:"attack_interval_min"`
+	AttackIntervalMax    *float32        `json:"attack_interval_max"`
+	AttackRange          *rangeJSON      `json:"attack_range"`
+	AttackRadiusMin      *float32        `json:"attack_radius_min"`
+	AttackRadius         *float32        `json:"attack_radius"`
+	XMaxRotation         *float32        `json:"x_max_rotation"`
+	YMaxHeadRotation     *float32        `json:"y_max_head_rotation"`
+	RangedFOV            *float32        `json:"ranged_fov"`
+	SpeedMultiplier      *float32        `json:"speed_multiplier"`
+	SetPersistent        *bool           `json:"set_persistent"`
+	Swing                *bool           `json:"swing"`
+	InRangeMovementMode  *string         `json:"in_range_movement_mode"`
+}
+
+// rangeJSON is a {min, max} object; a missing side keeps its old value.
+type rangeJSON struct {
+	Min *float32 `json:"min"`
+	Max *float32 `json:"max"`
+}
+
+// rangedUnset is the value BDS keeps in attack_interval's two sides until the
+// JSON sets them; it reads as 0.
+const rangedUnset = -1
+
+// UnmarshalJSON reads minecraft:behavior.ranged_attack the way BDS 1.26.60
+// does (definition 0xDFECB30, old format 0xE1DCB20, checks 0x5AE4630, goal
+// setup 0x58AF3C0 in 1.26.52). Fields the JSON leaves out keep the values c
+// already has, so decode into DefaultRangedAttack().
+func (c *RangedAttackConfig) UnmarshalJSON(b []byte) error {
+	var j rangedJSON
+	if err := json.Unmarshal(b, &j); err != nil {
+		return fmt.Errorf("behavior: read ranged_attack: %w", err)
+	}
+	if j.BurstShots != nil {
+		c.BurstShots = *j.BurstShots
+	}
+	setTicks(&c.TargetInSightTime, j.TargetInSightTime)
+	setTicks(&c.BurstInterval, j.BurstInterval)
+	setTicks(&c.ChargeChargedTrigger, j.ChargeChargedTrigger)
+	setTicks(&c.ChargeShootTrigger, j.ChargeShootTrigger)
+	if err := c.readInterval(&j); err != nil {
+		return err
+	}
+	if j.AttackRange != nil {
+		setFloat(&c.AttackRadiusMin, j.AttackRange.Min)
+		setFloat(&c.AttackRadius, j.AttackRange.Max)
+	}
+	setFloat(&c.AttackRadiusMin, j.AttackRadiusMin)
+	setFloat(&c.AttackRadius, j.AttackRadius)
+	setFloat(&c.XMaxRotation, j.XMaxRotation)
+	setFloat(&c.YMaxHeadRotation, j.YMaxHeadRotation)
+	setFloat(&c.RangedFOV, j.RangedFOV)
+	setFloat(&c.SpeedMultiplier, j.SpeedMultiplier)
+	if j.SetPersistent != nil {
+		c.SetPersistent = *j.SetPersistent
+	}
+	if j.Swing != nil {
+		c.Swing = *j.Swing
+	}
+	if j.InRangeMovementMode != nil {
+		i := slices.Index(rangedMoveModes(), *j.InRangeMovementMode)
+		if i < 0 {
+			return fmt.Errorf("behavior: ranged_attack in_range_movement_mode %q is not one of %v", *j.InRangeMovementMode, rangedMoveModes())
+		}
+		c.InRangeMovement = int32(i)
+	}
+	return nil
+}
+
+// readInterval reads attack_interval as a number (both sides, old format) or
+// a {min, max} object, then attack_interval_min and _max. An unset side is 0
+// and a max below the min is raised to the min, as BDS's load check does.
+func (c *RangedAttackConfig) readInterval(j *rangedJSON) error {
+	if j.AttackInterval == nil && j.AttackIntervalMin == nil && j.AttackIntervalMax == nil {
+		return nil
+	}
+	lo, hi := float32(rangedUnset), float32(rangedUnset)
+	if j.AttackInterval != nil {
+		var r rangeJSON
+		var v float32
+		switch {
+		case json.Unmarshal(j.AttackInterval, &v) == nil:
+			lo, hi = v, v
+		case json.Unmarshal(j.AttackInterval, &r) == nil:
+			setFloat(&lo, r.Min)
+			setFloat(&hi, r.Max)
+		default:
+			return fmt.Errorf("behavior: ranged_attack attack_interval %s is not a number or a {min, max} object", j.AttackInterval)
+		}
+	}
+	setFloat(&lo, j.AttackIntervalMin)
+	setFloat(&hi, j.AttackIntervalMax)
+	if lo == rangedUnset {
+		lo = 0
+	}
+	if hi == rangedUnset {
+		hi = 0
+	}
+	if lo > hi {
+		hi = lo
+	}
+	c.AttackIntervalMin = int32(lo * ticksPerSecond)
+	c.AttackIntervalMax = int32(hi * ticksPerSecond)
+	return nil
+}
+
+// setTicks stores a time in seconds as ticks, truncated as BDS does.
+func setTicks(dst *int32, s *float32) {
+	if s != nil {
+		*dst = int32(*s * ticksPerSecond)
+	}
+}
+
+func setFloat(dst *float32, v *float32) {
+	if v != nil {
+		*dst = *v
+	}
 }
 
 // DefaultRangedAttack returns the goal's BDS defaults.

@@ -62,11 +62,18 @@ func (g *Panic) hurtRecently(tick uint64) bool {
 	return g.world.CurrentTick()-tick <= panicHurtTicks
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal (0xBF9BD70).
 func (g *Panic) CanUse() bool {
 	if !g.cfg.Force && !g.triggered() {
 		return false
 	}
+	return g.pick()
+}
+
+// pick chooses where to run (0xBF9C6D0): water first with prefer_water, then
+// away from the attacker, then any land spot. It keeps the old spot when
+// nothing is found.
+func (g *Panic) pick() bool {
 	var p Vec3
 	ok := false
 	if g.cfg.PreferWater {
@@ -140,10 +147,12 @@ func (g *Panic) waterTarget() (Vec3, bool) {
 	return Vec3{X: float32(out.X), Y: float32(out.Y), Z: float32(out.Z)}, found
 }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal (0xBF9C5B0). Since 1.26.60 the mob
+// also keeps panicking while the hurt that started it still counts, even once
+// its path is done.
 func (g *Panic) CanContinueToUse() bool {
 	n := g.mob.Nav()
-	return n != nil && !n.Done()
+	return g.triggered() || n != nil && !n.Done()
 }
 
 // Start implements goal.Goal.
@@ -160,12 +169,16 @@ func (g *Panic) Stop() {
 	}
 }
 
-// Tick implements goal.Goal.
+// Tick implements goal.Goal (0xBF9BF50). Every 8 ticks the mob paths to its
+// spot again; since 1.26.60 it first picks a new spot when its path is done.
 func (g *Panic) Tick() {
 	now := g.world.CurrentTick()
 	playSound(g.world, g.mob, g.cfg.Sound, g.cfg.SoundInterval, now, &g.nextSound)
 	if g.nextPath < now {
 		if n := g.mob.Nav(); n != nil {
+			if n.Done() {
+				g.pick()
+			}
 			n.MoveTo(g.pos, g.cfg.SpeedMultiplier)
 		}
 		g.nextPath = now + panicRepath

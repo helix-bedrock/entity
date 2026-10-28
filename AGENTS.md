@@ -79,10 +79,11 @@ go test -run=^$ -bench=. -benchmem ./...   # benchmarks
    - every component can be read and given new settings while it runs
      (`Config`, `SetConfig`), from the mob's own tick;
    - goals can be added, removed, replaced and reordered while the mob runs.
-7. **BDS is the reference for the defaults.** Default behaviour matches BDS
-   1.26.52 one to one, quirks included, and each port cites the BDS function
-   addresses it was read from. Small differences are logged and fixed in one
-   refinement pass at the end.
+7. **BDS is the reference for the defaults.** Default behaviour matches the
+   latest BDS (1.26.60; goals ported earlier came from 1.26.52) one to one,
+   quirks included, and each port cites the BDS function addresses it was
+   read from. Small differences are logged and fixed in one refinement pass
+   at the end.
 
 The code does not follow rules 1, 2, 4, 5 and 6 everywhere yet. New code must
 follow them, and old code is being moved over.

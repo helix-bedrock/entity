@@ -7,7 +7,7 @@
   Goals, pathfinding, movement and spawning, standard library only
 </p>
 
-[![Minecraft](https://img.shields.io/badge/minecraft-v1.26.52_(Bedrock)-black)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
+[![Minecraft](https://img.shields.io/badge/minecraft-v1.26.60_(Bedrock)-black)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
 [![Go](https://img.shields.io/badge/go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Status](https://img.shields.io/badge/status-in_progress-orange)](#status)
@@ -16,8 +16,8 @@
 
 ## Status
 
-Status as of 2026-10-27: **the AI core runs, and 152 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
-BDS 1.26.52.
+Status as of 2026-10-27: **the AI core runs, and 156 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
+BDS 1.26.52 and checked against 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -28,7 +28,7 @@ BDS 1.26.52.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 152 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 156 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
   nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle and silverfish), and the
@@ -40,7 +40,7 @@ BDS 1.26.52.
 
 What is left:
 
-- **The other 23 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
+- **The other 19 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
   the entity packets.
 - **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
@@ -50,13 +50,18 @@ What is left:
   hurt_by_target's alert_same_type and breed's stop details. Block lists match by block name only,
   not by states or tags. Small differences from BDS are logged and fixed in one refinement pass at
   the end.
+- **1.26.60 check:** a scan of every goal's code against 1.26.52 found panic changed (it keeps
+  running while the hurt still counts and picks a new spot when its path ends) and vanilla moved
+  ranged_attack to its `attack_range`/`attack_interval` objects; both are in. The scan compares
+  constants, strings and calls, not every line, so a small change can still be missed.
 - **Not tested in game yet.** The goals are unit tested but not yet used by a running server or
   compared with BDS mob by mob.
 - **The API is not stable yet.** Names and behaviour may still change between commits.
 
 ## How it is checked
 
-Everything comes from the decompiled Bedrock Dedicated Server (BDS) 1.26.52: the same rules, the
+Everything comes from the decompiled Bedrock Dedicated Server (BDS) 1.26.52, and goals added or
+changed since come from 1.26.60: the same rules, the
 same numbers and the same random draws in the same order, quirks included. Each goal cites the
 BDS function addresses it was read from. The decompiled code is **not** in this repo; it was only
 used to read how the game works. Clean-room research notes are in [`research/`](research/).
@@ -146,7 +151,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, admire_item, barter and equip_item rules (`Items`); the inventory (`Container`), item data (stack sizes, damage, armor slots, recipes) and food use come from the engine |
 | Roll, lay_egg, jump_to_block, silverfish_merge_with_stone, silverfish_wake_up_friends | ✅ written from BDS |
 | Villagers and villages: move_to_poi, sleep, work, work_composter, mingle, hide, move_to_village, stroll_towards_village, move_through_village, explore_outskirts, move_indoors, move_outdoors, go_home, harvest_farm_block, fertilize_farm_block, raid_garden, inspect_bookshelf, celebrate, celebrate_survive, offer_flower, take_flower, trade_interest, trade_with_player | 🟡 written from BDS; POIs, villages, crops, items and trades come from the engine; trade_interest's item cycling and some defaults are simplified |
-| The other 23 goals (noteblocks, caravans, the dragon, the wither, ...) | ⬜ not started |
+| Caravans, leaders, hovering: follow_caravan, follow_target_leader, hover, float_tempt | ✅ written from BDS 1.26.60 |
+| The other 19 goals (noteblocks, the dragon, the wither, the vex, ...) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 

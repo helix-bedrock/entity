@@ -106,3 +106,67 @@ func (g *RandomHover) Tick() {
 		g.move()
 	}
 }
+
+// FlagIdling is the IDLING actor flag (41) hover sets every tick.
+const FlagIdling = 41
+
+// HoverConfig is minecraft:behavior.hover. The component has no fields of
+// its own; Speed is the speed BDS gives the move control (fixed at 1).
+type HoverConfig struct {
+	Speed float32
+}
+
+// DefaultHover returns the goal's BDS defaults.
+func DefaultHover() HoverConfig { return HoverConfig{Speed: 1} }
+
+// Hover is HoverGoal (vtable 0xF7B3B68, made in 0x54648C0): a flying mob
+// holds the spot where the goal started, pointing its move control back at
+// it whenever the control has nowhere to go.
+type Hover struct {
+	base
+	cfg  HoverConfig
+	spot Vec3
+}
+
+// NewHover makes the goal.
+func NewHover(w World, m Mob, c HoverConfig) *Hover {
+	return &Hover{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
+}
+
+// Config returns the goal's settings.
+func (g *Hover) Config() HoverConfig { return g.cfg }
+
+// SetConfig replaces the goal's settings.
+func (g *Hover) SetConfig(c HoverConfig) { g.cfg = c }
+
+// CanUse implements goal.Goal (0x5A04D90): the mob can fly, has a move
+// control and is not at the world origin.
+func (g *Hover) CanUse() bool {
+	if !g.mob.Flag(FlagCanFly) {
+		return false
+	}
+	if _, ok := g.mob.MoveWanted(); !ok {
+		return false
+	}
+	return g.mob.Pos() != Vec3{}
+}
+
+// CanContinueToUse implements goal.Goal: BaseGoal runs CanUse again.
+func (g *Hover) CanContinueToUse() bool { return g.CanUse() }
+
+// Start implements goal.Goal (0x5A04EA0).
+func (g *Hover) Start() { g.spot = g.mob.Pos() }
+
+// Stop implements goal.Goal.
+func (g *Hover) Stop() {}
+
+// Tick implements goal.Goal (0x5A04EC0).
+func (g *Hover) Tick() {
+	if g.spot == (Vec3{}) {
+		return
+	}
+	g.mob.SetFlag(FlagIdling, true)
+	if wanted, ok := g.mob.MoveWanted(); ok && !wanted {
+		g.mob.SetMoveWanted(g.spot, g.cfg.Speed)
+	}
+}

@@ -14,6 +14,7 @@ const (
 	temptRepathMin     = 8
 	temptRepathRandom  = 4
 	temptFloatMaxValue = 3.4028235e38
+	floatTemptMinLen   = 0.1 // float_tempt's shortest direction length
 )
 
 // TemptConfig is the JSON of minecraft:behavior.tempt.
@@ -45,7 +46,10 @@ type Tempt struct {
 	lastYaw   float32
 	nextSound uint64
 	avoided   bool
-	buf       []Actor
+	// float is float_tempt: the mob swims or flies straight at the player
+	// by adding to its motion, not by pathing.
+	float bool
+	buf   []Actor
 }
 
 // NewTempt makes the goal.
@@ -57,6 +61,16 @@ func NewTempt(w World, m Mob, c TemptConfig) *Tempt {
 		c.StopDistance = temptStop
 	}
 	return &Tempt{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, player: NoID}
+}
+
+// NewFloatTempt makes minecraft:behavior.float_tempt (FloatTemptGoal, vtable
+// 0xF7B34A8): tempt with the same JSON, but while the player is out of reach
+// the mob's motion grows toward the player by movement speed times
+// speed_multiplier each tick (0x59F7CA0), and in reach it does nothing.
+func NewFloatTempt(w World, m Mob, c TemptConfig) *Tempt {
+	g := NewTempt(w, m, c)
+	g.float = true
+	return g
 }
 
 // CanUse implements goal.Goal.
@@ -164,9 +178,14 @@ func (g *Tempt) Tick() {
 	mb := g.mob.Box()
 	stop := (b.Max.X-b.Min.X+(mb.Max.X-mb.Min.X))*0.5 + g.cfg.StopDistance
 	n := g.mob.Nav()
+	far := dz*dz+(dx*dx+dy*dy) >= stop*stop
 	switch {
+	case g.float:
+		if far {
+			g.floatToward(Vec3{X: dx, Y: dy, Z: dz})
+		}
 	case n == nil:
-	case dz*dz+(dx*dx+dy*dy) >= stop*stop:
+	case far:
 		if g.repath <= 0 {
 			n.MoveToActor(p, g.cfg.SpeedMultiplier)
 			g.repath = g.world.Random().NextInt(temptRepathRandom) + temptRepathMin
@@ -175,6 +194,15 @@ func (g *Tempt) Tick() {
 		n.Stop()
 	}
 	playSound(g.world, g.mob, g.cfg.Sound, g.cfg.SoundInterval, g.world.CurrentTick(), &g.nextSound)
+}
+
+// floatToward adds to the mob's motion along d, which is at least
+// floatTemptMinLen long for the normalising.
+func (g *Tempt) floatToward(d Vec3) {
+	inv := 1 / max(floatTemptMinLen, sqrt32(d.Z*d.Z+(d.X*d.X+d.Y*d.Y)))
+	s, k := g.mob.Speed(), g.cfg.SpeedMultiplier
+	v := g.mob.Velocity()
+	g.mob.SetVelocity(Vec3{X: v.X + k*(s*(d.X*inv)), Y: v.Y + k*(s*(d.Y*inv)), Z: v.Z + k*(s*(d.Z*inv))})
 }
 
 // riddenBox is the box around the entity and everything it rides.
