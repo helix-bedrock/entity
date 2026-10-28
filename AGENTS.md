@@ -46,6 +46,7 @@ go test -run=^$ -bench=. -benchmem ./...   # benchmarks
 | `nav` | The navigation components |
 | `move` | The move controls (`minecraft:movement.*`) |
 | `physics` | Mob movement and collision |
+| `definition` | Entity files: component groups, events, filters, properties |
 | `spawn` | The natural spawner (moving to Helix) |
 
 ## Invariants: do not break these

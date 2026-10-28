@@ -16,8 +16,8 @@
 
 ## Status
 
-Status as of 2026-10-28: **the AI core runs, and all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
-BDS 1.26.52 and checked against 1.26.60.
+Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs), and
+entity definitions load and run their events, ported from BDS 1.26.52 and 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -35,14 +35,23 @@ BDS 1.26.52 and checked against 1.26.60.
   the spell goals (summon_entity, send_event), and the
   villager and village goals (sleep, work, mingle, farming, hiding, trading, celebrating). The
   [roadmap](#roadmap) lists them all.
+- **Definitions:** `definition` loads Mojang's entity files and runs them like BDS 1.26.60: the
+  stack of component groups events add and remove, events (filters, randomize, sequence,
+  first_valid, triggers, responses), filter groups and their operators, and entity properties
+  with `set_property`.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **The other 8 goals**, entity definitions (loading a mob's components from Mojang's JSON) and
-  the entity packets.
+- **Building components from a definition:** `definition` hands over each mob's components as
+  raw JSON; turning them into goals, navigation and move controls (the component registry) is
+  next. The non-goal components (sensors, timers, ageable, tameable and so on) are not ported.
+- **Definition gaps:** the engine answers every filter test and runs every response except
+  `set_property`; legacy filter members and the component order of equal-priority goals after
+  group changes are not ported.
+- **The entity packets.**
 - **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
   first value. BDS's two random streams are one `Rand` here, and the Guardian sky check uses sky
@@ -106,6 +115,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`nav`](nav) | The navigation components |
 | [`move`](move) | The move controls |
 | [`physics`](physics) | Mob movement and collision |
+| [`definition`](definition) | Entity files: component groups, events, filters, properties |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where
@@ -160,7 +170,9 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | use_kinetic_weapon, wither_random_attack_pos_goal, wither_target_highest_damage (the weapon, dash state and damage tally are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
 | The ender dragon: dragonholdingpattern, dragontakeoff, dragonlanding, dragonscanning, dragonflaming, dragonchargeplayer, dragonstrafeplayer, dragondeath (the node graph, path search, crystals and flight state are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
-| Entity definitions and packets | ⬜ not started |
+| Entity definitions: groups, events, filters, properties | ✅ written from BDS 1.26.60 |
+| Building components from a definition, non-goal components | ⬜ not started |
+| Entity packets | ⬜ not started |
 
 **The goal is to match the latest Minecraft version exactly**, and to follow each Minecraft update.
 
