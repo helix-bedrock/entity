@@ -16,7 +16,7 @@
 
 ## Status
 
-Status as of 2026-10-28: **the AI core runs, and 167 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
+Status as of 2026-10-28: **the AI core runs, and 170 of the 175 vanilla goals are built** (BDS lists 7 more names it no longer runs), ported from
 BDS 1.26.52 and checked against 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
@@ -28,7 +28,7 @@ BDS 1.26.52 and checked against 1.26.60.
 - **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
   BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
   auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
-- **Behaviours:** `behavior` has 167 goals: strolling, swimming, flying and hovering, panic, tempt,
+- **Behaviours:** `behavior` has 170 goals: strolling, swimming, flying and hovering, panic, tempt,
   following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
   attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
   nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle, silverfish, guardian, vex, allay, cat gifts and the copper golem),
@@ -157,7 +157,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Spells, guardian, vex, play: summon_entity, send_event, guardian_attack, vex_copy_owner_target, vex_random_move, play | ✅ written from BDS 1.26.60 |
 | The allay: stay_near_noteblock, go_and_give_items_to_noteblock, go_and_give_items_to_owner | ✅ written from BDS 1.26.60 |
 | drop_item_for, transport_items (moving items is the engine's, through hooks) | ✅ written from BDS 1.26.60 |
-| The other 8 goals (use_kinetic_weapon, the dragon, the wither) | ⬜ not started |
+| use_kinetic_weapon, wither_random_attack_pos_goal, wither_target_highest_damage (the weapon, dash state and damage tally are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
+| The other 5 goals (the dragon) | ⬜ not started |
 | Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
 | Entity definitions and packets | ⬜ not started |
 
