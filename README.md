@@ -4,7 +4,7 @@
 
 <p>
   <b>Vanilla Minecraft: Bedrock Edition mob AI</b><br>
-  Goals, pathfinding, movement and spawning, standard library only
+  Goals, pathfinding, movement, spawning and the entity packets
 </p>
 
 [![Minecraft](https://img.shields.io/badge/minecraft-v1.26.60_(Bedrock)-black)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
@@ -22,6 +22,7 @@ its events, and its own state (age, breeding, taming, anger, healing, despawning
 breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
 attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
 hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
+`netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -80,6 +81,12 @@ hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in 
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
+- **Entity packets:** `netsync` has BDS 1.26.60's network rules as functions (rotation bytes,
+  the significance check, the MoveActorDelta header, the distance throttle, the 57-chunk view
+  area), builders for every entity packet, and an optional `Sync` that keeps what each player last
+  saw and writes one batch per player per tick in BDS's order. The engine decides who sees which
+  entity, when it moved and which sounds play; every vanilla behaviour is an option it can turn
+  off. The throttle matches all 4,764 unforced sends of a live BDS run.
 
 What is left:
 
@@ -94,7 +101,10 @@ What is left:
 - **Definition gaps:** the engine answers every filter test and runs every response except
   `set_property`; legacy filter members and the component order of equal-priority goals after
   group changes are not ported.
-- **The entity packets.**
+- **Entity packets:** players seeing players (AddPlayer), MoveActorDelta's Ticks value, the
+  MobEquipment slot fields, the high bits of MoveActorAbsolute's flags, one per-entity value that
+  makes BDS skip the throttle, and reading `conditional_bandwidth_optimization`'s conditional
+  values. Not yet checked against BDS packet by packet in a capture.
 - **Physics:** water currents, bouncy blocks, vehicles and gliding.
 - **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
   first value. BDS's two random streams are one `Rand` here, and the Guardian sky check uses sky
@@ -183,7 +193,9 @@ blocks share belong to the engine, and entity reaches them only through interfac
 - **Data-driven:** goal settings are the JSON fields of Mojang's `minecraft:behavior.*`
   components, with BDS's defaults; spawn rules are read from Mojang's own files.
 - **Replaceable:** every goal is a plain value; add, remove or write your own.
-- **No dependencies:** only the Go standard library and helix-data's data package.
+- **Few dependencies:** the AI packages use only the Go standard library and helix-data's data
+  package. `netsync` also uses Helix's own `protocol` for the packet types; importing only the AI
+  packages does not compile it.
 
 ## Roadmap
 
@@ -223,7 +235,7 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Interactions and conditions: interact, giveable, nameable, rideable, addrider, transformation, hurt_on_condition, breathable, burns_in_daylight | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
 | Leash, attributes and equipment: leashable (1.26.60 presets), leashable_to, the attribute components, attack, equipment, equippable, experience_reward, scale, attack_cooldown | 🟡 defaults from BDS 1.26.60 where found, logic from 1.21.3 |
 | Physics-style components: physics, collision_box, custom_hit_test, pushable / pushable_by_entity (1.26.60 presets) / pushable_by_block, buoyant, rail_movement, rail_sensor, friction_modifier, air_drag_modifier, bounciness, water_movement, variable_max_auto_step, jump.static, jump.dynamic, block_movement_slowdown_immunity and the marker components (can_climb, can_fly, uses_legacy_friction, ...) | 🟡 pushing (all five push modes) and buoyancy (waves and bobbing) from BDS 1.26.60, rail sensor from 1.21.3; jump.dynamic feeds the hop control |
-| Entity packets | ⬜ not started |
+| Entity packets: movement, throttle, view, spawn, equipment, data, events | 🟡 written from BDS 1.26.60; AddPlayer and a few field values left |
 
 **The goal is to match the latest Minecraft version exactly**, and to follow each Minecraft update.
 

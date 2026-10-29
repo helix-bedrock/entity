@@ -51,6 +51,7 @@ go test -run=^$ -bench=. -benchmem ./...   # benchmarks
 | `sensor` | Timers, the scheduler and the sensors that fire a mob's events |
 | `state` | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown, physics-style components (buoyancy, pushing, rail sensor, body settings), timers, teleporting, trails, area attacks, genetics, anger, and the settings of the components the engine runs |
 | `spawn` | The natural spawner (moving to Helix) |
+| `netsync` | The entity packets: BDS's network rules, packet builders and the optional `Sync` |
 
 ## Invariants: do not break these
 
