@@ -164,9 +164,11 @@ func States(c Context, env *state.Env, prev *state.Set, prevComps, comps definit
 		}
 	}
 	c.readPhysics(s, prev, read, same)
+	c.readOthers(env, s, prev, comps, read, same)
 	if env.Self != nil {
 		state.SetFlags(env.Self, state.FlagComponents(), hasIn(prevComps), hasIn(comps))
 		physicsChanged(env.Self, s, prev, prevComps, comps)
+		othersChanged(env.Self, s, prev, prevComps, comps)
 	}
 	return s, errs
 }

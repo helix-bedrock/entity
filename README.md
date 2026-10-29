@@ -19,8 +19,9 @@
 Status as of 2026-10-29: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
 its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
-breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, plus the attribute, equipment and
-physics settings it hands the engine) runs, ported from BDS 1.26.52 and 1.26.60.
+breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
+attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
+hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -66,15 +67,25 @@ physics settings it hands the engine) runs, ported from BDS 1.26.52 and 1.26.60.
   and be pulled in), `addrider`, `transformation` (the delay and block assist; the engine makes the
   new entity), `hurt_on_condition`, `breathable` (air supply, drowning and suffocation) and
   `burns_in_daylight`. Item work, riding itself and the blocks around the mob are the engine's.
+- **Everything else:** `state` also runs `damage_over_time`, `drying_out_timer`, `instant_despawn`,
+  `peek`, `ambient_sound_interval`, `heartbeat`, `bribeable`'s cooldown, `celebrate_hunt`, `explode`'s
+  fuse, `teleport`, `trail`, `group_size`, `home`, `inside_block_notifier`, `area_attack`,
+  `mob_effect`, `spawn_entity`, `block_sensor`, `combat_regeneration`, `trusting`, `genetics`,
+  `anger_level`, `ravager_blocked` and `spell_effects`; writes the actor data of `variant`,
+  `mark_variant`, `skin_id`, `color` and `color2`; reads `type_family`, `preferred_path`,
+  `annotation.break_door`, `shareables` and the marker components; and reads the components whose
+  work is the engine's (loot, inventory, trade tables, shooter, boostable, dash and the other rider
+  controls, knockback rules, dweller, flocking, looked_at and the rest) into settings for it.
+  Projectiles, NPCs, network bandwidth and the player's own values go to the engine as written.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **Other components:** attributes (health, attack, movement and the rest), leashable,
-  equipment, loot and the physics-style components (collision box, pushable, jump and the rest)
-  are not ported. The mob state logic is from BDS 1.21.3, like the sensors' tick logic: ageable's
+- **Component logic still missing:** flocking's steering, looked_at, block_sensor and the
+  1.26.60 versions of most of the last batch's systems (their logic is from BDS 1.21.3). The mob
+  state logic is from BDS 1.21.3, like the sensors' tick logic: ageable's
   `pause_growth_items`, `reset_growth_items` and feeding, angry's `broadcast_anger_when_dying`,
   and offspring mutations and colours are read but not run. What `interact`, `giveable` and
   `rideable` do once picked is a BDS callback that was not read. Some goal JSON members that only a few goals use are not
@@ -150,7 +161,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`definition`](definition) | Entity files: component groups, events, filters, properties |
 | [`component`](component) | Builds a mob's goals, navigation, movement, sensors and state from its components |
 | [`sensor`](sensor) | Timers, the scheduler and the sensors that fire a mob's events |
-| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown, physics-style components |
+| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown, physics-style components, timers, teleporting, trails, genetics, anger and the engine-side component settings |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where

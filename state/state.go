@@ -10,7 +10,11 @@
 // which ApplyBody hands to a physics.Body), the interaction
 // components (minecraft:interact, giveable, nameable, rideable, addrider)
 // and the condition components (minecraft:transformation,
-// hurt_on_condition, breathable, burns_in_daylight). It decides what
+// hurt_on_condition, breathable, burns_in_daylight), and the rest of
+// the vanilla components: timers (timers.go), the components that act
+// around the mob (world.go), trusting, genetics and anger (social.go),
+// actor data and markers (markers.go), and the settings of the components
+// the engine runs (engine.go), which act through Actions. It decides what
 // happens; the engine owns the items, the player's hand, spawning, health
 // and the packets, and answers through Mob.
 //

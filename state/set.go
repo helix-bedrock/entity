@@ -54,6 +54,70 @@ type Set struct {
 	BlockClimber         bool
 	CanStandOnPowderSnow bool
 	InputGroundControl   bool
+
+	// The data, family and marker components. Marker flag components are
+	// in MarkerFlagComponents; Markers holds the others the mob lists.
+	IntData    []IntDataConfig
+	TypeFamily *TypeFamilyConfig
+	Markers    map[string]bool
+	Sittable   *SittableConfig
+
+	// The timers and the components that act on the mob or around it.
+	DamageOverTime      *DamageOverTime
+	DryingOutTimer      *DryingOutTimer
+	InstantDespawn      *InstantDespawnConfig
+	Peek                *Peek
+	AmbientSound        *AmbientSoundInterval
+	Heartbeat           *HeartbeatConfig
+	Bribeable           *Bribeable
+	CelebrateHunt       *CelebrateHunt
+	Explode             *Explode
+	Teleport            *Teleport
+	Trail               *TrailConfig
+	GroupSize           *GroupSize
+	Home                *Home
+	InsideBlockNotifier *InsideBlockNotifier
+	AreaAttack          *AreaAttack
+	MobEffect           *MobEffect
+	SpawnEntity         *SpawnEntity
+	BlockSensor         *BlockSensorConfig
+	CombatRegeneration  *CombatRegeneration
+	Trusting            *TrustingConfig
+	Genetics            *Genetics
+	AngerLevel          *AngerLevel
+	RavagerBlocked      *RavagerBlockedConfig
+	SpellEffects        *SpellEffects
+	PreferredPath       *PreferredPathConfig
+	BreakDoor           *BreakDoorConfig
+	Shareables          *behavior.ShareablesConfig
+
+	// The components whose work is the engine's (engine.go).
+	Loot                      *LootConfig
+	Inventory                 *InventoryConfig
+	TradeTable                *TradeTableConfig
+	EconomyTradeTable         *EconomyTradeTableConfig
+	Boss                      *BossConfig
+	Shooter                   *ShooterConfig
+	Balloonable               *BalloonableConfig
+	Boostable                 *BoostableConfig
+	ItemControllable          *ItemControllableConfig
+	Dyeable                   *DyeableConfig
+	BreakBlocks               *BreakBlocksConfig
+	DashAction                *DashActionConfig
+	VerticalMovementAction    *VerticalMovementActionConfig
+	FreeCameraControlled      *FreeCameraControlledConfig
+	ReflectProjectiles        *ReflectProjectilesConfig
+	KnockbackRules            *KnockbackRulesConfig
+	RaidTrigger               *RaidTriggerConfig
+	MobEffectImmunity         *MobEffectImmunityConfig
+	Insomnia                  *InsomniaConfig
+	GrowsCrop                 *GrowsCropConfig
+	Dweller                   *DwellerConfig
+	Flocking                  *FlockingConfig
+	GameEventMovementTracking *GameEventMovementTrackingConfig
+	LookedAt                  *LookedAtConfig
+	// Raw are the Passthrough components, as written.
+	Raw RawComponents
 }
 
 // TickInput is the engine's answers a state tick needs beyond Env.
@@ -68,12 +132,22 @@ type TickInput struct {
 	LeashChunks LeashChunks
 	// Rails may be nil, which turns off rail_sensor.
 	Rails Rails
+	// Actions may be nil, which turns off the components that hurt, give
+	// effects, place blocks, teleport, explode or spawn.
+	Actions Actions
+	// Splashed reports a water bottle splash on the mob this tick
+	// (Actor::isAffectedByWaterBottle), for drying_out_timer.
+	Splashed bool
+	// CelebrationSound reports that the mob plays celebrate_hunt's sound
+	// (BDS: actor type 256, the piglins).
+	CelebrationSound bool
 }
 
 // Tick runs the ticking components once: ageable, breedable, tamemount,
 // angry, interact, transformation, hurt_on_condition, breathable,
-// burns_in_daylight, leashable, attack_cooldown, rail_sensor and
-// despawn. BDS runs each from its own system; this
+// burns_in_daylight, leashable, attack_cooldown, rail_sensor, the timers
+// and world components (damage_over_time to instant_despawn, see
+// tickOthers) and despawn. BDS runs each from its own system; this
 // order is not BDS's system order, which was not read. It reports that
 // the mob's transformation is due; the engine then transforms it.
 func (s *Set) Tick(env *Env, in TickInput) (transform bool) {
@@ -116,10 +190,75 @@ func (s *Set) Tick(env *Env, in TickInput) (transform bool) {
 	if s.RailSensor != nil {
 		s.RailSensor.Tick(env, in.Rails)
 	}
+	s.tickOthers(env, in)
 	if s.Despawn != nil {
 		s.Despawn.Tick(env, in.Chunks)
 	}
 	return transform
+}
+
+// tickOthers runs the timers and the components that act around the mob.
+func (s *Set) tickOthers(env *Env, in TickInput) {
+	if s.DamageOverTime != nil {
+		s.DamageOverTime.Tick(env)
+	}
+	if s.DryingOutTimer != nil {
+		s.DryingOutTimer.Tick(env, in.Splashed)
+	}
+	if s.Peek != nil {
+		s.Peek.Tick(env)
+	}
+	if s.AmbientSound != nil {
+		s.AmbientSound.Tick(env)
+	}
+	if s.Heartbeat != nil {
+		s.Heartbeat.Tick(env.Self)
+	}
+	if s.Bribeable != nil {
+		s.Bribeable.Tick()
+	}
+	if s.CelebrateHunt != nil {
+		s.CelebrateHunt.Tick(env, in.CelebrationSound)
+	}
+	if s.Explode != nil {
+		s.Explode.Tick(env, in.Actions)
+	}
+	if s.Teleport != nil {
+		s.Teleport.Tick(env, in.Actions)
+	}
+	if s.Trail != nil {
+		Trail(env, s.Trail, in.Actions)
+	}
+	if s.GroupSize != nil {
+		s.GroupSize.Tick(env)
+	}
+	if s.Home != nil {
+		s.Home.Tick(env)
+	}
+	if s.InsideBlockNotifier != nil {
+		s.InsideBlockNotifier.Tick(env)
+	}
+	if s.AreaAttack != nil {
+		s.AreaAttack.Tick(env, in.Actions)
+	}
+	if s.MobEffect != nil {
+		s.MobEffect.Tick(env, in.Actions)
+	}
+	if s.SpawnEntity != nil {
+		s.SpawnEntity.Tick(env, in.Actions)
+	}
+	if s.CombatRegeneration != nil {
+		s.CombatRegeneration.Tick(env)
+	}
+	if s.AngerLevel != nil {
+		s.AngerLevel.Tick(env)
+	}
+	if s.SpellEffects != nil {
+		s.SpellEffects.Tick(env.Self, in.Actions)
+	}
+	if s.InstantDespawn != nil {
+		InstantDespawn(env, in.Chunks)
+	}
 }
 
 // BeforeMove runs the components BDS runs as movement systems before the

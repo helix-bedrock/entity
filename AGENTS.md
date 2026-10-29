@@ -49,7 +49,7 @@ go test -run=^$ -bench=. -benchmem ./...   # benchmarks
 | `definition` | Entity files: component groups, events, filters, properties |
 | `component` | Builds a mob's goals, navigation, movement, sensors and state from its components |
 | `sensor` | Timers, the scheduler and the sensors that fire a mob's events |
-| `state` | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown, physics-style components (buoyancy, pushing, rail sensor, body settings) |
+| `state` | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown, physics-style components (buoyancy, pushing, rail sensor, body settings), timers, teleporting, trails, area attacks, genetics, anger, and the settings of the components the engine runs |
 | `spawn` | The natural spawner (moving to Helix) |
 
 ## Invariants: do not break these
