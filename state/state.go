@@ -5,7 +5,9 @@
 // (minecraft:is_baby, minecraft:is_tamed and the rest), the leash
 // components (minecraft:leashable, leashable_to), the attributes,
 // attack, equipment, equippable, experience_reward, scale and
-// attack_cooldown, the interaction
+// attack_cooldown, the physics-style components (minecraft:physics,
+// collision_box, pushable_by_entity, buoyant, rail_sensor and the rest,
+// which ApplyBody hands to a physics.Body), the interaction
 // components (minecraft:interact, giveable, nameable, rideable, addrider)
 // and the condition components (minecraft:transformation,
 // hurt_on_condition, breathable, burns_in_daylight). It decides what

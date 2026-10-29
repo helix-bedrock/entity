@@ -80,5 +80,14 @@ func (b *Body) jumpFromGround(w World) {
 			factor = lowJumpFactor
 		}
 	}
-	b.Vel.Y = factor * (b.jumpBoost() + groundJump)
+	b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
+}
+
+// jumpPower is the ground jump speed: the mob's jump.static power, else
+// BDS's default.
+func (b *Body) jumpPower() float32 {
+	if b.JumpPower > 0 {
+		return b.JumpPower
+	}
+	return groundJump
 }

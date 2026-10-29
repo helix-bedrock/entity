@@ -151,3 +151,14 @@ func BenchmarkTick(b *testing.B) {
 		m.Tick(w)
 	}
 }
+
+func TestJumpPower(t *testing.T) {
+	b := Body{}
+	if b.jumpPower() != groundJump {
+		t.Fatal("zero jump power is not the default")
+	}
+	b.JumpPower = 0.6
+	if b.jumpPower() != 0.6 {
+		t.Error("jump.static power ignored")
+	}
+}

@@ -212,3 +212,77 @@ func TestLeashAttributeReaders(t *testing.T) {
 		t.Errorf("top-level distances %+v", p)
 	}
 }
+
+func TestPhysicsReaders(t *testing.T) {
+	comps := definition.Group{
+		PhysicsName:              json.RawMessage(`{"has_gravity":false}`),
+		CollisionBoxName:         json.RawMessage(`{"height":1.9,"width":0.6}`),
+		CustomHitTestName:        json.RawMessage(`{"hitboxes":[{"height":0.85,"pivot":[0,0.5,0],"width":1.0}]}`),
+		PushableName:             json.RawMessage(`{"is_pushable":false,"is_pushable_by_piston":true}`),
+		PushableByEntityName:     json.RawMessage(`{"presets":[{"filters":{"all_of":[{"subject":"other","test":"is_family","value":"sulfur_cube"}]},"push_mode":"none"},{"min_distance":0.55,"push_mode":"legacy_boat","push_scale_other":0.25,"push_scale_self":0.5,"strength_multiplier":0.1}]}`),
+		BuoyantName:              json.RawMessage(`{"apply_gravity":false,"base_buoyancy":1.0,"can_auto_step_from_liquid":true,"liquid_blocks":["minecraft:water","minecraft:flowing_water"],"movement_type":"bobbing"}`),
+		RailMovementName:         json.RawMessage(`{}`),
+		RailSensorName:           json.RawMessage(`{"on_activate":{"event":"minecraft:on_prime"},"eject_on_activate":false}`),
+		FrictionModifierName:     json.RawMessage(`{"value":0.3}`),
+		AirDragModifierName:      json.RawMessage(`{"value":0.01}`),
+		BouncinessName:           json.RawMessage(`{"value":0.5}`),
+		WaterMovementName:        json.RawMessage(`{"drag_factor":0.98}`),
+		VariableMaxAutoStepName:  json.RawMessage(`{"base_value":1.0625,"jump_prevented_value":0.5625}`),
+		JumpStaticName:           json.RawMessage(`{"jump_power":0.6}`),
+		JumpDynamicName:          json.RawMessage(`{"fast_skip_data":{"animation_duration":15,"distance_scale":1.75,"height":0.15,"jump_delay":1},"regular_skip_data":{"animation_duration":18}}`),
+		SlowdownImmunityName:     json.RawMessage(`{"blocks":["minecraft:web"]}`),
+		"minecraft:can_climb":    json.RawMessage(`{}`),
+		CanStandOnPowderSnowName: json.RawMessage(`{}`),
+	}
+	m := &stateMob{flags: map[int]bool{state.FlagHasGravity: true}}
+	env := &state.Env{World: sensorWorld{}, Self: m}
+	s, errs := States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, nil, nil, comps)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	if !s.Physics.HasCollision || s.Physics.HasGravity || m.flags[state.FlagHasGravity] || !m.flags[state.FlagHasCollision] || !m.flags[state.FlagCanClimb] {
+		t.Errorf("physics %+v flags %v", *s.Physics, m.flags)
+	}
+	if s.CollisionBox.Width != 0.6 || s.CollisionBox.Height != 1.9 || len(s.CustomHitTest.HitBoxes) != 1 || s.CustomHitTest.HitBoxes[0].Pivot.Y != 0.5 {
+		t.Errorf("boxes %+v %+v", *s.CollisionBox, *s.CustomHitTest)
+	}
+	pc := s.PushableByEntity.Config()
+	if !s.PushableByBlock || len(pc.Presets) != 2 || pc.Presets[0].Mode != state.PushNone || pc.Presets[0].Filter == nil ||
+		pc.Presets[1].Mode != state.PushLegacyBoat || pc.Presets[1].Strength != 0.1 || pc.Presets[1].ScaleOther != 0.25 || pc.Presets[1].MinDistance != 0.55 {
+		t.Errorf("pushable %+v", pc)
+	}
+	bc := s.Buoyant.Config()
+	if bc.ApplyGravity || bc.Movement != state.BuoyancyBobbing || !bc.CanAutoStepFromLiquid || len(bc.LiquidBlocks) != 2 || bc.BigWaveSpeed != 10 {
+		t.Errorf("buoyant %+v", bc)
+	}
+	rc := s.RailSensor.Config()
+	if s.RailMovement.MaxSpeed != 0.4 || rc.EjectOnActivate || !rc.TickCommandBlockOnActivate || rc.OnActivate.Event != "minecraft:on_prime" {
+		t.Errorf("rail %+v %+v", *s.RailMovement, rc)
+	}
+	if s.FrictionModifier.Value != 0.3 || s.AirDragModifier.Value != 0.01 || s.Bounciness.Value != 0.5 || s.WaterMovement.DragFactor != 0.98 {
+		t.Errorf("values %v %v %v %v", *s.FrictionModifier, *s.AirDragModifier, *s.Bounciness, *s.WaterMovement)
+	}
+	if v := *s.VariableMaxAutoStep; v.Base != 1.0625 || v.Controlled != 0.5625 || v.JumpPrevented != 0.5625 {
+		t.Errorf("auto step %+v", v)
+	}
+	if d := *s.JumpDynamic; s.JumpStatic.JumpPower != 0.6 || d.Fast.DistanceScale != 1.75 || d.Fast.JumpDelay != 1 ||
+		d.Regular.AnimationDuration != 18 || d.Regular.Height != 0.1 || d.Regular.JumpDelay != 30 {
+		t.Errorf("jumps %+v %+v", *s.JumpStatic, d)
+	}
+	if len(s.SlowdownImmunity.Blocks) != 1 || !s.CanStandOnPowderSnow || s.BlockClimber {
+		t.Errorf("markers %+v", s)
+	}
+
+	// The old pushable with is_pushable true, and buoyant's simulate_waves.
+	old := definition.Group{
+		PushableName: json.RawMessage(`{"is_pushable":true,"is_pushable_by_piston":false}`),
+		BuoyantName:  json.RawMessage(`{"simulate_waves":false,"liquid_blocks":["minecraft:water"]}`),
+	}
+	s, errs = States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, s, comps, old)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	if s.PushableByEntity == nil || s.PushableByBlock || s.Buoyant.Config().Movement != state.BuoyancyNone || m.flags[state.FlagCanClimb] {
+		t.Errorf("old shapes: %+v flags %v", s, m.flags)
+	}
+}

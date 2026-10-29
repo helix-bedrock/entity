@@ -163,11 +163,10 @@ func States(c Context, env *state.Env, prev *state.Set, prevComps, comps definit
 			s.AttackCooldown = state.NewAttackCooldown(c.AttackCooldownConfig(j), env.World)
 		}
 	}
+	c.readPhysics(s, prev, read, same)
 	if env.Self != nil {
-		has := func(m definition.Group) func(string) bool {
-			return func(n string) bool { _, ok := m[n]; return ok }
-		}
-		state.SetFlags(env.Self, state.FlagComponents(), has(prevComps), has(comps))
+		state.SetFlags(env.Self, state.FlagComponents(), hasIn(prevComps), hasIn(comps))
+		physicsChanged(env.Self, s, prev, prevComps, comps)
 	}
 	return s, errs
 }

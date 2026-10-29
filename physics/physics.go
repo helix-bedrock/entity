@@ -177,7 +177,10 @@ type Body struct {
 	FrictionOverride *float32
 	// MaxAutoStep is the highest step the mob walks up.
 	MaxAutoStep float32
-	Nav         Nav
+	// JumpPower is minecraft:jump.static's jump_power, the ground jump's
+	// speed; zero or less uses BDS's 0.42.
+	JumpPower float32
+	Nav       Nav
 
 	Dolphin, Squid, SoulSpeed, ImmuneToLavaDrag, PowderSnowWalker bool
 	Vex, DiscardFriction, HasPhysics, CanAlwaysAutoStep           bool
