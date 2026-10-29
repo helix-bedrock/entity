@@ -18,7 +18,8 @@
 
 Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
-its events, and its own state (age, breeding, taming, anger, healing, despawning) runs, ported from BDS 1.26.52 and 1.26.60.
+its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
+breathing and burning) runs, ported from BDS 1.26.52 and 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -59,17 +60,23 @@ its events, and its own state (age, breeding, taming, anger, healing, despawning
   who else gets angry, what an item heals, and when a mob despawns. The engine owns the items,
   the player's hand, making the baby and the packets. `component.States` reads them from the
   definition.
+- **Interactions and conditions:** `state` also runs `minecraft:interact` (which interaction a
+  player gets, its cooldowns and `on_interact`), `giveable`, `nameable`, `rideable` (who may ride
+  and be pulled in), `addrider`, `transformation` (the delay and block assist; the engine makes the
+  new entity), `hurt_on_condition`, `breathable` (air supply, drowning and suffocation) and
+  `burns_in_daylight`. Item work, riding itself and the blocks around the mob are the engine's.
 - **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
   caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
   spawn check.
 
 What is left:
 
-- **Other components:** the components that are not goals, sensors or mob state (attributes such
-  as health and attack, interact, rideable, leashable, transformation and the rest) are not
-  ported. The mob state logic is from BDS 1.21.3, like the sensors' tick logic: ageable's
+- **Other components:** attributes (health, attack, movement and the rest), leashable,
+  equipment, loot and the physics-style components (collision box, pushable, jump and the rest)
+  are not ported. The mob state logic is from BDS 1.21.3, like the sensors' tick logic: ageable's
   `pause_growth_items`, `reset_growth_items` and feeding, angry's `broadcast_anger_when_dying`,
-  and offspring mutations and colours are read but not run. Some goal JSON members that only a few goals use are not
+  and offspring mutations and colours are read but not run. What `interact`, `giveable` and
+  `rideable` do once picked is a BDS callback that was not read. Some goal JSON members that only a few goals use are not
   read yet and keep their BDS defaults. The sensors' tick logic is from BDS 1.21.3, not yet
   checked against 1.26.60.
 - **Definition gaps:** the engine answers every filter test and runs every response except
@@ -142,7 +149,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`definition`](definition) | Entity files: component groups, events, filters, properties |
 | [`component`](component) | Builds a mob's goals, navigation, movement, sensors and state from its components |
 | [`sensor`](sensor) | Timers, the scheduler and the sensors that fire a mob's events |
-| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning and flag components |
+| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where
@@ -201,6 +208,7 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Building goals, navigation and movement from a definition | 🟡 written from BDS 1.26.60; some rarely used goal members keep their defaults |
 | Sensors and timers: timer, scheduler, environment_sensor, entity_sensor, target_nearby_sensor, damage_sensor, on_* events | 🟡 defaults from BDS 1.26.60, tick logic from 1.21.3 |
 | Mob state: ageable, breedable, offspring, tameable, tamemount, angry, healable, despawn, flag components | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
+| Interactions and conditions: interact, giveable, nameable, rideable, addrider, transformation, hurt_on_condition, breathable, burns_in_daylight | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
 | Non-goal components | ⬜ not started |
 | Entity packets | ⬜ not started |
 

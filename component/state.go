@@ -95,6 +95,42 @@ func States(c Context, env *state.Env, prev *state.Set, prevComps, comps definit
 	if j, ok := read(DespawnName); ok {
 		s.Despawn = state.NewDespawn(c.DespawnConfig(j))
 	}
+	if j, ok := read(InteractName); ok {
+		if s.Interact = prev.Interact; s.Interact == nil || !same(InteractName) {
+			s.Interact = state.NewInteract(c.InteractConfig(j))
+		}
+	}
+	if j, ok := read(GiveableName); ok {
+		if s.Giveable = prev.Giveable; s.Giveable == nil || !same(GiveableName) {
+			s.Giveable = state.NewGiveable(c.GiveableConfig(j))
+		}
+	}
+	if j, ok := read(NameableName); ok {
+		s.Nameable = state.NewNameable(c.NameableConfig(j))
+	}
+	if j, ok := read(RideableName); ok {
+		s.Rideable = state.NewRideable(c.RideableConfig(j))
+	}
+	if j, ok := read(AddRiderName); ok {
+		a := c.AddRiderConfig(j)
+		s.AddRider = &a
+	}
+	if j, ok := read(TransformationName); ok {
+		if s.Transformation = prev.Transformation; s.Transformation == nil || !same(TransformationName) {
+			s.Transformation = state.NewTransformation(c.TransformationConfig(j), env.Self, r)
+		}
+	}
+	if j, ok := read(HurtOnConditionName); ok {
+		s.HurtOnCondition = state.NewHurtOnCondition(c.HurtOnConditionConfig(j))
+	}
+	if j, ok := read(BreathableName); ok {
+		if s.Breathable = prev.Breathable; s.Breathable == nil || !same(BreathableName) {
+			s.Breathable = state.NewBreathable(c.BreathableConfig(j), env.Self)
+		}
+	}
+	if j, ok := read(BurnsInDaylightName); ok {
+		s.BurnsInDaylight = state.NewBurnsInDaylight(c.BurnsInDaylightConfig(j))
+	}
 	if env.Self != nil {
 		has := func(m definition.Group) func(string) bool {
 			return func(n string) bool { _, ok := m[n]; return ok }

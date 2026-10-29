@@ -23,6 +23,15 @@ func TestStateReaders(t *testing.T) {
 		HealableName:           json.RawMessage(`{"items":[{"item":"cookie","heal_amount":2,"effects":[{"name":"fatal_poison","duration":1000,"amplifier":0,"chance":1.0}]}]}`),
 		DespawnName:            json.RawMessage(`{"despawn_from_distance":{"max_distance":40}}`),
 		"minecraft:is_saddled": json.RawMessage(`{}`),
+		InteractName:           json.RawMessage(`{"interactions":{"cooldown":2.5,"give_item":true,"on_interact":{"filters":{"test":"pass"},"event":"poke","target":"self"},"use_item":true}}`),
+		GiveableName:           json.RawMessage(`{"triggers":{"cooldown":3.0,"items":["bamboo","cake"],"on_give":{"event":"minecraft:on_calm","target":"self"}}}`),
+		NameableName:           json.RawMessage(`{"default_trigger":{"event":"stop","target":"self"},"name_actions":[{"name_filter":"Johnny","on_named":{"event":"start","target":"self"}}]}`),
+		RideableName:           json.RawMessage(`{"seat_count":2,"family_types":["player"],"seats":[{"position":[0,1,0],"rotate_rider_by":"query.x"}]}`),
+		AddRiderName:           json.RawMessage(`{"entity_type":"minecraft:skeleton","spawn_event":"e"}`),
+		TransformationName:     json.RawMessage(`{"into":"minecraft:zombie<minecraft:as_adult>","delay":{"value":15,"block_assist_chance":0.01,"block_types":["iron_bars"]},"add":{"component_groups":["g"]}}`),
+		HurtOnConditionName:    json.RawMessage(`{"damage_conditions":[{"cause":"lava","damage_per_tick":4,"filters":{"test":"in_lava"}}]}`),
+		BreathableName:         json.RawMessage(`{"totalSupply":0,"suffocateTime":-1,"breathes_water":true}`),
+		BurnsInDaylightName:    json.RawMessage(`{"protection_slot":"slot.weapon.offhand"}`),
 	}
 	m := &stateMob{flags: map[int]bool{}}
 	env := &state.Env{World: sensorWorld{}, Self: m}
@@ -58,6 +67,34 @@ func TestStateReaders(t *testing.T) {
 		t.Errorf("despawn %+v", dc)
 	}
 
+	if ic := s.Interact.Config(); len(ic.Interactions) != 1 || ic.Interactions[0].Cooldown != 50 || !ic.Interactions[0].GiveItem || ic.Interactions[0].OnInteract.Event != "poke" {
+		t.Errorf("interact %+v", ic)
+	}
+	if gc := s.Giveable.Config(); len(gc.Triggers) != 1 || gc.Triggers[0].Cooldown != 3 || len(gc.Triggers[0].Items) != 2 {
+		t.Errorf("giveable %+v", gc)
+	}
+	if nc := s.Nameable.Config(); !nc.AllowNameTagRenaming || nc.NameActions[0].NameFilter[0] != "Johnny" || nc.DefaultTrigger.Event != "stop" {
+		t.Errorf("nameable %+v", nc)
+	}
+	if rc := s.Rideable.Config(); rc.SeatCount != 2 || !rc.CrouchingSkipInteract || rc.FamilyTypes[0] != "player" || rc.Seats[0].Position.Y != 1 {
+		t.Errorf("rideable %+v", rc)
+	}
+	if s.AddRider == nil || s.AddRider.Riders[0].EntityType != "minecraft:skeleton" {
+		t.Errorf("addrider %+v", s.AddRider)
+	}
+	if tc := s.Transformation.Config(); tc.Delay != 300 || tc.BlockAssistChance != 0.01 || tc.Add[0] != "g" || s.Transformation.Timer() != 300 || !m.flags[state.FlagTransforming] {
+		t.Errorf("transformation %+v", tc)
+	}
+	if hc := s.HurtOnCondition.Config(); hc.Conditions[0].DamagePerTick != 4 || hc.Conditions[0].Filters == nil {
+		t.Errorf("hurt_on_condition %+v", hc)
+	}
+	if bc := s.Breathable.Config(); bc.TotalSupply != 0 || bc.SuffocateTime != -1 || !bc.BreathesWater || !bc.BreathesAir {
+		t.Errorf("breathable %+v", bc)
+	}
+	if bc := s.BurnsInDaylight.Config(); bc.ProtectionSlot != "slot.weapon.offhand" || bc.Seconds != 8 {
+		t.Errorf("burns %+v", bc)
+	}
+
 	// Unchanged JSON keeps the running component; a removed flag component
 	// lowers its flag.
 	changed := definition.Group{}
@@ -76,7 +113,8 @@ type stateMob struct {
 	flags map[int]bool
 }
 
-func (m *stateMob) SetFlag(n int, on bool) { m.flags[n] = on }
+func (m *stateMob) SetFlag(n int, on bool)    { m.flags[n] = on }
+func (m *stateMob) SetAirSupply(int16, int16) {}
 
 // TestVanillaStates reads every state component of every vanilla 1.26.60
 // entity file; none may raise a warning.
@@ -102,7 +140,9 @@ func TestVanillaStates(t *testing.T) {
 			for _, e := range errs {
 				t.Errorf("%s: %v", file, e)
 			}
-			if s.Ageable != nil || s.Breedable != nil || s.Tameable != nil || s.Tamemount != nil || s.Angry != nil || s.Healable != nil || s.Despawn != nil {
+			if s.Ageable != nil || s.Breedable != nil || s.Tameable != nil || s.Tamemount != nil || s.Angry != nil || s.Healable != nil || s.Despawn != nil ||
+				s.Interact != nil || s.Giveable != nil || s.Nameable != nil || s.Rideable != nil || s.AddRider != nil ||
+				s.Transformation != nil || s.HurtOnCondition != nil || s.Breathable != nil || s.BurnsInDaylight != nil {
 				read++
 			}
 		}

@@ -2,13 +2,16 @@
 // a goal or a sensor: minecraft:ageable, minecraft:breedable,
 // minecraft:tameable, minecraft:tamemount, minecraft:angry,
 // minecraft:healable, minecraft:despawn and the flag components
-// (minecraft:is_baby, minecraft:is_tamed and the rest). It decides what
+// (minecraft:is_baby, minecraft:is_tamed and the rest), the interaction
+// components (minecraft:interact, giveable, nameable, rideable, addrider)
+// and the condition components (minecraft:transformation,
+// hurt_on_condition, breathable, burns_in_daylight). It decides what
 // happens; the engine owns the items, the player's hand, spawning, health
 // and the packets, and answers through Mob.
 //
 // The defaults are read from the BDS 1.26.60 parsers where they decompile
 // (breedable 0x6FCAED0, angry 0x735EE80, tamemount 0xC2BB260, healable
-// 0xDE9D860, despawn 0x723A360). The logic is from 1.21.3
+// 0xDE9D860, despawn 0x723A360, nameable 0x71373A0, rideable 0x744CFB0). The logic is from 1.21.3
 // (AgeableSystem, BreedableComponent, TameableComponent,
 // MountTamingComponent, AngrySystem, HealableComponent, DespawnComponent),
 // whose 1.26.60 versions were not found by name; the addresses are on each
@@ -81,7 +84,42 @@ type Mob interface {
 	MakeMad()
 	// Despawn removes the mob as BDS's Actor::despawn.
 	Despawn()
+	// Hurt deals damage of an actor damage cause, as Actor::hurt.
+	Hurt(cause int, amount float32)
+	// SetOnFire sets the mob on fire for a number of seconds.
+	SetOnFire(seconds int32)
+	// CanSeeDaylight is Actor::canSeeDaylight.
+	CanSeeDaylight() bool
+	// InWaterOrRain is Actor::isInWaterOrRain.
+	InWaterOrRain() bool
+	// InPowderSnow reports powder snow in the mob's box shrunk by 0.001.
+	InPowderSnow() bool
+	// SlotEmpty reports nothing in an equipment slot ("slot.armor.head").
+	SlotEmpty(slot string) bool
+	// Breath classifies the block at the mob's breathing point (attach
+	// position 7) against the breathable component's block lists.
+	Breath(breathe, nonBreathe []string) Medium
+	// Respiration is the highest respiration level of the worn armour.
+	Respiration() int32
+	// SetAirSupply sets the air supply and the maximum (actor data 7 and
+	// 42).
+	SetAirSupply(air, maxAir int16)
 }
+
+// Medium is what a mob breathes in (BreathableComponent's state).
+type Medium uint8
+
+// The breathing media, by BDS number.
+const (
+	MediumAir Medium = iota
+	MediumWater
+	MediumLava
+	MediumSolid
+	// MediumBreathable is a block of breathe_blocks; MediumNotBreathable a
+	// block of non_breathe_blocks.
+	MediumBreathable
+	MediumNotBreathable
+)
 
 // Env is what a state component ticks or interacts with. Every call
 // happens on the tick of the mob that owns the component.
@@ -94,6 +132,12 @@ type Env struct {
 	Tester func(self, other behavior.Actor) definition.Tester
 	// HasFamily reports that an entity has a type family.
 	HasFamily func(a behavior.Actor, family string) bool
+	// BlockMatches reports that the block at p matches one of the
+	// descriptors.
+	BlockMatches func(p behavior.Pos, blocks []string) bool
+	// CanRide is the passenger's own test that it can ride the vehicle;
+	// nil allows it.
+	CanRide func(passenger, vehicle behavior.Actor) bool
 }
 
 func (e *Env) tester(self, other behavior.Actor) definition.Tester {

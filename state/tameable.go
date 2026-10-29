@@ -183,12 +183,12 @@ func (t *Tamemount) TameTo(env *Env, player behavior.Actor) {
 	env.fire(t.cfg.TameEvent, env.tester(m, nil))
 }
 
-// Interaction is what a player's item does to a tamemount.
-type Interaction uint8
+// MountResult is what a player's item does to a tamemount.
+type MountResult uint8
 
 // The tamemount interactions.
 const (
-	InteractNone Interaction = iota
+	InteractNone MountResult = iota
 	// InteractFeed added the feed item's temper_mod.
 	InteractFeed
 	// InteractReject is an auto_reject_items item: the engine rejects it
@@ -199,7 +199,7 @@ const (
 // Feed is a player using the item in hand on the mount, which must have
 // no rider. It returns what happened and the feed item used (-1 for
 // none). The engine uses up a fed item.
-func (t *Tamemount) Feed(env *Env, h Hand) (Interaction, int) {
+func (t *Tamemount) Feed(env *Env, h Hand) (MountResult, int) {
 	if len(env.Self.Riders()) > 0 || h == nil {
 		return InteractNone, -1
 	}

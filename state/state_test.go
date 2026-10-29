@@ -71,10 +71,18 @@ type mob struct {
 	despawned  bool
 	alerted    bool
 	hurtBy     behavior.ID
+	hurtAt     uint64
+	hurts      []int
+	fire       int32
+	medium     Medium
+	under      bool
+	air        int16
+	day        bool
+	vehicle    behavior.ID
 }
 
 func newMob(id behavior.ID) *mob {
-	return &mob{id: id, typ: "minecraft:wolf", flags: map[int]bool{}, owner: behavior.NoID, target: behavior.NoID, hurtBy: behavior.NoID, hp: 10, maxHP: 10}
+	return &mob{vehicle: behavior.NoID, id: id, typ: "minecraft:wolf", flags: map[int]bool{}, owner: behavior.NoID, target: behavior.NoID, hurtBy: behavior.NoID, hp: 10, maxHP: 10}
 }
 
 func (m *mob) ID() behavior.ID                     { return m.id }
@@ -111,7 +119,7 @@ func (m *mob) Despawn()                            { m.despawned = true }
 func (m *mob) AttachPos(int) behavior.Vec3         { return m.pos }
 func (m *mob) PlaySoundAt(s int, _ behavior.Vec3)  { m.sounds = append(m.sounds, s) }
 func (m *mob) LastHurtMob() (behavior.ID, int32)   { return behavior.NoID, -100 }
-func (m *mob) LastHurtBy() (behavior.ID, uint64)   { return m.hurtBy, 0 }
+func (m *mob) LastHurtBy() (behavior.ID, uint64)   { return m.hurtBy, m.hurtAt }
 func (m *mob) FriendlyAnger(behavior.Actor)        { m.alerted = true }
 
 type events struct{ fired []string }
@@ -475,3 +483,19 @@ func TestSetFlags(t *testing.T) {
 		t.Errorf("flags %v", m.flags)
 	}
 }
+
+func (m *mob) Hurt(cause int, _ float32)   { m.hurts = append(m.hurts, cause) }
+func (m *mob) SetOnFire(s int32)           { m.fire = s }
+func (m *mob) CanSeeDaylight() bool        { return m.day }
+func (m *mob) InWaterOrRain() bool         { return false }
+func (m *mob) InPowderSnow() bool          { return false }
+func (m *mob) SlotEmpty(string) bool       { return true }
+func (m *mob) Breath(_, _ []string) Medium { return m.medium }
+func (m *mob) Respiration() int32          { return 0 }
+func (m *mob) SetAirSupply(air, _ int16)   { m.air = air }
+func (m *mob) HasEffect(int) bool          { return false }
+func (m *mob) UnderWater() bool            { return m.under }
+func (m *mob) Vehicle() behavior.ID        { return m.vehicle }
+
+func (w *world) IsDay() bool                             { return true }
+func (w *world) LevelEvent(int32, behavior.Vec3, string) {}
