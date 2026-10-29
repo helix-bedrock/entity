@@ -131,6 +131,38 @@ func States(c Context, env *state.Env, prev *state.Set, prevComps, comps definit
 	if j, ok := read(BurnsInDaylightName); ok {
 		s.BurnsInDaylight = state.NewBurnsInDaylight(c.BurnsInDaylightConfig(j))
 	}
+	if j, ok := read(LeashableName); ok {
+		s.Leashable = state.NewLeashable(c.LeashableConfig(j))
+	}
+	if j, ok := read(LeashableToName); ok {
+		l := c.LeashableToConfig(j)
+		s.LeashableTo = &l
+	}
+	s.Attributes = c.readAttributes(comps)
+	if j, ok := read(AttackName); ok {
+		a := c.AttackConfig(j)
+		s.Attack = &a
+	}
+	if j, ok := read(EquipmentName); ok {
+		e := c.EquipmentConfig(j)
+		s.Equipment = &e
+	}
+	if j, ok := read(EquippableName); ok {
+		s.Equippable = state.NewEquippable(c.EquippableConfig(j))
+	}
+	if j, ok := read(ExperienceRewardName); ok {
+		e := c.ExperienceRewardConfig(j)
+		s.ExperienceReward = &e
+	}
+	if j, ok := read(ScaleName); ok {
+		sc := c.ScaleConfig(j)
+		s.Scale = &sc
+	}
+	if j, ok := read(AttackCooldownName); ok {
+		if s.AttackCooldown = prev.AttackCooldown; s.AttackCooldown == nil || !same(AttackCooldownName) {
+			s.AttackCooldown = state.NewAttackCooldown(c.AttackCooldownConfig(j), env.World)
+		}
+	}
 	if env.Self != nil {
 		has := func(m definition.Group) func(string) bool {
 			return func(n string) bool { _, ok := m[n]; return ok }

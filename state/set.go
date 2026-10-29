@@ -19,6 +19,16 @@ type Set struct {
 	HurtOnCondition *HurtOnCondition
 	Breathable      *Breathable
 	BurnsInDaylight *BurnsInDaylight
+	Leashable       *Leashable
+	LeashableTo     *LeashableToConfig
+	// Attributes are the attribute components the mob lists, by name.
+	Attributes       map[string]AttributeConfig
+	Attack           *AttackConfig
+	Equipment        *EquipmentConfig
+	Equippable       *Equippable
+	ExperienceReward *ExperienceRewardConfig
+	Scale            *ScaleConfig
+	AttackCooldown   *AttackCooldown
 }
 
 // TickInput is the engine's answers a state tick needs beyond Env.
@@ -28,11 +38,14 @@ type TickInput struct {
 	// Invulnerable is a player in creative or with the invulnerable
 	// ability, who always breathes.
 	Invulnerable bool
+	// LeashChunks may be nil: a leashed mob whose holder is missing then
+	// waits and never drops the leash.
+	LeashChunks LeashChunks
 }
 
 // Tick runs the ticking components once: ageable, breedable, tamemount,
 // angry, interact, transformation, hurt_on_condition, breathable,
-// burns_in_daylight and despawn. BDS runs each from its own system; this
+// burns_in_daylight, leashable, attack_cooldown and despawn. BDS runs each from its own system; this
 // order is not BDS's system order, which was not read. It reports that
 // the mob's transformation is due; the engine then transforms it.
 func (s *Set) Tick(env *Env, in TickInput) (transform bool) {
@@ -65,6 +78,12 @@ func (s *Set) Tick(env *Env, in TickInput) (transform bool) {
 	}
 	if s.BurnsInDaylight != nil {
 		s.BurnsInDaylight.Tick(env)
+	}
+	if s.Leashable != nil {
+		s.Leashable.Tick(env, in.LeashChunks)
+	}
+	if s.AttackCooldown != nil {
+		s.AttackCooldown.Tick(env)
 	}
 	if s.Despawn != nil {
 		s.Despawn.Tick(env, in.Chunks)

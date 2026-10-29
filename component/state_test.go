@@ -152,3 +152,63 @@ func TestVanillaStates(t *testing.T) {
 	}
 	t.Logf("%d component sets with state components", read)
 }
+
+func TestLeashAttributeReaders(t *testing.T) {
+	comps := definition.Group{
+		LeashableName:                   json.RawMessage(`{"on_unleash":{"event":"minecraft:on_unleashed","target":"self"},"presets":[{"filter":{"subject":"other","test":"is_family","value":"happy_ghast"},"spring_type":"quad_dampened","rotation_adjustment":90},{"hard_distance":10,"max_distance":14}],"unleash_on_removal":false}`),
+		LeashableToName:                 json.RawMessage(`{"unleash_on_removal":false}`),
+		"minecraft:health":              json.RawMessage(`{"value":{"range_min":15,"range_max":30},"max":30}`),
+		"minecraft:movement":            json.RawMessage(`{"value":0.25}`),
+		"minecraft:horse.jump_strength": json.RawMessage(`{"value":{"range_min":0.4,"range_max":1.0}}`),
+		AttackName:                      json.RawMessage(`{"damage":[3,9],"effect_name":"poison","effect_duration":10}`),
+		EquipmentName:                   json.RawMessage(`{"table":"loot_tables/entities/skeleton_gear.json","slot_drop_chance":[{"slot":"slot.weapon.mainhand","drop_chance":1.0}]}`),
+		EquippableName:                  json.RawMessage(`{"slots":[{"slot":0,"item":"saddle","accepted_items":["saddle"],"on_equip":{"event":"saddled"},"on_unequip":{"event":"unsaddled"}}]}`),
+		ExperienceRewardName:            json.RawMessage(`{"on_bred":"Math.Random(1,7)","on_death":"query.last_hit_by_player ? Math.Random(1,3) : 0"}`),
+		ScaleName:                       json.RawMessage(`{"value":0.5}`),
+		AttackCooldownName:              json.RawMessage(`{"attack_cooldown_complete_event":{"event":"attack_cooldown_complete_event","target":"self"},"attack_cooldown_time":[10.0,15.0]}`),
+	}
+	m := &stateMob{flags: map[int]bool{}}
+	env := &state.Env{World: sensorWorld{}, Self: m}
+	s, errs := States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, nil, nil, comps)
+	if len(errs) > 0 {
+		t.Fatal(errs)
+	}
+	lc := s.Leashable.Config()
+	if lc.UnleashOnRemoval || !lc.CanBeStolen || lc.OnUnleash.Event != "minecraft:on_unleashed" || len(lc.Presets) != 2 ||
+		lc.Presets[0].Filter == nil || lc.Presets[0].SpringType != "quad_dampened" || lc.Presets[0].RotationAdjustment != 90 || lc.Presets[0].MaxDistance != 10 ||
+		lc.Presets[1].SoftDistance != 4 || lc.Presets[1].HardDistance != 10 || lc.Presets[1].MaxDistance != 14 {
+		t.Errorf("leashable %+v", lc)
+	}
+	if s.LeashableTo.UnleashOnRemoval || s.LeashableTo.CanRetrieveFrom {
+		t.Errorf("leashable_to %+v", *s.LeashableTo)
+	}
+	if h := s.Attributes["minecraft:health"]; h.Value.Min != 15 || h.Value.Max != 30 || h.Max != 30 || len(s.Attributes) != 3 {
+		t.Errorf("attributes %+v", s.Attributes)
+	}
+	if j := s.Attributes["minecraft:horse.jump_strength"]; j.Value.Min != 0.4 || j.Value.Max != 1 {
+		t.Errorf("jump_strength %+v", j)
+	}
+	if a := *s.Attack; a.Damage.Min != 3 || a.Damage.Max != 9 || a.EffectName != "poison" || a.EffectDuration != 10 || a.EffectAmplifier != 0 {
+		t.Errorf("attack %+v", a)
+	}
+	if e := *s.Equipment; e.Table == "" || len(e.SlotDropChance) != 1 || e.SlotDropChance[0].DropChance != 1 {
+		t.Errorf("equipment %+v", e)
+	}
+	if e := s.Equippable.Config(); len(e.Slots) != 1 || e.Slots[0].Item != "saddle" || e.Slots[0].OnUnequip.Event != "unsaddled" {
+		t.Errorf("equippable %+v", e)
+	}
+	if x := *s.ExperienceReward; len(x.OnBred) != 1 || len(x.OnDeath) != 1 {
+		t.Errorf("experience_reward %+v", x)
+	}
+	if s.Scale.Value != 0.5 {
+		t.Errorf("scale %v", s.Scale.Value)
+	}
+	if a := s.AttackCooldown.Config(); a.Time.Min != 10 || a.Time.Max != 15 || a.OnComplete.Event != "attack_cooldown_complete_event" {
+		t.Errorf("attack_cooldown %+v", a)
+	}
+	old := definition.Group{LeashableName: json.RawMessage(`{"soft_distance":2,"hard_distance":3,"max_distance":5}`)}
+	s, _ = States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, nil, nil, old)
+	if p := s.Leashable.Config().Presets; len(p) != 1 || p[0].MaxDistance != 5 {
+		t.Errorf("top-level distances %+v", p)
+	}
+}

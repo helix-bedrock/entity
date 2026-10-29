@@ -19,7 +19,7 @@
 Status as of 2026-10-28: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
 its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
-breathing and burning) runs, ported from BDS 1.26.52 and 1.26.60.
+breathing, burning, leashing and attack cooldowns, plus the attribute and equipment settings it hands the engine) runs, ported from BDS 1.26.52 and 1.26.60.
 
 - **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
   flags, the target pass and the normal pass, NoAI).
@@ -149,7 +149,7 @@ run on that mob's tick and mobs can be ticked on many threads.
 | [`definition`](definition) | Entity files: component groups, events, filters, properties |
 | [`component`](component) | Builds a mob's goals, navigation, movement, sensors and state from its components |
 | [`sensor`](sensor) | Timers, the scheduler and the sensors that fire a mob's events |
-| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing |
+| [`state`](state) | A mob's own state: age, breeding, taming, anger, healing, despawning, flags, interactions, riding, transforming, breathing, leashing, attributes, equipment, attack cooldown |
 | [`spawn`](spawn) | The natural spawner and spawn rules |
 
 ### What belongs where
@@ -209,7 +209,8 @@ blocks share belong to the engine, and entity reaches them only through interfac
 | Sensors and timers: timer, scheduler, environment_sensor, entity_sensor, target_nearby_sensor, damage_sensor, on_* events | 🟡 defaults from BDS 1.26.60, tick logic from 1.21.3 |
 | Mob state: ageable, breedable, offspring, tameable, tamemount, angry, healable, despawn, flag components | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
 | Interactions and conditions: interact, giveable, nameable, rideable, addrider, transformation, hurt_on_condition, breathable, burns_in_daylight | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
-| Non-goal components | ⬜ not started |
+| Leash, attributes and equipment: leashable (1.26.60 presets), leashable_to, the attribute components, attack, equipment, equippable, experience_reward, scale, attack_cooldown | 🟡 defaults from BDS 1.26.60 where found, logic from 1.21.3 |
+| Physics-style components (collision_box, pushable, jump.static, buoyant, rail_movement, ...) | ⬜ not started |
 | Entity packets | ⬜ not started |
 
 **The goal is to match the latest Minecraft version exactly**, and to follow each Minecraft update.

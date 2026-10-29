@@ -2,7 +2,10 @@
 // a goal or a sensor: minecraft:ageable, minecraft:breedable,
 // minecraft:tameable, minecraft:tamemount, minecraft:angry,
 // minecraft:healable, minecraft:despawn and the flag components
-// (minecraft:is_baby, minecraft:is_tamed and the rest), the interaction
+// (minecraft:is_baby, minecraft:is_tamed and the rest), the leash
+// components (minecraft:leashable, leashable_to), the attributes,
+// attack, equipment, equippable, experience_reward, scale and
+// attack_cooldown, the interaction
 // components (minecraft:interact, giveable, nameable, rideable, addrider)
 // and the condition components (minecraft:transformation,
 // hurt_on_condition, breathable, burns_in_daylight). It decides what
@@ -104,6 +107,17 @@ type Mob interface {
 	// SetAirSupply sets the air supply and the maximum (actor data 7 and
 	// 42).
 	SetAirSupply(air, maxAir int16)
+	// LeashHolder is the entity holding the mob's leash, behavior.NoID
+	// when it is not leashed; SetLeashHolder ties the leash to one.
+	LeashHolder() behavior.ID
+	SetLeashHolder(id behavior.ID)
+	// DropLeash breaks the leash as Actor::dropLeash, dropping the lead
+	// item and sending the change when asked.
+	DropLeash(dropItem, send bool)
+	// StopRiding takes the mob off its vehicle.
+	StopRiding()
+	// GameEvent posts a game event by name, caused by an entity, at p.
+	GameEvent(name string, by behavior.ID, p behavior.Vec3)
 }
 
 // Medium is what a mob breathes in (BreathableComponent's state).
