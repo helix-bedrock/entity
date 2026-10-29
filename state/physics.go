@@ -1,7 +1,10 @@
 package state
 
 import (
+	"math"
+
 	"github.com/helix-bedrock/entity/behavior"
+	"github.com/helix-bedrock/entity/move"
 	"github.com/helix-bedrock/entity/physics"
 )
 
@@ -10,6 +13,7 @@ import (
 const (
 	FlagSneaking                      = 1
 	FlagCanClimb                      = 19
+	FlagLeashed                       = 30
 	FlagCanPowerJump                  = 45
 	FlagHasCollision                  = 48
 	FlagHasGravity                    = 49
@@ -162,9 +166,8 @@ type JumpInfo struct {
 	JumpDelay, AnimationDuration int32
 }
 
-// JumpDynamicConfig is minecraft:jump.dynamic (1.26.60 0x7124C80). The
-// skip logic (1.21.3 DynamicJumpControl) is not ported; the config is
-// held for the engine.
+// JumpDynamicConfig is minecraft:jump.dynamic (1.26.60 0x7124C80). Its
+// jumps run in move's hop control (Dynamic, TickJump).
 type JumpDynamicConfig struct {
 	Regular, Fast JumpInfo
 }
@@ -173,6 +176,29 @@ type JumpDynamicConfig struct {
 func DefaultJumpDynamic() JumpDynamicConfig {
 	j := JumpInfo{DistanceScale: 1, Height: 0.1, JumpDelay: 30, AnimationDuration: 1}
 	return JumpDynamicConfig{Regular: j, Fast: j}
+}
+
+// fixedJump makes one jump kind; BDS's fixed kinds are set in 1.21.3
+// JumpControlComponent::initializeFromDefinition (0x1405E6C70).
+func fixedJump(distance, height float32, delay int32, anim int8) move.JumpInfo {
+	return move.JumpInfo{DistanceScale: distance, Height: height, Delay: delay, Animation: anim}
+}
+
+// Dynamic builds the hop control's jump kinds: none and the take-off jump
+// are BDS's fixed ones, walk is regular_skip_data and sprint is
+// fast_skip_data. That mapping is inferred from 1.21.3's fixed defaults
+// (walk 0.8, sprint 1.75 distance), not read from 1.26.60.
+func (c JumpDynamicConfig) Dynamic() move.Dynamic {
+	var d move.Dynamic
+	d.Infos[move.JumpNone] = fixedJump(0, 0, 30, 1)
+	d.Infos[move.JumpWalk] = c.Regular.info()
+	d.Infos[move.JumpTake] = fixedJump(1, 0.4, 14, 5)
+	d.Infos[move.JumpSprint] = c.Fast.info()
+	return d
+}
+
+func (j JumpInfo) info() move.JumpInfo {
+	return fixedJump(j.DistanceScale, j.Height, j.JumpDelay, int8(min(max(j.AnimationDuration, math.MinInt8), math.MaxInt8)))
 }
 
 // SlowdownImmunityConfig is minecraft:block_movement_slowdown_immunity:
@@ -219,4 +245,7 @@ func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 		b.JumpPower = s.JumpStatic.JumpPower
 	}
 	b.PowderSnowWalker = b.PowderSnowWalker || s.CanStandOnPowderSnow
+	if s.Buoyant != nil && s.Buoyant.AutoStep() {
+		b.CanAlwaysAutoStep = true
+	}
 }

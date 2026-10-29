@@ -229,7 +229,6 @@ func TestPhysicsReaders(t *testing.T) {
 		WaterMovementName:        json.RawMessage(`{"drag_factor":0.98}`),
 		VariableMaxAutoStepName:  json.RawMessage(`{"base_value":1.0625,"jump_prevented_value":0.5625}`),
 		JumpStaticName:           json.RawMessage(`{"jump_power":0.6}`),
-		JumpDynamicName:          json.RawMessage(`{"fast_skip_data":{"animation_duration":15,"distance_scale":1.75,"height":0.15,"jump_delay":1},"regular_skip_data":{"animation_duration":18}}`),
 		SlowdownImmunityName:     json.RawMessage(`{"blocks":["minecraft:web"]}`),
 		"minecraft:can_climb":    json.RawMessage(`{}`),
 		CanStandOnPowderSnowName: json.RawMessage(`{}`),
@@ -265,9 +264,8 @@ func TestPhysicsReaders(t *testing.T) {
 	if v := *s.VariableMaxAutoStep; v.Base != 1.0625 || v.Controlled != 0.5625 || v.JumpPrevented != 0.5625 {
 		t.Errorf("auto step %+v", v)
 	}
-	if d := *s.JumpDynamic; s.JumpStatic.JumpPower != 0.6 || d.Fast.DistanceScale != 1.75 || d.Fast.JumpDelay != 1 ||
-		d.Regular.AnimationDuration != 18 || d.Regular.Height != 0.1 || d.Regular.JumpDelay != 30 {
-		t.Errorf("jumps %+v %+v", *s.JumpStatic, d)
+	if s.JumpStatic.JumpPower != 0.6 || s.JumpDynamic != nil {
+		t.Errorf("jump.static %+v", *s.JumpStatic)
 	}
 	if len(s.SlowdownImmunity.Blocks) != 1 || !s.CanStandOnPowderSnow || s.BlockClimber {
 		t.Errorf("markers %+v", s)
@@ -275,8 +273,9 @@ func TestPhysicsReaders(t *testing.T) {
 
 	// The old pushable with is_pushable true, and buoyant's simulate_waves.
 	old := definition.Group{
-		PushableName: json.RawMessage(`{"is_pushable":true,"is_pushable_by_piston":false}`),
-		BuoyantName:  json.RawMessage(`{"simulate_waves":false,"liquid_blocks":["minecraft:water"]}`),
+		PushableName:    json.RawMessage(`{"is_pushable":true,"is_pushable_by_piston":false}`),
+		BuoyantName:     json.RawMessage(`{"simulate_waves":false,"liquid_blocks":["minecraft:water"]}`),
+		JumpDynamicName: json.RawMessage(`{"fast_skip_data":{"animation_duration":15,"distance_scale":1.75,"height":0.15,"jump_delay":1},"regular_skip_data":{"animation_duration":18}}`),
 	}
 	s, errs = States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, s, comps, old)
 	if len(errs) > 0 {
@@ -284,5 +283,18 @@ func TestPhysicsReaders(t *testing.T) {
 	}
 	if s.PushableByEntity == nil || s.PushableByBlock || s.Buoyant.Config().Movement != state.BuoyancyNone || m.flags[state.FlagCanClimb] {
 		t.Errorf("old shapes: %+v flags %v", s, m.flags)
+	}
+	if d := *s.JumpDynamic; d.Fast.DistanceScale != 1.75 || d.Fast.JumpDelay != 1 ||
+		d.Regular.AnimationDuration != 18 || d.Regular.Height != 0.1 || d.Regular.JumpDelay != 30 {
+		t.Errorf("jump.dynamic %+v", d)
+	}
+
+	both := definition.Group{
+		JumpStaticName:  json.RawMessage(`{}`),
+		JumpDynamicName: json.RawMessage(`{}`),
+	}
+	s, errs = States(Context{Resolver: &testResolver{}, Parser: definition.NewParser()}, env, s, old, both)
+	if len(errs) != 1 || s.JumpDynamic != nil || s.JumpStatic == nil {
+		t.Errorf("both jumps: %v %+v", errs, s)
 	}
 }

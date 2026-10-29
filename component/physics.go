@@ -88,7 +88,9 @@ func (c *Context) pushPreset(o Object) state.PushPreset {
 	p.MaxKickSpeed = c.Float(o, "max_kick_speed", p.MaxKickSpeed)
 	p.VerticalKickMultiplier = c.Float(o, "vertical_kick_multiplier", p.VerticalKickMultiplier)
 	p.PlaySound = c.Bool(o, "play_sound", p.PlaySound)
-	p.PlaySoundCooldown = c.Float(o, "play_sound_cooldown_in_seconds", p.PlaySoundCooldown)
+	// BDS keeps the cooldown in ticks; seconds times 20, truncated, is
+	// assumed.
+	p.PlaySoundCooldown = int64(c.Float(o, "play_sound_cooldown_in_seconds", float32(p.PlaySoundCooldown)/20) * 20)
 	p.PlaySoundImpulseThreshold = c.Float(o, "play_sound_impulse_threshold", p.PlaySoundImpulseThreshold)
 	return p
 }
@@ -292,8 +294,14 @@ func (c *Context) readPhysics(s, prev *state.Set, read func(string) (Object, boo
 		s.JumpStatic = &js
 	}
 	if j, ok := read(JumpDynamicName); ok {
-		jd := c.JumpDynamicConfig(j)
-		s.JumpDynamic = &jd
+		// BDS logs an error and keeps the static jump when a mob lists
+		// both (1.21.3 initMultiTypeJumpComponent 0x1405E5710).
+		if s.JumpStatic != nil {
+			c.Warn(fmt.Errorf("both %s and %s: the dynamic jump is ignored", JumpStaticName, JumpDynamicName))
+		} else {
+			jd := c.JumpDynamicConfig(j)
+			s.JumpDynamic = &jd
+		}
 	}
 	if j, ok := read(SlowdownImmunityName); ok {
 		si := c.SlowdownImmunityConfig(j)
