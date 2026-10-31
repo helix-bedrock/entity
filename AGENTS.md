@@ -100,4 +100,5 @@ follow them, and old code is being moved over.
 - Python scripts on Windows write CRLF line endings unless they open files with
   `newline="\n"`. Run `gofmt -w` after scripted edits.
 - Commits go straight to main, signed and signed off (`git commit -S -s`).
-- Refresh the README's "Status as of <date>" line on every commit.
+- Refresh STATUS.md (its "Status as of <date>" line and what changed) on every
+  commit; the README only links to it.

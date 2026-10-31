@@ -1,0 +1,148 @@
+# What entity does
+
+Status as of 2026-10-31: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
+entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
+its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
+breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
+attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
+hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
+`netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
+
+## What works
+
+- **Goals:** `goal` runs a mob's goals the way the BDS goal selector does (priorities, control
+  flags, the target pass and the normal pass, NoAI).
+- **Pathfinding:** `path` is the BDS pathfinder for walking and swimming mobs: A* search, node
+  classification and costs.
+- **Navigation:** `nav` has all seven navigation types (walk, float, generic, climb, swim, fly and
+  hover): following a path, shortcuts, doors, sun avoidance, the stuck checks and fly gravity.
+- **Movement:** `move` has the move controls (`minecraft:movement.*`); `physics` moves mobs like the
+  BDS movement pipeline: travel types and speeds, swept box collision with depenetration and
+  auto-step, gravity, drag, friction, climbing, jumping, and swimming and floating.
+- **Behaviours:** `behavior` has all 178 goals: strolling, swimming, flying and hovering, panic, tempt,
+  following, looking, breeding, avoiding, every common target goal, melee, ranged and charge
+  attacks, and the mob-specific ones (squid, slime, creeper, ravager, breeze, goat, fox, phantom,
+  nautilus, cat, the warden, frog, strider, panda, axolotl, wolf, turtle, silverfish, guardian, vex, allay, cat gifts, the copper golem, the wither and the ender dragon),
+  the spell goals (summon_entity, send_event), and the
+  villager and village goals (sleep, work, mingle, farming, hiding, trading, celebrating).
+- **Definitions:** `definition` loads Mojang's entity files and runs them like BDS 1.26.60: the
+  stack of component groups events add and remove, events (filters, randomize, sequence,
+  first_valid, triggers, responses), filter groups and their operators, and entity properties
+  with `set_property`.
+- **Components:** `component` turns a mob's components into its goals the way BDS 1.26.60 does
+  when its groups change: each `minecraft:behavior.*` becomes a goal with its JSON `priority` and
+  `control_flags`, in the order the definition added them, and the old goals are dropped (running
+  non-target goals are stopped first). It also reads the navigation and movement components. Every
+  component name maps to a factory in a `Registry` that servers can change, `minecraft:` names
+  included. Sounds, damage causes, filter tests, item and block descriptors and Molang go to the
+  engine through a `Resolver`.
+- **Sensors:** `sensor` runs `minecraft:timer`, `scheduler`, `environment_sensor`,
+  `entity_sensor`, `target_nearby_sensor` and `damage_sensor`, which decide when the mob's events
+  fire, and holds the `on_*` event components (`on_hurt`, `on_target_acquired` and the rest) for
+  the engine or a goal to fire. The damage sensor decides whether damage is dealt and by how much;
+  the damage itself is the engine's. `component.Sensors` reads them from the definition.
+- **Mob state:** `state` runs `minecraft:ageable`, `breedable` (with `offspring`), `tameable`,
+  `tamemount`, `angry`, `healable` and `despawn`, and raises the flags of the flag components
+  (`is_baby`, `is_tamed`, `is_saddled` and the rest). It decides when a baby grows up, when a mob
+  falls in love and which babies a mating makes, whether a taming try works, when anger ends and
+  who else gets angry, what an item heals, and when a mob despawns. The engine owns the items,
+  the player's hand, making the baby and the packets. `component.States` reads them from the
+  definition.
+- **Interactions and conditions:** `state` also runs `minecraft:interact` (which interaction a
+  player gets, its cooldowns and `on_interact`), `giveable`, `nameable`, `rideable` (who may ride
+  and be pulled in), `addrider`, `transformation` (the delay and block assist; the engine makes the
+  new entity), `hurt_on_condition`, `breathable` (air supply, drowning and suffocation) and
+  `burns_in_daylight`. Item work, riding itself and the blocks around the mob are the engine's.
+- **Everything else:** `state` also runs `damage_over_time`, `drying_out_timer`, `instant_despawn`,
+  `peek`, `ambient_sound_interval`, `heartbeat`, `bribeable`'s cooldown, `celebrate_hunt`, `explode`'s
+  fuse, `teleport`, `trail`, `group_size`, `home`, `inside_block_notifier`, `area_attack`,
+  `mob_effect`, `spawn_entity`, `block_sensor`, `combat_regeneration`, `trusting`, `genetics`,
+  `anger_level`, `ravager_blocked` and `spell_effects`; writes the actor data of `variant`,
+  `mark_variant`, `skin_id`, `color` and `color2`; reads `type_family`, `preferred_path`,
+  `annotation.break_door`, `shareables` and the marker components; and reads the components whose
+  work is the engine's (loot, inventory, trade tables, shooter, boostable, dash and the other rider
+  controls, knockback rules, dweller, flocking, looked_at and the rest) into settings for it.
+  Projectiles, NPCs, network bandwidth and the player's own values go to the engine as written.
+- **Spawning:** `spawn` is the BDS natural spawner: the per-chunk tick, floor search, population
+  caps, spawn rules (biome filters, herds, permutes, delays, density) and each mob class's own
+  spawn check.
+- **Entity packets:** `netsync` has BDS 1.26.60's network rules as functions (rotation bytes,
+  the significance check, the MoveActorDelta header, the distance throttle, the 57-chunk view
+  area), builders for every entity packet, and an optional `Sync` that keeps what each player last
+  saw and writes one batch per player per tick in BDS's order. The engine decides who sees which
+  entity, when it moved and which sounds play; every vanilla behaviour is an option it can turn
+  off. The throttle matches all 4,764 unforced sends of a live BDS run.
+
+## What is left
+
+- **Component logic still missing:** flocking's steering, looked_at, block_sensor and the
+  1.26.60 versions of most of the last batch's systems (their logic is from BDS 1.21.3). The mob
+  state logic is from BDS 1.21.3, like the sensors' tick logic: ageable's
+  `pause_growth_items`, `reset_growth_items` and feeding, angry's `broadcast_anger_when_dying`,
+  and offspring mutations and colours are read but not run. What `interact`, `giveable` and
+  `rideable` do once picked is a BDS callback that was not read. Some goal JSON members that only a few goals use are not
+  read yet and keep their BDS defaults. The sensors' tick logic is from BDS 1.21.3, not yet
+  checked against 1.26.60.
+- **Definition gaps:** the engine answers every filter test and runs every response except
+  `set_property`; legacy filter members and the component order of equal-priority goals after
+  group changes are not ported.
+- **Entity packets:** players seeing players (AddPlayer), MoveActorDelta's Ticks value, the
+  MobEquipment slot fields, the high bits of MoveActorAbsolute's flags, one per-entity value that
+  makes BDS skip the throttle, and reading `conditional_bandwidth_optimization`'s conditional
+  values. Not yet checked against BDS packet by packet in a capture.
+- **Physics:** water currents, bouncy blocks, vehicles and gliding.
+- **Spawning:** structure spawn lists, phantoms, the zombie special case and the delay filter's
+  first value. BDS's two random streams are one `Rand` here, and the Guardian sky check uses sky
+  light.
+- **Small gaps in built goals:** the panic start component, the float rider component,
+  hurt_by_target's alert_same_type and breed's stop details. Block lists match by block name only,
+  not by states or tags. Small differences from BDS are logged and fixed in one refinement pass at
+  the end.
+- **1.26.60 check:** a scan of every goal's code against 1.26.52 found panic changed (it keeps
+  running while the hurt still counts and picks a new spot when its path ends) and vanilla moved
+  ranged_attack to its `attack_range`/`attack_interval` objects; both are in. 1.26.60 also added a
+  sound event and moved "undefined" from 614 to 615, which every goal's "no sound" now uses. The scan compares
+  constants, strings and calls, not every line, so a small change can still be missed.
+- **Not tested in game yet.** The goals are unit tested but not yet used by a running server or
+  compared with BDS mob by mob.
+- **The API is not stable yet.** Names and behaviour may still change between commits.
+
+## Every part
+
+| Part | State |
+|---|---|
+| Goal selector | ✅ done |
+| Pathfinding (walk, swim) | ✅ done |
+| Navigation (all seven types) | ✅ done |
+| Move controls, physics | 🟡 done except water currents, bouncy blocks, vehicles, gliding |
+| Wandering: random_stroll, random_swim, random_fly, random_breach, random_hover, float_wander, swim_idle, swim_wander, random_look_around (and _and_sit), random_sitting | ✅ written from BDS |
+| Following: follow_owner, follow_parent, follow_mob, teleport_to_owner, tempt, mount_pathing | ✅ written from BDS |
+| Looking: look_at_player, look_at_entity, look_at_target, look_at_trading_player | ✅ written from BDS |
+| Survival: panic, float, swim_up_for_breath, flee_sun, restrict_sun, avoid_mob_type, avoid_block, run_around_like_crazy | 🟡 written from BDS; panic and float miss one component each |
+| Moving to places: move_to_water, _lava, _liquid, _land, _block, _random_block, move_towards_target, move_towards_home/dwelling_restriction, stomp_turtle_egg | ✅ written from BDS |
+| Breeding, sitting, timers: breed, stay_while_sitting, timer_flag_1 to 3 | 🟡 written from BDS; breed's stop details left |
+| Targeting: nearest_attackable_target, nearest_prioritized_attackable_target, hurt_by_target, owner_hurt_by_target, owner_hurt_target, defend_trusted_target, defend_village_target, target_when_pushed | 🟡 written from BDS; hurt_by_target's alert_same_type left |
+| Attacks: melee_attack, melee_box_attack, leap_at_target, ranged_attack, delayed_attack, stomp_attack, charge_attack, hold_ground, swell | ✅ written from BDS |
+| Mob attacks: ocelotattack, fire_at_target, jump_around_target, move_around_target, aquatic_charge_attack, ram_attack, stalk_and_pounce_on_target, knockback_roar, swoop_attack, circle_around_anchor | ✅ written from BDS |
+| Squid and slime goals (9) | ✅ written from BDS |
+| Warden: emerge, dig, roar, sniff, investigate_suspicious_location, sonic_boom | ✅ written from BDS |
+| Frog and strider: croak, rise_to_liquid_level | ✅ written from BDS |
+| Panda, fox, axolotl, wolf, cat: lay_down, scared, sneeze, nap, find_cover, play_dead, beg, ocelot_sit_on_block | ✅ written from BDS |
+| Items: pickup_items, equip_item, share_items, admire_item, barter, charge_held_item, drink_milk, drink_potion, eat_carried_item, snacking | 🟡 written from BDS, with the shareables, admire_item, barter and equip_item rules (`Items`); the inventory (`Container`), item data (stack sizes, damage, armor slots, recipes) and food use come from the engine |
+| Roll, lay_egg, jump_to_block, silverfish_merge_with_stone, silverfish_wake_up_friends | ✅ written from BDS |
+| Villagers and villages: move_to_poi, sleep, work, work_composter, mingle, hide, move_to_village, stroll_towards_village, move_through_village, explore_outskirts, move_indoors, move_outdoors, go_home, harvest_farm_block, fertilize_farm_block, raid_garden, inspect_bookshelf, celebrate, celebrate_survive, offer_flower, take_flower, trade_interest, trade_with_player | 🟡 written from BDS; POIs, villages, crops, items and trades come from the engine; trade_interest's item cycling and some defaults are simplified |
+| Caravans, leaders, hovering: follow_caravan, follow_target_leader, hover, float_tempt | ✅ written from BDS 1.26.60 |
+| Spells, guardian, vex, play: summon_entity, send_event, guardian_attack, vex_copy_owner_target, vex_random_move, play | ✅ written from BDS 1.26.60 |
+| The allay: stay_near_noteblock, go_and_give_items_to_noteblock, go_and_give_items_to_owner | ✅ written from BDS 1.26.60 |
+| drop_item_for, transport_items (moving items is the engine's, through hooks) | ✅ written from BDS 1.26.60 |
+| use_kinetic_weapon, wither_random_attack_pos_goal, wither_target_highest_damage (the weapon, dash state and damage tally are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
+| The ender dragon: dragonholdingpattern, dragontakeoff, dragonlanding, dragonscanning, dragonflaming, dragonchargeplayer, dragonstrafeplayer, dragondeath (the node graph, path search, crystals and flight state are the engine's, through hooks) | ✅ written from BDS 1.26.60 |
+| Natural spawning | 🟡 written from BDS; structure lists, phantoms and a few special cases left |
+| Entity definitions: groups, events, filters, properties | ✅ written from BDS 1.26.60 |
+| Building goals, navigation and movement from a definition | 🟡 written from BDS 1.26.60; some rarely used goal members keep their defaults |
+| Sensors and timers: timer, scheduler, environment_sensor, entity_sensor, target_nearby_sensor, damage_sensor, on_* events | 🟡 defaults from BDS 1.26.60, tick logic from 1.21.3 |
+| Mob state: ageable, breedable, offspring, tameable, tamemount, angry, healable, despawn, flag components | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
+| Interactions and conditions: interact, giveable, nameable, rideable, addrider, transformation, hurt_on_condition, breathable, burns_in_daylight | 🟡 defaults from BDS 1.26.60 where they decompile, logic from 1.21.3 |
+| Leash, attributes and equipment: leashable (1.26.60 presets), leashable_to, the attribute components, attack, equipment, equippable, experience_reward, scale, attack_cooldown | 🟡 defaults from BDS 1.26.60 where found, logic from 1.21.3 |
+| Physics-style components: physics, collision_box, custom_hit_test, pushable / pushable_by_entity (1.26.60 presets) / pushable_by_block, buoyant, rail_movement, rail_sensor, friction_modifier, air_drag_modifier, bounciness, water_movement, variable_max_auto_step, jump.static, jump.dynamic, block_movement_slowdown_immunity and the marker components (can_climb, can_fly, uses_legacy_friction, ...) | 🟡 pushing (all five push modes) and buoyancy (waves and bobbing) from BDS 1.26.60, rail sensor from 1.21.3; jump.dynamic feeds the hop control |
+| Entity packets: movement, throttle, view, spawn, equipment, data, events | 🟡 written from BDS 1.26.60; AddPlayer and a few field values left |
