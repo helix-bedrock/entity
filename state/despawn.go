@@ -46,6 +46,10 @@ func DefaultDespawn() DespawnConfig {
 	}
 }
 
+// edgeDistance caps max_distance while the tick range is short (BDS's fminf
+// with 44.0).
+const edgeDistance = 44
+
 // Chunks is the engine's answers about the chunks around a mob.
 type Chunks interface {
 	// TickRange is the level's chunk tick range.
@@ -57,11 +61,11 @@ type Chunks interface {
 	UntickedNeighbour(p behavior.Pos, r int32) bool
 }
 
-// Despawn is minecraft:despawn (1.21.3 DespawnComponent::tick 0x1405BC140,
-// _tryStandardDespawnRules 0x1405A4630). BDS passes the distances to
-// Dimension::fetchAnyInteractablePlayer in registers the decompile drops;
-// which call takes min_distance and which max_distance is taken from what
-// the rules do and was not read.
+// Despawn is minecraft:despawn, as BDS 1.26.60's despawn tick 0x723BB90
+// and its tail 0x723C570 (names from 1.21.3 DespawnComponent::tick and
+// _tryStandardDespawnRules). The first player search has no distance
+// (FLT_MAX), the near check takes min_distance (definition +84) and the far
+// checks max_distance (+88), capped at 44 when the tick range is 4 or less.
 type Despawn struct {
 	cfg DespawnConfig
 	buf []behavior.Actor
@@ -132,7 +136,7 @@ func (d *Despawn) standard(env *Env, chunks Chunks) bool {
 		return true
 	}
 	if (!ok && c.FromDistance || c.FromSimulationEdge) && chunks != nil && chunks.TickRange() <= c.EdgeTickRange {
-		return !d.playerWithin(env, m.Pos(), c.MaxDistance)
+		return !d.playerWithin(env, m.Pos(), min(edgeDistance, c.MaxDistance))
 	}
 	if c.FromSimulationEdge && chunks != nil {
 		p := m.Pos()
