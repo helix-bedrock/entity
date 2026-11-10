@@ -5,7 +5,7 @@ import (
 	"math/rand/v2"
 	"testing"
 
-	files "github.com/helix-bedrock/helix-data/data/1.26.52"
+	files "github.com/helix-bedrock/helix-data/data/files"
 
 	"github.com/helix-bedrock/entity/path"
 )
