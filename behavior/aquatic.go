@@ -225,7 +225,7 @@ func (g *AquaticChargeAttack) inReach(t Actor) bool {
 
 // knock hits the target and, for a mob, knocks it back along the charge.
 func (g *AquaticChargeAttack) knock(t Actor) {
-	g.m.Attack(t)
+	g.m.Attack(t, nil)
 	if !t.IsMob() {
 		return
 	}

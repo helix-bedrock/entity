@@ -44,18 +44,23 @@ func newB5Mob(w World, id ID, p Vec3, kind string) *b5Mob {
 		aggressor: NoID, badPlayer: NoID}
 }
 
-func (m *b5Mob) IsPlayer() bool                      { return m.player }
-func (m *b5Mob) RuntimeID() uint64                   { return 0 }
-func (m *b5Mob) CanSee(Actor) bool                   { return m.see }
-func (m *b5Mob) CanAttack(Actor) bool                { return true }
-func (m *b5Mob) Admiring() bool                      { return false }
-func (m *b5Mob) PlayersTargetable() bool             { return true }
-func (m *b5Mob) Team() int                           { return 0 }
-func (m *b5Mob) Invulnerable() bool                  { return false }
-func (m *b5Mob) HasHealth() bool                     { return true }
-func (m *b5Mob) BodyYaw() float32                    { return m.body }
-func (m *b5Mob) Swing()                              { m.swings++ }
-func (m *b5Mob) Attack(a Actor) (bool, bool)         { m.hits = append(m.hits, a.ID()); return true, false }
+func (m *b5Mob) IsPlayer() bool          { return m.player }
+func (m *b5Mob) RuntimeID() uint64       { return 0 }
+func (m *b5Mob) CanSee(Actor) bool       { return m.see }
+func (m *b5Mob) CanAttack(Actor) bool    { return true }
+func (m *b5Mob) Admiring() bool          { return false }
+func (m *b5Mob) PlayersTargetable() bool { return true }
+func (m *b5Mob) Team() int               { return 0 }
+func (m *b5Mob) Invulnerable() bool      { return false }
+func (m *b5Mob) HasHealth() bool         { return true }
+func (m *b5Mob) BodyYaw() float32        { return m.body }
+func (m *b5Mob) Swing()                  { m.swings++ }
+func (m *b5Mob) Attack(a Actor, then AttackResult) {
+	m.hits = append(m.hits, a.ID())
+	if then != nil {
+		then.AttackResult(a.ID(), true, false)
+	}
+}
 func (m *b5Mob) MoveWanted() (bool, bool)            { return m.wanted, true }
 func (m *b5Mob) SetMoveWanted(p Vec3, _ float32)     { m.wanted, m.wantedAt = true, p }
 func (m *b5Mob) ClearMoveWanted()                    { m.wanted = false }

@@ -131,5 +131,5 @@ func (g *OcelotAttack) Tick() {
 		return
 	}
 	g.timer = g.cfg.Cooldown
-	g.m.Attack(t)
+	g.m.Attack(t, nil)
 }

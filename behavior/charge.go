@@ -80,6 +80,6 @@ func (g *ChargeAttack) Tick() {
 		}
 		return
 	}
-	g.m.Attack(t)
+	g.m.Attack(t, nil)
 	g.m.SetFlag(FlagCharging, false)
 }

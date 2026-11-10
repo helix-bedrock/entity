@@ -16,8 +16,16 @@ type Attacker interface {
 	Targeter
 	// Swing swings the mob's arm.
 	Swing()
-	// Attack hits the target; it reports a hit and whether the target died.
-	Attack(a Actor) (hit, killed bool)
+	// Attack hits the target and, when then is not nil, tells then whether it hit and
+	// whether the target died. An engine that ticks mobs one at a time calls then before
+	// Attack returns; one whose mobs think in parallel applies the hit after the thinking
+	// and calls then there, still in the same tick and before the mob's next one.
+	Attack(a Actor, then AttackResult)
+}
+
+// AttackResult receives the outcome of an Attack.
+type AttackResult interface {
+	AttackResult(target ID, hit, killed bool)
 }
 
 // MeleeConfig is the JSON of minecraft:behavior.melee_attack. Times are in
@@ -219,15 +227,20 @@ func (g *Melee) Tick() {
 func (g *Melee) strike(t Actor) {
 	g.cooldown = g.cfg.Cooldown
 	g.m.Swing()
-	hit, killed := g.m.Attack(t)
+	g.m.Attack(t, g)
+}
+
+// AttackResult implements AttackResult: the end of 2.4's attack step, the events and
+// attack_once, once the engine knows whether the hit landed.
+func (g *Melee) AttackResult(target ID, hit, killed bool) {
 	if !hit {
 		return
 	}
 	if g.cfg.OnAttack != "" {
-		g.m.Event(g.cfg.OnAttack, t.ID())
+		g.m.Event(g.cfg.OnAttack, target)
 	}
 	if killed && g.cfg.OnKill != "" {
-		g.m.Event(g.cfg.OnKill, t.ID())
+		g.m.Event(g.cfg.OnKill, target)
 	}
 	if g.cfg.AttackOnce {
 		g.done = true

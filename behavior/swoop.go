@@ -94,7 +94,7 @@ func (g *SwoopAttack) Tick() {
 	r := g.cfg.DamageReach
 	mb := g.m.Box()
 	if overlaps(sortedBox(sub(mb.Min, Vec3{X: r, Y: r, Z: r}), add(mb.Max, Vec3{X: r, Y: r, Z: r})), b) {
-		g.m.Attack(t)
+		g.m.Attack(t, nil)
 		g.hit = true
 	}
 }

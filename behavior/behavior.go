@@ -217,6 +217,14 @@ type Actor interface {
 
 // World answers the goals' questions about the level. It is called from
 // the tick of the mob that owns the goal.
+//
+// An engine may tick the mobs of one area in parallel (Helix does in
+// crowded regions): then every mob thinks against the world as it was at
+// the start of the phase, and LevelEvent, BreakBlock, SetBlock, Particle,
+// sounds and attacks are queued and applied after it in a fixed order.
+// Goals must not rely on seeing their own block changes in the same tick,
+// and must not share state with other mobs' goals. Random then is the
+// mob's own source, so results do not depend on the core count.
 type World interface {
 	// Random is the level's main random (Level::getRandom); IRandom and
 	// ThreadRandom are its other two sources. Each goal draws from the one
@@ -315,6 +323,12 @@ type World interface {
 	// BaseGameAtLeast reports a world base game version at or above
 	// major.minor.patch.
 	BaseGameAtLeast(major, minor, patch int) bool
+	// SetMobTarget sets the target of another mob, and MobEvent fires a
+	// JSON event on another mob with other as its target. Goals change
+	// other mobs only through these, never through the Actor they were
+	// given, so an engine whose mobs think in parallel can queue them.
+	SetMobTarget(id, target ID)
+	MobEvent(id ID, event string, other ID)
 }
 
 // PlacedBlock is a block a goal places: a block name and at most one of its

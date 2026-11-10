@@ -181,7 +181,7 @@ func (g *StalkAndPounce) chase(t Actor, p Vec3) {
 		g.m.SetFallImmune(false)
 		if dist2(p, q) <= g.cfg.StrikeDist {
 			if t := g.actor(g.m.Target()); t != nil {
-				g.m.Attack(t)
+				g.m.Attack(t, nil)
 			}
 			g.state = stalkDone
 			return

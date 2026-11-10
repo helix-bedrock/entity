@@ -13,8 +13,10 @@ type knightMob struct {
 
 func (m *knightMob) Nav() Navigator { return pathNav{m.nav} }
 func (m *knightMob) Swing()         {}
-func (m *knightMob) Attack(Actor) (bool, bool) {
-	return true, false
+func (m *knightMob) Attack(a Actor, then AttackResult) {
+	if then != nil {
+		then.AttackResult(a.ID(), true, false)
+	}
 }
 func (m *knightMob) KineticReach() (Range[float32], bool) { return Range[float32]{1, 3}, m.weapon }
 func (m *knightMob) StartKineticCharge(s float32) {

@@ -71,6 +71,19 @@ func (w *flatWorld) Actor(id ID) Actor {
 	return nil
 }
 
+// SetMobTarget and MobEvent apply at once, as an engine that ticks mobs one at a time.
+func (w *flatWorld) SetMobTarget(id, target ID) {
+	if m, ok := w.Actor(id).(Mob); ok {
+		m.SetTarget(target)
+	}
+}
+
+func (w *flatWorld) MobEvent(id ID, event string, other ID) {
+	if m, ok := w.Actor(id).(Mob); ok {
+		m.Event(event, other)
+	}
+}
+
 func (w *flatWorld) Block(p Pos) Block {
 	if p.Y <= 63 {
 		return Block{Name: "minecraft:stone", Ground: true, Solid: true, HasCollision: true}

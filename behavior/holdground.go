@@ -109,9 +109,7 @@ func (g *HoldGround) Start() {
 		return
 	}
 	for _, a := range g.kin(g.h.ID()) {
-		if m, ok := a.(Mob); ok {
-			m.SetTarget(g.h.Target())
-		}
+		g.world.SetMobTarget(a.ID(), g.h.Target())
 	}
 	clear(g.near)
 }
@@ -129,9 +127,11 @@ func (g *HoldGround) Stop() {
 	}
 	// BDS's query includes the mob itself.
 	for _, a := range g.kin(NoID) {
-		if m, ok := a.(Mob); ok {
-			m.Event(g.cfg.WithinRadiusEvent, NoID)
+		if a.ID() == g.h.ID() {
+			g.h.Event(g.cfg.WithinRadiusEvent, NoID)
+			continue
 		}
+		g.world.MobEvent(a.ID(), g.cfg.WithinRadiusEvent, NoID)
 	}
 	clear(g.near)
 }

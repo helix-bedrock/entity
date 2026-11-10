@@ -93,9 +93,7 @@ func (g *DelayedAttack) Tick() {
 		return
 	}
 	if g.cooldown == g.dcfg.AttackDuration-g.dcfg.HitDelay && in {
-		if hit, _ := g.m.Attack(t); hit && g.cfg.AttackOnce {
-			g.done = true
-		}
+		g.m.Attack(t, g)
 	}
 	if g.cooldown <= 0 {
 		g.cooldown = g.dcfg.AttackDuration
@@ -124,6 +122,21 @@ func DefaultStompAttack() StompAttackConfig {
 type StompAttack struct {
 	*Melee
 	scfg StompAttackConfig
+}
+
+// AttackResult implements AttackResult: a delayed attack only ends on attack_once, without
+// melee_attack's events.
+func (g *DelayedAttack) AttackResult(_ ID, hit, _ bool) {
+	if hit && g.cfg.AttackOnce {
+		g.done = true
+	}
+}
+
+// AttackResult implements AttackResult as DelayedAttack's does.
+func (g *StompAttack) AttackResult(_ ID, hit, _ bool) {
+	if hit && g.cfg.AttackOnce {
+		g.done = true
+	}
 }
 
 // NewStompAttack makes the goal.
@@ -157,9 +170,7 @@ func (g *StompAttack) Tick() {
 	case s >= d && g.cooldown <= 0 && standing:
 		g.cooldown = g.cfg.Cooldown
 		g.m.SetFlag(FlagStanding, false)
-		if hit, _ := g.m.Attack(t); hit && g.cfg.AttackOnce {
-			g.done = true
-		}
+		g.m.Attack(t, g)
 	case s*g.scfg.NoDamageRangeMultiplier >= d:
 		if g.cooldown <= 0 {
 			g.cooldown = g.cfg.Cooldown
