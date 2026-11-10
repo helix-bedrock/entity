@@ -9,6 +9,7 @@ package spawn
 
 import (
 	"math"
+	"sync"
 
 	"github.com/helix-bedrock/entity/path"
 )
@@ -43,23 +44,43 @@ var moon = [8]float32{1, 0.75, 0.5, 0.25, 0, 0.25, 0.5, 0.75}
 // maxHerdTotal caps how many mobs one cluster may add.
 const maxHerdTotal = 200
 
-// Spawner holds the rules and the reusable counting state. One Spawner
-// serves one dimension and must not be used from two goroutines at once.
+// Spawner holds the loaded rules and the level's delay_filter timers. It is
+// shared: every goroutine that spawns uses its own State from NewState.
 type Spawner struct {
 	rules  *Rules
 	biomes []BiomeInfo
 	// byBiome lists, per biome ID, the rules whose biome filter accepts the
 	// biome, in load order.
 	byBiome [][]int32
+	// delays is the world age, in seconds, before which a delay_filter
+	// identifier may not spawn again. BDS keeps them per level, so every
+	// State shares them.
+	delays *delays
+}
+
+// delays are the delay_filter timers, guarded because States that tick in
+// parallel share them.
+type delays struct {
+	mu sync.Mutex
+	at map[string]int64
+}
+
+func (d *delays) get(id string) int64 {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return d.at[id]
+}
+
+// State is the counting state of one spawning goroutine (a region in Helix).
+// It must not be used from two goroutines at once.
+type State struct {
+	*Spawner
 	// counts are the mobs near the chunk, [surface][pool].
 	counts [2][numPools]int32
 	// density counts the mobs near the chunk by identifier, [surface].
 	density   [2]map[string]int32
 	herdTotal int32
-	// delays is the world age, in seconds, before which a delay_filter
-	// identifier may not spawn again.
-	delays  map[string]int64
-	spawned []Mob
+	spawned   []Mob
 }
 
 // New builds a Spawner. biomes is indexed by biome ID; an ID without an
@@ -69,8 +90,7 @@ func New(rules *Rules, biomes []BiomeInfo) *Spawner {
 		rules:   rules,
 		biomes:  biomes,
 		byBiome: make([][]int32, len(biomes)),
-		density: [2]map[string]int32{{}, {}},
-		delays:  map[string]int64{},
+		delays:  &delays{at: map[string]int64{}},
 	}
 	for id := range biomes {
 		for i := range rules.All {
@@ -81,10 +101,15 @@ func New(rules *Rules, biomes []BiomeInfo) *Spawner {
 	}
 	for i := range rules.All {
 		if d := rules.All[i].DelayID; d != "" {
-			s.delays[d] = 0
+			s.delays.at[d] = 0
 		}
 	}
 	return s
+}
+
+// NewState makes the counting state for one goroutine that spawns.
+func (s *Spawner) NewState() *State {
+	return &State{Spawner: s, density: [2]map[string]int32{{}, {}}}
 }
 
 // conditions is BDS's SpawnConditions for one floor.
@@ -104,7 +129,7 @@ func surfaceIndex(surface bool) int {
 
 // TickChunk runs the spawner for chunk (cx, cz), as BDS does once per tick
 // for every ticking chunk.
-func (s *Spawner) TickChunk(w World, lv *Level, r Rand, cx, cz int32) {
+func (s *State) TickChunk(w World, lv *Level, r Rand, cx, cz int32) {
 	if !lv.MobSpawning || r.Int(2000) > 10 {
 		return
 	}
@@ -147,7 +172,7 @@ func (s *Spawner) TickChunk(w World, lv *Level, r Rand, cx, cz int32) {
 }
 
 // count recounts the mobs in the 9×9 chunks around (cx, cz).
-func (s *Spawner) count(w World, cx, cz int32) {
+func (s *State) count(w World, cx, cz int32) {
 	s.counts = [2][numPools]int32{}
 	clear(s.density[0])
 	clear(s.density[1])
@@ -238,7 +263,7 @@ func brightness(w World, lv *Level, p path.Pos) float32 {
 
 func stormy(lv *Level) bool { return lv.Rain*lv.Thunder > 0.9 }
 
-func (s *Spawner) cluster(w World, lv *Level, r Rand, c *conditions) {
+func (s *State) cluster(w World, lv *Level, r Rand, c *conditions) {
 	if w.Block(c.pos).Material == MaterialAir {
 		return
 	}
@@ -258,7 +283,7 @@ func (s *Spawner) cluster(w World, lv *Level, r Rand, c *conditions) {
 	}
 	c.delay = 0
 	if rule.DelayID != "" {
-		c.delay = s.delays[rule.DelayID]
+		c.delay = s.delays.get(rule.DelayID)
 	}
 	if !s.passes(w, lv, r, rule, c) || rule.Rarity > 0 && r.Int(rule.Rarity) != 0 {
 		return
@@ -341,18 +366,19 @@ func (s *Spawner) cluster(w World, lv *Level, r Rand, c *conditions) {
 	}
 }
 
-func (s *Spawner) setDelay(lv *Level, r Rand, rule *Rule) {
-	if _, ok := s.delays[rule.DelayID]; !ok {
-		return
-	}
+func (s *State) setDelay(lv *Level, r Rand, rule *Rule) {
 	d := rule.DelayMin
 	if rule.DelayMax > rule.DelayMin {
 		d += r.Int(rule.DelayMax - rule.DelayMin)
 	}
-	s.delays[rule.DelayID] = int64(d) + lv.Time/20
+	s.delays.mu.Lock()
+	defer s.delays.mu.Unlock()
+	if _, ok := s.delays.at[rule.DelayID]; ok {
+		s.delays.at[rule.DelayID] = int64(d) + lv.Time/20
+	}
 }
 
-func (s *Spawner) capOK(lv *Level, rule *Rule, si int) bool {
+func (s *State) capOK(lv *Level, rule *Rule, si int) bool {
 	if rule.Pool == PoolNone || int(lv.Dimension) >= len(caps) {
 		return false
 	}
@@ -361,7 +387,7 @@ func (s *Spawner) capOK(lv *Level, rule *Rule, si int) bool {
 }
 
 // spawnOne is BDS's spawn of one mob of a cluster, standing on the floor.
-func (s *Spawner) spawnOne(w World, lv *Level, r Rand, typ string, c *conditions) {
+func (s *State) spawnOne(w World, lv *Level, r Rand, typ string, c *conditions) {
 	pos := path.Vec3{X: float32(c.pos.X) + 0.49, Y: float32(c.pos.Y + 1), Z: float32(c.pos.Z) + 0.49}
 	m := w.NewMob(typ, pos, c.surface)
 	if m == nil || !checkSpawn(w, lv, r, typ, m) {
@@ -378,7 +404,7 @@ func (s *Spawner) spawnOne(w World, lv *Level, r Rand, typ string, c *conditions
 
 // pick is BDS's getMobToSpawn: a weighted pick among the biome's rules that
 // pass the conditions.
-func (s *Spawner) pick(w World, lv *Level, r Rand, c *conditions) *Rule {
+func (s *State) pick(w World, lv *Level, r Rand, c *conditions) *Rule {
 	id := w.Biome(c.pos)
 	if int(id) >= len(s.byBiome) {
 		return nil
@@ -416,7 +442,7 @@ func moonPhase(t int64) int {
 }
 
 // passes is BDS's canSpawnInConditions.
-func (s *Spawner) passes(w World, lv *Level, r Rand, rule *Rule, c *conditions) bool {
+func (s *State) passes(w World, lv *Level, r Rand, rule *Rule, c *conditions) bool {
 	minY, maxY := w.HeightRange()
 	y := c.pos.Y
 	if y < minY || y >= maxY || y < rule.HeightMin || y > rule.HeightMax {
@@ -454,7 +480,7 @@ func (s *Spawner) passes(w World, lv *Level, r Rand, rule *Rule, c *conditions) 
 }
 
 // placement is BDS's spawn position check at p, the block above the floor.
-func (s *Spawner) placement(w World, rule *Rule, p path.Pos) bool {
+func (s *State) placement(w World, rule *Rule, p path.Pos) bool {
 	cx, cz := p.X>>4, p.Z>>4
 	for dx := int32(-1); dx <= 1; dx++ {
 		for dz := int32(-1); dz <= 1; dz++ {
@@ -522,7 +548,7 @@ func contains(names []string, name string) bool {
 
 // slimeOK is the spawn predicate BDS gives minecraft:slime's rules: slime
 // chunks below y 39, and swamps on dim moonlit nights from y 50 to 68.
-func (s *Spawner) slimeOK(w World, lv *Level, r Rand, c *conditions) bool {
+func (s *State) slimeOK(w World, lv *Level, r Rand, c *conditions) bool {
 	p := c.pos
 	if p.Y <= 38 {
 		return slimeChunk(p.X>>4, p.Z>>4)

@@ -131,7 +131,7 @@ func TestFindFloor(t *testing.T) {
 func run(t *testing.T, lv *Level) *flat {
 	t.Helper()
 	rules, biomes := vanilla(t)
-	s := New(rules, biomes)
+	s := New(rules, biomes).NewState()
 	w := &flat{player: path.Vec3{X: 8, Y: ground + 1, Z: 60}}
 	r := pcg{rand.New(rand.NewPCG(1, 2))}
 	for range 200000 {
@@ -190,7 +190,7 @@ func TestPeacefulNoMonsters(t *testing.T) {
 
 func BenchmarkTickChunk(b *testing.B) {
 	rules, biomes := vanilla(b)
-	s := New(rules, biomes)
+	s := New(rules, biomes).NewState()
 	w := &flat{player: path.Vec3{X: 8, Y: ground + 1, Z: 60}}
 	lv := &Level{MobSpawning: true, Difficulty: 2, Time: 1000, DayTime: 18000, SkyDarken: 11}
 	r := pcg{rand.New(rand.NewPCG(1, 2))}
