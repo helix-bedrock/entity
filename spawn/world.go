@@ -90,6 +90,8 @@ type Level struct {
 	SkyDarken uint8
 	// Rain and Thunder are the weather levels from 0 to 1.
 	Rain, Thunder float32
+	// TickRange is the level's chunk tick range, the server's tick distance in chunks.
+	TickRange int32
 }
 
 // Rand is the level's random source. Int returns a value in [0, n) and

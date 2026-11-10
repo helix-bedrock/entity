@@ -1,10 +1,11 @@
 // Package spawn is BDS's natural mob spawner: each tick it may pick a column
 // in a ticking chunk, find the floors in it from the sky down, and spawn a
-// herd on each floor from the spawn rules of that floor's biome.
+// herd on each floor from the spawn rules of that floor's biome; and once per
+// newly generated chunk, PostProcess spawns its first herd.
 //
-// It follows BDS 1.26.52's BedrockSpawner. Not ported yet: structure spawn
-// areas (witch huts, monuments, fortresses, outposts), slime chunks, phantom
-// insomnia and despawning.
+// It follows BDS's BedrockSpawner (1.26.52, PostProcess 1.26.60). Not ported
+// yet: structure spawn areas (witch huts, monuments, fortresses, outposts)
+// and phantom insomnia. Despawning is the state package's minecraft:despawn.
 package spawn
 
 import (
@@ -171,6 +172,31 @@ func (s *State) TickChunk(w World, lv *Level, r Rand, cx, cz int32) {
 	}
 }
 
+// PostProcess is BDS's postProcessSpawnMobs (1.26.60 BedrockSpawner vtable
+// slot 12): the herd a chunk gets once, on its first tick after world
+// generation. It picks one column, x then z, finds the first floor from the
+// top without the surface search's stops, and spawns a cluster there as the
+// tick does, with the surface conditions and water or lava from the block
+// above. Positions inside an ancient city get none.
+func (s *State) PostProcess(w World, lv *Level, r Rand, cx, cz int32) {
+	if !lv.MobSpawning {
+		return
+	}
+	s.count(w, cx, cz)
+	x := cx*16 + r.Int(16)
+	z := cz*16 + r.Int(16)
+	minY, maxY := w.HeightRange()
+	p := path.Pos{X: x, Y: maxY, Z: z}
+	if !findFloor(w, &p, false, minY) || !w.Loaded(p) || w.InAncientCity(p) {
+		return
+	}
+	c := conditions{surface: true, pos: p}
+	m := w.Block(path.Pos{X: p.X, Y: p.Y + 1, Z: p.Z}).Material
+	c.water = m == MaterialWater
+	c.lava = m == MaterialLava
+	s.cluster(w, lv, r, &c)
+}
+
 // count recounts the mobs in the 9×9 chunks around (cx, cz).
 func (s *State) count(w World, cx, cz int32) {
 	s.counts = [2][numPools]int32{}
@@ -290,7 +316,7 @@ func (s *State) cluster(w World, lv *Level, r Rand, c *conditions) {
 	}
 	f := r.Float()
 	n := herd.Min + int32(math.Round(float64(f*f*float32(herd.Max-herd.Min))))
-	if n <= 0 || !s.placement(w, rule, up) {
+	if n <= 0 || !s.placement(w, lv, rule, up) {
 		return
 	}
 	if c.delay != 0 && rule.DelayChance != 100 && r.Int(100) > rule.DelayChance {
@@ -479,19 +505,21 @@ func (s *State) passes(w World, lv *Level, r Rand, rule *Rule, c *conditions) bo
 	return rule.VillageDistance == 0 || !w.PlayerInVillage(c.pos, rule.VillageDistance)
 }
 
-// placement is BDS's spawn position check at p, the block above the floor.
-func (s *State) placement(w World, rule *Rule, p path.Pos) bool {
-	cx, cz := p.X>>4, p.Z>>4
-	for dx := int32(-1); dx <= 1; dx++ {
-		for dz := int32(-1); dz <= 1; dz++ {
-			if !w.TickedRecently(cx+dx, cz+dz) {
-				return false
-			}
+// placement is BDS's spawn position check at p, the block above the floor
+// (1.26.60 0xCD8F2F0). With a tick range of 5 or more the 9 chunks around p
+// must have ticked within the last tick; at exactly 4 that check is skipped
+// and the player distance is capped at 44; below 4 nothing spawns.
+func (s *State) placement(w World, lv *Level, rule *Rule, p path.Pos) bool {
+	limit := rule.DistanceMax
+	if lv.TickRange < 5 || !ticked(w, p) {
+		if lv.TickRange != 4 {
+			return false
 		}
+		limit = min(limit, edgeDistance)
 	}
 	maxDist := float32(math.MaxFloat32)
-	if rule.DistanceMax >= 0 {
-		maxDist = float32(rule.DistanceMax)
+	if limit >= 0 {
+		maxDist = float32(limit)
 	}
 	pv := path.Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	pl, ok := w.NearestPlayer(pv, maxDist)
@@ -520,6 +548,22 @@ func (s *State) placement(w World, rule *Rule, p path.Pos) bool {
 		return false
 	}
 	return at.Flags&FlagSolidBlocking == 0
+}
+
+// edgeDistance caps the player distance at a tick range of 4.
+const edgeDistance = 44
+
+// ticked reports the 9 chunks around p ticked in this tick or the last.
+func ticked(w World, p path.Pos) bool {
+	cx, cz := p.X>>4, p.Z>>4
+	for dx := int32(-1); dx <= 1; dx++ {
+		for dz := int32(-1); dz <= 1; dz++ {
+			if !w.TickedRecently(cx+dx, cz+dz) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // above is spawns_above_block_filter: one of the blocks within the distance

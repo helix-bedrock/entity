@@ -141,7 +141,7 @@ func run(t *testing.T, lv *Level) *flat {
 }
 
 func TestAnimalsByDay(t *testing.T) {
-	w := run(t, &Level{MobSpawning: true, Difficulty: 2, Time: 1000, DayTime: 6000})
+	w := run(t, &Level{MobSpawning: true, TickRange: 5, Difficulty: 2, Time: 1000, DayTime: 6000})
 	if len(w.mobs) == 0 {
 		t.Fatal("nothing spawned")
 	}
@@ -164,7 +164,7 @@ func TestAnimalsByDay(t *testing.T) {
 }
 
 func TestMonstersAtNight(t *testing.T) {
-	w := run(t, &Level{MobSpawning: true, Difficulty: 2, Time: 1000, DayTime: 18000, SkyDarken: 11})
+	w := run(t, &Level{MobSpawning: true, TickRange: 5, Difficulty: 2, Time: 1000, DayTime: 18000, SkyDarken: 11})
 	monsters := 0
 	for _, m := range w.mobs {
 		if classOf(m.id) == classAnimal {
@@ -180,7 +180,7 @@ func TestMonstersAtNight(t *testing.T) {
 }
 
 func TestPeacefulNoMonsters(t *testing.T) {
-	w := run(t, &Level{MobSpawning: true, Difficulty: 0, Time: 1000, DayTime: 18000, SkyDarken: 11})
+	w := run(t, &Level{MobSpawning: true, TickRange: 5, Difficulty: 0, Time: 1000, DayTime: 18000, SkyDarken: 11})
 	for _, m := range w.mobs {
 		if isMonster(classOf(m.id)) {
 			t.Fatalf("monster %s on peaceful", m.id)
@@ -192,7 +192,7 @@ func BenchmarkTickChunk(b *testing.B) {
 	rules, biomes := vanilla(b)
 	s := New(rules, biomes).NewState()
 	w := &flat{player: path.Vec3{X: 8, Y: ground + 1, Z: 60}}
-	lv := &Level{MobSpawning: true, Difficulty: 2, Time: 1000, DayTime: 18000, SkyDarken: 11}
+	lv := &Level{MobSpawning: true, TickRange: 5, Difficulty: 2, Time: 1000, DayTime: 18000, SkyDarken: 11}
 	r := pcg{rand.New(rand.NewPCG(1, 2))}
 	for range 100000 {
 		s.TickChunk(w, lv, r, 0, 0)
