@@ -1,6 +1,9 @@
 package state
 
-import "github.com/helix-bedrock/entity/definition"
+import (
+	"github.com/helix-bedrock/entity/behavior"
+	"github.com/helix-bedrock/entity/definition"
+)
 
 // DamageCondition is one of minecraft:hurt_on_condition's
 // damage_conditions: damage of a cause every tick its filters pass.
@@ -104,18 +107,51 @@ func DefaultBreathable() BreathableConfig {
 	}
 }
 
-// Breathable is minecraft:breathable: the mob's air supply (1.21.3
-// _tickBreathableComponent 0x1406C3470, updateBreathableState 0x140571670,
-// canBreathe 0x140564850, BreathableDefinition::initialize 0x14056A060).
+// Breathable is minecraft:breathable: the air supply (BDS 1.26.60's tick sub_79139D0, its
+// medium sub_7370980, its damage source sub_79198E0; the definition's numbers from 1.21.3
+// BreathableDefinition::initialize 0x14056A060). Players and mobs run the same component, as
+// in BDS: anything that is a [Breather] can.
 type Breathable struct {
 	cfg    BreathableConfig
 	air    int16
 	medium Medium
 }
 
+// Breather is what the breathable component needs of its entity. Every [Mob] is one; an
+// engine's players can be one too.
+type Breather interface {
+	// Alive reports the entity is alive.
+	Alive() bool
+	// Breath classifies the block at the breathing point (attach position 7).
+	Breath(breathe, nonBreathe []string) Medium
+	// HasEffect reports a mob effect by ID.
+	HasEffect(id int) bool
+	// UnderWater reports the breathing point under the water's surface (Actor::isHeadInLiquid
+	// with water, sub_B39C240).
+	UnderWater() bool
+	// SetFlag sets an actor flag.
+	SetFlag(n int, on bool)
+	// AttachPos is Actor::getAttachPos for a BDS actor location number.
+	AttachPos(loc int) behavior.Vec3
+	// Respiration is the highest respiration level of the worn armour.
+	Respiration() int32
+	// Hurt deals damage of an actor damage cause.
+	Hurt(cause int, amount float32)
+	// SetAirSupply sets the air supply and the maximum (actor data 7 and 42).
+	SetAirSupply(air, maxAir int16)
+}
+
+// BreathWorld is what of the world the breathable component reads.
+type BreathWorld interface {
+	// Random is the level's random.
+	Random() behavior.Random
+	// LevelEvent sends a level event at p.
+	LevelEvent(id int32, p behavior.Vec3, block string)
+}
+
 // NewBreathable makes the component with a full air supply and sets the
-// mob's air data.
-func NewBreathable(c BreathableConfig, m Mob) *Breathable {
+// entity's air data.
+func NewBreathable(c BreathableConfig, m Breather) *Breathable {
 	b := &Breathable{cfg: c, air: b16(c.TotalSupply * ticksPerSecond)}
 	if m != nil {
 		m.SetAirSupply(b.air, b.maxAir())
@@ -134,6 +170,12 @@ func (b *Breathable) SetConfig(c BreathableConfig) { b.cfg = c }
 // Air is the air supply in ticks.
 func (b *Breathable) Air() int16 { return b.air }
 
+// SetAir sets the air supply in ticks, as a saved entity loads it.
+func (b *Breathable) SetAir(air int16) { b.air = air }
+
+// MaxAir is the full air supply in ticks.
+func (b *Breathable) MaxAir() int16 { return b.maxAir() }
+
 func (b *Breathable) maxAir() int16 { return b16(b.cfg.TotalSupply * ticksPerSecond) }
 
 // inhaleRate is the air regained a tick while inhaling, as initialize
@@ -147,75 +189,93 @@ func (b *Breathable) inhaleRate() int32 {
 
 // CanBreathe reports breathing in the current medium, or anywhere with
 // water breathing or conduit power.
-func (b *Breathable) CanBreathe(m Mob) bool {
+func (b *Breathable) CanBreathe(m Breather) bool {
 	if m.HasEffect(b.cfg.WaterBreathing) || m.HasEffect(b.cfg.ConduitPower) {
 		return true
 	}
-	switch b.medium {
-	case MediumWater:
-		return b.cfg.BreathesWater || !m.UnderWater()
-	case MediumLava:
-		return b.cfg.BreathesLava
-	case MediumSolid:
-		return b.cfg.BreathesSolids
-	case MediumBreathable:
-		return true
-	case MediumNotBreathable:
-		return false
-	}
-	return b.cfg.BreathesAir
+	ok, _ := b.breathes(m.UnderWater())
+	return ok
 }
 
-// Tick updates the air supply. A living mob that can breathe refills its
-// air; one that cannot, in water, loses one air a tick (less often with
-// respiration) and is hurt for 2 once its air reaches suffocate_time.
-// invulnerable is a player in creative or with the invulnerable ability,
-// who always breathes.
-//
-// As decompiled, a mob that cannot breathe outside water keeps its air
-// and has the breathing flag raised; that reading was not checked
-// against the disassembly.
+// breathes is the tick's switch on the medium: whether the entity breathes, and the breathing
+// flag it shows. Only an entity drowning in water drops the flag.
+func (b *Breathable) breathes(underWater bool) (ok, flag bool) {
+	switch b.medium {
+	case MediumWater:
+		if b.cfg.BreathesWater || !underWater {
+			return true, true
+		}
+		return false, false
+	case MediumLava:
+		return b.cfg.BreathesLava, true
+	case MediumSolid:
+		return b.cfg.BreathesSolids, true
+	case MediumBreathable:
+		return true, true
+	case MediumNotBreathable:
+		return false, true
+	}
+	return b.cfg.BreathesAir, true
+}
+
+// Tick updates a mob's or player's air supply; see [Breathable.TickFor].
 func (b *Breathable) Tick(env *Env, invulnerable bool) {
 	m := env.Self
-	if !m.IsMob() && !m.IsPlayer() || !m.Alive() {
+	if !m.IsMob() && !m.IsPlayer() {
+		return
+	}
+	b.TickFor(m, env.World, invulnerable)
+}
+
+// TickFor updates the air supply as BDS 1.26.60's tick (sub_79139D0). An entity that breathes
+// refills its air, at once or over inhale_time. One that does not, in any medium it cannot
+// breathe, loses one air a tick (one in respiration + 1 ticks with Respiration armour), sends
+// bubbles with its head under water, and once its air is down to suffocate_time is hurt for 2,
+// drowning with its head under water and suffocating otherwise, and its air goes back to 0.
+// invulnerable is a player in creative or with the invulnerable ability, who always breathes.
+//
+// Not done: BDS keeps the air of an entity that is in a bubble column (a component read at
+// the start, hash 336927900), and names the death "dehydration" for one that breathes water
+// in air (the cause stays suffocation).
+func (b *Breathable) TickFor(m Breather, w BreathWorld, invulnerable bool) {
+	if !m.Alive() {
 		return
 	}
 	b.medium = m.Breath(b.cfg.BreatheBlocks, b.cfg.NonBreatheBlocks)
+	under := m.UnderWater()
+	ok, flag := true, true
+	if !invulnerable && !m.HasEffect(b.cfg.WaterBreathing) && !m.HasEffect(b.cfg.ConduitPower) {
+		ok, flag = b.breathes(under)
+	}
+	m.SetFlag(flagBreathing, flag)
 	maxAir := b.maxAir()
 	air := b.air
-	switch {
-	case invulnerable || b.CanBreathe(m):
-		m.SetFlag(flagBreathing, true)
+	if ok {
 		if air < maxAir {
-			if b.cfg.InhaleTime*ticksPerSecond > 0 {
-				air = b16(min(max(int32(air)+b.inhaleRate(), 0), int32(maxAir)))
-			} else {
-				air = maxAir
+			next := int32(maxAir)
+			if b.cfg.InhaleTime > 0 {
+				if n := int32(air) + b.inhaleRate(); n <= next {
+					next = max(n, 0)
+				}
 			}
+			air = b16(next)
 		}
-	case b.medium == MediumWater:
-		m.SetFlag(flagBreathing, false)
-		under := m.UnderWater()
+	} else {
+		n := m.Respiration() + 1
 		if under && b.cfg.GeneratesBubbles {
-			env.World.LevelEvent(b.cfg.BubbleEvent, m.AttachPos(AttachHead), "")
+			w.LevelEvent(b.cfg.BubbleEvent, m.AttachPos(AttachHead), "")
 		}
-		n := int32(1)
-		if air > 0 {
-			n = m.Respiration() + 1
-		}
-		if env.World.Random().NextInt(n) == 0 {
+		if w.Random().NextInt(n) == 0 {
 			air--
 		}
 		if int32(air) <= b.cfg.SuffocateTime*ticksPerSecond {
-			air = 0
 			cause := b.cfg.SuffocateCause
 			if under {
 				cause = b.cfg.DrownCause
 			}
 			m.Hurt(cause, b.cfg.Damage)
+			air = 0
 		}
-	default:
-		m.SetFlag(flagBreathing, true)
 	}
 	b.air = air
 	m.SetAirSupply(air, maxAir)
