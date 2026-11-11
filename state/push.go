@@ -213,6 +213,18 @@ func PushActors(env *Env, self *PushableByEntity, w PushWorld, dst []behavior.Ac
 	return dst
 }
 
+// PushedBy pushes the mob self away from an actor whose own pushActors
+// runs outside this package, a player's: the same push PushActors gives
+// each actor it finds, self only (a player is never pushed back by it).
+// env is the pushed mob's. The engine checks that the boxes are within
+// reach.
+func (p *PushableByEntity) PushedBy(env *Env, w PushWorld, self, by behavior.Actor) {
+	if p == nil || env == nil || w == nil || self == nil || by == nil {
+		return
+	}
+	p.push(env, w, self, by, true)
+}
+
 // skipPush is 1.26.60 0x7517560 without its first check (a level
 // virtual, believed to be the client side test): either rides, or one
 // last left the other.
