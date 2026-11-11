@@ -41,6 +41,33 @@ func (b *Body) touchesLava(w World) bool {
 	return false
 }
 
+// waterShrink is how far BDS 1.26.60's LiquidPhysicsSystem (sub_77DCDE0) shrinks the box
+// before looking for water (0x1A7E930).
+var waterShrink = Vec3{X: 0.001, Y: 0.401, Z: 0.001}
+
+// touchesWater is the water test of the liquid physics.
+func (b *Body) touchesWater(w World) bool {
+	if w.ContainsMaterial(shrink(b.Box, waterShrink), path.MaterialWater) {
+		return true
+	}
+	for _, s := range b.SubBoxes {
+		if w.ContainsMaterial(s, path.MaterialWater) {
+			return true
+		}
+	}
+	return false
+}
+
+// UpdateLiquid sets WasInWater for the next tick as BDS 1.26.60 does after a mob moves: its
+// LiquidPhysicsSystem (sub_77DCDE0) finds the liquid the box touches, lava (box shrunk by
+// 0.1, 0.4, 0.1) before water (shrunk by 0.001, 0.401, 0.001), and the water state update
+// (sub_78274B0) keeps the in-water flag only for water. The host calls it once Box is where
+// the mob ended up. Not done: BDS also clears the flag for a mob riding a boat, which the body
+// does not know, and pushes the mob along flowing water.
+func (b *Body) UpdateLiquid(w World) {
+	b.WasInWater = !b.touchesLava(w) && b.touchesWater(w)
+}
+
 // sense is TravelTypeSensingSystem (0x7391B90).
 func (b *Body) sense(w World) {
 	b.liquid = false
