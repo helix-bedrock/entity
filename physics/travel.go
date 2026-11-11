@@ -61,11 +61,18 @@ func (b *Body) touchesWater(w World) bool {
 // UpdateLiquid sets WasInWater for the next tick as BDS 1.26.60 does after a mob moves: its
 // LiquidPhysicsSystem (sub_77DCDE0) finds the liquid the box touches, lava (box shrunk by
 // 0.1, 0.4, 0.1) before water (shrunk by 0.001, 0.401, 0.001), and the water state update
-// (sub_78274B0) keeps the in-water flag only for water. The host calls it once Box is where
-// the mob ended up. Not done: BDS also clears the flag for a mob riding a boat, which the body
-// does not know, and pushes the mob along flowing water.
-func (b *Body) UpdateLiquid(w World) {
-	b.WasInWater = !b.touchesLava(w) && b.touchesWater(w)
+// (sub_78274B0) keeps the in-water flag only for water, and never for a mob riding a boat
+// (inBoat). The host calls it once Box is where the mob ended up. The current's push is the
+// host's, as it knows the blocks' flow: see [Body.LiquidBoxes].
+func (b *Body) UpdateLiquid(w World, inBoat bool) {
+	b.WasInWater = !inBoat && !b.touchesLava(w) && b.touchesWater(w)
+}
+
+// LiquidBoxes are the boxes LiquidPhysicsSystem looks in for lava and for water, the box
+// shrunk by 0.1, 0.4, 0.1 and by 0.001, 0.401, 0.001; a host pushes the mob along the
+// current of the liquid blocks in them.
+func (b *Body) LiquidBoxes() (lava, water Box) {
+	return shrink(b.Box, lavaShrink), shrink(b.Box, waterShrink)
 }
 
 // sense is TravelTypeSensingSystem (0x7391B90).
