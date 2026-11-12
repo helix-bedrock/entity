@@ -113,6 +113,13 @@ func (b *Breedable) Cooldown() int32 { return b.cooldown }
 // LoveCause is the player who put the mob in love, NoID for none.
 func (b *Breedable) LoveCause() behavior.ID { return b.loveCause }
 
+// SetState puts back a saved love timer, cooldown and love cause, as
+// BDS's load reads InLove, BreedCooldown and LoveCause (1.26.60
+// 0x7372E40).
+func (b *Breedable) SetState(love, cooldown int32, cause behavior.ID) {
+	b.love, b.cooldown, b.loveCause = max(love, 0), max(cooldown, 0), cause
+}
+
 func (b *Breedable) cooldownTicks() int32 { return int32(b.cfg.Cooldown * ticksPerSecond) }
 
 // Tick counts the love timer and the cooldown down. A baby is never in
@@ -175,7 +182,15 @@ func (b *Breedable) sittingOK(a behavior.Actor) bool {
 // component is pb (nil when it has none): neither cooling down, a breed
 // type for the partner, tame rules, sitting rules and both in love.
 func (b *Breedable) CanMate(self, partner behavior.Actor, pb *Breedable) bool {
-	if partner == nil || partner.ID() == self.ID() || b.cooldown > 0 || pb == nil || pb.cooldown > 0 {
+	return pb != nil && b.CanMateWith(self, partner, pb.cooldown <= 0)
+}
+
+// CanMateWith is CanMate for a partner whose component is not at hand:
+// partnerReady reports that the partner has minecraft:breedable and is not
+// cooling down. An engine that runs mobs on many cores answers it from the
+// partner's copy of the last tick instead of reading its component.
+func (b *Breedable) CanMateWith(self, partner behavior.Actor, partnerReady bool) bool {
+	if partner == nil || partner.ID() == self.ID() || b.cooldown > 0 || !partnerReady {
 		return false
 	}
 	if b.breedType(partner.Type()) == nil {
