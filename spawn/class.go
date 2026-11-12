@@ -106,6 +106,14 @@ func floorPos(v path.Vec3) path.Pos {
 
 func below(p path.Pos) path.Pos { return path.Pos{X: p.X, Y: p.Y - 1, Z: p.Z} }
 
+// CheckSpawnRules is the mob's own spawn check (Mob::checkSpawnRules and its overrides),
+// which BDS also runs for a monster spawner's mobs: Spawner::spawnMob (1.26.60 0xCD8F8C0)
+// asks it of every mob spawned with its natural spawn flag set, and the spawner's flag
+// changes nothing in Mob's (0xBFE5530) or Monster's (0xBD3E490, darkness first) checks.
+func CheckSpawnRules(w World, lv *Level, r Rand, typ string, m Mob) bool {
+	return checkSpawn(w, lv, r, typ, m)
+}
+
 // checkSpawn is the mob's own natural spawn check, run before it is added.
 func checkSpawn(w World, lv *Level, r Rand, typ string, m Mob) bool {
 	c := classOf(typ)
