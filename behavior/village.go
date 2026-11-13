@@ -14,10 +14,10 @@ func inBounds(b Box, p Vec3) bool {
 
 // MoveToVillageConfig is the JSON of minecraft:behavior.move_to_village.
 type MoveToVillageConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	// CooldownTime is the rest, in seconds, after a path that did not move.
-	CooldownTime float32 `json:"cooldown_time"`
-	GoalRadius   float32 `json:"goal_radius"`
+	CooldownTime float64 `json:"cooldown_time"`
+	GoalRadius   float64 `json:"goal_radius"`
 	SearchRange  int32   `json:"search_range"`
 }
 
@@ -87,7 +87,7 @@ func (g *moveToVillage) pick() Vec3 {
 	x := randomInt(r, int32(b.Min.X), int32(b.Max.X))
 	z := randomInt(r, int32(b.Min.Z), int32(b.Max.Z))
 	randomInt(r, int32(b.Min.Y), int32(b.Max.Y))
-	return Vec3{X: float32(x), Y: float32(g.world.HeightMap(x, z)), Z: float32(z)}
+	return Vec3{X: float64(x), Y: float64(g.world.HeightMap(x, z)), Z: float64(z)}
 }
 
 // moveToBlock is moveMobToBlock (0x527AEE0): one stride of the follow
@@ -96,7 +96,7 @@ func (g *moveToVillage) moveToBlock() {
 	p := g.mob.Pos()
 	d := scale(normalize(sub(g.aim, p)), g.mob.FollowRange()*villageStride)
 	at := add(p, d)
-	at.Y = float32(g.world.HeightMap(floorInt(at.X), floorInt(at.Z)))
+	at.Y = float64(g.world.HeightMap(floorInt(at.X), floorInt(at.Z)))
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(at, g.cfg.SpeedMultiplier)
 	}
@@ -115,7 +115,7 @@ func (g *moveToVillage) CanContinueToUse() bool {
 		return false
 	}
 	t := g.targetBlock()
-	c := Vec3{X: float32(t.X) + 0.5, Y: float32(t.Y) + 0.5, Z: float32(t.Z) + 0.5}
+	c := Vec3{X: float64(t.X) + 0.5, Y: float64(t.Y) + 0.5, Z: float64(t.Z) + 0.5}
 	if g.radius2+g.radius2 > dist2(c, g.mob.Pos()) {
 		return g.entered && !inBounds(b, g.mob.Pos())
 	}
@@ -137,7 +137,7 @@ func (g *moveToVillage) Tick() {
 
 // pathNear is 0x721A450: the path is done, or its end is within r of the
 // mob.
-func pathNear(m Mob, r float32) bool {
+func pathNear(m Mob, r float64) bool {
 	n := m.Nav()
 	if n == nil {
 		return false
@@ -149,7 +149,7 @@ func pathNear(m Mob, r float32) bool {
 	if n.Done() {
 		return true
 	}
-	c := Vec3{X: float32(end.X) + 0.5, Y: float32(end.Y) + 0.5, Z: float32(end.Z) + 0.5}
+	c := Vec3{X: float64(end.X) + 0.5, Y: float64(end.Y) + 0.5, Z: float64(end.Z) + 0.5}
 	return r*r > dist2(c, m.Pos())
 }
 
@@ -170,7 +170,7 @@ func (g *MoveToVillage) CanUse() bool { return g.canUseVillage() }
 // minecraft:behavior.stroll_towards_village.
 type StrollTowardsVillageConfig struct {
 	MoveToVillageConfig
-	StartChance float32 `json:"start_chance"`
+	StartChance float64 `json:"start_chance"`
 }
 
 // DefaultStrollTowardsVillage returns the goal's BDS defaults (TypeSchema
@@ -207,16 +207,16 @@ func (g *StrollTowardsVillage) CanUse() bool {
 func (g *StrollTowardsVillage) pick() Vec3 {
 	v := g.moveToVillage.pick()
 	mb := blockOf(g.mob.Pos())
-	d := normalize(Vec3{X: float32(int32(v.X) - mb.X), Y: float32(int32(v.Y) - mb.Y), Z: float32(int32(v.Z) - mb.Z)})
-	at := add(vecOf(mb), scale(d, float32(g.reach)))
+	d := normalize(Vec3{X: float64(int32(v.X) - mb.X), Y: float64(int32(v.Y) - mb.Y), Z: float64(int32(v.Z) - mb.Z)})
+	at := add(vecOf(mb), scale(d, float64(g.reach)))
 	p := blockOf(at)
-	return Vec3{X: float32(p.X), Y: float32(g.world.HeightMap(p.X, p.Z)), Z: float32(p.Z)}
+	return Vec3{X: float64(p.X), Y: float64(g.world.HeightMap(p.X, p.Z)), Z: float64(p.Z)}
 }
 
 // MoveThroughVillageConfig is the JSON of
 // minecraft:behavior.move_through_village.
 type MoveThroughVillageConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	OnlyAtNight     bool    `json:"only_at_night"`
 }
 
@@ -256,14 +256,14 @@ type ExploreOutskirtsConfig struct {
 	NextXZ int32 `json:"next_xz"`
 	NextY  int32 `json:"next_y"`
 	// The times are in seconds.
-	MinWaitTime       float32 `json:"min_wait_time"`
-	MaxWaitTime       float32 `json:"max_wait_time"`
-	MaxTravelTime     float32 `json:"max_travel_time"`
-	SpeedMultiplier   float32 `json:"speed_multiplier"`
-	ExploreDist       float32 `json:"explore_dist"`
-	MinPerimeter      float32 `json:"min_perimeter"`
-	MinDistFromTarget float32 `json:"min_dist_from_target"`
-	TimerRatio        float32 `json:"timer_ratio"`
+	MinWaitTime       float64 `json:"min_wait_time"`
+	MaxWaitTime       float64 `json:"max_wait_time"`
+	MaxTravelTime     float64 `json:"max_travel_time"`
+	SpeedMultiplier   float64 `json:"speed_multiplier"`
+	ExploreDist       float64 `json:"explore_dist"`
+	MinPerimeter      float64 `json:"min_perimeter"`
+	MinDistFromTarget float64 `json:"min_dist_from_target"`
+	TimerRatio        float64 `json:"timer_ratio"`
 	DistFromBoundary  Vec3    `json:"dist_from_boundary"`
 }
 
@@ -309,14 +309,14 @@ func (g *ExploreOutskirts) CanUse() bool {
 	}
 	w, d := b.Max.X-b.Min.X, b.Max.Z-b.Min.Z
 	perim := (d + w) * 2
-	if g.cfg.MinPerimeter > float32(int32(perim)) {
+	if g.cfg.MinPerimeter > float64(int32(perim)) {
 		return false
 	}
 	x, z := edgePoint(b, g.world.Random().NextInt(int32(perim)))
 	p := Vec3{X: x, Y: m.Pos().Y, Z: z}
 	dir := normalize(sub(p, boxCentre(b)))
 	g.target = add(p, scale(dir, g.cfg.ExploreDist))
-	g.target.Y = float32(g.world.HeightMap(floorInt(g.target.X), floorInt(g.target.Z)))
+	g.target.Y = float64(g.world.HeightMap(floorInt(g.target.X), floorInt(g.target.Z)))
 	return true
 }
 
@@ -338,22 +338,22 @@ func shrink(b Box, d Vec3) Box {
 
 // edgePoint walks r blocks round the village edge: along min z, up max x,
 // back along max z and down min x.
-func edgePoint(b Box, r int32) (x, z float32) {
+func edgePoint(b Box, r int32) (x, z float64) {
 	w, d := b.Max.X-b.Min.X, b.Max.Z-b.Min.Z
-	f := float32(r)
+	f := float64(r)
 	if w > f {
 		return b.Min.X + f, b.Min.Z
 	}
 	r -= int32(w)
-	if f = float32(r); d > f {
+	if f = float64(r); d > f {
 		return b.Max.X, b.Min.Z + f
 	}
 	r -= int32(d)
-	if f = float32(r); w > f {
+	if f = float64(r); w > f {
 		return b.Max.X - f, b.Max.Z
 	}
 	r -= int32(w)
-	if f = float32(r); d > f {
+	if f = float64(r); d > f {
 		return b.Min.X, b.Max.Z - f
 	}
 	return b.Min.X, b.Min.Z
@@ -399,8 +399,8 @@ func (g *ExploreOutskirts) Tick() {
 				g.target = p
 				n.MoveTo(p, g.cfg.SpeedMultiplier)
 			}
-			lo := int32(float32(g.minWait) / g.cfg.TimerRatio)
-			g.waitFor = randomInt(r, lo, int32(float32(g.maxWait)/g.cfg.TimerRatio))
+			lo := int32(float64(g.minWait) / g.cfg.TimerRatio)
+			g.waitFor = randomInt(r, lo, int32(float64(g.maxWait)/g.cfg.TimerRatio))
 		}
 		return
 	}

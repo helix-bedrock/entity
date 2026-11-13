@@ -21,7 +21,7 @@ const (
 // Value is a property value, or a Molang result: a number or a string.
 // Bools are numbers, 0 for false.
 type Value struct {
-	Number   float32
+	Number   float64
 	String   string
 	IsString bool
 }
@@ -31,7 +31,7 @@ type Property struct {
 	Name string
 	Type PropertyType
 	// Min and Max are an int or float property's range.
-	Min, Max float32
+	Min, Max float64
 	// Values are an enum's values.
 	Values     []string
 	ClientSync bool
@@ -127,7 +127,7 @@ func (p *Parser) parseRange(prop *Property, raw json.RawMessage) error {
 	if hi < lo {
 		return fmt.Errorf("range max is less than range min")
 	}
-	prop.Min, prop.Max = float32(lo), float32(hi)
+	prop.Min, prop.Max = float64(lo), float64(hi)
 	return nil
 }
 
@@ -200,9 +200,9 @@ func (p *Parser) parseDefault(prop *Property, raw json.RawMessage, warn func(err
 		if k != kindNumber || json.Unmarshal(raw, &f) != nil {
 			return fmt.Errorf("'default' value does not match the specified type")
 		}
-		v := float32(f)
+		v := float64(f)
 		if prop.Type == PropertyInt {
-			v = float32(int32(f))
+			v = float64(int32(f))
 		}
 		if v < prop.Min || v > prop.Max {
 			warn(fmt.Errorf("property %s: default %v is not between %v and %v, clamping to nearest value", prop.Name, v, prop.Min, prop.Max))
@@ -215,7 +215,7 @@ func (p *Parser) parseDefault(prop *Property, raw json.RawMessage, warn func(err
 	return nil
 }
 
-func boolNumber(b bool) float32 {
+func boolNumber(b bool) float64 {
 	if b {
 		return 1
 	}
@@ -231,7 +231,7 @@ func (prop *Property) convert(v Value) (Value, bool) {
 		if v.IsString {
 			return Value{}, false
 		}
-		return Value{Number: float32(int32(v.Number))}, true
+		return Value{Number: float64(int32(v.Number))}, true
 	case PropertyFloat:
 		if v.IsString {
 			return Value{}, false

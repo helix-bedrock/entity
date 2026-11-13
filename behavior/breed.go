@@ -24,7 +24,7 @@ type Breeder interface {
 type Breed struct {
 	base
 	m       Breeder
-	speed   float32
+	speed   float64
 	partner ID
 	timer   int32
 	buf     []Actor
@@ -32,7 +32,7 @@ type Breed struct {
 
 // NewBreed makes minecraft:behavior.breed; speed is its speed_multiplier
 // (1 by default).
-func NewBreed(w World, m Breeder, speed float32) *Breed {
+func NewBreed(w World, m Breeder, speed float64) *Breed {
 	return &Breed{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, speed: speed, partner: NoID}
 }
 
@@ -50,11 +50,11 @@ func closeEnough(at Vec3, self Box, p Actor) bool {
 		gz := gapAxis(at.Z-hw, at.Z+hw, pb.Min.Z, pb.Max.Z)
 		return gx*gx+gy*gy+gz*gz <= breedBoxGap2
 	}
-	d := float32(math.Sqrt(float64(dist2(at, pp))))
+	d := float64(math.Sqrt(float64(dist2(at, pp))))
 	return d-(h1+h2) <= breedGap
 }
 
-func gapAxis(aMin, aMax, bMin, bMax float32) float32 {
+func gapAxis(aMin, aMax, bMin, bMax float64) float64 {
 	switch {
 	case aMax < bMin:
 		return bMin - aMax
@@ -75,7 +75,7 @@ func (g *Breed) CanUse() bool {
 	b.Max = Vec3{X: b.Max.X + breedBox, Y: b.Max.Y + breedBox, Z: b.Max.Z + breedBox}
 	g.buf = g.world.Entities(g.buf[:0], g.mob.ID(), b)
 	defer clear(g.buf)
-	best := float32(temptFloatMaxValue)
+	best := float64(temptFloatMaxValue)
 	g.partner = NoID
 	for _, e := range g.buf {
 		if !e.IsMob() || !g.mob.CanMate(e) {
@@ -89,7 +89,7 @@ func (g *Breed) CanUse() bool {
 		if !ok {
 			continue
 		}
-		if closeEnough(Vec3{X: float32(end.X), Y: float32(end.Y), Z: float32(end.Z)}, g.mob.Box(), e) {
+		if closeEnough(Vec3{X: float64(end.X), Y: float64(end.Y), Z: float64(end.Z)}, g.mob.Box(), e) {
 			best, g.partner = d, e.ID()
 		}
 	}
@@ -117,7 +117,7 @@ func (g *Breed) CanContinueToUse() bool {
 		return false
 	}
 	end, ok := n.PathEnd()
-	return ok && closeEnough(Vec3{X: float32(end.X), Y: float32(end.Y), Z: float32(end.Z)}, g.mob.Box(), p)
+	return ok && closeEnough(Vec3{X: float64(end.X), Y: float64(end.Y), Z: float64(end.Z)}, g.mob.Box(), p)
 }
 
 // Start implements goal.Goal.

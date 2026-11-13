@@ -27,8 +27,8 @@ type villager struct {
 	inVil    bool
 	dir      int32
 	sleeping bool
-	collider [2]float32
-	yaw      float32
+	collider [2]float64
+	yaw      float64
 	vel      Vec3
 	look     Vec3
 	looks    int
@@ -60,8 +60,8 @@ func (m *villager) Village(int32) (Box, bool)        { return m.village, m.inVil
 func (m *villager) BedDirection(Pos) (int32, bool)   { return m.dir, true }
 func (m *villager) Sleeping() bool                   { return m.sleeping }
 func (m *villager) SetSleeping(on bool)              { m.sleeping = on }
-func (m *villager) SetSleepCollider(w, h float32)    { m.collider = [2]float32{w, h} }
-func (m *villager) SetSleepYaw(y float32)            { m.yaw = y }
+func (m *villager) SetSleepCollider(w, h float64)    { m.collider = [2]float64{w, h} }
+func (m *villager) SetSleepYaw(y float64)            { m.yaw = y }
 func (m *villager) HealOnWake()                      {}
 func (m *villager) StandUpSpot(bed Pos, _ Vec3) (Pos, bool) {
 	return Pos{X: bed.X + 1, Y: bed.Y, Z: bed.Z}, true
@@ -69,9 +69,9 @@ func (m *villager) StandUpSpot(bed Pos, _ Vec3) (Pos, bool) {
 func (m *villager) Teleport(p Vec3)                      { m.pos = p }
 func (m *villager) SetVelocity(v Vec3)                   { m.vel = v }
 func (m *villager) LookBusy() bool                       { return false }
-func (m *villager) LookAt(p Vec3, _, _ float32)          { m.look, m.looks = p, m.looks+1 }
-func (m *villager) MaxHeadXRot() float32                 { return 40 }
-func (m *villager) FollowRange() float32                 { return 16 }
+func (m *villager) LookAt(p Vec3, _, _ float64)          { m.look, m.looks = p, m.looks+1 }
+func (m *villager) MaxHeadXRot() float64                 { return 40 }
+func (m *villager) FollowRange() float64                 { return 16 }
 func (m *villager) Eyes() Vec3                           { return add(m.pos, Vec3{Y: 1.6}) }
 func (m *villager) AttachPos(int) Vec3                   { return add(m.pos, Vec3{Y: 1}) }
 func (m *villager) PlaySoundAt(int, Vec3)                { m.sounds = append(m.sounds, "level") }
@@ -113,7 +113,7 @@ func (m *villager) TradeShow(held Item, from int) (Item, int, bool) {
 }
 
 func TestMoveToPOIReachesTheBed(t *testing.T) {
-	w := newVWorld(&seqRandom{floats: []float32{0}})
+	w := newVWorld(&seqRandom{floats: []float64{0}})
 	m := newVillager(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5})
 	m.pois[POIBed] = POI{Pos: Pos{X: 5, Y: 64}}
 	g := NewMoveToPOI(w, m, DefaultMoveToPOI())
@@ -131,7 +131,7 @@ func TestMoveToPOIReachesTheBed(t *testing.T) {
 }
 
 func TestSleepLiesInTheBedAndGetsUp(t *testing.T) {
-	w := newVWorld(&seqRandom{floats: []float32{0}})
+	w := newVWorld(&seqRandom{floats: []float64{0}})
 	m := newVillager(w, 1, Vec3{X: 5.5, Y: 64, Z: 0.5})
 	m.pois[POIBed] = POI{Pos: Pos{X: 5, Y: 64}, Radius: 1}
 	m.dir = 1
@@ -158,7 +158,7 @@ func TestSleepLiesInTheBedAndGetsUp(t *testing.T) {
 }
 
 func TestWorkArrivesStampsAndPlaysTheSound(t *testing.T) {
-	w := newVWorld(&seqRandom{floats: []float32{0}})
+	w := newVWorld(&seqRandom{floats: []float64{0}})
 	m := newVillager(w, 1, Vec3{X: 3.5, Y: 64, Z: 0.5})
 	m.pois[POIJobSite] = POI{Pos: Pos{X: 3, Y: 64}, Radius: 1, Sound: "block.barrel"}
 	c := DefaultWork()
@@ -179,7 +179,7 @@ func TestWorkArrivesStampsAndPlaysTheSound(t *testing.T) {
 }
 
 func TestMinglePairsTwoVillagers(t *testing.T) {
-	w := newVWorld(&seqRandom{floats: []float32{0}})
+	w := newVWorld(&seqRandom{floats: []float64{0}})
 	a := newVillager(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5})
 	b := newVillager(w, 2, Vec3{X: 1.5, Y: 64, Z: 0.5})
 	w.entities = []Actor{a, b}
@@ -203,7 +203,7 @@ func TestMinglePairsTwoVillagers(t *testing.T) {
 }
 
 func TestMoveToVillageWalksInFromOutside(t *testing.T) {
-	w := newVWorld(&seqRandom{ints: []int32{0, 3, 4}, floats: []float32{0}})
+	w := newVWorld(&seqRandom{ints: []int32{0, 3, 4}, floats: []float64{0}})
 	m := newVillager(w, 1, Vec3{X: -40.5, Y: 64, Z: 0.5})
 	m.village, m.inVil = Box{Min: Vec3{X: 0, Y: 60, Z: 0}, Max: Vec3{X: 16, Y: 70, Z: 16}}, true
 	g := NewMoveToVillage(w, m, DefaultMoveToVillage())
@@ -225,7 +225,7 @@ func TestEdgePointWalksTheVillageRim(t *testing.T) {
 	b := Box{Max: Vec3{X: 10, Z: 4}}
 	for _, c := range []struct {
 		r    int32
-		x, z float32
+		x, z float64
 	}{{3, 3, 0}, {12, 10, 2}, {16, 8, 4}, {26, 0, 2}} {
 		if x, z := edgePoint(b, c.r); x != c.x || z != c.z {
 			t.Errorf("edgePoint(%d) = %v, %v, want %v, %v", c.r, x, z, c.x, c.z)
@@ -254,7 +254,7 @@ func TestHarvestPlantsEmptyFarmland(t *testing.T) {
 }
 
 func TestCelebrateSurviveLaunchesUnderTheSky(t *testing.T) {
-	w := newVWorld(&seqRandom{floats: []float32{0}})
+	w := newVWorld(&seqRandom{floats: []float64{0}})
 	m := newVillager(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5})
 	g := NewCelebrateSurvive(w, m, DefaultCelebrateSurvive())
 	g.Start()

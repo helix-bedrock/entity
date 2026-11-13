@@ -80,7 +80,7 @@ func number(raw json.RawMessage) (float64, bool) {
 }
 
 // Float reads a number member, def when it is missing or not a number.
-func (c *Context) Float(j Object, k string, def float32) float32 {
+func (c *Context) Float(j Object, k string, def float64) float64 {
 	if !j.Has(k) {
 		return def
 	}
@@ -89,7 +89,7 @@ func (c *Context) Float(j Object, k string, def float32) float32 {
 		c.Warn(fmt.Errorf("%s: not a number", k))
 		return def
 	}
-	return float32(f)
+	return float64(f)
 }
 
 // Int reads a number member truncated to an integer, as jsoncpp's asInt.
@@ -150,7 +150,7 @@ func (c *Context) Vec3(j Object, k string, def behavior.Vec3) behavior.Vec3 {
 	if !j.Has(k) {
 		return def
 	}
-	var v [3]float32
+	var v [3]float64
 	if err := json.Unmarshal(j[k], &v); err != nil {
 		c.Warn(fmt.Errorf("%s: %w", k, err))
 		return def
@@ -189,7 +189,7 @@ func rangeOf(raw json.RawMessage) (lo, hi float64, ok bool) {
 }
 
 // Range reads a float range member.
-func (c *Context) Range(j Object, k string, def behavior.Range[float32]) behavior.Range[float32] {
+func (c *Context) Range(j Object, k string, def behavior.Range[float64]) behavior.Range[float64] {
 	if !j.Has(k) {
 		return def
 	}
@@ -198,7 +198,7 @@ func (c *Context) Range(j Object, k string, def behavior.Range[float32]) behavio
 		c.Warn(fmt.Errorf("%s: not a range", k))
 		return def
 	}
-	return behavior.Range[float32]{Min: float32(lo), Max: float32(hi)}
+	return behavior.Range[float64]{Min: float64(lo), Max: float64(hi)}
 }
 
 // RangeInt reads an integer range member, truncating each end.
@@ -219,7 +219,7 @@ func (c *Context) RangeTicks(j Object, k string, def behavior.Range[int32]) beha
 	if !j.Has(k) {
 		return def
 	}
-	r := c.Range(j, k, behavior.Range[float32]{Min: float32(def.Min) / ticksPerSecond, Max: float32(def.Max) / ticksPerSecond})
+	r := c.Range(j, k, behavior.Range[float64]{Min: float64(def.Min) / ticksPerSecond, Max: float64(def.Max) / ticksPerSecond})
 	return behavior.Range[int32]{Min: int32(r.Min * ticksPerSecond), Max: int32(r.Max * ticksPerSecond)}
 }
 

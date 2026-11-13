@@ -35,11 +35,11 @@ type dragonMob struct {
 	nodes                []Pos
 	paths                [][2]int
 	finals               []Pos
-	air, turn            float32
-	yaw, yawSpeed        float32
+	air, turn            float64
+	yaw, yawSpeed        float64
 	look                 Vec3
 	landings, takeoffs   int
-	health               float32
+	health               float64
 	events, particles    []int32
 	shots                []ID
 	breath               []Vec3
@@ -62,24 +62,24 @@ func (d *dragonMob) SetFlameCount(n int32)     { d.flames = n }
 func (d *dragonMob) SetSitting(on bool)        { d.flags[FlagSitting], d.sittingSet = on, true }
 func (d *dragonMob) Nodes() []Pos              { return d.nodes }
 func (d *dragonMob) ClosestNode() int          { return 0 }
-func (d *dragonMob) SetAirSpeed(v float32)     { d.air = v }
-func (d *dragonMob) SetTurnSpeed(v float32)    { d.turn = v }
-func (d *dragonMob) HeadLook(float32) Vec3     { return d.look }
+func (d *dragonMob) SetAirSpeed(v float64)     { d.air = v }
+func (d *dragonMob) SetTurnSpeed(v float64)    { d.turn = v }
+func (d *dragonMob) HeadLook(float64) Vec3     { return d.look }
 func (d *dragonMob) HeadBox() Box              { return Box{Min: d.pos, Max: d.pos} }
-func (d *dragonMob) Yaw() float32              { return d.yaw }
-func (d *dragonMob) SetYaw(v float32)          { d.yaw = v }
-func (d *dragonMob) YawSpeed() float32         { return d.yawSpeed }
-func (d *dragonMob) SetYawSpeed(v float32)     { d.yawSpeed = v }
+func (d *dragonMob) Yaw() float64              { return d.yaw }
+func (d *dragonMob) SetYaw(v float64)          { d.yaw = v }
+func (d *dragonMob) YawSpeed() float64         { return d.yawSpeed }
+func (d *dragonMob) SetYawSpeed(v float64)     { d.yawSpeed = v }
 func (d *dragonMob) HorizontalCollision() bool { return d.hCollide }
 func (d *dragonMob) VerticalCollision() bool   { return false }
 func (d *dragonMob) StartLanding()             { d.landings++ }
 func (d *dragonMob) StartTakeoff()             { d.takeoffs++ }
-func (d *dragonMob) Health() float32           { return d.health }
-func (d *dragonMob) SetHealth(v float32)       { d.health = v }
+func (d *dragonMob) Health() float64           { return d.health }
+func (d *dragonMob) SetHealth(v float64)       { d.health = v }
 func (d *dragonMob) ActorEvent(id, _ int32)    { d.events = append(d.events, id) }
 func (d *dragonMob) ShootFireball(t Actor)     { d.shots = append(d.shots, t.ID()) }
 func (d *dragonMob) Particle(id int32, _ Vec3) { d.particles = append(d.particles, id) }
-func (d *dragonMob) SpawnBreath(p Vec3, _ float32, _ int32, _ string) {
+func (d *dragonMob) SpawnBreath(p Vec3, _ float64, _ int32, _ string) {
 	d.breath = append(d.breath, p)
 }
 
@@ -119,7 +119,7 @@ func TestDragonHoldingPatternCircles(t *testing.T) {
 	}
 	g.Start()
 	fw.r.ints = []int32{1}
-	fw.r.floats = []float32{0.5}
+	fw.r.floats = []float64{0.5}
 	g.Tick()
 	// Not turning: one node on, the first node skipped, raised by half of 20.
 	if len(d.paths) != 1 || d.paths[0] != [2]int{0, 11} {

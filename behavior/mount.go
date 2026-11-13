@@ -11,9 +11,9 @@ const (
 
 // MountPathingConfig is the JSON of minecraft:behavior.mount_pathing.
 type MountPathingConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	// TargetDist is target_dist, added to the squared reach.
-	TargetDist  float32 `json:"target_dist"`
+	TargetDist  float64 `json:"target_dist"`
 	TrackTarget bool    `json:"track_target"`
 }
 
@@ -133,13 +133,13 @@ func (g *MountPathing) Tick() {
 // player on its back runs to random spots nearby.
 type RunAroundLikeCrazy struct {
 	base
-	speed float32
+	speed float64
 	to    Vec3
 }
 
 // NewRunAroundLikeCrazy makes the goal; speed is speed_multiplier, 1 by
 // default.
-func NewRunAroundLikeCrazy(w World, m Mob, speed float32) *RunAroundLikeCrazy {
+func NewRunAroundLikeCrazy(w World, m Mob, speed float64) *RunAroundLikeCrazy {
 	return &RunAroundLikeCrazy{base: base{mob: m, world: w, flags: flagsMove}, speed: speed}
 }
 

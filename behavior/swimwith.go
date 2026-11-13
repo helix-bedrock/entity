@@ -33,16 +33,16 @@ type SwimCompanion interface {
 
 // SwimWithEntityConfig is the JSON of minecraft:behavior.swim_with_entity.
 type SwimWithEntityConfig struct {
-	SuccessRate  float32 `json:"success_rate"`
-	ChanceToStop float32 `json:"chance_to_stop"`
+	SuccessRate  float64 `json:"success_rate"`
+	ChanceToStop float64 `json:"chance_to_stop"`
 	// StateCheckInterval is in seconds, truncated to ticks.
-	StateCheckInterval      float32 `json:"state_check_interval"`
-	CatchUpThreshold        float32 `json:"catch_up_threshold"`
-	MatchDirectionThreshold float32 `json:"match_direction_threshold"`
-	CatchUpMultiplier       float32 `json:"catch_up_multiplier"`
-	SpeedMultiplier         float32 `json:"speed_multiplier"`
-	SearchRange             float32 `json:"search_range"`
-	StopDistance            float32 `json:"stop_distance"`
+	StateCheckInterval      float64 `json:"state_check_interval"`
+	CatchUpThreshold        float64 `json:"catch_up_threshold"`
+	MatchDirectionThreshold float64 `json:"match_direction_threshold"`
+	CatchUpMultiplier       float64 `json:"catch_up_multiplier"`
+	SpeedMultiplier         float64 `json:"speed_multiplier"`
+	SearchRange             float64 `json:"search_range"`
+	StopDistance            float64 `json:"stop_distance"`
 	// EntityTypes are the entity_types filters, any of which must pass;
 	// none passes every entity.
 	EntityTypes []Filter
@@ -173,12 +173,12 @@ func (g *SwimWithEntity) Tick() {
 		k = swimWithSide
 	}
 	base := blockOf(Vec3{
-		X: float32(floorInt(tp.X)) + 0.5 + side.X*k*swimWithSideReach,
-		Y: float32(floorInt(tp.Y)) + 0.5 + side.Y*k*swimWithSideReach,
-		Z: float32(floorInt(tp.Z)) + 0.5 + side.Z*k*swimWithSideReach,
+		X: float64(floorInt(tp.X)) + 0.5 + side.X*k*swimWithSideReach,
+		Y: float64(floorInt(tp.Y)) + 0.5 + side.Y*k*swimWithSideReach,
+		Z: float64(floorInt(tp.Z)) + 0.5 + side.Z*k*swimWithSideReach,
 	})
 	base.Y--
-	var speed float32
+	var speed float64
 	switch g.state {
 	case swimWithMatching:
 		speed = g.cfg.SpeedMultiplier
@@ -189,14 +189,14 @@ func (g *SwimWithEntity) Tick() {
 	case swimWithCatchingUp:
 		speed = g.cfg.CatchUpMultiplier
 		base = add3(base, Pos{X: floorInt(d.X * swimWithCatchUp), Y: floorInt(d.Y * swimWithCatchUp), Z: floorInt(d.Z * swimWithCatchUp)})
-		aim := Vec3{X: float32(base.X), Y: float32(base.Y), Z: float32(base.Z)}
+		aim := Vec3{X: float64(base.X), Y: float64(base.Y), Z: float64(base.Z)}
 		if length(sub(at, aim)) < g.cfg.MatchDirectionThreshold {
 			g.timer, g.state = 0, swimWithMatching
 		}
 	}
 	if n := m.Nav(); n != nil {
-		n.MoveTo(Vec3{X: float32(base.X), Y: float32(base.Y), Z: float32(base.Z)}, speed)
+		n.MoveTo(Vec3{X: float64(base.X), Y: float64(base.Y), Z: float64(base.Z)}, speed)
 	}
 }
 
-func dot(a, b Vec3) float32 { return a.Z*b.Z + (a.X*b.X + a.Y*b.Y) }
+func dot(a, b Vec3) float64 { return a.Z*b.Z + (a.X*b.X + a.Y*b.Y) }

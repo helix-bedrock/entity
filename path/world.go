@@ -10,7 +10,7 @@ type Pos struct{ X, Y, Z int32 }
 func (p Pos) Add(o Pos) Pos { return Pos{p.X + o.X, p.Y + o.Y, p.Z + o.Z} }
 
 // Vec3 is a position in the world.
-type Vec3 struct{ X, Y, Z float32 }
+type Vec3 struct{ X, Y, Z float64 }
 
 // Box is an axis-aligned box. A box with Min not below Max on some axis has
 // no volume.
@@ -113,7 +113,7 @@ type BlockInfo struct {
 	Flowing bool
 	// VisualTop is the top of the block's visual shape, as a height inside
 	// the block (still water is lower than a full block).
-	VisualTop float32
+	VisualTop float64
 }
 
 // World answers the pathfinder's block questions. A search calls it from one

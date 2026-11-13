@@ -14,7 +14,7 @@ const (
 // is parsed by BDS but not read by the goal.
 type LeapConfig struct {
 	// YD is yd, the upward speed of the leap.
-	YD             float32 `json:"yd"`
+	YD             float64 `json:"yd"`
 	MustBeOnGround bool    `json:"must_be_on_ground"`
 	SetPersistent  bool    `json:"set_persistent"`
 }

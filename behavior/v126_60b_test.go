@@ -10,7 +10,7 @@ import (
 type hurt struct {
 	to     ID
 	cause  int
-	damage float32
+	damage float64
 	ignore bool
 }
 
@@ -39,8 +39,8 @@ func (m *b2Mob) Target() ID                             { return m.target }
 func (m *b2Mob) SetTarget(id ID)                        { m.target = id }
 func (m *b2Mob) Owner() ID                              { return m.owner }
 func (m *b2Mob) Eyes() Vec3                             { return Vec3{X: m.pos.X, Y: m.pos.Y + 1.6, Z: m.pos.Z} }
-func (m *b2Mob) LookAt(p Vec3, _, _ float32)            { m.lookedAt = append(m.lookedAt, p) }
-func (m *b2Mob) MaxHeadXRot() float32                   { return 40 }
+func (m *b2Mob) LookAt(p Vec3, _, _ float64)            { m.lookedAt = append(m.lookedAt, p) }
+func (m *b2Mob) MaxHeadXRot() float64                   { return 40 }
 func (m *b2Mob) CanAttack(Actor) bool                   { return true }
 func (m *b2Mob) IgnoresCannotBeAttacked(Actor) bool     { return false }
 func (m *b2Mob) RuntimeID() uint64                      { return uint64(m.id) }
@@ -51,8 +51,8 @@ func (m *b2Mob) BoundOrigin() (Pos, bool)               { return derefPos(m.boun
 func (m *b2Mob) ChasingDuringPlay(id ID) bool           { return m.chasing[id] }
 func (m *b2Mob) SetChasingDuringPlay(on bool)           { m.chasing[m.id] = on }
 func (m *b2Mob) Difficulty() int                        { return m.difficulty }
-func (m *b2Mob) AttackDamage() (float32, float32, bool) { return 4, 6, true }
-func (m *b2Mob) HurtBy(a Actor, c int, d float32, i bool) {
+func (m *b2Mob) AttackDamage() (float64, float64, bool) { return 4, 6, true }
+func (m *b2Mob) HurtBy(a Actor, c int, d float64, i bool) {
 	m.hurts = append(m.hurts, hurt{to: a.ID(), cause: c, damage: d, ignore: i})
 }
 func (m *b2Mob) EntityEvent(id int)               { m.entityEvents = append(m.entityEvents, id) }
@@ -64,17 +64,17 @@ func (m *b2Mob) SendEvent(to ID, e string)        { m.sent = append(m.sent, e) }
 func (m *b2Mob) PlaySoundAt(s int, _ Vec3)        { m.sounds = append(m.sounds, s) }
 func (m *b2Mob) Team() int                        { return 0 }
 func (m *b2Mob) Monster() bool                    { return false }
-func (m *b2Mob) FollowRange() float32             { return 64 }
-func (m *b2Mob) ArmourCoverage() float32          { return 0 }
+func (m *b2Mob) FollowRange() float64             { return 64 }
+func (m *b2Mob) ArmourCoverage() float64          { return 0 }
 func (m *b2Mob) Invulnerable() bool               { return false }
 func (m *b2Mob) WearsHeadOf(string) bool          { return false }
-func (m *b2Mob) HeadRotation() (float32, float32) { return 0, 0 }
+func (m *b2Mob) HeadRotation() (float64, float64) { return 0, 0 }
 func (m *b2Mob) LastHurtMob() (ID, int32)         { return NoID, 0 }
 func (m *b2Mob) LastHurtByMob() ID                { return NoID }
 func (m *b2Mob) Dimension() int                   { return 0 }
 func (m *b2Mob) BlocksSpace() bool                { return false }
 func (m *b2Mob) HijacksMount() bool               { return false }
-func (m *b2Mob) BodyYaw() float32                 { return 0 }
+func (m *b2Mob) BodyYaw() float64                 { return 0 }
 func (m *b2Mob) AttachPos(int) Vec3               { return m.Eyes() }
 func (m *b2Mob) HasHealth() bool                  { return true }
 
@@ -198,7 +198,7 @@ func TestPlayChasesFriend(t *testing.T) {
 }
 
 func TestPlayChanceToStart(t *testing.T) {
-	w := &flatWorld{r: &seqRandom{floats: []float32{0.5}}}
+	w := &flatWorld{r: &seqRandom{floats: []float64{0.5}}}
 	m := newB2Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:villager_v2")
 	if NewPlay(w, m, DefaultPlay()).CanUse() {
 		t.Fatal("started on a 0.5 roll")
@@ -211,7 +211,7 @@ func TestGuardianBeam(t *testing.T) {
 		elder  bool
 		hard   bool
 		ticks  int
-		magic  float32
+		magic  float64
 		ignore bool
 	}{
 		{name: "normal", ticks: 90, magic: 1},
@@ -219,7 +219,7 @@ func TestGuardianBeam(t *testing.T) {
 		{name: "elder hard", elder: true, hard: true, ticks: 70, magic: 5},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			fw := &flatWorld{r: &seqRandom{floats: []float32{0.5}}}
+			fw := &flatWorld{r: &seqRandom{floats: []float64{0.5}}}
 			w := &lineWorld{flatWorld: fw}
 			m := newB2Mob(w, 1, Vec3{X: 0.5, Y: 60, Z: 0.5}, "minecraft:guardian")
 			p := newB2Mob(w, 2, Vec3{X: 8.5, Y: 60, Z: 0.5}, "minecraft:player")
@@ -293,7 +293,7 @@ func TestSummonLine(t *testing.T) {
 	if len(m.summons) != 3 {
 		t.Fatalf("summoned %d, want 3 in one tick", len(m.summons))
 	}
-	for i, want := range []float32{2, 4, 6} {
+	for i, want := range []float64{2, 4, 6} {
 		if got := m.summons[i]; got.Pos != (Vec3{X: want, Y: 64, Z: 0}) || got.Lifespan != 22 {
 			t.Errorf("summon %d at %v life %d, want x %v on the floor", i, got.Pos, got.Lifespan, want)
 		}
@@ -428,7 +428,7 @@ func TestStayNearNoteblock(t *testing.T) {
 }
 
 func TestGiveToNoteblockThrows(t *testing.T) {
-	w := &flatWorld{r: &seqRandom{floats: []float32{0.5}}, tick: 700}
+	w := &flatWorld{r: &seqRandom{floats: []float64{0.5}}, tick: 700}
 	m := newAllay(w, Vec3{X: 1.5, Y: 64, Z: 0.5})
 	nb := Pos{Y: 64}
 	m.heard, m.heardTick, m.noteblocks[nb] = &nb, 690, true

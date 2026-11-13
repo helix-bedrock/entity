@@ -24,12 +24,12 @@ type FlowerOfferer interface {
 // OfferFlowerConfig is the JSON of minecraft:behavior.offer_flower.
 type OfferFlowerConfig struct {
 	// MaxOfferFlowerDuration is in seconds.
-	MaxOfferFlowerDuration float32 `json:"max_offer_flower_duration"`
-	ChanceToStart          float32 `json:"chance_to_start"`
+	MaxOfferFlowerDuration float64 `json:"max_offer_flower_duration"`
+	ChanceToStart          float64 `json:"chance_to_start"`
 	Filters                Filter  `json:"-"`
 	SearchArea             Vec3    `json:"search_area"`
-	MaxRotationX           float32 `json:"max_rotation_x"`
-	MaxHeadRotationY       float32 `json:"max_head_rotation_y"`
+	MaxRotationX           float64 `json:"max_rotation_x"`
+	MaxHeadRotationY       float64 `json:"max_head_rotation_y"`
 	// TakeGoal is the goal a mob must have to be offered the flower.
 	TakeGoal string `json:"-"`
 	// StopEvent is the actor event sent when the offer ends.
@@ -105,16 +105,16 @@ func (g *OfferFlower) Tick() {
 
 // TakeFlowerConfig is the JSON of minecraft:behavior.take_flower.
 type TakeFlowerConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	Filters         Filter  `json:"-"`
 	// MinWaitTime and MaxWaitTime are taken from the offer's length as
 	// whole numbers of ticks, the way BDS casts them.
-	MinWaitTime         float32  `json:"min_wait_time"`
-	MaxWaitTime         float32  `json:"max_wait_time"`
+	MinWaitTime         float64  `json:"min_wait_time"`
+	MaxWaitTime         float64  `json:"max_wait_time"`
 	SearchArea          Vec3     `json:"search_area"`
-	MaxRotationX        float32  `json:"max_rotation_x"`
-	MaxHeadRotationY    float32  `json:"max_head_rotation_y"`
-	MinDistanceToTarget float32  `json:"min_distance_to_target"`
+	MaxRotationX        float64  `json:"max_rotation_x"`
+	MaxHeadRotationY    float64  `json:"max_head_rotation_y"`
+	MinDistanceToTarget float64  `json:"min_distance_to_target"`
 	OnTakeFlower        []string `json:"on_take_flower"`
 	StopEvent           int32    `json:"-"`
 }

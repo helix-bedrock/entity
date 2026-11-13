@@ -196,8 +196,8 @@ func (c *Context) EntitySensorConfig(j Object) sensor.EntitySensorConfig {
 
 func (c *Context) subsensor(j Object) sensor.SubsensorConfig {
 	s := sensor.DefaultSubsensor()
-	r := c.Range(j, "range", behavior.Range[float32]{Min: s.Range[0], Max: s.Range[1]})
-	s.Range = [2]float32{r.Min, r.Max}
+	r := c.Range(j, "range", behavior.Range[float64]{Min: s.Range[0], Max: s.Range[1]})
+	s.Range = [2]float64{r.Min, r.Max}
 	s.YOffset = c.Float(j, "y_offset", s.YOffset)
 	s.RequireAll = c.Bool(j, "require_all", s.RequireAll)
 	s.MinCount = c.Int(j, "minimum_count", s.MinCount)

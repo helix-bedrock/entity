@@ -87,7 +87,7 @@ func (g *RandomFly) perch() (Vec3, bool) {
 					continue
 				}
 				if w.Block(c).Name == airName && w.Block(Pos{X: x, Y: y + 1, Z: z}).Name == airName {
-					return Vec3{X: float32(x), Y: float32(y), Z: float32(z)}, true
+					return Vec3{X: float64(x), Y: float64(y), Z: float64(z)}, true
 				}
 			}
 		}

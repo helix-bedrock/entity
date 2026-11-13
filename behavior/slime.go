@@ -11,23 +11,23 @@ type Slime interface {
 	Mob
 	// MoveTurn is the move control's max_turn; ok is false when the mob has
 	// no move control.
-	MoveTurn() (maxTurn float32, ok bool)
+	MoveTurn() (maxTurn float64, ok bool)
 	// KeepMoving sets the move control's has-wanted flag and speed modifier
 	// and keeps its wanted position.
-	KeepMoving(speed float32)
+	KeepMoving(speed float64)
 	// HasJumpControl reports JumpControlComponent.
 	HasJumpControl() bool
 	// LookYaw turns the look control to the yaw with pitch 0 at speed for
 	// both axes (has-yaw mode); false when the mob has no look control.
-	LookYaw(yaw, speed float32) bool
+	LookYaw(yaw, speed float64) bool
 	// Yaw is the yaw of ActorRotationComponent.
-	Yaw() float32
+	Yaw() float64
 }
 
 // wrapDegrees is mce::Math::wrapDegrees without the final fold: the angle
 // in [-180, 180).
-func wrapDegrees(a float32) float32 {
-	v := float32(math.Mod(float64(a+180), 360))
+func wrapDegrees(a float64) float64 {
+	v := float64(math.Mod(float64(a+180), 360))
 	if v < 0 {
 		v += 360
 	}
@@ -37,7 +37,7 @@ func wrapDegrees(a float32) float32 {
 // SlimeKeepOnJumpingConfig is the JSON of
 // minecraft:behavior.slime_keep_on_jumping.
 type SlimeKeepOnJumpingConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 }
 
 // DefaultSlimeKeepOnJumping returns the goal's BDS defaults.
@@ -79,8 +79,8 @@ func (g *SlimeKeepOnJumping) Tick() { g.s.KeepMoving(g.cfg.SpeedMultiplier) }
 // SlimeFloatConfig is the JSON of minecraft:behavior.slime_float.
 type SlimeFloatConfig struct {
 	// JumpChance is jump_chance_percentage, a 0 to 1 chance per tick.
-	JumpChance      float32 `json:"jump_chance_percentage"`
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	JumpChance      float64 `json:"jump_chance_percentage"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 }
 
 // DefaultSlimeFloat returns the goal's BDS defaults.
@@ -132,7 +132,7 @@ type SlimeRandomDirectionConfig struct {
 	// AddRandomTime is add_random_time_range in whole seconds.
 	AddRandomTime int32 `json:"add_random_time_range"`
 	// MinChangeTime is min_change_direction_time in seconds.
-	MinChangeTime float32 `json:"min_change_direction_time"`
+	MinChangeTime float64 `json:"min_change_direction_time"`
 	TurnRange     int32   `json:"turn_range"`
 }
 
@@ -150,7 +150,7 @@ type SlimeRandomDirection struct {
 	minTime int32
 	addTime int32
 	timer   int32
-	yaw     float32
+	yaw     float64
 }
 
 // NewSlimeRandomDirection makes the goal.
@@ -183,7 +183,7 @@ func (g *SlimeRandomDirection) Tick() {
 	if t < 2 {
 		r := g.world.Random()
 		g.timer = g.minTime + r.NextInt(g.addTime)
-		g.yaw = float32(r.NextInt(g.cfg.TurnRange))
+		g.yaw = float64(r.NextInt(g.cfg.TurnRange))
 	}
 	cur := g.s.Yaw()
 	d := wrapDegrees(cur - g.yaw)
@@ -198,19 +198,19 @@ func (g *SlimeRandomDirection) Tick() {
 		return
 	}
 	y := max(-turn, min(turn, wrapDegrees(g.yaw-cur))) + cur
-	if !g.s.LookYaw(y, float32(g.cfg.TurnRange)) {
+	if !g.s.LookYaw(y, float64(g.cfg.TurnRange)) {
 		g.s.SetYaw(y)
 	}
 }
 
 // SlimeAttackConfig is the JSON of minecraft:behavior.slime_attack.
 type SlimeAttackConfig struct {
-	XMaxRotation    float32 `json:"x_max_rotation"`
-	YMaxRotation    float32 `json:"y_max_rotation"`
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	XMaxRotation    float64 `json:"x_max_rotation"`
+	YMaxRotation    float64 `json:"y_max_rotation"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	// GrowTiredTime is grow_tired_cooldown_time in seconds: the goal stops
 	// after it and starts again on the next check.
-	GrowTiredTime float32 `json:"grow_tired_cooldown_time"`
+	GrowTiredTime float64 `json:"grow_tired_cooldown_time"`
 	SetPersistent bool    `json:"set_persistent"`
 }
 

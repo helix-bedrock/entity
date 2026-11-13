@@ -79,7 +79,7 @@ func parseOperator(s string) (Operator, bool) {
 // Compare applies the operator to a test's value a and the JSON value b, as
 // FilterTest::_testValuesWithOperator does for numbers. An unknown operator
 // is false.
-func Compare[T int32 | float32](op Operator, a, b T) bool {
+func Compare[T int32 | float64](op Operator, a, b T) bool {
 	switch op {
 	case OpEquals:
 		return a == b

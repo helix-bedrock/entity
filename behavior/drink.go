@@ -72,21 +72,21 @@ type PotionDrinker interface {
 	DrinkPotion(aux int16)
 	// SpeedModifier adds the goal's modifier with the amount to the
 	// movement attribute, or removes it.
-	SpeedModifier(on bool, amount float32)
+	SpeedModifier(on bool, amount float64)
 }
 
 // Potion is one entry of drink_potion's potions list.
 type Potion struct {
 	// ID is the potion type, the aux value of the potion item.
 	ID     int16
-	Chance float32
+	Chance float64
 	// Filters is tested with the mob as self and its target as the other.
 	Filters Filter
 }
 
 // DrinkPotionConfig is the JSON of minecraft:behavior.drink_potion.
 type DrinkPotionConfig struct {
-	SpeedModifier float32 `json:"speed_modifier"`
+	SpeedModifier float64 `json:"speed_modifier"`
 	Potions       []Potion
 }
 

@@ -27,12 +27,12 @@ type EatAndReplace struct {
 // EatBlockConfig is the JSON of minecraft:behavior.eat_block.
 type EatBlockConfig struct {
 	// TimeUntilEat is time_until_eat in seconds, truncated to ticks.
-	TimeUntilEat float32 `json:"time_until_eat"`
+	TimeUntilEat float64 `json:"time_until_eat"`
 	// SuccessChance is success_chance, a Molang expression; the engine
 	// evaluates it for the mob on each canUse. Nil uses
 	// SuccessChanceValue.
-	SuccessChance      func(m Mob) float32
-	SuccessChanceValue float32
+	SuccessChance      func(m Mob) float64
+	SuccessChanceValue float64
 	Pairs              []EatAndReplace `json:"eat_and_replace_block_pairs"`
 	OnEat              []string
 }
@@ -125,7 +125,7 @@ func (g *EatBlock) Tick() {
 		}
 	}
 	if w.MobGriefing() {
-		w.LevelEvent(eventDestroyDust, Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}, w.Block(p).Name)
+		w.LevelEvent(eventDestroyDust, Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}, w.Block(p).Name)
 		w.SetBlock(p, PlacedBlock{Name: rep}, m.ID())
 	}
 	m.EatGameEvent(m.AttachPos(attachMouth))

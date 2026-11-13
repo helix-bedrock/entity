@@ -10,7 +10,7 @@ import (
 // TargetNearbyConfig is minecraft:target_nearby_sensor.
 type TargetNearbyConfig struct {
 	// InsideRange and OutsideRange are distances to the target.
-	InsideRange, OutsideRange float32
+	InsideRange, OutsideRange float64
 	// MustSee needs the target in sight for on_inside_range and enables
 	// on_vision_lost_inside_range.
 	MustSee bool
@@ -30,7 +30,7 @@ func DefaultTargetNearby() TargetNearbyConfig {
 type TargetNearby struct {
 	cfg                   TargetNearbyConfig
 	seen, inside, outside bool
-	dist                  float32
+	dist                  float64
 }
 
 // NewTargetNearby makes a target sensor.
@@ -45,7 +45,7 @@ func (s *TargetNearby) Config() TargetNearbyConfig { return s.cfg }
 func (s *TargetNearby) SetConfig(c TargetNearbyConfig) { s.cfg = c }
 
 // Distance is the distance measured last tick, -1 without a target.
-func (s *TargetNearby) Distance() float32 { return s.dist }
+func (s *TargetNearby) Distance() float64 { return s.dist }
 
 // Tick measures the distance to the target and fires the events whose
 // state changed.
@@ -87,13 +87,13 @@ func (s *TargetNearby) Tick(env *Env) {
 // Distance is BDS's distance from self's box to the target: AABB::distanceTo
 // is called with the target's box where it takes a point, so it measures to
 // the target box's minimum corner (1.21.3 0x1420D1560).
-func Distance(self, target behavior.Box) float32 {
+func Distance(self, target behavior.Box) float64 {
 	p := target.Min
 	c := behavior.Vec3{X: clamp(p.X, self.Min.X, self.Max.X), Y: clamp(p.Y, self.Min.Y, self.Max.Y), Z: clamp(p.Z, self.Min.Z, self.Max.Z)}
 	dx, dy, dz := p.X-c.X, p.Y-c.Y, p.Z-c.Z
 	return sqrt(dx*dx + dy*dy + dz*dz)
 }
 
-func clamp(v, lo, hi float32) float32 { return min(max(v, lo), hi) }
+func clamp(v, lo, hi float64) float64 { return min(max(v, lo), hi) }
 
-func sqrt(v float32) float32 { return float32(math.Sqrt(float64(v))) }
+func sqrt(v float64) float64 { return float64(math.Sqrt(float64(v))) }

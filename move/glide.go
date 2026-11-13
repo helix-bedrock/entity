@@ -3,22 +3,22 @@ package move
 // Glider is minecraft:movement.glide's settings and state.
 type Glider struct {
 	// StartSpeed is start_speed: the speed after bumping into a wall.
-	StartSpeed float32
+	StartSpeed float64
 	// TurnSpeed is speed_when_turning.
-	TurnSpeed float32
+	TurnSpeed float64
 
-	speed  float32
+	speed  float64
 	saved  Vec3
 	bumped int32
 }
 
 // NewGlider returns a glider at its start speed.
-func NewGlider(start, turn float32) *Glider {
+func NewGlider(start, turn float64) *Glider {
 	return &Glider{StartSpeed: start, TurnSpeed: turn, speed: start}
 }
 
 // wrapDegrees maps d into [-180, 180).
-func wrapDegrees(d float32) float32 {
+func wrapDegrees(d float64) float64 {
 	d = fmod(d+180, 360)
 	if d < 0 {
 		d += 360
@@ -27,7 +27,7 @@ func wrapDegrees(d float32) float32 {
 }
 
 // toward moves cur towards target by at most step.
-func toward(cur, target, step float32) float32 {
+func toward(cur, target, step float64) float64 {
 	if target > cur {
 		return min(target, cur+step)
 	}
@@ -59,7 +59,7 @@ func Glide(b *Body, c *Control, g *Glider, bumped bool) {
 	}
 
 	dx, dy, dz := c.Wanted.X-b.Pos.X, c.Wanted.Y-b.Pos.Y, c.Wanted.Z-b.Pos.Z
-	f := float32(1)
+	f := float64(1)
 	if h2 := dx*dx + dz*dz; h2 != 0 {
 		f = 1 - abs32(0.7*dy)/sqrt(h2)
 	}
@@ -98,7 +98,7 @@ func Glide(b *Body, c *Control, g *Glider, bumped bool) {
 	}
 
 	a := (yaw + 90) * 0.017453292 * sinScale
-	var tx, ty, tz float32
+	var tx, ty, tz float64
 	if abs32(dist) >= 0.00000011920929 {
 		tx = abs32(dx/dist) * (sinTable[uint16(int32(a+16384))] * g.speed)
 		ty = abs32(dy/dist) * (sinTable[uint16(int32(pitch*-0.017453292*sinScale))] * g.speed)

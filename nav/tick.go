@@ -3,7 +3,7 @@ package nav
 import "github.com/helix-bedrock/entity/path"
 
 // almostOne is BDS's 0.9999999f, the test for "a full block high".
-const almostOne float32 = 0.9999999
+const almostOne float64 = 0.9999999
 
 // Tick moves the mob on along its path and sets its wanted position. Call
 // it once per tick when ShouldTick allows.
@@ -93,7 +93,7 @@ func (n *Navigation) wanted(w World, m *Mob) path.Vec3 {
 
 // footprintAir reports whether the blocks a mob of width wd covers at p
 // are all air.
-func footprintAir(w World, p path.Vec3, wd float32) bool {
+func footprintAir(w World, p path.Vec3, wd float64) bool {
 	hw := wd / 2
 	y := int32(p.Y)
 	for x := floorInt(p.X - hw); x <= floorInt(p.X+hw); x++ {
@@ -108,7 +108,7 @@ func footprintAir(w World, p path.Vec3, wd float32) bool {
 
 // surface is the height a mob of width wd stands at over p: the top of the
 // highest box, or still water, in its footprint, and at least p.Y.
-func surface(w World, p path.Vec3, wd float32) float32 {
+func surface(w World, p path.Vec3, wd float64) float64 {
 	hw := wd / 2
 	y := floorInt(p.Y)
 	top := p.Y
@@ -121,7 +121,7 @@ func surface(w World, p path.Vec3, wd float32) float32 {
 				continue
 			}
 			if in.Kind == path.KindWater && !in.Flowing {
-				top = max(float32(y)+in.VisualTop, top)
+				top = max(float64(y)+in.VisualTop, top)
 			}
 			if box := w.CollisionBox(b, bp); box.HasVolume() {
 				top = max(box.Max.Y, top)
@@ -136,7 +136,7 @@ func partial(b path.Box) bool { return b.HasVolume() && b.Max.Y-b.Min.Y < almost
 
 // topAligned reports a partial box that reaches the top of block y.
 func topAligned(b path.Box, y int32) bool {
-	d := b.Max.Y - float32(y)
+	d := b.Max.Y - float64(y)
 	if d < 0 {
 		d = -d
 	}

@@ -28,8 +28,8 @@ func hasFamily(a Actor, name string) bool {
 
 // FollowMobConfig is the JSON of minecraft:behavior.follow_mob.
 type FollowMobConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
-	StopDistance    float32 `json:"stop_distance"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
+	StopDistance    float64 `json:"stop_distance"`
 	SearchRange     int32   `json:"search_range"`
 	UseHome         bool    `json:"use_home_position_restriction"`
 	// PreferredType is preferred_actor_type, an entity identifier.
@@ -83,7 +83,7 @@ func (g *FollowMob) outsideHome(a Actor) bool {
 		return false
 	}
 	c, r, ok := g.mob.Home()
-	return ok && r > 0 && dist2(vecOf(c), a.Pos()) > float32(r)
+	return ok && r > 0 && dist2(vecOf(c), a.Pos()) > float64(r)
 }
 
 // keeps is the getEntities predicate (0x5751A70).
@@ -100,7 +100,7 @@ func (g *FollowMob) CanUse() bool {
 	if m.Nav() == nil || g.world.Random().NextInt(followMobChance) != 0 {
 		return false
 	}
-	r := float32(g.cfg.SearchRange)
+	r := float64(g.cfg.SearchRange)
 	b := m.Box()
 	b.Min, b.Max = Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}, Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}
 	all := g.world.Entities(g.buf[:0], m.ID(), b)

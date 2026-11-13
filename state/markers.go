@@ -35,7 +35,7 @@ const (
 // engine's mob implements it; a mob that does not gets no data written.
 type DataMob interface {
 	SetIntData(key int, v int32)
-	SetFloatData(key int, v float32)
+	SetFloatData(key int, v float64)
 	SetStringData(key int, v string)
 }
 
@@ -45,7 +45,7 @@ func setInt(m Mob, key int, v int32) {
 	}
 }
 
-func setFloat(m Mob, key int, v float32) {
+func setFloat(m Mob, key int, v float64) {
 	if d, ok := m.(DataMob); ok {
 		d.SetFloatData(key, v)
 	}

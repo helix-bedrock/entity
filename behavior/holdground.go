@@ -17,9 +17,9 @@ type Holder interface {
 
 // HoldGroundConfig is the JSON of minecraft:behavior.hold_ground.
 type HoldGroundConfig struct {
-	MinRadius      float32 `json:"min_radius"`
+	MinRadius      float64 `json:"min_radius"`
 	Broadcast      bool    `json:"broadcast"`
-	BroadcastRange float32 `json:"broadcast_range"`
+	BroadcastRange float64 `json:"broadcast_range"`
 	// WithinRadiusEvent is within_radius_event: fired on the mob and its
 	// kind nearby when the target comes within min_radius.
 	WithinRadiusEvent string
@@ -36,7 +36,7 @@ type HoldGround struct {
 	base
 	h      Holder
 	cfg    HoldGroundConfig
-	min2   float32
+	min2   float64
 	target ID
 	near   []Actor
 }

@@ -90,7 +90,7 @@ func (c *Context) pushPreset(o Object) state.PushPreset {
 	p.PlaySound = c.Bool(o, "play_sound", p.PlaySound)
 	// BDS keeps the cooldown in ticks; seconds times 20, truncated, is
 	// assumed.
-	p.PlaySoundCooldown = int64(c.Float(o, "play_sound_cooldown_in_seconds", float32(p.PlaySoundCooldown)/20) * 20)
+	p.PlaySoundCooldown = int64(c.Float(o, "play_sound_cooldown_in_seconds", float64(p.PlaySoundCooldown)/20) * 20)
 	p.PlaySoundImpulseThreshold = c.Float(o, "play_sound_impulse_threshold", p.PlaySoundImpulseThreshold)
 	return p
 }

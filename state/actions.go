@@ -12,7 +12,7 @@ import "github.com/helix-bedrock/entity/behavior"
 type Actions interface {
 	// Hurt damages target by an actor damage cause, as Actor::hurt with an
 	// ActorDamageByActorSource from by (behavior.NoID for no source).
-	Hurt(target behavior.Actor, by behavior.ID, cause int, amount float32)
+	Hurt(target behavior.Actor, by behavior.ID, cause int, amount float64)
 	// CanReceiveEffect is Actor::canReceiveMobEffectsFromGameplay and not
 	// being invulnerable to an entity attack from by.
 	CanReceiveEffect(target behavior.Actor, by behavior.ID) bool

@@ -39,7 +39,7 @@ type b7Mob struct {
 	vibration  uint64
 	heard      bool
 	lava       bool
-	sonicHits  []float32
+	sonicHits  []float64
 	sonicUntil uint64
 	sonicSet   bool
 	events     []int32
@@ -64,7 +64,7 @@ func (m *b7Mob) InDaylight() bool               { return m.daylight }
 func (m *b7Mob) Remove()                        { m.removed++ }
 func (m *b7Mob) HeardVibration() (uint64, bool) { return m.vibration, m.heard }
 func (m *b7Mob) InLava() bool                   { return m.lava }
-func (m *b7Mob) SonicHit(_ Actor, d float32)    { m.sonicHits = append(m.sonicHits, d) }
+func (m *b7Mob) SonicHit(_ Actor, d float64)    { m.sonicHits = append(m.sonicHits, d) }
 func (m *b7Mob) SonicCooldown() (uint64, bool)  { return m.sonicUntil, m.sonicSet }
 func (m *b7Mob) SetSonicCooldown(t uint64)      { m.sonicUntil, m.sonicSet = t, true }
 func (m *b7Mob) LevelEventXYZ(id int32, p Vec3) {
@@ -187,7 +187,7 @@ func TestRoarTargetsTheAngrySuspect(t *testing.T) {
 }
 
 func TestSniffMarksTheNearestPlayer(t *testing.T) {
-	w := newB7World(&seqRandom{floats: []float32{0.5}})
+	w := newB7World(&seqRandom{floats: []float64{0.5}})
 	m := newB7Mob(w, 1, Vec3{Y: 64}, wardenType)
 	pig := newB7Mob(w, 2, Vec3{X: 1, Y: 64}, "minecraft:pig")
 	p := newB7Mob(w, 3, Vec3{X: 2.5, Y: 64, Z: 0.5}, "minecraft:player")
@@ -288,7 +288,7 @@ func TestSonicBoomChargesThenFires(t *testing.T) {
 }
 
 func TestCroakDrawsItsTimes(t *testing.T) {
-	w := newB7World(&seqRandom{floats: []float32{0.5, 0}})
+	w := newB7World(&seqRandom{floats: []float64{0.5, 0}})
 	m := newB7Mob(w, 1, Vec3{Y: 64}, "minecraft:frog")
 	dry := true
 	c := DefaultCroak()

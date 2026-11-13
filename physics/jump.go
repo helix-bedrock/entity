@@ -14,17 +14,17 @@ const (
 )
 
 // jumpBoost is the jump boost effect's extra jump.
-func (b *Body) jumpBoost() float32 {
+func (b *Body) jumpBoost() float64 {
 	if b.JumpBoost < 0 {
 		return 0
 	}
-	return float32(b.JumpBoost+1) * 0.1
+	return float64(b.JumpBoost+1) * 0.1
 }
 
 // mobJump is MobJumpSystem (0x74C10B0) and, for the ground jump it
 // requests, JumpFromGround for non-player mobs (0x74C01F0).
 func (b *Body) mobJump(w World) {
-	inc := float32(liquidJump)
+	inc := float64(liquidJump)
 	if b.Jump.Pending {
 		b.Jump.Pending = false
 		inc = pendingLiquidJump
@@ -48,7 +48,7 @@ func (b *Body) mobJump(w World) {
 	}
 	if b.WasInWater && b.Jump.NoJumpDelay == 0 {
 		b.Jump.Start = b.Pos
-		v := float32(groundJump)
+		v := float64(groundJump)
 		if b.Squid {
 			v = squidJump
 		}
@@ -69,13 +69,13 @@ func (b *Body) mobJump(w World) {
 // jumpFromGround is the non-player jump: weaker off a low-jump block at the
 // feet or, when the feet are on a block boundary, just below.
 func (b *Body) jumpFromGround(w World) {
-	var factor float32 = 1
+	var factor float64 = 1
 	feet := b.feet()
 	blk := w.Block(feet)
 	switch {
 	case blk.LowJump:
 		factor = lowJumpFactor
-	case blk.JumpFromBelow || float32(feet.Y) >= b.Box.Min.Y:
+	case blk.JumpFromBelow || float64(feet.Y) >= b.Box.Min.Y:
 		if w.Block(path.Pos{X: feet.X, Y: feet.Y - 1, Z: feet.Z}).LowJump {
 			factor = lowJumpFactor
 		}
@@ -85,7 +85,7 @@ func (b *Body) jumpFromGround(w World) {
 
 // jumpPower is the ground jump speed: the mob's jump.static power, else
 // BDS's default.
-func (b *Body) jumpPower() float32 {
+func (b *Body) jumpPower() float64 {
 	if b.JumpPower > 0 {
 		return b.JumpPower
 	}

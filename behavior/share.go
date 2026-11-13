@@ -42,9 +42,9 @@ type ShareItemsConfig struct {
 	// EntityTypes are the filters of who it shares with, tested with the
 	// mob as self and the other entity.
 	EntityTypes     []Filter
-	GoalRadius      float32 `json:"goal_radius"`
+	GoalRadius      float64 `json:"goal_radius"`
 	MaxDist         int32   `json:"max_dist"`
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 }
 
 // DefaultShareItems returns the goal's BDS defaults.
@@ -65,7 +65,7 @@ type ShareItems struct {
 	base
 	m      Sharer
 	cfg    ShareItemsConfig
-	r2     float32
+	r2     float64
 	item   Item
 	timer  int32
 	repath int32
@@ -90,7 +90,7 @@ func (g *ShareItems) CanUse() bool {
 	if len(g.offers) == 0 {
 		return false
 	}
-	g.near, g.buf = sortedNear(g.world, m, float32(g.cfg.MaxDist), g.near, g.buf)
+	g.near, g.buf = sortedNear(g.world, m, float64(g.cfg.MaxDist), g.near, g.buf)
 	defer clear(g.near)
 	for _, f := range g.cfg.EntityTypes {
 		for _, a := range g.near {

@@ -49,13 +49,13 @@ type SummonSequence struct {
 	// SummonAtTarget.
 	Shape, Target int32
 	// Size is the circle's radius or the line's length.
-	Size float32
+	Size float64
 	// BaseDelay and DelayPerSummon are in ticks.
 	BaseDelay, DelayPerSummon int32
 	// SummonCap stops the choice while this many entities of the type are
 	// within SummonCapRadius of the mob's box; 0 has no cap.
 	SummonCap       int32
-	SummonCapRadius float32
+	SummonCapRadius float64
 	EntityType      string
 	// EntityLifespan is in ticks, -1 for none.
 	EntityLifespan     int32
@@ -72,10 +72,10 @@ func DefaultSummonSequence() SummonSequence {
 
 // SummonChoice is one entry of summon_choices.
 type SummonChoice struct {
-	MinActivationRange, MaxActivationRange float32
+	MinActivationRange, MaxActivationRange float64
 	// CooldownTime is in ticks.
 	CooldownTime int32
-	Weight       float32
+	Weight       float64
 	Filters      Filter
 	// CastDuration is in ticks; the parser defaults it to the sequence's
 	// total delay (TotalDelay).
@@ -97,11 +97,11 @@ func DefaultSummonChoice() SummonChoice {
 // base_delay plus delay_per_summon for every entity after the first, in
 // ticks.
 func (c SummonChoice) TotalDelay() int32 {
-	var t float32
+	var t float64
 	for _, s := range c.Sequence {
-		t += float32(s.BaseDelay)
+		t += float64(s.BaseDelay)
 		if s.NumEntitiesSpawned >= 2 {
-			t += float32(s.DelayPerSummon * (s.NumEntitiesSpawned - 1))
+			t += float64(s.DelayPerSummon * (s.NumEntitiesSpawned - 1))
 		}
 	}
 	return int32(t / ticksPerSecond * ticksPerSecond)
@@ -111,7 +111,7 @@ func (c SummonChoice) TotalDelay() int32 {
 type SummonEntityConfig struct {
 	SummonChoices []SummonChoice
 	// LookYaw and LookPitch are the look control limits while casting.
-	LookYaw, LookPitch float32
+	LookYaw, LookPitch float64
 	// CastFlags are the control flags while the cast runs, IdleFlags the
 	// ones once it is over (BDS's fourth flag bit alone).
 	CastFlags, IdleFlags goal.Flags
@@ -180,7 +180,7 @@ func (g *SummonEntity) CanUse() bool {
 		}
 		if c.Filters == nil || c.Filters(g.m, t) {
 			g.picks = append(g.picks, i)
-			weight = int32(float32(weight) + c.Weight)
+			weight = int32(float64(weight) + c.Weight)
 		}
 	}
 	g.choice = -1
@@ -190,11 +190,11 @@ func (g *SummonEntity) CanUse() bool {
 	r := g.world.Random().NextInt(weight)
 	for _, i := range g.picks {
 		w := g.cfg.SummonChoices[i].Weight
-		if w > float32(r) {
+		if w > float64(r) {
 			g.choice = i
 			break
 		}
-		r = int32(float32(r) - w)
+		r = int32(float64(r) - w)
 	}
 	return g.picked() != nil && g.cooldownEnd <= g.world.CurrentTick()
 }
@@ -312,20 +312,20 @@ func (g *SummonEntity) summonOne(s *SummonSequence, t Actor) {
 	if s.Target == SummonAtTarget {
 		origin, other = g.targetAt, g.selfAt
 	}
-	n := float32(g.spawned + 1)
+	n := float64(g.spawned + 1)
 	switch s.Shape {
 	case SummonLine:
 		dx, dz := other.X-origin.X, other.Z-origin.Z
 		l := sqrt32(dz*dz + (dx*dx + 0))
-		var ux, uz float32
+		var ux, uz float64
 		if l >= minLength {
 			ux, uz = dx/l, dz/l
 		}
-		step := s.Size / float32(s.NumEntitiesSpawned)
+		step := s.Size / float64(s.NumEntitiesSpawned)
 		g.place(s, ux*step*n+origin.X, uz*step*n+origin.Z, lo, hi)
 	case SummonCircle:
-		a := (float32(math.Atan2(float64(tp.Z-mp.Z), float64(tp.X-mp.X))) +
-			float32(2*g.spawned)*math.Pi/float32(s.NumEntitiesSpawned)) * sinScale
+		a := (float64(math.Atan2(float64(tp.Z-mp.Z), float64(tp.X-mp.X))) +
+			float64(2*g.spawned)*math.Pi/float64(s.NumEntitiesSpawned)) * sinScale
 		x := tableSin(uint16(int32(a+sinQuarter)))*s.Size + origin.X
 		g.place(s, x, s.Size*tableSin(uint16(int32(a)))+origin.Z, lo, hi)
 	}
@@ -334,7 +334,7 @@ func (g *SummonEntity) summonOne(s *SummonSequence, t Actor) {
 // place is 0xBFA4000: from the top of the range down to one block under
 // its bottom, the first non-solid block on a solid one; the entity stands
 // on top of whatever shape that block has.
-func (g *SummonEntity) place(s *SummonSequence, x, z, lo, hi float32) {
+func (g *SummonEntity) place(s *SummonSequence, x, z, lo, hi float64) {
 	p := Pos{X: floorInt(x), Y: floorInt(hi), Z: floorInt(z)}
 	bottom := floorInt(lo)
 	for g.world.Block(p).Solid || !g.world.Block(Pos{X: p.X, Y: p.Y - 1, Z: p.Z}).Solid {
@@ -344,12 +344,12 @@ func (g *SummonEntity) place(s *SummonSequence, x, z, lo, hi float32) {
 			return
 		}
 	}
-	var off float32
+	var off float64
 	if b := g.world.Block(p); b.Material != path.MaterialAir {
 		off = b.ShapeTop
 	}
 	g.m.Summon(Summon{
 		EntityType: s.EntityType, Event: s.SummonEvent, Lifespan: s.EntityLifespan,
-		Pos: Vec3{X: float32(p.X), Y: float32(p.Y) + off, Z: float32(p.Z)},
+		Pos: Vec3{X: float64(p.X), Y: float64(p.Y) + off, Z: float64(p.Z)},
 	})
 }

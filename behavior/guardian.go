@@ -15,11 +15,11 @@ type GuardianAttacker interface {
 	Difficulty() int
 	// AttackDamage is the damage range of the mob's attack component; ok
 	// is false when it has none.
-	AttackDamage() (lo, hi float32, ok bool)
+	AttackDamage() (lo, hi float64, ok bool)
 	// HurtBy hurts a with a damage source of the cause from the mob, unless
 	// a is invulnerable to it. ignoreCooldown is the target's hurt
 	// cooldown bypass (Actor +849) that BDS holds on for the magic hit.
-	HurtBy(a Actor, cause int, damage float32, ignoreCooldown bool)
+	HurtBy(a Actor, cause int, damage float64, ignoreCooldown bool)
 	// EntityEvent broadcasts an entity event for the mob.
 	EntityEvent(id int)
 	// ResetAttack zeroes the guardian's attack field (Guardian +1192) when
@@ -36,10 +36,10 @@ type GuardianAttackConfig struct {
 	// ticks before its sound.
 	SoundDelay int32
 	// XMaxRotation and YMaxHeadRotation are the look control limits.
-	XMaxRotation, YMaxHeadRotation float32
+	XMaxRotation, YMaxHeadRotation float64
 	// MinDistance is how close a normal guardian may get before the goal
 	// stops.
-	MinDistance float32
+	MinDistance float64
 	// BeamTicks and ElderBeamTicks are how long the beam charges.
 	BeamTicks, ElderBeamTicks int32
 	// SoundEvent is the entity event sent when the beam starts.
@@ -173,7 +173,7 @@ func (g *GuardianAttack) Tick() {
 	if g.m.Flag(FlagElder) {
 		magic += g.cfg.ElderExtraMagicDamage
 	}
-	g.m.HurtBy(t, g.cfg.MagicCause, float32(magic), true)
+	g.m.HurtBy(t, g.cfg.MagicCause, float64(magic), true)
 	g.m.SetTarget(NoID)
 	g.m.ResetAttack()
 }

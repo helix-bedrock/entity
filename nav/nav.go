@@ -218,7 +218,7 @@ type Pathfinder interface {
 
 // MoveControl is the mob's minecraft:movement.* control.
 type MoveControl interface {
-	SetWantedPosition(p path.Vec3, speed float32)
+	SetWantedPosition(p path.Vec3, speed float64)
 	// ClearWanted drops the wanted position.
 	ClearWanted()
 }
@@ -235,7 +235,7 @@ type Mob struct {
 	// Vel is the mob's last movement (its position delta).
 	Vel           path.Vec3
 	Box           path.Box
-	Width, Height float32
+	Width, Height float64
 
 	// Movement abilities, from the actor flags.
 	CanFly, CanSwim, CanWalk bool
@@ -274,16 +274,16 @@ type Mob struct {
 
 // ShouldTick reports whether the navigation system ticks a mob: not when it
 // is removed, its AI is off, or its health (rounded up) is 0 or less.
-func ShouldTick(removed, noAI bool, health float32) bool {
-	return !removed && !noAI && float32(math.Ceil(float64(health))) > 0
+func ShouldTick(removed, noAI bool, health float64) bool {
+	return !removed && !noAI && float64(math.Ceil(float64(health))) > 0
 }
 
-func floorInt(v float32) int32 { return int32(math.Floor(float64(v))) }
+func floorInt(v float64) int32 { return int32(math.Floor(float64(v))) }
 
 // ceilInt is BDS's integer ceiling of a positive float.
-func ceilInt(v float32) int32 {
+func ceilInt(v float64) int32 {
 	i := int32(v)
-	if float32(i) < v {
+	if float64(i) < v {
 		i++
 	}
 	return i

@@ -24,12 +24,12 @@ type gift struct {
 // giftMob is a b2Mob with drop_item_for's hooks.
 type giftMob struct {
 	*b2Mob
-	time     float32
+	time     float64
 	gifts    []gift
 	teleport []Vec3
 }
 
-func (m *giftMob) TimeOfDay() float32 { return m.time }
+func (m *giftMob) TimeOfDay() float64 { return m.time }
 func (m *giftMob) DropGift(t string, d int32, to ID) {
 	m.gifts = append(m.gifts, gift{table: t, delay: d, to: to})
 }
@@ -81,7 +81,7 @@ func TestDropItemForGivesGift(t *testing.T) {
 func TestDropItemForTimeWindowAndCooldown(t *testing.T) {
 	cat, g, _ := newDropTest()
 	cfg := g.Config()
-	cfg.TimeOfDayRange = Range[float32]{0.7, 0.8}
+	cfg.TimeOfDayRange = Range[float64]{0.7, 0.8}
 	g.SetConfig(cfg)
 	cat.time = 0.5
 	g.Start()

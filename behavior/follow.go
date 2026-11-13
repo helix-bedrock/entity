@@ -20,10 +20,10 @@ const (
 
 // FollowOwnerConfig is the JSON of minecraft:behavior.follow_owner.
 type FollowOwnerConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
-	StartDistance   float32 `json:"start_distance"`
-	StopDistance    float32 `json:"stop_distance"`
-	MaxDistance     float32 `json:"max_distance"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
+	StartDistance   float64 `json:"start_distance"`
+	StopDistance    float64 `json:"stop_distance"`
+	MaxDistance     float64 `json:"max_distance"`
 	CanTeleport     bool    `json:"can_teleport"`
 	IgnoreVibration bool    `json:"ignore_vibration"`
 	// RandomTeleport shuffles the teleport spots and checks them for
@@ -202,7 +202,7 @@ func (g *spotFinder) find(w World, m Mob, o Actor, ring int32, random bool) (Vec
 			if !below.Solid || at.Solid || at.Liquid || head.Solid || head.Liquid {
 				continue
 			}
-			spot := Vec3{X: float32(c.X) + 0.5, Y: float32(c.Y), Z: float32(c.Z) + 0.5}
+			spot := Vec3{X: float64(c.X) + 0.5, Y: float64(c.Y), Z: float64(c.Z) + 0.5}
 			if !random {
 				return spot, true
 			}
@@ -248,7 +248,7 @@ func (g *spotFinder) blocked(w World, b Box) bool {
 // its type.
 type FollowParent struct {
 	base
-	speed float32
+	speed float64
 	// stopOnEnd is the game toggle that stops navigation when the goal
 	// ends; on in 1.26.52.
 	stopOnEnd bool
@@ -259,7 +259,7 @@ type FollowParent struct {
 
 // NewFollowParent makes minecraft:behavior.follow_parent; speed is its
 // speed_multiplier (1 by default).
-func NewFollowParent(w World, m Mob, speed float32) *FollowParent {
+func NewFollowParent(w World, m Mob, speed float64) *FollowParent {
 	return &FollowParent{base: base{mob: m, world: w, flags: flagsMove}, speed: speed, stopOnEnd: true, parent: NoID}
 }
 
@@ -273,7 +273,7 @@ func (g *FollowParent) CanUse() bool {
 	b.Max = Vec3{X: b.Max.X + parentBoxXZ, Y: b.Max.Y + parentBoxY, Z: b.Max.Z + parentBoxXZ}
 	g.buf = g.world.Entities(g.buf[:0], g.mob.ID(), b)
 	defer clear(g.buf)
-	best := float32(temptFloatMaxValue)
+	best := float64(temptFloatMaxValue)
 	var found Actor
 	for _, e := range g.buf {
 		if !e.IsMob() || e.Type() != g.mob.Type() || e.Flag(FlagBaby) || !e.Alive() {

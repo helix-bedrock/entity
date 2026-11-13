@@ -37,11 +37,11 @@ type Movement struct {
 	Name string
 	// MaxTurn is max_turn in degrees per tick, 30 by default (1.26.60
 	// 0x7133490).
-	MaxTurn float32
+	MaxTurn float64
 	// Glider is movement.glide's state, nil for the other kinds.
 	Glider *move.Glider
 	// JumpDelay is movement.jump's jump_delay in seconds.
-	JumpDelay behavior.Range[float32]
+	JumpDelay behavior.Range[float64]
 	// JSON is the component, for the members read elsewhere (sway).
 	JSON Object
 }

@@ -205,7 +205,7 @@ func mobCheck(w World, lv *Level, c class, m Mob) bool {
 }
 
 // walkTarget is the class's getWalkTargetValue at p.
-func walkTarget(w World, lv *Level, c class, m Mob, p path.Pos) float32 {
+func walkTarget(w World, lv *Level, c class, m Mob, p path.Pos) float64 {
 	switch c {
 	case classMonster, classDarkMonster, classSilverfish, classEndermite:
 		if !m.FireImmune() && w.Block(below(p)).Flags&FlagMagma != 0 {
@@ -242,11 +242,11 @@ func walkTarget(w World, lv *Level, c class, m Mob, p path.Pos) float32 {
 	return 0
 }
 
-func turtleWalk(w World, p path.Pos) float32 {
+func turtleWalk(w World, p path.Pos) float64 {
 	if w.Block(p).Material != MaterialWater {
 		return 0
 	}
-	v := float32(3)
+	v := float64(3)
 	for i := int32(2); ; i++ {
 		if w.Block(path.Pos{X: p.X, Y: p.Y + i, Z: p.Z}).Material != MaterialWater {
 			return v
@@ -268,7 +268,7 @@ func waterCheck(w World, r Rand, m Mob) bool {
 		top++
 	}
 	y := max(top-r.Int(4)-2, int32(pos.Y))
-	m.SetPos(path.Vec3{X: float32(p.X), Y: float32(y), Z: float32(p.Z)})
+	m.SetPos(path.Vec3{X: float64(p.X), Y: float64(y), Z: float64(p.Z)})
 	b := m.Box()
 	if solidIn(w, b) || !materialIn(w, b, MaterialWater) {
 		return false
@@ -313,5 +313,5 @@ func materialIn(w World, b path.Box, m Material) bool {
 	return false
 }
 
-func ffloor(f float32) int32 { return int32(math.Floor(float64(f))) }
-func fceil(f float32) int32  { return int32(math.Ceil(float64(f))) }
+func ffloor(f float64) int32 { return int32(math.Floor(float64(f))) }
+func fceil(f float64) int32  { return int32(math.Ceil(float64(f))) }

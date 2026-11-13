@@ -29,7 +29,7 @@ const (
 // randomize, sequence or first_valid lists.
 type Event struct {
 	// Weight is the node's randomize weight.
-	Weight  float32
+	Weight  float64
 	Filters *Filter
 	Kind    Kind
 	// Children are the nodes of a sequence, randomize or first_valid.
@@ -79,7 +79,7 @@ func (p *Parser) parseEvent(raw json.RawMessage, warn func(error)) *Event {
 	if w, ok := obj["weight"]; ok {
 		var f float64
 		if json.Unmarshal(w, &f) == nil {
-			ev.Weight = float32(math.Abs(f))
+			ev.Weight = float64(math.Abs(f))
 		}
 	}
 	if f, ok := obj["filters"]; ok {
@@ -235,7 +235,7 @@ type modifier struct {
 }
 
 // evaluate walks a node and collects the leaves to run (0xB31A220).
-func (ev *Event) evaluate(t Tester, rnd func() float32, out []modifier) []modifier {
+func (ev *Event) evaluate(t Tester, rnd func() float64, out []modifier) []modifier {
 	for ev.Kind == KindFirstValid {
 		next := (*Event)(nil)
 		for _, c := range ev.Children {
@@ -267,7 +267,7 @@ func (ev *Event) evaluate(t Tester, rnd func() float32, out []modifier) []modifi
 		if len(pass) == 0 {
 			return out
 		}
-		var total float32
+		var total float64
 		for _, c := range pass {
 			total += c.Weight
 		}

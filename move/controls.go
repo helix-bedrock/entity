@@ -29,7 +29,7 @@ func (b *Body) source() *Body {
 // fly3D is the base move control's motion for mobs that do not walk: it
 // pushes the velocity towards the target and faces the target or the
 // direction of travel. It returns false when the mob arrived.
-func fly3D(b *Body, c *Control, dx, dy, dz, d2 float32) {
+func fly3D(b *Body, c *Control, dx, dy, dz, d2 float64) {
 	d := sqrt(d2)
 	if avgSize(b.Box) > d {
 		c.HasWanted = false
@@ -40,7 +40,7 @@ func fly3D(b *Body, c *Control, dx, dy, dz, d2 float32) {
 	b.Vel.Y += dy * inv * 0.05 * c.Speed
 	b.Vel.Z += c.Speed * (dz * inv * 0.05)
 	b.Vel.X += c.Speed * (dx * inv * 0.05)
-	var target float32
+	var target float64
 	if b.Target != nil {
 		target = atan2(b.Target.X-b.Pos.X, b.Target.Z-b.Pos.Z) * -degrees
 	} else {
@@ -139,8 +139,8 @@ func swim3D(b *Body, c *Control) {
 	s := b.MovementSpeed * c.Speed
 	b.SetSpeed(moveSpeed(b, c.Wanted, s))
 	p := atan2(dy, sqrt(dx*dx+dz*dz)) * degrees * -0.017453292
-	b.LocalMove.Y = -float32(math.Sin(float64(p))) * s
-	b.LocalMove.Z = float32(math.Cos(float64(p))) * s
+	b.LocalMove.Y = -float64(math.Sin(float64(p))) * s
+	b.LocalMove.Z = float64(math.Cos(float64(p))) * s
 	if b.InWater {
 		b.Vel.Y += 0.02
 	}
@@ -190,7 +190,7 @@ func Hover(b *Body, c *Control) {
 	dx, dy, dz := c.Wanted.X-ctr.X, c.Wanted.Y-ctr.Y, c.Wanted.Z-ctr.Z
 	b.LocalMove = Vec3{}
 	a := avgSize(b.Box)
-	f := float32(0.95)
+	f := float64(0.95)
 	if a*a > dx*dx+dz*dz {
 		f = 0.35
 	}
@@ -210,7 +210,7 @@ func Hover(b *Body, c *Control) {
 	s := sp * c.Speed
 	b.SetSpeed(moveSpeed(b, c.Wanted, s))
 	b.Yaw = turnYaw(b, c.MaxTurn, dx, dz, s)
-	var up, fwd float32
+	var up, fwd float64
 	if dy*dy > 0.0001 {
 		up = min(abs32(dy), s)
 		if dy < 0 {
@@ -225,7 +225,7 @@ func Hover(b *Body, c *Control) {
 
 // Sway is minecraft:movement.sway's settings.
 type Sway struct {
-	Frequency, Amplitude float32
+	Frequency, Amplitude float64
 }
 
 // Swimmer is what minecraft:movement.swim reads besides the body.
@@ -259,7 +259,7 @@ func Swim(b *Body, c *Control, sw *Swimmer) {
 		if off < 0 {
 			off = -off
 		}
-		t := float32(sw.Ticks) + float32(off)
+		t := float64(sw.Ticks) + float64(off)
 		a := tableSin(sw.Sway.Frequency*t) * sw.Sway.Amplitude
 		yr := b.Yaw * 0.017453292 * sinScale
 		cy, sy := sinTable[uint16(int32(yr+16384))], sinTable[uint16(int32(yr))]
@@ -272,10 +272,10 @@ func Swim(b *Body, c *Control, sw *Swimmer) {
 	b.SetSpeed(s)
 	b.Flags.Set(FlagMoving, true)
 	p := b.Pitch * 0.017453292
-	sn := float32(math.Sin(float64(p)))
+	sn := float64(math.Sin(float64(p)))
 	m := min(abs32(dy*5), 1.25)
 	m = max32(abs32(sn), m)
-	var sign float32
+	var sign float64
 	switch {
 	case sn < 0:
 		sign = 1
@@ -283,7 +283,7 @@ func Swim(b *Body, c *Control, sw *Swimmer) {
 		sign = -1
 	}
 	b.LocalMove.Y = sign * m * s
-	b.LocalMove.Z = float32(math.Cos(float64(p))) * s
+	b.LocalMove.Z = float64(math.Cos(float64(p))) * s
 	if b.InWater {
 		b.Vel.Y += 0.02
 	}
@@ -303,7 +303,7 @@ func Swim(b *Body, c *Control, sw *Swimmer) {
 
 // Amphibious is minecraft:movement.amphibious: the basic control on land,
 // and swimming along the path in water.
-func Amphibious(b *Body, c *Control, pathActive bool, underwaterSpeed, height float32) {
+func Amphibious(b *Body, c *Control, pathActive bool, underwaterSpeed, height float64) {
 	if !b.WasInWater {
 		Basic(b, c)
 		return
@@ -329,25 +329,25 @@ func Amphibious(b *Body, c *Control, pathActive bool, underwaterSpeed, height fl
 	b.Vel.Y += b.Speed * vy * 0.1
 }
 
-func abs32(v float32) float32 {
+func abs32(v float64) float64 {
 	if v < 0 {
 		return -v
 	}
 	return v
 }
 
-func floorInt(v float32) int32 { return int32(math.Floor(float64(v))) }
+func floorInt(v float64) int32 { return int32(math.Floor(float64(v))) }
 
 // sinScale turns radians into a sine table index.
 const sinScale = 10430.378
 
 // sinTable is BDS's 65536-entry sine table (mce::Math).
-var sinTable = func() (t [65536]float32) {
+var sinTable = func() (t [65536]float64) {
 	for i := range t {
-		t[i] = float32(math.Sin(float64(i) * math.Pi * 2 / 65536))
+		t[i] = float64(math.Sin(float64(i) * math.Pi * 2 / 65536))
 	}
 	return t
 }()
 
 // tableSin is the table sine of x radians.
-func tableSin(x float32) float32 { return sinTable[uint16(int32(x*sinScale))] }
+func tableSin(x float64) float64 { return sinTable[uint16(int32(x*sinScale))] }

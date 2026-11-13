@@ -125,7 +125,7 @@ func TestTimer(t *testing.T) {
 	w, self, ev, env := setup()
 	c := DefaultTimer()
 	c.Looping, c.RandomInterval = false, false
-	c.Time = behavior.Range[float32]{Min: 2, Max: 2}
+	c.Time = behavior.Range[float64]{Min: 2, Max: 2}
 	c.Event = trig("done", nil)
 	tm := NewTimer(c, env)
 	for w.tick = 0; w.tick < 100; w.tick++ {
@@ -142,7 +142,7 @@ func TestTimer(t *testing.T) {
 	ev.fired = nil
 	w.tick, w.r = 0, 5
 	c.Looping = true
-	c.Time = behavior.Range[float32]{Min: 1, Max: 3}
+	c.Time = behavior.Range[float64]{Min: 1, Max: 3}
 	tm = NewTimer(c, env)
 	for ; w.tick <= 75; w.tick++ {
 		tm.Tick(env)
@@ -239,7 +239,7 @@ func TestEntitySensor(t *testing.T) {
 		t.Fatalf("fired %v, want a zero count to fire with minimum 0", ev.fired)
 	}
 
-	b := s.Box(env.Self, SubsensorConfig{Range: [2]float32{3, 2}, YOffset: 4.5})
+	b := s.Box(env.Self, SubsensorConfig{Range: [2]float64{3, 2}, YOffset: 4.5})
 	if b.Min.Y != 2.5 || b.Max.Y != 7.5 || b.Max.X != 3.5 {
 		t.Fatalf("box %+v", b)
 	}
@@ -254,7 +254,7 @@ func TestTargetNearby(t *testing.T) {
 	c.InsideRange, c.OutsideRange = 3, 6
 	c.OnInside, c.OnOutside, c.OnVisionLost = trig("in", nil), trig("out", nil), trig("lost", nil)
 	s := NewTargetNearby(c)
-	step := func(x float32) {
+	step := func(x float64) {
 		target.pos.X = x
 		s.Tick(env)
 	}

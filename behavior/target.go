@@ -24,7 +24,7 @@ const (
 // EntityType is one entry of a target goal's entity_types.
 type EntityType struct {
 	Filters Filter
-	MaxDist float32 `json:"max_dist"`
+	MaxDist float64 `json:"max_dist"`
 	MustSee bool    `json:"must_see"`
 	// MustSeeForget is must_see_forget_duration in ticks.
 	MustSeeForget int32
@@ -37,7 +37,7 @@ type EntityType struct {
 
 // visibility is the goal's target_sneak_visibility_multiplier and
 // target_invisible_multiplier.
-type visibility struct{ sneak, invisible float32 }
+type visibility struct{ sneak, invisible float64 }
 
 // Targeter is the part of the mob the target and attack goals need on top
 // of Mob.
@@ -153,8 +153,8 @@ func (t *target) keep(a Actor) bool {
 
 // rangeScale is the sneak, invisibility and mob head scale of an entry's
 // range.
-func rangeScale(m Mob, a Actor, v visibility) float32 {
-	s := float32(1)
+func rangeScale(m Mob, a Actor, v visibility) float64 {
+	s := float64(1)
 	if a.Flag(flagSneaking) {
 		s = v.sneak
 	}
@@ -168,7 +168,7 @@ func rangeScale(m Mob, a Actor, v visibility) float32 {
 }
 
 // inRange is the distance check of 1.3 F.
-func inRange(m Mob, a Actor, e *EntityType, v visibility, searchHeight float32) bool {
+func inRange(m Mob, a Actor, e *EntityType, v visibility, searchHeight float64) bool {
 	s := rangeScale(m, a, v)
 	r := e.MaxDist * s
 	if dist2(m.Pos(), a.Pos()) > r*r {
@@ -185,9 +185,9 @@ type NearestAttackableConfig struct {
 	// attack_interval in ticks.
 	ScanInterval, RandomInterval int32
 	// Probability is the acquisition chance; 1 always looks.
-	Probability        float32
-	WithinRadius       float32 `json:"within_radius"`
-	TargetSearchHeight float32 `json:"target_search_height"`
+	Probability        float64
+	WithinRadius       float64 `json:"within_radius"`
+	TargetSearchHeight float64 `json:"target_search_height"`
 	MustSee            bool    `json:"must_see"`
 	MustReach          bool    `json:"must_reach"`
 	// MustSeeForget is must_see_forget_duration in ticks.
@@ -197,7 +197,7 @@ type NearestAttackableConfig struct {
 	AttackOwner     bool `json:"attack_owner"`
 	// SneakMultiplier and InvisibleMultiplier are
 	// target_sneak_visibility_multiplier and target_invisible_multiplier.
-	SneakMultiplier, InvisibleMultiplier float32
+	SneakMultiplier, InvisibleMultiplier float64
 }
 
 // DefaultNearestAttackable returns the goal's BDS defaults.
@@ -236,8 +236,8 @@ func NewNearestAttackable(w World, m Targeter, c NearestAttackableConfig) *Neare
 }
 
 // maxDist is the largest max_dist of the entries.
-func (g *NearestAttackable) maxDist() float32 {
-	var d float32
+func (g *NearestAttackable) maxDist() float64 {
+	var d float64
 	for i := range g.cfg.EntityTypes {
 		d = max32(d, g.cfg.EntityTypes[i].MaxDist)
 	}

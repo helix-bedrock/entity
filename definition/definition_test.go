@@ -18,14 +18,14 @@ func (t tester) Test(x *Test) (pass, resolved bool) {
 
 // host records what an Instance asks of the engine.
 type host struct {
-	floats    []float32
+	floats    []float64
 	responses []string
 	triggers  []string
 	cancel    bool
 }
 
 func (h *host) NameTag() string { return "" }
-func (h *host) NextFloat() float32 {
+func (h *host) NextFloat() float64 {
 	if len(h.floats) == 0 {
 		return 0
 	}
@@ -145,7 +145,7 @@ func TestSequenceTriggerAndProperties(t *testing.T) {
 
 func TestRandomizeFirstValidLoopAndTargets(t *testing.T) {
 	def := mustParse(t, testEntity)
-	h := &host{floats: []float32{0.5}}
+	h := &host{floats: []float64{0.5}}
 	in := New(def, h, InitLoaded, "")
 	// 0.5*4 = 2 > weight 1, so the second (weight 3) child runs.
 	in.Execute("rand", tester{})

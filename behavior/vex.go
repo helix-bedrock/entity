@@ -77,9 +77,9 @@ type VexRandomMoveConfig struct {
 	Tries int
 	// Spread is the half size of the box the spots are drawn from.
 	Spread Pos
-	Speed  float32
+	Speed  float64
 	// LookYaw and LookPitch are the look control limits in degrees.
-	LookYaw, LookPitch float32
+	LookYaw, LookPitch float64
 }
 
 // DefaultVexRandomMove returns the goal's BDS numbers (tick 0x56C4640).
@@ -144,7 +144,7 @@ func (g *VexRandomMove) Tick() {
 		if g.world.Block(p).Material != path.MaterialAir {
 			continue
 		}
-		at := Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}
+		at := Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}
 		g.m.SetMoveWanted(at, g.cfg.Speed)
 		if g.actor(g.m.Target()) == nil {
 			g.m.LookAt(at, g.cfg.LookYaw, g.cfg.LookPitch)

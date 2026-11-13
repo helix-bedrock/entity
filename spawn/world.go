@@ -89,7 +89,7 @@ type Level struct {
 	// (0 to 15).
 	SkyDarken uint8
 	// Rain and Thunder are the weather levels from 0 to 1.
-	Rain, Thunder float32
+	Rain, Thunder float64
 	// TickRange is the level's chunk tick range, the server's tick distance in chunks.
 	TickRange int32
 }
@@ -98,7 +98,7 @@ type Level struct {
 // Float a value in [0, 1), as BDS's IRandom nextInt and nextFloat do.
 type Rand interface {
 	Int(n int32) int32
-	Float() float32
+	Float() float64
 }
 
 // World answers the spawner's questions about one dimension. TickChunk
@@ -120,7 +120,7 @@ type World interface {
 	TickedRecently(cx, cz int32) bool
 	// NearestPlayer returns the position of the nearest player within
 	// maxDist of p, as BDS stores player positions.
-	NearestPlayer(p path.Vec3, maxDist float32) (path.Vec3, bool)
+	NearestPlayer(p path.Vec3, maxDist float64) (path.Vec3, bool)
 	// InAncientCity reports whether p is inside an ancient city, where
 	// nothing spawns naturally.
 	InAncientCity(p path.Pos) bool

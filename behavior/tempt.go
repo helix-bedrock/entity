@@ -19,16 +19,16 @@ const (
 
 // TemptConfig is the JSON of minecraft:behavior.tempt.
 type TemptConfig struct {
-	SpeedMultiplier     float32 `json:"speed_multiplier"`
-	WithinRadius        float32 `json:"within_radius"`
-	StopDistance        float32 `json:"stop_distance"`
+	SpeedMultiplier     float64 `json:"speed_multiplier"`
+	WithinRadius        float64 `json:"within_radius"`
+	StopDistance        float64 `json:"stop_distance"`
 	CanGetScared        bool    `json:"can_get_scared"`
 	CanTemptVertically  bool    `json:"can_tempt_vertically"`
 	CanTemptWhileRidden bool    `json:"can_tempt_while_ridden"`
 	// Tempts reports that the player holds one of the goal's items.
 	Tempts        func(player Actor) bool
 	Sound         int
-	SoundInterval Range[float32]
+	SoundInterval Range[float64]
 	OnTemptStart  string
 	OnTemptEnd    string
 }
@@ -48,8 +48,8 @@ type Tempt struct {
 	cooldown  int32
 	repath    int32
 	lastPos   Vec3
-	lastPitch float32
-	lastYaw   float32
+	lastPitch float64
+	lastYaw   float64
 	nextSound uint64
 	avoided   bool
 	// float is float_tempt: the mob swims or flies straight at the player
@@ -92,7 +92,7 @@ func (g *Tempt) CanUse() bool {
 		return false
 	}
 	r2 := g.cfg.WithinRadius * g.cfg.WithinRadius
-	best := float32(temptFloatMaxValue)
+	best := float64(temptFloatMaxValue)
 	var found Actor
 	g.buf = g.world.Players(g.buf[:0])
 	for _, p := range g.buf {
@@ -223,7 +223,7 @@ func riddenBox(w World, a Actor) Box {
 	return b
 }
 
-func abs32(v float32) float32 {
+func abs32(v float64) float64 {
 	if v < 0 {
 		return -v
 	}

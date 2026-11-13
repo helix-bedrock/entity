@@ -55,7 +55,7 @@ type LayEggConfig struct {
 	MaterialsAbove      []path.Material
 	AllowFromBelow      bool    `json:"allow_laying_from_below"`
 	UseDefaultAnimation bool    `json:"use_default_animation"`
-	LaySeconds          float32 `json:"lay_seconds"`
+	LaySeconds          float64 `json:"lay_seconds"`
 	EggType             string  `json:"egg_type"`
 	// LaySound is the lay_egg_sound level sound event.
 	LaySound int32
@@ -140,7 +140,7 @@ func (g *LayEgg) find() bool {
 		if dist2(at, vecOf(g.target)) <= dist2(at, vecOf(p))+1 {
 			continue
 		}
-		pr, ok := m.ProbePath(Vec3{X: float32(p.X), Y: float32(p.Y + 1), Z: float32(p.Z)})
+		pr, ok := m.ProbePath(Vec3{X: float64(p.X), Y: float64(p.Y + 1), Z: float64(p.Z)})
 		if !ok {
 			continue
 		}
@@ -181,7 +181,7 @@ func (g *LayEgg) Tick() {
 	switch {
 	case g.counter <= 0:
 		m.SetFlag(FlagLayingEgg, true)
-	case float32(g.counter) > g.cfg.LaySeconds*ticksPerSecond:
+	case float64(g.counter) > g.cfg.LaySeconds*ticksPerSecond:
 		g.lay()
 	}
 	on := vecOf(Pos{X: g.target.X, Y: g.target.Y + 1, Z: g.target.Z})

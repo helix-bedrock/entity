@@ -38,7 +38,7 @@ type Ranged interface {
 	// RestartAngry restarts AngryComponent's duration; nothing without one.
 	RestartAngry()
 	// RangedAttack is Mob::performRangedAttack with a power of 0.1 to 1.
-	RangedAttack(t Actor, power float32)
+	RangedAttack(t Actor, power float64)
 }
 
 // RangedAttackConfig is the JSON of minecraft:behavior.ranged_attack; its
@@ -57,14 +57,14 @@ type RangedAttackConfig struct {
 	AttackIntervalMax int32
 	// AttackRadiusMin and AttackRadius are attack_range's min and max
 	// (attack_radius_min and attack_radius in the old format).
-	AttackRadiusMin float32
-	AttackRadius    float32
+	AttackRadiusMin float64
+	AttackRadius    float64
 	// XMaxRotation and YMaxHeadRotation are the look control's speeds
 	// (map?: which JSON field feeds which).
-	XMaxRotation     float32
-	YMaxHeadRotation float32
-	RangedFOV        float32
-	SpeedMultiplier  float32
+	XMaxRotation     float64
+	YMaxHeadRotation float64
+	RangedFOV        float64
+	SpeedMultiplier  float64
 	SetPersistent    bool
 	Swing            bool
 	// InRangeMovement is the in-range movement mode; 1 keeps walking
@@ -82,20 +82,20 @@ func rangedMoveModes() []string { return []string{"hold_position", "follow_targe
 // seconds.
 type rangedJSON struct {
 	BurstShots           *int32          `json:"burst_shots"`
-	TargetInSightTime    *float32        `json:"target_in_sight_time"`
-	BurstInterval        *float32        `json:"burst_interval"`
-	ChargeChargedTrigger *float32        `json:"charge_charged_trigger"`
-	ChargeShootTrigger   *float32        `json:"charge_shoot_trigger"`
+	TargetInSightTime    *float64        `json:"target_in_sight_time"`
+	BurstInterval        *float64        `json:"burst_interval"`
+	ChargeChargedTrigger *float64        `json:"charge_charged_trigger"`
+	ChargeShootTrigger   *float64        `json:"charge_shoot_trigger"`
 	AttackInterval       json.RawMessage `json:"attack_interval"`
-	AttackIntervalMin    *float32        `json:"attack_interval_min"`
-	AttackIntervalMax    *float32        `json:"attack_interval_max"`
+	AttackIntervalMin    *float64        `json:"attack_interval_min"`
+	AttackIntervalMax    *float64        `json:"attack_interval_max"`
 	AttackRange          *rangeJSON      `json:"attack_range"`
-	AttackRadiusMin      *float32        `json:"attack_radius_min"`
-	AttackRadius         *float32        `json:"attack_radius"`
-	XMaxRotation         *float32        `json:"x_max_rotation"`
-	YMaxHeadRotation     *float32        `json:"y_max_head_rotation"`
-	RangedFOV            *float32        `json:"ranged_fov"`
-	SpeedMultiplier      *float32        `json:"speed_multiplier"`
+	AttackRadiusMin      *float64        `json:"attack_radius_min"`
+	AttackRadius         *float64        `json:"attack_radius"`
+	XMaxRotation         *float64        `json:"x_max_rotation"`
+	YMaxHeadRotation     *float64        `json:"y_max_head_rotation"`
+	RangedFOV            *float64        `json:"ranged_fov"`
+	SpeedMultiplier      *float64        `json:"speed_multiplier"`
 	SetPersistent        *bool           `json:"set_persistent"`
 	Swing                *bool           `json:"swing"`
 	InRangeMovementMode  *string         `json:"in_range_movement_mode"`
@@ -103,8 +103,8 @@ type rangedJSON struct {
 
 // rangeJSON is a {min, max} object; a missing side keeps its old value.
 type rangeJSON struct {
-	Min *float32 `json:"min"`
-	Max *float32 `json:"max"`
+	Min *float64 `json:"min"`
+	Max *float64 `json:"max"`
 }
 
 // rangedUnset is the value BDS keeps in attack_interval's two sides until the
@@ -163,10 +163,10 @@ func (c *RangedAttackConfig) readInterval(j *rangedJSON) error {
 	if j.AttackInterval == nil && j.AttackIntervalMin == nil && j.AttackIntervalMax == nil {
 		return nil
 	}
-	lo, hi := float32(rangedUnset), float32(rangedUnset)
+	lo, hi := float64(rangedUnset), float64(rangedUnset)
 	if j.AttackInterval != nil {
 		var r rangeJSON
-		var v float32
+		var v float64
 		switch {
 		case json.Unmarshal(j.AttackInterval, &v) == nil:
 			lo, hi = v, v
@@ -194,13 +194,13 @@ func (c *RangedAttackConfig) readInterval(j *rangedJSON) error {
 }
 
 // setTicks stores a time in seconds as ticks, truncated as BDS does.
-func setTicks(dst *int32, s *float32) {
+func setTicks(dst *int32, s *float64) {
 	if s != nil {
 		*dst = int32(*s * ticksPerSecond)
 	}
 }
 
-func setFloat(dst *float32, v *float32) {
+func setFloat(dst *float64, v *float64) {
 	if v != nil {
 		*dst = *v
 	}
@@ -288,14 +288,14 @@ func (g *RangedAttack) Stop() {
 
 // interval is the attack interval for the distance: attack_interval_min to
 // _max scaled by how far into attack_radius the target is.
-func (g *RangedAttack) interval(d2 float32) int32 {
-	v := float32(g.cfg.AttackIntervalMin) + float32(g.cfg.AttackIntervalMax-g.cfg.AttackIntervalMin)*(sqrt32(d2)/g.cfg.AttackRadius)
+func (g *RangedAttack) interval(d2 float64) int32 {
+	v := float64(g.cfg.AttackIntervalMin) + float64(g.cfg.AttackIntervalMax-g.cfg.AttackIntervalMin)*(sqrt32(d2)/g.cfg.AttackRadius)
 	return int32(math.Floor(float64(v)))
 }
 
 // moverSpeed is the movement speed of the entity that moves the mob: its
 // lowest vehicle when it rides (map?: 0 for a vehicle that is not a mob).
-func (g *RangedAttack) moverSpeed() float32 {
+func (g *RangedAttack) moverSpeed() float64 {
 	r := rootVehicle(g.world, g.m)
 	if r.ID() == g.m.ID() {
 		return g.m.Speed()
@@ -332,7 +332,7 @@ func (g *RangedAttack) Tick() {
 
 // move backs away from a target inside attack_radius_min, holds still in
 // range, and otherwise walks to the target.
-func (g *RangedAttack) move(t Actor, d2 float32) {
+func (g *RangedAttack) move(t Actor, d2 float64) {
 	n, speed := g.m.Nav(), g.moverSpeed()
 	r := g.cfg.AttackRadius
 	switch {
@@ -342,11 +342,11 @@ func (g *RangedAttack) move(t Actor, d2 float32) {
 		}
 		k := (g.cfg.AttackRadiusMin - sqrt32(d2)) + rangedBackOff
 		p, q := g.m.Pos(), t.Pos()
-		a := float32(math.Atan2(float64(p.Z-q.Z), float64(p.X-q.X))) * sinScale
+		a := float64(math.Atan2(float64(p.Z-q.Z), float64(p.X-q.X))) * sinScale
 		// BDS takes x from the sine and z from the cosine.
 		n.MoveTo(Vec3{X: tableSin(uint16(int32(a)))*k + p.X, Y: p.Y, Z: k*tableSin(uint16(int32(a+sinQuarter))) + p.Z}, g.cfg.SpeedMultiplier)
 	case d2 <= r*r && g.seen >= g.cfg.TargetInSightTime:
-		var hold float32
+		var hold float64
 		if r > 0 {
 			hold = r + rangedHoldPad
 		}
@@ -362,7 +362,7 @@ func (g *RangedAttack) move(t Actor, d2 float32) {
 		g.m.ClearMoveWanted()
 		if g.m.Vehicle() == NoID {
 			p, q := g.m.Pos(), t.Pos()
-			g.m.SetYaw(float32(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z))) * -degPerRad)
+			g.m.SetYaw(float64(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z))) * -degPerRad)
 		}
 	default:
 		if n != nil && speed > 0 {
@@ -372,7 +372,7 @@ func (g *RangedAttack) move(t Actor, d2 float32) {
 }
 
 // load counts down to the next burst, or charges the crossbow.
-func (g *RangedAttack) load(d2 float32, seen bool) {
+func (g *RangedAttack) load(d2 float64, seen bool) {
 	if !g.crossbow {
 		c := g.timer
 		g.timer--
@@ -409,7 +409,7 @@ func (g *RangedAttack) load(d2 float32, seen bool) {
 
 // fire shoots once the burst timer is up and the target is in range, seen
 // and in the field of view.
-func (g *RangedAttack) fire(t Actor, d2 float32, seen bool) {
+func (g *RangedAttack) fire(t Actor, d2 float64, seen bool) {
 	b := g.burstTimer
 	g.burstTimer--
 	r, lo := g.cfg.AttackRadius, g.cfg.AttackRadiusMin

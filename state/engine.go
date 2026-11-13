@@ -77,7 +77,7 @@ type ShooterProjectile struct {
 type ShooterConfig struct {
 	Def         string
 	AuxVal      int32
-	Power       float32
+	Power       float64
 	Magic       bool
 	Sound       int
 	Projectiles []ShooterProjectile
@@ -99,7 +99,7 @@ func (c *ShooterConfig) Pick(env *Env, target behavior.Actor) (def string, aux i
 // BalloonableConfig is minecraft:balloonable (1.21.3 schema 0x140562530:
 // soft_distance 2, max_distance 10, mass 1).
 type BalloonableConfig struct {
-	SoftDistance, MaxDistance, Mass float32
+	SoftDistance, MaxDistance, Mass float64
 	OnBalloon, OnUnballoon          *definition.Trigger
 }
 
@@ -118,7 +118,7 @@ type BoostItem struct {
 // BoostableConfig is minecraft:boostable. Duration is in ticks.
 type BoostableConfig struct {
 	Duration        int32
-	SpeedMultiplier float32
+	SpeedMultiplier float64
 	Items           []BoostItem
 }
 
@@ -142,20 +142,20 @@ type BreakBlocksConfig struct {
 // Cooldown is in ticks.
 type DashActionConfig struct {
 	Cooldown                             int32
-	HorizontalMomentum, VerticalMomentum float32
+	HorizontalMomentum, VerticalMomentum float64
 	CanDashUnderwater                    bool
 	Direction                            string
 }
 
 // VerticalMovementActionConfig is minecraft:vertical_movement_action.
 type VerticalMovementActionConfig struct {
-	VerticalVelocity float32 `json:"vertical_velocity"`
+	VerticalVelocity float64 `json:"vertical_velocity"`
 }
 
 // FreeCameraControlledConfig is minecraft:free_camera_controlled.
 type FreeCameraControlledConfig struct {
-	BackwardsMovementModifier float32 `json:"backwards_movement_modifier"`
-	StrafeSpeedModifier       float32 `json:"strafe_speed_modifier"`
+	BackwardsMovementModifier float64 `json:"backwards_movement_modifier"`
+	StrafeSpeedModifier       float64 `json:"strafe_speed_modifier"`
 }
 
 // ReflectProjectilesConfig is minecraft:reflect_projectiles. The angles
@@ -169,8 +169,8 @@ type ReflectProjectilesConfig struct {
 // KnockbackPreset is one of minecraft:apply_knockback_rules' presets.
 type KnockbackPreset struct {
 	Filter                             *definition.Filter
-	HorizontalPower, VerticalPower     float32
-	VerticalVelocityCap, SlowdownScale float32
+	HorizontalPower, VerticalPower     float64
+	VerticalVelocityCap, SlowdownScale float64
 	ScaleWithDamage                    bool
 	Mode, ExtraApproach                string
 }
@@ -214,7 +214,7 @@ func (c *MobEffectImmunityConfig) Immune(effect string) bool {
 // InsomniaConfig is minecraft:insomnia (1.21.3 schema 0x1405D9B20:
 // days_until_insomnia 3).
 type InsomniaConfig struct {
-	Days float32 `json:"days_until_insomnia"`
+	Days float64 `json:"days_until_insomnia"`
 }
 
 // DefaultInsomnia is the BDS default.
@@ -224,7 +224,7 @@ func DefaultInsomnia() InsomniaConfig { return InsomniaConfig{Days: 3} }
 // tick 0x14077FDF0) was not read.
 type GrowsCropConfig struct {
 	Charges int32   `json:"charges"`
-	Chance  float32 `json:"chance"`
+	Chance  float64 `json:"chance"`
 }
 
 // DwellerConfig is minecraft:dweller: the mob's village membership, which
@@ -250,19 +250,19 @@ type FlockingConfig struct {
 	UseCenterOfMass        bool    `json:"use_center_of_mass"`
 	LowFlockLimit          int32   `json:"low_flock_limit"`
 	HighFlockLimit         int32   `json:"high_flock_limit"`
-	GoalWeight             float32 `json:"goal_weight"`
-	LonerChance            float32 `json:"loner_chance"`
-	InfluenceRadius        float32 `json:"influence_radius"`
-	BreachInfluence        float32 `json:"breach_influence"`
-	SeparationWeight       float32 `json:"separation_weight"`
-	SeparationThreshold    float32 `json:"separation_threshold"`
-	CohesionWeight         float32 `json:"cohesion_weight"`
-	CohesionThreshold      float32 `json:"cohesion_threshold"`
-	InnerCohesionThreshold float32 `json:"innner_cohesion_threshold"`
-	MinHeight              float32 `json:"min_height"`
-	MaxHeight              float32 `json:"max_height"`
-	BlockDistance          float32 `json:"block_distance"`
-	BlockWeight            float32 `json:"block_weight"`
+	GoalWeight             float64 `json:"goal_weight"`
+	LonerChance            float64 `json:"loner_chance"`
+	InfluenceRadius        float64 `json:"influence_radius"`
+	BreachInfluence        float64 `json:"breach_influence"`
+	SeparationWeight       float64 `json:"separation_weight"`
+	SeparationThreshold    float64 `json:"separation_threshold"`
+	CohesionWeight         float64 `json:"cohesion_weight"`
+	CohesionThreshold      float64 `json:"cohesion_threshold"`
+	InnerCohesionThreshold float64 `json:"innner_cohesion_threshold"`
+	MinHeight              float64 `json:"min_height"`
+	MaxHeight              float64 `json:"max_height"`
+	BlockDistance          float64 `json:"block_distance"`
+	BlockWeight            float64 `json:"block_weight"`
 }
 
 // GameEventMovementTrackingConfig is minecraft:game_event_movement_tracking:
@@ -283,15 +283,15 @@ func DefaultGameEventMovementTracking() GameEventMovementTrackingConfig {
 // parser (sub_6FDD2B0) was not decompiled and its system not found: the
 // members are read as written and the engine runs it.
 type LookedAtConfig struct {
-	SearchRadius           float32
+	SearchRadius           float64
 	SetTarget              string
 	FindPlayersOnly        bool
-	Cooldown               behavior.Range[float32]
-	FieldOfView            float32
+	Cooldown               behavior.Range[float64]
+	FieldOfView            float64
 	ScaleFOVByDistance     bool
 	LineOfSightObstruction string
 	LookAtLocations        []string
-	MinLookedAtDuration    float32
+	MinLookedAtDuration    float64
 	Filters                *definition.Filter
 	LookedAt, NotLookedAt  *definition.Trigger
 }

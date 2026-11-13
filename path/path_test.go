@@ -44,7 +44,7 @@ func (w *testWorld) Liquid(p Pos) Block {
 func (w *testWorld) Info(b Block) *BlockInfo { return &w.infos[b] }
 
 func (w *testWorld) CollisionBox(b Block, p Pos) Box {
-	x, y, z := float32(p.X), float32(p.Y), float32(p.Z)
+	x, y, z := float64(p.X), float64(p.Y), float64(p.Z)
 	switch b {
 	case stone:
 		return Box{Vec3{x, y, z}, Vec3{x + 1, y + 1, z + 1}}
@@ -60,7 +60,7 @@ func (w *testWorld) Pathable(b Block, _, _ Pos) bool { return b == air || b == w
 
 // zombie returns settings like a zombie's standing at block p.
 func zombie(p Pos) *Settings {
-	x, y, z := float32(p.X)+0.5, float32(p.Y), float32(p.Z)+0.5
+	x, y, z := float64(p.X)+0.5, float64(p.Y), float64(p.Z)+0.5
 	return &Settings{
 		Box:        Box{Vec3{x - 0.3, y, z - 0.3}, Vec3{x + 0.3, y + 1.9, z + 0.3}},
 		Width:      0.6,

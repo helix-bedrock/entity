@@ -9,7 +9,7 @@ import (
 
 // TrustingConfig is minecraft:trusting (1.21.3 schema 0x14062F2C0).
 type TrustingConfig struct {
-	Probability float32
+	Probability float64
 	Items       []string
 	OnTrust     *definition.Trigger
 	// InteractText is the interaction button's text.
@@ -89,12 +89,12 @@ type Gene struct {
 	// Simplified is use_simplified_breeding.
 	Simplified bool
 	// MutationRate overrides the component's when not negative.
-	MutationRate float32
+	MutationRate float64
 }
 
 // GeneticsConfig is minecraft:genetics (1.21.3 schema 0x1405AC0A0).
 type GeneticsConfig struct {
-	MutationRate float32
+	MutationRate float64
 	Genes        []Gene
 }
 
@@ -239,7 +239,7 @@ func fits(v GeneticVariant, al Alleles) bool {
 
 // AngerSound is one of anger_level's on_increase_sounds.
 type AngerSound struct {
-	Condition func(behavior.Mob) float32
+	Condition func(behavior.Mob) float64
 	Sound     int
 }
 
@@ -403,7 +403,7 @@ type WeightedTrigger struct {
 // (sub_726B6C0) and the code that runs it were not read: Blocked picks a
 // reaction by weight.
 type RavagerBlockedConfig struct {
-	KnockbackStrength float32
+	KnockbackStrength float64
 	Reactions         []WeightedTrigger
 }
 

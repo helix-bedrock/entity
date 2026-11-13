@@ -53,29 +53,29 @@ type JumpAroundTargetConfig struct {
 	JumpCooldownHurt int32
 	LastHurtDuration int32
 	PrepareJump      uint64
-	MaxJumpVelocity  float32 `json:"max_jump_velocity"`
+	MaxJumpVelocity  float64 `json:"max_jump_velocity"`
 	CheckCollision   bool    `json:"check_collision"`
-	BoxScale         float32 `json:"entity_bounding_box_scale"`
+	BoxScale         float64 `json:"entity_bounding_box_scale"`
 	// LOSIgnoreHeight is line_of_sight_obstruction_height_ignore.
 	LOSIgnoreHeight int32 `json:"line_of_sight_obstruction_height_ignore"`
 	// ValidDistance is valid_distance_to_target, squared.
-	ValidDistance Range[float32]
+	ValidDistance Range[float64]
 	Spread        int32 `json:"landing_position_spread_degrees"`
 	// LandingDistance is landing_distance_from_target as written; BDS
 	// takes the square root of both ends when it uses them.
-	LandingDistance Range[float32]
+	LandingDistance Range[float64]
 	VerticalSpace   int32     `json:"required_vertical_space"`
 	SnapRange       int32     `json:"snap_to_surface_block_range"`
-	JumpAngles      []float32 `json:"jump_angles"`
+	JumpAngles      []float64 `json:"jump_angles"`
 }
 
 // DefaultJumpAroundTarget returns the goal's BDS defaults.
 func DefaultJumpAroundTarget() JumpAroundTargetConfig {
 	return JumpAroundTargetConfig{
 		JumpCooldown: 10, JumpCooldownHurt: 2, LastHurtDuration: 40, PrepareJump: 10, MaxJumpVelocity: 1.4,
-		BoxScale: 0.7, LOSIgnoreHeight: 4, ValidDistance: Range[float32]{16, 400}, Spread: 90,
-		LandingDistance: Range[float32]{4, 8}, VerticalSpace: 4, SnapRange: 10,
-		JumpAngles: []float32{40, 55, 60, 75, 80},
+		BoxScale: 0.7, LOSIgnoreHeight: 4, ValidDistance: Range[float64]{16, 400}, Spread: 90,
+		LandingDistance: Range[float64]{4, 8}, VerticalSpace: 4, SnapRange: 10,
+		JumpAngles: []float64{40, 55, 60, 75, 80},
 	}
 }
 
@@ -94,14 +94,14 @@ type JumpAroundTarget struct {
 	landing  Vec3
 	velocity Vec3
 	valid    bool
-	angles   []float32
+	angles   []float64
 }
 
 // NewJumpAroundTarget makes the goal. Like BDS it keeps the mob's box and
 // DiscardFriction as they are now, to restore them when a jump ends.
 func NewJumpAroundTarget(w World, m Jumper, c JumpAroundTargetConfig) *JumpAroundTarget {
 	return &JumpAroundTarget{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c,
-		friction: m.DiscardFriction(), size: m.Box(), state: jumpDone, angles: make([]float32, len(c.JumpAngles))}
+		friction: m.DiscardFriction(), size: m.Box(), state: jumpDone, angles: make([]float64, len(c.JumpAngles))}
 }
 
 // CanBeInterrupted implements goal.Goal: a jump always finishes.
@@ -134,7 +134,7 @@ func (g *JumpAroundTarget) CanUse() bool {
 		}
 	}
 	r := g.cfg.LandingDistance
-	l := pointBehind(g.world, t, float32(g.cfg.Spread), sqrt32(r.Min), sqrt32(r.Max))
+	l := pointBehind(g.world, t, float64(g.cfg.Spread), sqrt32(r.Min), sqrt32(r.Max))
 	s, ok := g.snap(l)
 	if !ok {
 		return false
@@ -145,12 +145,12 @@ func (g *JumpAroundTarget) CanUse() bool {
 	// BDS lands two blocks above the solid block it found.
 	y := s.Y + 1
 	eye := g.m.AttachPos(attachHead)
-	x, z := float32(s.X), float32(s.Z)
-	if !g.world.ClearLine(eye, Vec3{X: x, Y: float32(y + 1), Z: z}) &&
-		!g.world.ClearLine(eye, Vec3{X: x, Y: float32(y + g.cfg.LOSIgnoreHeight), Z: z}) {
+	x, z := float64(s.X), float64(s.Z)
+	if !g.world.ClearLine(eye, Vec3{X: x, Y: float64(y + 1), Z: z}) &&
+		!g.world.ClearLine(eye, Vec3{X: x, Y: float64(y + g.cfg.LOSIgnoreHeight), Z: z}) {
 		return false
 	}
-	g.landing = Vec3{X: x, Y: float32(y), Z: z}
+	g.landing = Vec3{X: x, Y: float64(y), Z: z}
 	g.velocity, g.valid = g.jumpVector(g.landing)
 	return g.valid
 }
@@ -192,7 +192,7 @@ func (g *JumpAroundTarget) jumpVector(l Vec3) (Vec3, bool) {
 		}
 		if amp, ok := g.m.EffectAmplifier(jumpBoostEffect); ok {
 			if l := length(v); l >= minLength {
-				v.Y += v.Y / l * float32(amp+1) * jumpBoostStep
+				v.Y += v.Y / l * float64(amp+1) * jumpBoostStep
 			}
 		}
 		return v, true
@@ -204,7 +204,7 @@ func (g *JumpAroundTarget) jumpVector(l Vec3) (Vec3, bool) {
 // (0x53434F0): the launch velocity that reaches to at the elevation angle,
 // and with collision on, a check that the box swept along the arc touches
 // no block.
-func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale float32) (Vec3, bool) {
+func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale float64) (Vec3, bool) {
 	dx, dy, dz := to.X-from.X, to.Y-from.Y, to.Z-from.Z
 	h2 := dx*dx + dz*dz
 	h := sqrt32(h2)
@@ -216,7 +216,7 @@ func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale f
 		return Vec3{}, false
 	}
 	vh, vy := c*v, v*s
-	t := float32(math.Atan2(float64(dz), float64(dx))) * sinScale
+	t := float64(math.Atan2(float64(dz), float64(dx))) * sinScale
 	st, ct := tableSin(uint16(int32(t))), tableSin(uint16(int32(t+sinQuarter)))
 	vel := Vec3{X: vh * ct, Y: vy, Z: vh * st}
 	if !collide {
@@ -226,11 +226,11 @@ func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale f
 	if steps <= 0 {
 		return Vec3{}, false
 	}
-	step := h / float32(2*steps)
+	step := h / float64(2*steps)
 	points := max(2*steps-1, 1)
 	tan, denom := s/c, c*c*(v2+v2)
 	var prev Vec3
-	for i, d := int32(0), float32(0); i < points; i++ {
+	for i, d := int32(0), float64(0); i < points; i++ {
 		d += step
 		p := Vec3{X: ct*d + from.X, Y: tan*d + d*d*-jumpGravity/denom + from.Y, Z: st*d + from.Z}
 		if i > 0 && scale != 0 && sweepHits(w, box, prev, p, scale) {
@@ -244,7 +244,7 @@ func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale f
 // sweepHits moves the box, scaled about its centre, from a to b in steps
 // of nine tenths of its smallest side and reports a block in the way. BDS
 // also takes nine tenths of the distance in sides as the step count.
-func sweepHits(w World, box Box, a, b Vec3, boxScale float32) bool {
+func sweepHits(w World, box Box, a, b Vec3, boxScale float64) bool {
 	if !(box.Min.X < box.Max.X && box.Min.Y < box.Max.Y && box.Min.Z < box.Max.Z) {
 		return false
 	}
@@ -270,7 +270,7 @@ func sweepHits(w World, box Box, a, b Vec3, boxScale float32) bool {
 // pointBehind is TargetRelativeMovementGoalUtils::getRandomPointBehindTarget
 // (0x5343D90): a point at a random distance in [lo, hi) from the target's
 // feet, around the direction opposite its head yaw, spread by a gaussian.
-func pointBehind(w World, t Actor, spread, lo, hi float32) Vec3 {
+func pointBehind(w World, t Actor, spread, lo, hi float64) Vec3 {
 	r := w.Random()
 	_, yaw := t.HeadRotation()
 	a := yaw + behindYaw + spread*r.NextGaussian()*0.5
@@ -291,7 +291,7 @@ func (g *JumpAroundTarget) Start() {
 	g.m.SetFlag(FlagJumpGoal, true)
 	g.state = jumpPreparing
 	p := g.m.Pos()
-	yaw := float32(math.Atan2(float64(g.landing.X-p.X), float64(g.landing.Z-p.Z))) * degPerRad
+	yaw := float64(math.Atan2(float64(g.landing.X-p.X), float64(g.landing.Z-p.Z))) * degPerRad
 	g.m.SetBodyYaw(yaw)
 	g.m.SetYaw(yaw)
 }

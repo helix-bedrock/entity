@@ -51,7 +51,7 @@ func configured[M any, C any, G goal.Goal](def func() C, read func(c *Context, j
 }
 
 // speedOnly wraps a goal made with just speed_multiplier.
-func speedOnly[M any, G goal.Goal](def float32, mk func(behavior.World, M, float32) G) GoalFactory {
+func speedOnly[M any, G goal.Goal](def float64, mk func(behavior.World, M, float64) G) GoalFactory {
 	return func(c *Context, j Object) (goal.Goal, error) {
 		m, err := need[M](c)
 		if err != nil {
@@ -62,7 +62,7 @@ func speedOnly[M any, G goal.Goal](def float32, mk func(behavior.World, M, float
 }
 
 // soundInterval reads sound_interval in seconds.
-func soundInterval(c *Context, j Object, r *behavior.Range[float32]) {
+func soundInterval(c *Context, j Object, r *behavior.Range[float64]) {
 	*r = c.Range(j, "sound_interval", *r)
 }
 
@@ -127,7 +127,7 @@ func readRandomLook(c *Context, j Object, cfg *behavior.RandomLookConfig) {
 		Max: c.Int(j, "max_look_time", cfg.LookTime.Max),
 	}
 	cfg.LookTime = c.RangeTicks(j, "look_time", cfg.LookTime)
-	cfg.Angle = behavior.Range[float32]{
+	cfg.Angle = behavior.Range[float64]{
 		Min: c.Float(j, "min_angle_of_view_horizontal", cfg.Angle.Min),
 		Max: c.Float(j, "max_angle_of_view_horizontal", cfg.Angle.Max),
 	}
@@ -502,7 +502,7 @@ func vanillaGoals() map[string]GoalFactory {
 			readMelee(c, j, &cfg.MeleeConfig)
 			cfg.AttackDuration = c.Ticks(j, "attack_duration", cfg.AttackDuration)
 			if j.Has("attack_duration") || j.Has("hit_delay_pct") {
-				cfg.HitDelay = int32(float32(cfg.AttackDuration) * c.Float(j, "hit_delay_pct", 0.5))
+				cfg.HitDelay = int32(float64(cfg.AttackDuration) * c.Float(j, "hit_delay_pct", 0.5))
 			}
 			cfg.Sound = c.Sound(j, "sound_event", cfg.Sound)
 		}, behavior.NewDelayedAttack),
@@ -562,7 +562,7 @@ func vanillaGoals() map[string]GoalFactory {
 			cfg.OnStart = c.Trigger(j, "on_start")
 		}, behavior.NewRamAttack),
 		"stalk_and_pounce_on_target": configured(behavior.DefaultStalkAndPounce, func(c *Context, j Object, cfg *behavior.StalkAndPounceConfig) {
-			sq := func(k string, def float32) float32 {
+			sq := func(k string, def float64) float64 {
 				if !j.Has(k) {
 					return def
 				}
@@ -718,7 +718,7 @@ func vanillaGoals() map[string]GoalFactory {
 		"eat_block": configured(behavior.DefaultEatBlock, func(c *Context, j Object, cfg *behavior.EatBlockConfig) {
 			if j.Has("success_chance") {
 				if f, ok := number(j["success_chance"]); ok {
-					cfg.SuccessChance, cfg.SuccessChanceValue = nil, float32(f)
+					cfg.SuccessChance, cfg.SuccessChanceValue = nil, float64(f)
 				} else if eval, ok := c.Resolver.Molang(c.String(j, "success_chance", "")); ok {
 					cfg.SuccessChance = eval
 				} else {

@@ -36,16 +36,16 @@ func (m *b11bMob) NearestStructure(k string, _ Pos) (Pos, bool) {
 	return m.wreck, m.hasWreck && k == structureShipwreck
 }
 func (m *b11bMob) LootChest(Box) (Pos, bool)    { return Pos{}, false }
-func (m *b11bMob) FollowRange() float32         { return 16 }
+func (m *b11bMob) FollowRange() float64         { return 16 }
 func (m *b11bMob) ResetTreasureTimer()          { m.resets++ }
 func (m *b11bMob) Motion(id ID) Vec3            { return m.motion[id] }
-func (m *b11bMob) Rotation() (float32, float32) { return 0, 0 }
+func (m *b11bMob) Rotation() (float64, float64) { return 0, 0 }
 func (m *b11bMob) SpawnLoot(string, Vec3) bool  { m.loot++; return true }
 func (m *b11bMob) DefaultDigBlock(b Block) bool { return m.defaultOK }
 func (m *b11bMob) HasEffect(int) bool           { return false }
 
 func TestEatBlockEatsGrassAfterTheTimer(t *testing.T) {
-	w := newB11World(&seqRandom{floats: []float32{0.01}})
+	w := newB11World(&seqRandom{floats: []float64{0.01}})
 	w.griefing = true
 	m := newB11bMob(w, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:sheep")
 	w.blocks[Pos{Y: 63}] = Block{Name: "minecraft:grass_block"}
@@ -64,7 +64,7 @@ func TestEatBlockEatsGrassAfterTheTimer(t *testing.T) {
 }
 
 func TestEatBlockDrawsTheChanceFirst(t *testing.T) {
-	w := newB11World(&seqRandom{floats: []float32{0.5}})
+	w := newB11World(&seqRandom{floats: []float64{0.5}})
 	m := newB11bMob(w, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:sheep")
 	w.blocks[Pos{Y: 63}] = Block{Name: "minecraft:grass_block"}
 	if NewEatBlock(w, m, DefaultEatBlock()).CanUse() {
@@ -149,7 +149,7 @@ func TestFindUnderwaterTreasureHeadsForTheWreck(t *testing.T) {
 }
 
 func TestSwimWithEntityCatchesUpThenMatches(t *testing.T) {
-	w := newB11World(&seqRandom{floats: []float32{0.05}})
+	w := newB11World(&seqRandom{floats: []float64{0.05}})
 	m := newB11bMob(w, Vec3{X: 0.5, Y: 40, Z: 0.5}, "minecraft:dolphin")
 	m.wet = map[ID]bool{m.id: true}
 	p := newB11bMob(w, Vec3{X: 0.5, Y: 40, Z: 10.5}, "minecraft:player")

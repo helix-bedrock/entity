@@ -24,7 +24,7 @@ func (m *bodyMob) Riders() []ID                  { return m.riders }
 func (m *bodyMob) SetHijackable(on bool)         { m.hijack = on }
 func (m *bodyMob) SetPersistSit(on bool)         { m.sit = on }
 func (m *bodyMob) SetPersistent()                {}
-func (m *bodyMob) LookAt(Vec3, float32, float32) {}
+func (m *bodyMob) LookAt(Vec3, float64, float64) {}
 func (m *bodyMob) LookBusy() bool                { return false }
 
 func (m *bodyMob) HijacksMount() bool { return false }
@@ -122,7 +122,7 @@ type petMob struct{ *bodyMob }
 func (m *petMob) RuntimeID() uint64       { return 1 }
 func (m *petMob) CanSee(Actor) bool       { return true }
 func (m *petMob) CanAttack(Actor) bool    { return true }
-func (m *petMob) FollowRange() float32    { return 16 }
+func (m *petMob) FollowRange() float64    { return 16 }
 func (m *petMob) Admiring() bool          { return false }
 func (m *petMob) PlayersTargetable() bool { return true }
 func (m *petMob) Team() int               { return 0 }

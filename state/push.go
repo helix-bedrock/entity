@@ -34,25 +34,25 @@ type PushPreset struct {
 	Filter *definition.Filter
 	Mode   PushMode
 	// Strength is strength_multiplier, the push speed per tick.
-	Strength float32
+	Strength float64
 	// MinDistance and MaxDistance bound the distance between the two
 	// (on the larger axis for the default mode, else the length); the
 	// pusher's half width is taken off before the MaxDistance test.
-	MinDistance, MaxDistance float32
+	MinDistance, MaxDistance float64
 	// RequireCollisionOverlap pushes only when the two boxes overlap.
 	RequireCollisionOverlap bool
 	// ScaleSelf scales the push on the pushed mob and ScaleOther the push
 	// back on the pusher.
-	ScaleSelf, ScaleOther float32
+	ScaleSelf, ScaleOther float64
 	// The ball mode's kick: the pusher's speed times KickSpeedScale,
 	// clamped to MinKickSpeed..MaxKickSpeed, and the upward part of the
 	// kick on a mob on the ground.
-	KickSpeedScale, MinKickSpeed, MaxKickSpeed, VerticalKickMultiplier float32
+	KickSpeedScale, MinKickSpeed, MaxKickSpeed, VerticalKickMultiplier float64
 	// PlaySound plays the push sound when the push on the mob is at least
 	// PlaySoundImpulseThreshold, at most once per PlaySoundCooldown ticks.
 	PlaySound                 bool
 	PlaySoundCooldown         int64
-	PlaySoundImpulseThreshold float32
+	PlaySoundImpulseThreshold float64
 }
 
 // DefaultPushPreset is the 1.26.60 default preset (static 0xFD47DE8,
@@ -71,14 +71,14 @@ type PushableByEntityConfig struct {
 	Presets []PushPreset
 	// Reach is how far past its box, on x and z, a mob pushes others
 	// (Mob::pushActors, 1.26.60 0xBFEE7F0, grows the box by 0.2).
-	Reach float32
+	Reach float64
 	// MinecartAlign is how closely two minecarts must line up, as the
 	// cosine between the push and the pushed cart's heading, to share
 	// their speed; MinecartKeep is the part of their own speed each keeps.
-	MinecartAlign, MinecartKeep float32
+	MinecartAlign, MinecartKeep float64
 	// MinBallLength is the shortest distance the ball mode takes a
 	// direction from.
-	MinBallLength float32
+	MinBallLength float64
 	// SoundEvent is the level sound event of the push sound.
 	SoundEvent int
 }
@@ -134,7 +134,7 @@ type PushWorld interface {
 	PushableByEntity(a behavior.Actor) *PushableByEntity
 	// PushThrough is the actor's push-through value (0 for none), which
 	// weakens default, boat and minecart pushes on it.
-	PushThrough(a behavior.Actor) float32
+	PushThrough(a behavior.Actor) float64
 	// SameVehicle reports that b is a's vehicle root or rides it.
 	SameVehicle(a, b behavior.Actor) bool
 	// PrevVehicle is the vehicle the actor last left while it is not
@@ -246,11 +246,11 @@ func (p *PushableByEntity) push(env *Env, w PushWorld, a, b behavior.Actor, self
 	w.PullIn(a, b)
 	pa, pb := a.Pos(), b.Pos()
 	dx, dz := pb.X-pa.X, pb.Z-pa.Z
-	var dist float32
+	var dist float64
 	if pre.Mode == PushDefault {
 		dist = max(abs(dx), abs(dz))
 	} else {
-		dist = float32(math.Sqrt(float64(dx*dx + dz*dz)))
+		dist = float64(math.Sqrt(float64(dx*dx + dz*dz)))
 	}
 	bb := b.Box()
 	if dist < pre.MinDistance || dist-(bb.Max.X-bb.Min.X)*0.5 > pre.MaxDistance {
@@ -290,7 +290,7 @@ func (p *PushableByEntity) sound(env *Env, w PushWorld, pre PushPreset, a behavi
 // vectors returns the pushes on a and b for the preset's mode: default
 // (0x7518320), legacy_boat (0x7517D90), legacy_minecart (0x7517E90) and
 // ball (0x75180E0). dist is the mode's distance, never below MinDistance.
-func (p *PushableByEntity) vectors(w PushWorld, pre PushPreset, a, b behavior.Actor, dx, dz, dist float32) (va, vb behavior.Vec3) {
+func (p *PushableByEntity) vectors(w PushWorld, pre PushPreset, a, b behavior.Actor, dx, dz, dist float64) (va, vb behavior.Vec3) {
 	if dist <= 0 && pre.Mode != PushBall {
 		return
 	}
@@ -299,7 +299,7 @@ func (p *PushableByEntity) vectors(w PushWorld, pre PushPreset, a, b behavior.Ac
 	case PushDefault:
 		// BDS normalizes by the square root of the larger axis, not the
 		// length, and leaves ScaleSelf out of the push back.
-		f := float32(1 / math.Sqrt(float64(dist)))
+		f := float64(1 / math.Sqrt(float64(dist)))
 		g := min(f, 1) * pre.Strength
 		x, z := dx*f*g*keep, dz*f*g*keep
 		return behavior.Vec3{X: -x * pre.ScaleSelf, Z: -z * pre.ScaleSelf},
@@ -323,11 +323,11 @@ func (p *PushableByEntity) vectors(w PushWorld, pre PushPreset, a, b behavior.Ac
 
 // minecarts is the minecart against minecart push: lined-up carts share
 // their speed, others do not push. nx, nz is the unit push direction.
-func (p *PushableByEntity) minecarts(w PushWorld, a, b behavior.Actor, nx, nz, x, z float32) (va, vb behavior.Vec3) {
+func (p *PushableByEntity) minecarts(w PushWorld, a, b behavior.Actor, nx, nz, x, z float64) (va, vb behavior.Vec3) {
 	// BDS reads the heading from its sine table.
-	i := float32(float64(a.BodyYaw())*math.Pi/180) * 10430.378
+	i := float64(float64(a.BodyYaw())*math.Pi/180) * 10430.378
 	cos, sin := tableSin(int32(i+16384)), tableSin(int32(i))
-	if l := float32(math.Sqrt(float64(cos*cos + sin*sin))); l >= 1e-4 {
+	if l := float64(math.Sqrt(float64(cos*cos + sin*sin))); l >= 1e-4 {
 		cos, sin = cos/l, sin/l
 	} else {
 		cos, sin = 0, 0
@@ -346,15 +346,15 @@ func (p *PushableByEntity) minecarts(w PushWorld, a, b behavior.Actor, nx, nz, x
 // ball is the sulfur cube's kick: the pusher's speed sets the kick, which
 // sends the mob straight away from the pusher, up too when it is on the
 // ground, and the pusher back. l is the distance between the two.
-func (p *PushableByEntity) ball(w PushWorld, pre PushPreset, a, b behavior.Actor, dx, dz, l float32) (va, vb behavior.Vec3) {
+func (p *PushableByEntity) ball(w PushWorld, pre PushPreset, a, b behavior.Actor, dx, dz, l float64) (va, vb behavior.Vec3) {
 	s := w.Velocity(b)
-	speed := float32(math.Sqrt(float64(s.X*s.X+s.Y*s.Y+s.Z*s.Z))) * pre.KickSpeedScale
+	speed := float64(math.Sqrt(float64(s.X*s.X+s.Y*s.Y+s.Z*s.Z))) * pre.KickSpeedScale
 	kick := min(max(speed, pre.MinKickSpeed), pre.MaxKickSpeed)
-	var nx, nz float32
+	var nx, nz float64
 	if l >= p.cfg.MinBallLength {
 		nx, nz = dx/l, dz/l
 	}
-	var up float32
+	var up float64
 	if w.OnGround(a) {
 		up = pre.VerticalKickMultiplier
 	}
@@ -363,8 +363,8 @@ func (p *PushableByEntity) ball(w PushWorld, pre PushPreset, a, b behavior.Actor
 }
 
 // tableSin is mce::Math's sine table lookup: 65536 steps per turn.
-func tableSin(i int32) float32 {
-	return float32(math.Sin(float64(uint16(i)) * 2 * math.Pi / 65536))
+func tableSin(i int32) float64 {
+	return float64(math.Sin(float64(uint16(i)) * 2 * math.Pi / 65536))
 }
 
 // intersects is AABB::intersects: the boxes overlap with some volume.
@@ -374,7 +374,7 @@ func intersects(a, b behavior.Box) bool {
 		a.Max.Z > b.Min.Z && a.Min.Z < b.Max.Z
 }
 
-func abs(v float32) float32 {
+func abs(v float64) float64 {
 	if v < 0 {
 		return -v
 	}

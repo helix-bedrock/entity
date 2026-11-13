@@ -12,7 +12,7 @@ func (f *Finder) stepBox(b Block, p Pos) Box {
 // reaches by moving to pos, stepping up by at most stepUp or dropping down,
 // or nil. Like BDS it adds the node's cost again each time it returns an
 // existing node.
-func (f *Finder) getNode(from, p Pos, canClimb bool, stepUp float32) *node {
+func (f *Finder) getNode(from, p Pos, canClimb bool, stepUp float64) *node {
 	s := f.s
 	t := f.isFree(from, p, f.size, false, canClimb)
 	if s.Fly {
@@ -59,8 +59,8 @@ func (f *Finder) getNode(from, p Pos, canClimb bool, stepUp float32) *node {
 
 // stepUpNode tries the node stepUp above pos for a mob standing on box at
 // from.
-func (f *Finder) stepUpNode(from, p Pos, box Box, stepUp float32, canClimb bool) *node {
-	top := float32(from.Y)
+func (f *Finder) stepUpNode(from, p Pos, box Box, stepUp float64, canClimb bool) *node {
+	top := float64(from.Y)
 	if box.Min.X < box.Max.X && box.Min.Y < box.Max.Y && box.Min.Z < box.Max.Z {
 		top = box.Max.Y
 	}
@@ -70,17 +70,17 @@ func (f *Finder) stepUpNode(from, p Pos, box Box, stepUp float32, canClimb bool)
 		for z := p.Z; z < p.Z+f.size.Z; z++ {
 			q := Pos{x, y, z}
 			b := f.stepBox(f.world.Block(q), q)
-			level := float32(y)
+			level := float64(y)
 			if b.Max.X > b.Min.X && b.Max.Y > b.Min.Y && b.Min.Z < b.Max.Z {
 				level = b.Max.Y
 			}
 			u := Pos{x, y - 1, z}
 			ub := f.stepBox(f.world.Block(u), u)
-			var h float32
+			var h float64
 			if ub.Max.X > ub.Min.X && ub.Max.Y > ub.Min.Y && ub.Min.Z < ub.Max.Z {
 				h = max(ub.Max.Y, level)
 			} else {
-				h = max(float32(u.Y), level)
+				h = max(float64(u.Y), level)
 			}
 			if h > target {
 				return nil

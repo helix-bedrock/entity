@@ -27,7 +27,7 @@ type TakeBlockConfig struct {
 	OnTake  []string
 	XZRange Range[int32] `json:"xz_range"`
 	YRange  Range[int32] `json:"y_range"`
-	Chance  float32      `json:"chance"`
+	Chance  float64      `json:"chance"`
 	// AffectedByGriefingRule needs mobGriefing on.
 	AffectedByGriefingRule bool `json:"affected_by_griefing_rule"`
 	RequiresLineOfSight    bool `json:"requires_line_of_sight"`
@@ -100,7 +100,7 @@ type PlaceBlockConfig struct {
 	OnPlace                []string
 	XZRange                Range[int32] `json:"xz_range"`
 	YRange                 Range[int32] `json:"y_range"`
-	Chance                 float32      `json:"chance"`
+	Chance                 float64      `json:"chance"`
 	AffectedByGriefingRule bool         `json:"affected_by_griefing_rule"`
 }
 
@@ -225,7 +225,7 @@ func randomIncl(r Random, s Range[int32]) int32 {
 
 // chance is Random::chance (0x48CAB20): no draw at 0 or below or at 1 and
 // above.
-func chance(r Random, p float32) bool {
+func chance(r Random, p float64) bool {
 	if p <= 0 {
 		return false
 	}

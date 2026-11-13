@@ -23,12 +23,12 @@ type KineticWielder interface {
 	Attacker
 	// KineticReach is the reach of the held item's minecraft:kinetic_weapon
 	// component; ok is false when the mob holds no item with one.
-	KineticReach() (reach Range[float32], ok bool)
+	KineticReach() (reach Range[float64], ok bool)
 	// StartKineticCharge starts the held weapon's kinetic attack with the
 	// minimum speeds of its conditions multiplied by speedScale (BDS copies
 	// the item component into an actor component and sets actor flag 4).
 	// It does nothing while an attack already runs.
-	StartKineticCharge(speedScale float32)
+	StartKineticCharge(speedScale float64)
 	// KineticCharging reports that the attack still runs (the actor
 	// component exists).
 	KineticCharging() bool
@@ -41,22 +41,22 @@ type KineticWielder interface {
 type UseKineticWeaponConfig struct {
 	MeleeConfig
 	// ApproachDistance is how close, flat, the mob walks before it charges.
-	ApproachDistance float32 `json:"approach_distance"`
+	ApproachDistance float64 `json:"approach_distance"`
 	// RepositionDistance is how far past the target the mob runs after a
 	// charge.
-	RepositionDistance        Range[float32]
-	RepositionSpeedMultiplier float32 `json:"reposition_speed_multiplier"`
+	RepositionDistance        Range[float64]
+	RepositionSpeedMultiplier float64 `json:"reposition_speed_multiplier"`
 	// CooldownDistance is how far past the target the mob runs once the
 	// attack ends.
-	CooldownDistance Range[float32]
+	CooldownDistance Range[float64]
 	// CooldownSpeedMultiplier is read but never used by BDS: the cooldown
 	// walks use reposition_speed_multiplier.
-	CooldownSpeedMultiplier float32 `json:"cooldown_speed_multiplier"`
+	CooldownSpeedMultiplier float64 `json:"cooldown_speed_multiplier"`
 	// WeaponReachMultiplier scales the weapon's reach.
-	WeaponReachMultiplier float32 `json:"weapon_reach_multiplier"`
+	WeaponReachMultiplier float64 `json:"weapon_reach_multiplier"`
 	// WeaponMinSpeedMultiplier scales the minimum speeds of the weapon's
 	// conditions.
-	WeaponMinSpeedMultiplier float32 `json:"weapon_min_speed_multiplier"`
+	WeaponMinSpeedMultiplier float64 `json:"weapon_min_speed_multiplier"`
 }
 
 // DefaultUseKineticWeapon returns the goal's BDS defaults (definition
@@ -64,8 +64,8 @@ type UseKineticWeaponConfig struct {
 func DefaultUseKineticWeapon() UseKineticWeaponConfig {
 	return UseKineticWeaponConfig{
 		MeleeConfig:      DefaultMelee(),
-		ApproachDistance: 8, RepositionDistance: Range[float32]{2, 2}, RepositionSpeedMultiplier: 1,
-		CooldownDistance: Range[float32]{8, 8}, CooldownSpeedMultiplier: 1,
+		ApproachDistance: 8, RepositionDistance: Range[float64]{2, 2}, RepositionSpeedMultiplier: 1,
+		CooldownDistance: Range[float64]{8, 8}, CooldownSpeedMultiplier: 1,
 		WeaponReachMultiplier: 1, WeaponMinSpeedMultiplier: 1,
 	}
 }
@@ -82,7 +82,7 @@ type UseKineticWeapon struct {
 	state int
 	// reach is the weapon's reach times the multiplier; BDS keeps (0, 3)
 	// until a weapon was read.
-	reach Range[float32]
+	reach Range[float64]
 	// spot is the block the mob walks to, while hasSpot.
 	spot    Pos
 	hasSpot bool
@@ -93,7 +93,7 @@ type UseKineticWeapon struct {
 
 // NewUseKineticWeapon makes the goal (create 0x56CAAF0).
 func NewUseKineticWeapon(w World, m KineticWielder, c UseKineticWeaponConfig) *UseKineticWeapon {
-	g := &UseKineticWeapon{Melee: *NewMelee(w, m, c.MeleeConfig), k: m, reach: Range[float32]{0, 3}}
+	g := &UseKineticWeapon{Melee: *NewMelee(w, m, c.MeleeConfig), k: m, reach: Range[float64]{0, 3}}
 	g.kcfg = c
 	return g
 }
@@ -145,19 +145,19 @@ func (g *UseKineticWeapon) Stop() {
 func (g *UseKineticWeapon) readWeapon() {
 	if r, ok := g.k.KineticReach(); ok {
 		m := g.kcfg.WeaponReachMultiplier
-		g.reach = Range[float32]{r.Min * m, r.Max * m}
+		g.reach = Range[float64]{r.Min * m, r.Max * m}
 	}
 }
 
 // mid2 is the squared middle of the reach.
-func (g *UseKineticWeapon) mid2() float32 {
+func (g *UseKineticWeapon) mid2() float64 {
 	h := (g.reach.Min + g.reach.Max) * 0.5
 	return h * h
 }
 
 // flat2 is the flat squared distance from the mob to the target's vehicle,
 // or the target.
-func (g *UseKineticWeapon) flat2(t Actor) float32 {
+func (g *UseKineticWeapon) flat2(t Actor) float64 {
 	if v := g.actor(t.Vehicle()); v != nil {
 		t = v
 	}
@@ -275,16 +275,16 @@ func (g *UseKineticWeapon) follow() {
 // melee_fov. BDS turns the angle, already in radians, from degrees once
 // more, so the spot ends up close to +z of the target whatever the
 // direction.
-func (g *UseKineticWeapon) past(t Actor, r Range[float32]) {
+func (g *UseKineticWeapon) past(t Actor, r Range[float64]) {
 	r1 := g.world.Random()
 	p, q := g.m.AttachPos(0), t.AttachPos(0)
 	dx, dy, dz := q.X-p.X, q.Y-p.Y, q.Z-p.Z
-	l := float32(math.Sqrt(float64(dz*dz + dx*dx + dy*dy)))
-	var nx, nz float32
+	l := float64(math.Sqrt(float64(dz*dz + dx*dx + dy*dy)))
+	var nx, nz float64
 	if l >= kineticMinLength {
 		nx, nz = dx/l, dz/l
 	}
-	a := float32(math.Atan2(float64(nz), float64(nx)))
+	a := float64(math.Atan2(float64(nz), float64(nx)))
 	h := g.cfg.MeleeFOV * radPerDeg * 0.5
 	a = (h+h)*r1.NextFloat() - h + a
 	d := (r.Max-r.Min)*r1.NextFloat() + r.Min
@@ -299,7 +299,7 @@ func (g *UseKineticWeapon) past(t Actor, r Range[float32]) {
 
 // wander is 0x56A1200: a random land spot around the mob, its ranges the
 // distance's ends plus the reach's middle, then the walk there.
-func (g *UseKineticWeapon) wander(r Range[float32]) {
+func (g *UseKineticWeapon) wander(r Range[float64]) {
 	h := (g.reach.Min + g.reach.Max) * 0.5
 	p, ok := landPos(g.world, g.m, int32(r.Min+h), int32(r.Max+h))
 	if !ok {

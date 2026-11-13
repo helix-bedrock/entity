@@ -4,12 +4,12 @@ import "math"
 
 // GoHomeConfig is the JSON of minecraft:behavior.go_home.
 type GoHomeConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	// Interval is the 1 in n chance per tick to start; 0 never starts.
 	Interval   int32   `json:"interval"`
-	GoalRadius float32 `json:"goal_radius"`
+	GoalRadius float64 `json:"goal_radius"`
 	// CalculateNewPathRadius is read but not used by BDS 1.26.52's goal.
-	CalculateNewPathRadius float32  `json:"calculate_new_path_radius"`
+	CalculateNewPathRadius float64  `json:"calculate_new_path_radius"`
 	OnHome                 []string `json:"on_home"`
 	OnFailed               []string `json:"on_failed"`
 }
@@ -24,7 +24,7 @@ func DefaultGoHome() GoHomeConfig {
 type GoHome struct {
 	base
 	cfg     GoHomeConfig
-	radius2 float32
+	radius2 float64
 	lastEnd Pos
 }
 
@@ -41,8 +41,8 @@ func (g *GoHome) fire(events []string) {
 
 // homeDist2 is the squared distance from the mob to the home block's
 // middle.
-func (g *GoHome) homeDist2(h Pos) float32 {
-	return dist2(Vec3{X: float32(h.X) + 0.5, Y: float32(h.Y) + 0.5, Z: float32(h.Z) + 0.5}, g.mob.Pos())
+func (g *GoHome) homeDist2(h Pos) float64 {
+	return dist2(Vec3{X: float64(h.X) + 0.5, Y: float64(h.Y) + 0.5, Z: float64(h.Z) + 0.5}, g.mob.Pos())
 }
 
 // CanUse implements goal.Goal (0x57462B0).

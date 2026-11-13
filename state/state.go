@@ -94,7 +94,7 @@ type Mob interface {
 	// Despawn removes the mob as BDS's Actor::despawn.
 	Despawn()
 	// Hurt deals damage of an actor damage cause, as Actor::hurt.
-	Hurt(cause int, amount float32)
+	Hurt(cause int, amount float64)
 	// SetOnFire sets the mob on fire for a number of seconds.
 	SetOnFire(seconds int32)
 	// CanSeeDaylight is Actor::canSeeDaylight.

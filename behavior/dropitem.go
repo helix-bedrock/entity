@@ -13,7 +13,7 @@ type Gifter interface {
 	Mob
 	// TimeOfDay is the dimension's time of day for the level time, from 0
 	// to 1 (Dimension::getTimeOfDay).
-	TimeOfDay() float32
+	TimeOfDay() float64
 	// DropGift rolls the loot table with the level's Random and the mob as
 	// the looting entity, and spawns each item at the mob's position,
 	// pickable after pickupDelay ticks. BDS then also sends its player event
@@ -25,20 +25,20 @@ type Gifter interface {
 // are in seconds.
 type DropItemForConfig struct {
 	MoveToConfig
-	SecondsBeforePickup float32 `json:"seconds_before_pickup"`
-	Cooldown            float32 `json:"cooldown"`
-	DropItemChance      float32 `json:"drop_item_chance"`
+	SecondsBeforePickup float64 `json:"seconds_before_pickup"`
+	Cooldown            float64 `json:"cooldown"`
+	DropItemChance      float64 `json:"drop_item_chance"`
 	// OfferingDistance is how far from the target the mob wants to stand.
-	OfferingDistance float32 `json:"offering_distance"`
+	OfferingDistance float64 `json:"offering_distance"`
 	// MinimumTeleportDistance is compared with the squared distance to the
 	// target spot, as BDS does.
-	MinimumTeleportDistance float32 `json:"minimum_teleport_distance"`
+	MinimumTeleportDistance float64 `json:"minimum_teleport_distance"`
 	// MaxHeadLookAtHeight is the look control's yaw limit.
-	MaxHeadLookAtHeight float32 `json:"max_head_look_at_height"`
+	MaxHeadLookAtHeight float64 `json:"max_head_look_at_height"`
 	// TargetRange widens the mob's box on each axis for the target search.
 	TargetRange    Vec3
 	TeleportOffset Vec3
-	TimeOfDayRange Range[float32]
+	TimeOfDayRange Range[float64]
 	LootTable      string `json:"loot_table"`
 	// OnDropAttempt is fired on the mob whenever the goal stops.
 	OnDropAttempt string
@@ -57,7 +57,7 @@ func DefaultDropItemFor() DropItemForConfig {
 		OfferingDistance: 1, MinimumTeleportDistance: 2, MaxHeadLookAtHeight: 10,
 		TargetRange:    Vec3{X: 1, Y: 1, Z: 1},
 		TeleportOffset: Vec3{Y: 1},
-		TimeOfDayRange: Range[float32]{0, 1},
+		TimeOfDayRange: Range[float64]{0, 1},
 	}
 }
 
@@ -75,7 +75,7 @@ type DropItemFor struct {
 	// tried.
 	wait, waitTicks int32
 	pickupDelay     int32
-	offering2       float32
+	offering2       float64
 	dropped         bool
 	buf             []Actor
 }
@@ -182,7 +182,7 @@ func (g *DropItemFor) Tick() {
 	pathDone := n == nil || n.Done()
 	if dist2(g.aim, g.mob.Pos()) > g.cfg.MinimumTeleportDistance {
 		o := g.cfg.TeleportOffset
-		g.m.Teleport(add(g.aim, Vec3{X: float32(floorInt(o.X)), Y: float32(floorInt(o.Y)), Z: float32(floorInt(o.Z))}))
+		g.m.Teleport(add(g.aim, Vec3{X: float64(floorInt(o.X)), Y: float64(floorInt(o.Y)), Z: float64(floorInt(o.Z))}))
 		if n != nil {
 			n.Stop()
 		}
@@ -223,7 +223,7 @@ func (g *DropItemFor) find() bool {
 	if h < 0 || r <= 0 {
 		return false
 	}
-	best, found := float32(moveToFar), false
+	best, found := float64(moveToFar), false
 	for k := int32(0); k <= h; k = ringNext(k) {
 		for i := int32(0); i < r; i++ {
 			for x := int32(0); x <= i; x = ringNext(x) {
@@ -236,7 +236,7 @@ func (g *DropItemFor) find() bool {
 					if !g.valid(p) {
 						continue
 					}
-					d := float32(math.Abs(float64(g.offering2 - float32(blockDist2(c, p)))))
+					d := float64(math.Abs(float64(g.offering2 - float64(blockDist2(c, p)))))
 					if best > d && g.reachable(p) {
 						g.aim, best, found = vecOf(p), d, true
 					}

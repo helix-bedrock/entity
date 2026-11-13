@@ -52,8 +52,8 @@ func pickHit(w World, hits []blockHit, method int) (Pos, bool) {
 
 // AvoidBlockConfig is the JSON of minecraft:behavior.avoid_block.
 type AvoidBlockConfig struct {
-	WalkSpeed    float32 `json:"walk_speed_modifier"`
-	SprintSpeed  float32 `json:"sprint_speed_modifier"`
+	WalkSpeed    float64 `json:"walk_speed_modifier"`
+	SprintSpeed  float64 `json:"sprint_speed_modifier"`
 	SearchRange  int32   `json:"search_range"`
 	SearchHeight int32   `json:"search_height"`
 	TickInterval int32   `json:"tick_interval"`
@@ -62,13 +62,13 @@ type AvoidBlockConfig struct {
 	TargetBlocks  []string
 	OnEscape      []string
 	Sound         int
-	SoundInterval Range[float32]
+	SoundInterval Range[float64]
 }
 
 // DefaultAvoidBlock returns the goal's BDS defaults.
 func DefaultAvoidBlock() AvoidBlockConfig {
 	return AvoidBlockConfig{WalkSpeed: 1, SprintSpeed: 1, TickInterval: 1, Sound: NoSound,
-		SoundInterval: Range[float32]{3, 8}}
+		SoundInterval: Range[float64]{3, 8}}
 }
 
 // AvoidBlock is AvoidBlockGoal: the mob runs from the nearest (or a random)
@@ -154,7 +154,7 @@ func (g *AvoidBlock) Stop() {
 // block.
 func (g *AvoidBlock) Tick() {
 	s := g.cfg.WalkSpeed
-	if r := float32(g.cfg.SearchRange * g.cfg.SearchRange); r > dist2(g.mob.Pos(), vecOf(g.block)) {
+	if r := float64(g.cfg.SearchRange * g.cfg.SearchRange); r > dist2(g.mob.Pos(), vecOf(g.block)) {
 		s = g.cfg.SprintSpeed
 	}
 	if n := g.mob.Nav(); n != nil {

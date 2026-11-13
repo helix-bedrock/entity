@@ -31,25 +31,25 @@ type AttackResult interface {
 // MeleeConfig is the JSON of minecraft:behavior.melee_attack. Times are in
 // ticks.
 type MeleeConfig struct {
-	SpeedMultiplier     float32 `json:"speed_multiplier"`
+	SpeedMultiplier     float64 `json:"speed_multiplier"`
 	TrackTarget         bool    `json:"track_target"`
 	RequireCompletePath bool    `json:"require_complete_path"`
 	AttackOnce          bool    `json:"attack_once"`
-	ReachMultiplier     float32 `json:"reach_multiplier"`
-	MeleeFOV            float32 `json:"melee_fov"`
+	ReachMultiplier     float64 `json:"reach_multiplier"`
+	MeleeFOV            float64 `json:"melee_fov"`
 	Cooldown            int32
 	RandomStopInterval  int32 `json:"random_stop_interval"`
 	PathTime            Range[int32]
-	InnerBoundary       float32 `json:"path_inner_boundary"`
-	OuterBoundary       float32 `json:"path_outer_boundary"`
+	InnerBoundary       float64 `json:"path_inner_boundary"`
+	OuterBoundary       float64 `json:"path_outer_boundary"`
 	InnerIncrease       int32
 	OuterIncrease       int32
 	FailIncrease        int32
-	XMaxRotation        float32 `json:"x_max_rotation"`
-	YMaxHeadRotation    float32 `json:"y_max_head_rotation"`
+	XMaxRotation        float64 `json:"x_max_rotation"`
+	YMaxHeadRotation    float64 `json:"y_max_head_rotation"`
 	// HorizontalReach is melee_box_attack's reach: how far the mob's box
 	// is widened, on x and z only, to touch the target's box.
-	HorizontalReach float32 `json:"horizontal_reach"`
+	HorizontalReach float64 `json:"horizontal_reach"`
 	// AttackTypes, when set, limits the goal to targets of these types.
 	AttackTypes []string
 	OnAttack    string
@@ -173,7 +173,7 @@ func (g *Melee) Stop() {
 }
 
 // reach2 is the squared attack reach of 2.4.
-func (g *Melee) reach2(t Actor) float32 {
+func (g *Melee) reach2(t Actor) float64 {
 	b := g.m.Box()
 	w := max32(meleeMinWidth, b.Max.X-b.Min.X)
 	w2 := w
@@ -191,9 +191,9 @@ func (g *Melee) inFOV(t Actor) bool { return inFOV(g.m, t.Pos(), g.cfg.MeleeFOV)
 
 // inFOV is the field of view test (0x7267140): q lies within fov degrees
 // of the mob's body yaw.
-func inFOV(m Mob, q Vec3, fov float32) bool {
+func inFOV(m Mob, q Vec3, fov float64) bool {
 	p := m.Pos()
-	yaw := float32(math.Atan2(float64(q.Z-p.Z), float64(q.X-p.X)))*degPerRad - 90 - m.BodyYaw()
+	yaw := float64(math.Atan2(float64(q.Z-p.Z), float64(q.X-p.X)))*degPerRad - 90 - m.BodyYaw()
 	return wrap180(yaw+180) <= fov*0.5
 }
 
@@ -250,7 +250,7 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 // step is the chase step the melee goals share (0x526F3A0): look at the
 // target, count the repath timer down, and while the target is tracked or
 // seen remember where it is and repath when the timer runs out.
-func (g *Melee) step(t Actor, inReach bool, d2 float32) {
+func (g *Melee) step(t Actor, inReach bool, d2 float64) {
 	if !g.m.LookBusy() {
 		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
 	}
@@ -265,7 +265,7 @@ func (g *Melee) step(t Actor, inReach bool, d2 float32) {
 }
 
 // chase is the repath step of 2.3.
-func (g *Melee) chase(t Actor, d2 float32, inReach bool) {
+func (g *Melee) chase(t Actor, d2 float64, inReach bool) {
 	n := g.m.Nav()
 	if n == nil {
 		return

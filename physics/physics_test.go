@@ -31,7 +31,7 @@ func (w testWorld) CollisionBoxes(dst []Box, b Box) []Box {
 	for x := x0; x <= x1; x++ {
 		for z := z0; z <= z1; z++ {
 			for y := y0; y <= y1; y++ {
-				c := Box{Min: Vec3{X: float32(x), Y: float32(y), Z: float32(z)}, Max: Vec3{X: float32(x + 1), Y: float32(y + 1), Z: float32(z + 1)}}
+				c := Box{Min: Vec3{X: float64(x), Y: float64(y), Z: float64(z)}, Max: Vec3{X: float64(x + 1), Y: float64(y + 1), Z: float64(z + 1)}}
 				if overlapsOrTouches(c, b) {
 					dst = append(dst, c)
 				}
@@ -53,7 +53,7 @@ func overlapsOrTouches(a, b Box) bool {
 func (testWorld) ContainsMaterial(Box, path.Material) bool { return false }
 func (testWorld) ContainsLiquid(Box) bool                  { return false }
 
-func mob(x, y, z float32) *Body {
+func mob(x, y, z float64) *Body {
 	b := &Body{
 		Pos: Vec3{X: x, Y: y, Z: z}, Width: 0.6, Height: 1.8,
 		MovementSpeed: 0.1, AirSpeed: 0.02, SwimSpeed: 1,
@@ -64,7 +64,7 @@ func mob(x, y, z float32) *Body {
 	return b
 }
 
-func near(a, b float32) bool { return math.Abs(float64(a-b)) < 1e-5 }
+func near(a, b float64) bool { return math.Abs(float64(a-b)) < 1e-5 }
 
 func TestFallAndLand(t *testing.T) {
 	w := testWorld{}
@@ -92,7 +92,7 @@ func TestWalkSpeed(t *testing.T) {
 	b.Input = Vec3{Z: 1}
 	b.Tick(w)
 	// 0.546/(0.6*0.91) is 1, so the travel speed is the movement speed.
-	want := float32(0.1*0.98) * 0.546
+	want := float64(0.1*0.98) * 0.546
 	if b.Travel() != TravelGround || !near(b.Vel.Z, want) || !near(b.Pos.Z, 0.5+0.1*0.98) {
 		t.Fatalf("travel %d vel %v pos %v", b.Travel(), b.Vel, b.Pos)
 	}

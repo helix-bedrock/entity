@@ -139,16 +139,16 @@ type Sneezer interface {
 // is in whole seconds.
 type SneezeConfig struct {
 	Cooldown       int32
-	Probability    float32 `json:"probability"`
-	DropItemChance float32 `json:"drop_item_chance"`
+	Probability    float64 `json:"probability"`
+	DropItemChance float64 `json:"drop_item_chance"`
 	LootTable      string  `json:"loot_table"`
 	Sound          int
 	PrepareSound   int
-	PrepareTime    float32 `json:"prepare_time"`
+	PrepareTime    float64 `json:"prepare_time"`
 	// EntityTypes are the filters of the mobs that jump at the sneeze,
 	// tested with the sneezing mob as self and the mob as other.
 	EntityTypes  []Filter
-	WithinRadius float32 `json:"within_radius"`
+	WithinRadius float64 `json:"within_radius"`
 }
 
 // DefaultSneeze returns the goal's BDS defaults.

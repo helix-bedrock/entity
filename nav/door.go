@@ -82,7 +82,7 @@ func passDoor(w World, m *Mob, b path.Block, p *path.Path, i int) bool {
 // clearOf reports whether the mob's box stays out of the block at p.
 func clearOf(m *Mob, p path.Pos) bool {
 	b := m.Box
-	x, y, z := float32(p.X), float32(p.Y), float32(p.Z)
+	x, y, z := float64(p.X), float64(p.Y), float64(p.Z)
 	return !(b.Max.X > x && b.Min.X < x+1 && b.Max.Y > y && b.Min.Y < y+1 && b.Max.Z > z && b.Min.Z < z+1)
 }
 

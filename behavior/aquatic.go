@@ -40,7 +40,7 @@ type AquaticCharger interface {
 	WasInWater(a Actor) bool
 	// MovementAttribute is the current value of the first of the two
 	// movement attributes BDS looks up, 0.1 when the mob has neither.
-	MovementAttribute() float32
+	MovementAttribute() float64
 	// HorizontalCollision is HorizontalCollisionFlagComponent.
 	HorizontalCollision() bool
 }
@@ -48,16 +48,16 @@ type AquaticCharger interface {
 // AquaticChargeAttackConfig is the JSON of
 // minecraft:behavior.aquatic_charge_attack.
 type AquaticChargeAttackConfig struct {
-	MaxChargeDistance float32 `json:"max_charge_distance"`
-	AttackReach       float32 `json:"attack_reach"`
-	KnockbackForce    float32 `json:"knockback_force"`
-	Overshoot         float32 `json:"charge_overshoot_distance"`
-	ChargeSpeed       float32 `json:"charge_speed"`
+	MaxChargeDistance float64 `json:"max_charge_distance"`
+	AttackReach       float64 `json:"attack_reach"`
+	KnockbackForce    float64 `json:"knockback_force"`
+	Overshoot         float64 `json:"charge_overshoot_distance"`
+	ChargeSpeed       float64 `json:"charge_speed"`
 	// Cooldown is charge_cooldown_time in seconds.
-	Cooldown Range[float32]
+	Cooldown Range[float64]
 	// SpeedMultiplier is charge_speed_multiplier; with it the charge
 	// speed follows the movement attribute.
-	SpeedMultiplier    float32 `json:"charge_speed_multiplier"`
+	SpeedMultiplier    float64 `json:"charge_speed_multiplier"`
 	HasSpeedMultiplier bool
 }
 
@@ -65,7 +65,7 @@ type AquaticChargeAttackConfig struct {
 func DefaultAquaticChargeAttack() AquaticChargeAttackConfig {
 	return AquaticChargeAttackConfig{
 		MaxChargeDistance: 16, AttackReach: 10, KnockbackForce: 0.05, Overshoot: 2, ChargeSpeed: 1.5,
-		Cooldown: Range[float32]{2, 6},
+		Cooldown: Range[float64]{2, 6},
 	}
 }
 
@@ -262,7 +262,7 @@ func (g *AquaticChargeAttack) wanderRange() int32 {
 
 // wanderStep is one tick of swimming about (0x720B590): steer at the
 // wander spot and pick a new one when it is reached or the mob is stuck.
-func (g *AquaticChargeAttack) wanderStep(attr float32) {
+func (g *AquaticChargeAttack) wanderStep(attr float64) {
 	if !g.m.WasInWater(g.m) {
 		return
 	}
@@ -310,8 +310,8 @@ func (g *AquaticChargeAttack) pickWander() {
 	p := g.m.Pos()
 	_, yaw := g.m.HeadRotation()
 	r := float64(yaw * radPerDeg)
-	half := 0.5 * float32(n)
-	x, z := p.X-float32(math.Sin(r))*half, float32(math.Cos(r))*half+p.Z
+	half := 0.5 * float64(n)
+	x, z := p.X-float64(math.Sin(r))*half, float64(math.Cos(r))*half+p.Z
 	if y, ok := g.wanderDepth(x, z, n); ok {
 		g.setWander(Vec3{X: x, Y: y, Z: z})
 	}
@@ -321,12 +321,12 @@ func (g *AquaticChargeAttack) pickWander() {
 // floor (or 20 under the surface, or the range under the mob) and just
 // under the surface, kept when that block is water and the climb is
 // shallow.
-func (g *AquaticChargeAttack) wanderDepth(x, z float32, n int32) (float32, bool) {
+func (g *AquaticChargeAttack) wanderDepth(x, z float64, n int32) (float64, bool) {
 	p := g.m.Pos()
-	rng := float32(n)
+	rng := float64(n)
 	bx, bz := floorInt(x), floorInt(z)
-	ground := float32(g.world.AboveTopSolid(bx, bz))
-	top, maxH := ground, float32(g.world.MaxHeight())
+	ground := float64(g.world.AboveTopSolid(bx, bz))
+	top, maxH := ground, float64(g.world.MaxHeight())
 	for maxH > top {
 		if g.world.LiquidMaterial(Pos{X: bx, Y: int32(top), Z: bz}) != path.MaterialWater {
 			top--
@@ -349,7 +349,7 @@ func (g *AquaticChargeAttack) wanderDepth(x, z float32, n int32) (float32, bool)
 		return 0, false
 	}
 	dx, dz := x-p.X, z-p.Z
-	pitch := abs32(float32(math.Atan2(float64(y-p.Y), float64(sqrt32(dx*dx+dz*dz)))) * -degPerRad)
+	pitch := abs32(float64(math.Atan2(float64(y-p.Y), float64(sqrt32(dx*dx+dz*dz)))) * -degPerRad)
 	if pitch > wanderMaxPitch && pitch < wanderMinPitch {
 		return 0, false
 	}
@@ -361,15 +361,15 @@ func (g *AquaticChargeAttack) setWander(w Vec3) {
 	g.wander, g.last, g.stuck = w, g.m.Pos(), 0
 	d := sub(w, g.m.Pos())
 	if length2(d) > steerEpsilon {
-		turnYaw(g.m, float32(math.Atan2(float64(-d.X), float64(d.Z)))*degPerRad, wanderMaxTurn)
+		turnYaw(g.m, float64(math.Atan2(float64(-d.X), float64(d.Z)))*degPerRad, wanderMaxTurn)
 	}
 }
 
 // steer is the swim steering step (0x720B920): turn towards dir by at most
 // limit degrees and take vel as the motion when it differs.
-func steer(m Mob, dir, vel Vec3, limit float32) {
+func steer(m Mob, dir, vel Vec3, limit float64) {
 	if length2(dir) > steerEpsilon {
-		turnYaw(m, float32(math.Atan2(float64(-dir.X), float64(dir.Z)))*degPerRad, limit)
+		turnYaw(m, float64(math.Atan2(float64(-dir.X), float64(dir.Z)))*degPerRad, limit)
 	}
 	if dist2(vel, m.Velocity()) > steerEpsilon {
 		m.SetVelocity(vel)
@@ -378,13 +378,13 @@ func steer(m Mob, dir, vel Vec3, limit float32) {
 
 // turnYaw turns the mob's rotation towards yaw by at most limit degrees;
 // BDS only writes it when it changes.
-func turnYaw(m Mob, yaw, limit float32) {
+func turnYaw(m Mob, yaw, limit float64) {
 	_, cur := m.HeadRotation()
 	if v := approachDegrees(cur, yaw, limit); v != cur {
 		m.SetYaw(v)
 	}
 }
 
-func length2(v Vec3) float32 { return v.Z*v.Z + (v.X*v.X + v.Y*v.Y) }
+func length2(v Vec3) float64 { return v.Z*v.Z + (v.X*v.X + v.Y*v.Y) }
 
-func ceil32(v float32) float32 { return float32(math.Ceil(float64(v))) }
+func ceil32(v float64) float64 { return float64(math.Ceil(float64(v))) }

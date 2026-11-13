@@ -37,26 +37,26 @@ type PetSleeper interface {
 	TellOwner()
 	// SetExactPathEnd sets the navigation's exact end switch (+0x8000)
 	// and the squared reach of the last node.
-	SetExactPathEnd(reach2 float32)
+	SetExactPathEnd(reach2 float64)
 	// SetPathSpeed is the speed of the path being followed.
-	SetPathSpeed(s float32)
+	SetPathSpeed(s float64)
 	// Velocity and SetVelocity are the mob's motion.
 	Velocity() Vec3
 	SetVelocity(v Vec3)
 	// Yaw is ActorRotationComponent's yaw; SetYaw sets it.
-	Yaw() float32
-	SetYaw(yaw float32)
+	Yaw() float64
+	SetYaw(yaw float64)
 	// SetBodyYaw sets the body rotation (MobBodyRotationComponent).
-	SetBodyYaw(yaw float32)
+	SetBodyYaw(yaw float64)
 }
 
 // PetSleepWithOwnerConfig is the JSON of
 // minecraft:behavior.pet_sleep_with_owner.
 type PetSleepWithOwnerConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	SearchRange     int32   `json:"search_range"`
 	SearchHeight    int32   `json:"search_height"`
-	GoalRadius      float32 `json:"goal_radius"`
+	GoalRadius      float64 `json:"goal_radius"`
 }
 
 // DefaultPetSleepWithOwner returns the goal's BDS defaults (0x5755A70).
@@ -93,17 +93,17 @@ func (g *PetSleepWithOwner) CanUse() bool {
 		return false
 	}
 	p, op := m.Pos(), o.Pos()
-	if abs32(p.Y-op.Y) > float32(g.cfg.SearchHeight) {
+	if abs32(p.Y-op.Y) > float64(g.cfg.SearchHeight) {
 		return false
 	}
 	dx, dz := p.X-op.X, p.Z-op.Z
-	if float32(g.cfg.SearchRange*g.cfg.SearchRange) > dz*dz+dx*dx {
+	if float64(g.cfg.SearchRange*g.cfg.SearchRange) > dz*dz+dx*dx {
 		return false
 	}
 	if !m.ClaimBed(bed) {
 		return false
 	}
-	g.target = Vec3{X: float32(bed.X) + 0.5, Y: float32(bed.Y) + 0.5, Z: float32(bed.Z) + 0.5}
+	g.target = Vec3{X: float64(bed.X) + 0.5, Y: float64(bed.Y) + 0.5, Z: float64(bed.Z) + 0.5}
 	return true
 }
 
@@ -162,7 +162,7 @@ func (g *PetSleepWithOwner) slowAtEnd() {
 }
 
 // gap2 is the squared distance from the box's middle height to the bed.
-func (g *PetSleepWithOwner) gap2() float32 {
+func (g *PetSleepWithOwner) gap2() float64 {
 	p, b := g.m.Pos(), g.m.Box()
 	mid := (b.Max.Y-b.Min.Y)*0.5 + b.Min.Y
 	dx, dy, dz := g.target.X-p.X, g.target.Y-mid, g.target.Z-p.Z
@@ -190,7 +190,7 @@ func (g *PetSleepWithOwner) hopTick() {
 	v := m.Velocity()
 	m.SetVelocity(Vec3{X: v.X * petSleepDamp, Y: v.Y * petSleepDamp, Z: v.Z * petSleepDamp})
 	p := m.Pos()
-	face := float32(math.Atan2(float64(g.target.Z-p.Z), float64(g.target.X-p.X)))*degPerRad - 90
+	face := float64(math.Atan2(float64(g.target.Z-p.Z), float64(g.target.X-p.X)))*degPerRad - 90
 	m.SetYaw(approachDegrees(m.Yaw(), face, petSleepTurn))
 	m.SetBodyYaw(approachDegrees(m.BodyYaw(), face, petSleepTurn))
 }

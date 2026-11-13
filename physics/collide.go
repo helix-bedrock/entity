@@ -14,13 +14,13 @@ const (
 // boxes overlap, the movement with the shape ignored (free) and with it
 // applied (clipped).
 type clipResult struct {
-	depth         float32
+	depth         float64
 	free, clipped Vec3
 	// axis is the push-out axis; 0 unless the boxes overlap.
 	axis int
 }
 
-func get(v Vec3, axis int) float32 {
+func get(v Vec3, axis int) float64 {
 	switch axis {
 	case 0:
 		return v.X
@@ -30,7 +30,7 @@ func get(v Vec3, axis int) float32 {
 	return v.Z
 }
 
-func set(v *Vec3, axis int, f float32) {
+func set(v *Vec3, axis int, f float64) {
 	switch axis {
 	case 0:
 		v.X = f
@@ -43,7 +43,7 @@ func set(v *Vec3, axis int, f float32) {
 
 // gap is one axis of clip: the distances that would push mov out of shape
 // toward + (up) and - (down), each zeroed below clipEps.
-func gap(sMin, sMax, mMin, mMax float32) (up, down float32) {
+func gap(sMin, sMax, mMin, mMax float64) (up, down float64) {
 	up, down = sMax-mMin, mMax-sMin
 	if abs32(up) <= clipEps {
 		up = 0
@@ -63,9 +63,9 @@ func clip(s, mov Box, v Vec3) clipResult {
 	if s.Min.X >= s.Max.X || s.Min.Y >= s.Max.Y || s.Min.Z >= s.Max.Z {
 		return r
 	}
-	var pen, dir [3]float32
-	var gapLen, gapDir float32
-	axes := [3][4]float32{
+	var pen, dir [3]float64
+	var gapLen, gapDir float64
+	axes := [3][4]float64{
 		{s.Min.X, s.Max.X, mov.Min.X, mov.Max.X},
 		{s.Min.Y, s.Max.Y, mov.Min.Y, mov.Max.Y},
 		{s.Min.Z, s.Max.Z, mov.Min.Z, mov.Max.Z},
@@ -132,9 +132,9 @@ func clip(s, mov Box, v Vec3) clipResult {
 // every shape, last to first, and a shape the box sinks into deeper than
 // the axis epsilon is ignored. It returns the total movement, the summed
 // push-out depth and the moved box.
-func sweep(box Box, steps []Vec3, shapes []Box, epsv Vec3) (Vec3, float32, Box) {
+func sweep(box Box, steps []Vec3, shapes []Box, epsv Vec3) (Vec3, float64, Box) {
 	var total Vec3
-	var depth float32
+	var depth float64
 	for _, v := range steps {
 		for i := len(shapes) - 1; i >= 0; i-- {
 			r := clip(shapes[i], box, v)
@@ -232,12 +232,12 @@ func (b *Body) moveCollide(w World) {
 		b.Vel, b.Slowdown = Vec3{}, Vec3{}
 	}
 	if l2 := b.delta.Z*b.delta.Z + (b.delta.X*b.delta.X + b.delta.Y*b.delta.Y); l2 > maxMove*maxMove {
-		k := maxMove / float32(math.Sqrt(float64(l2)))
+		k := maxMove / float64(math.Sqrt(float64(l2)))
 		b.delta = scale(b.delta, k)
 	}
 	b.shapes = w.CollisionBoxes(b.shapes[:0], b.fetchBox())
 
-	var e float32
+	var e float64
 	if b.depen&(1|depenTwice|depenToward) == 0 {
 		e = depenEps
 	}

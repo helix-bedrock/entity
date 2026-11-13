@@ -43,21 +43,21 @@ func heardNoteblock(w World, m NoteblockListener, listenSeconds int32, blocks []
 }
 
 func blockCentre(p Pos) Vec3 {
-	return Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}
+	return Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}
 }
 
 // StayNearNoteblockConfig is the JSON of
 // minecraft:behavior.stay_near_noteblock.
 type StayNearNoteblockConfig struct {
-	Speed                       float32
-	StartDistance, StopDistance float32
+	Speed                       float64
+	StartDistance, StopDistance float64
 	// ListenTime is in seconds.
 	ListenTime int32
 	// Noteblock is the block descriptor the heard spot must match.
 	Noteblock []string
 	// LookYaw is the look control's yaw limit; the pitch limit is the
 	// mob's MaxHeadXRot.
-	LookYaw float32
+	LookYaw float64
 	// Repath is how many ticks pass between paths.
 	Repath int32
 }
@@ -139,19 +139,19 @@ func (g *StayNearNoteblock) Tick() {
 
 // GiveItemsConfig is the JSON the two give goals share.
 type GiveItemsConfig struct {
-	RunSpeed float32
+	RunSpeed float64
 	// ReachDistance is reach_block_distance or reach_mob_distance.
-	ReachDistance float32
-	ThrowForce    float32
+	ReachDistance float64
+	ThrowForce    float64
 	// VerticalThrowMul scales the throw's upward part.
-	VerticalThrowMul float32
+	VerticalThrowMul float64
 	ThrowSound       int
 	// OnItemThrow are the events fired on the mob each tick it throws.
 	OnItemThrow []string
 	// SoundEvery and SoundChance gate the throw sound: on level ticks that
 	// divide by SoundEvery, when an IRandom float is below SoundChance.
 	SoundEvery  uint64
-	SoundChance float32
+	SoundChance float64
 }
 
 func defaultGiveItems() GiveItemsConfig {

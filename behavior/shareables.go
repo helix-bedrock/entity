@@ -160,7 +160,7 @@ func (i *Items) shareAmount(it Item, withCount bool) (int32, Item) {
 	}
 	n := have >> 1
 	if !half {
-		n = min(have-keep, int32(float32(keep)*shareThird))
+		n = min(have-keep, int32(float64(keep)*shareThird))
 	}
 	if craft != "" {
 		out := Item{Name: craft, Count: 1}

@@ -18,7 +18,7 @@ type DespawnConfig struct {
 	// FromDistance turns on the distance rule (the despawn_from_distance
 	// member is present); MinDistance and MaxDistance are its distances.
 	FromDistance             bool
-	MinDistance, MaxDistance float32
+	MinDistance, MaxDistance float64
 	// FromInactivity keeps a mob that acted within InactivityTimer seconds.
 	FromInactivity  bool
 	InactivityTimer int32
@@ -150,7 +150,7 @@ func (d *Despawn) standard(env *Env, chunks Chunks) bool {
 
 // playerWithin is Dimension::fetchAnyInteractablePlayer: a player that is
 // not a spectator within dist.
-func (d *Despawn) playerWithin(env *Env, p behavior.Vec3, dist float32) bool {
+func (d *Despawn) playerWithin(env *Env, p behavior.Vec3, dist float64) bool {
 	d.buf = env.World.Players(d.buf[:0])
 	defer clear(d.buf)
 	for _, pl := range d.buf {

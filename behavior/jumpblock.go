@@ -26,8 +26,8 @@ const (
 
 // The elevation angles jump_to_block tries, in order.
 var (
-	jumpBlockAngles     = []float32{70, 80, 50}
-	jumpBlockHighAngles = []float32{80, 70, 50}
+	jumpBlockAngles     = []float64{70, 80, 50}
+	jumpBlockHighAngles = []float64{80, 70, 50}
 )
 
 // jumpBlockFloorFrom is the base game version from which the search starts
@@ -74,10 +74,10 @@ type JumpToBlockConfig struct {
 	MinPathLength int32 `json:"minimum_path_length"`
 	MinDistance   int32 `json:"minimum_distance"`
 	// Cooldown is cooldown_range in seconds.
-	Cooldown        Range[float32]
-	ScaleFactor     float32  `json:"scale_factor"`
-	MaxVelocity     float32  `json:"max_velocity"`
-	PreferredChance float32  `json:"preferred_blocks_chance"`
+	Cooldown        Range[float64]
+	ScaleFactor     float64  `json:"scale_factor"`
+	MaxVelocity     float64  `json:"max_velocity"`
+	PreferredChance float64  `json:"preferred_blocks_chance"`
 	PreferredBlocks []string `json:"preferred_blocks"`
 	ForbiddenBlocks []string `json:"forbidden_blocks"`
 }
@@ -86,7 +86,7 @@ type JumpToBlockConfig struct {
 func DefaultJumpToBlock() JumpToBlockConfig {
 	return JumpToBlockConfig{
 		SearchWidth: jumpBlockWidth, SearchHeight: jumpBlockHeight, MinPathLength: 5, MinDistance: 2,
-		Cooldown: Range[float32]{10, 20}, ScaleFactor: 0.7, MaxVelocity: 1.5, PreferredChance: 1,
+		Cooldown: Range[float64]{10, 20}, ScaleFactor: 0.7, MaxVelocity: 1.5, PreferredChance: 1,
 	}
 }
 
@@ -265,8 +265,8 @@ func (g *JumpToBlock) candidates(pref bool) bool {
 			}
 		}
 		from := m.Pos()
-		aim := Vec3{X: float32(c.X) + 0.5, Z: float32(c.Z) + 0.5}
-		aim.Y = w.Block(c).ShapeHeight + 0.5 + float32(c.Y)
+		aim := Vec3{X: float64(c.X) + 0.5, Z: float64(c.Z) + 0.5}
+		aim.Y = w.Block(c).ShapeHeight + 0.5 + float64(c.Y)
 		ax, az := aim.X-from.X, aim.Z-from.Z
 		if l := sqrt32(az*az + (ax*ax + 0)); l >= minLength {
 			aim.X -= ax / l * jumpBlockAimBack
@@ -281,7 +281,7 @@ func (g *JumpToBlock) candidates(pref bool) bool {
 			if !ok {
 				continue
 			}
-			d := dist2(from, Vec3{X: float32(c.X) + 0.5, Y: float32(c.Y) + 0.5, Z: float32(c.Z) + 0.5})
+			d := dist2(from, Vec3{X: float64(c.X) + 0.5, Y: float64(c.Y) + 0.5, Z: float64(c.Z) + 0.5})
 			g.cands = append(g.cands, jumpCandidate{pos: c, velocity: v, weight: ceilInt(d)})
 			break
 		}
@@ -324,12 +324,12 @@ func (g *JumpToBlock) pick() bool {
 
 // turn is _rotateTowardsTarget (0x574F550): one turn step towards the
 // landing block, done when within a degree of it.
-func (g *JumpToBlock) turn(maxTurn float32) bool {
+func (g *JumpToBlock) turn(maxTurn float64) bool {
 	p := g.m.Pos()
-	dx, dz := float32(g.target.X)+0.5-p.X, float32(g.target.Z)+0.5-p.Z
-	yaw := float32(math.Atan2(float64(dx), float64(dz))) * -degPerRad
+	dx, dz := float64(g.target.X)+0.5-p.X, float64(g.target.Z)+0.5-p.Z
+	yaw := float64(math.Atan2(float64(dx), float64(dz))) * -degPerRad
 	v := faceYaw(g.m, g.m, yaw, maxTurn)
-	d := float32(math.Mod(float64(v-yaw+180), 360))
+	d := float64(math.Mod(float64(v-yaw+180), 360))
 	if d < 0 {
 		d += 360
 	}
@@ -368,7 +368,7 @@ func (g *JumpToBlock) Tick() {
 		g.jump()
 	case jumpBlockInAir:
 		m.SetFlag(FlagJumpGoal, true)
-		m.LookAt(Vec3{X: float32(g.target.X) + 0.5, Y: float32(g.target.Y + 1), Z: float32(g.target.Z) + 0.5}, jumpBlockLook, m.MaxHeadXRot())
+		m.LookAt(Vec3{X: float64(g.target.X) + 0.5, Y: float64(g.target.Y + 1), Z: float64(g.target.Z) + 0.5}, jumpBlockLook, m.MaxHeadXRot())
 		if m.Collided() {
 			v := m.Velocity()
 			v.X *= jumpBlockLandSlow
@@ -395,7 +395,7 @@ func (g *JumpToBlock) jump() {
 	m.SetBox(sortedBox(sub(c, half), add(c, half)))
 	m.SetDiscardFriction(true)
 	if amp, ok := m.EffectAmplifier(jumpBoostEffect); ok {
-		g.velocity = add(g.velocity, scale(normalize(g.velocity), float32(amp+1)*jumpBoostStep))
+		g.velocity = add(g.velocity, scale(normalize(g.velocity), float64(amp+1)*jumpBoostStep))
 	}
 	m.SetVelocity(g.velocity)
 	g.state = jumpBlockInAir

@@ -14,7 +14,7 @@ type nav struct {
 	stopped bool
 }
 
-func (n *nav) MoveTo(p behavior.Vec3, _ float32) bool { n.moves = append(n.moves, p); return true }
+func (n *nav) MoveTo(p behavior.Vec3, _ float64) bool { n.moves = append(n.moves, p); return true }
 func (n *nav) Stop()                                  { n.stopped = true }
 
 type leashMob struct {
@@ -196,7 +196,7 @@ func TestAttackCooldown(t *testing.T) {
 	w := &world{tick: 100, r: random{n: 5}}
 	m := newLeashMob(1)
 	env, ev := leashEnv(m, w)
-	a := NewAttackCooldown(AttackCooldownConfig{Time: behavior.Range[float32]{Min: 1, Max: 2}, OnComplete: trig("ready")}, w)
+	a := NewAttackCooldown(AttackCooldownConfig{Time: behavior.Range[float64]{Min: 1, Max: 2}, OnComplete: trig("ready")}, w)
 	if a.Until() != 100+20+5 {
 		t.Fatalf("until %d", a.Until())
 	}

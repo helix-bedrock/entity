@@ -3,12 +3,12 @@ package path
 import "math"
 
 // almostOne is BDS's 0.9999999f, the test for "a full block high".
-const almostOne float32 = 0.9999999
+const almostOne float64 = 0.9999999
 
 // maxFloat is FLT_MAX, the "no ceiling" answer.
-const maxFloat float32 = math.MaxFloat32
+const maxFloat float64 = math.MaxFloat32
 
-func abs32(v float32) float32 {
+func abs32(v float64) float64 {
 	if v < 0 {
 		return -v
 	}
@@ -16,15 +16,15 @@ func abs32(v float32) float32 {
 }
 
 // ceilInt is BDS's integer ceiling of a positive float.
-func ceilInt(v float32) int32 {
+func ceilInt(v float64) int32 {
 	i := int32(v)
-	if float32(i) < v {
+	if float64(i) < v {
 		i++
 	}
 	return i
 }
 
-func floorInt(v float32) int32 {
+func floorInt(v float64) int32 {
 	return int32(math.Floor(float64(v)))
 }
 
@@ -47,7 +47,7 @@ func (f *Finder) pathBox(b Block, p Pos) Box {
 }
 
 // columnSpace is a cached floor and ceiling of a column.
-type columnSpace struct{ floor, ceil float32 }
+type columnSpace struct{ floor, ceil float64 }
 
 // space returns the floor and ceiling around p for a mob of the search's
 // height, cached for the search.
@@ -62,7 +62,7 @@ func (f *Finder) space(p Pos) columnSpace {
 
 // ceiling is the bottom of the lowest box at or above p within the mob's
 // height.
-func (f *Finder) ceiling(p Pos) float32 {
+func (f *Finder) ceiling(p Pos) float64 {
 	n := ceilInt(f.s.Height)
 	if n < 0 {
 		return maxFloat
@@ -70,11 +70,11 @@ func (f *Finder) ceiling(p Pos) float32 {
 	b := f.world.Block(p)
 	if box := f.pathBox(b, p); box.HasVolume() {
 		c := f.world.CollisionBox(b, p)
-		if c.HasVolume() && abs32(c.Max.Y-c.Min.Y) < almostOne && abs32(c.Max.Y-float32(p.Y)) > almostOne {
+		if c.HasVolume() && abs32(c.Max.Y-c.Min.Y) < almostOne && abs32(c.Max.Y-float64(p.Y)) > almostOne {
 			return box.Min.Y
 		}
 	}
-	for i := int32(1); float32(n) >= float32(i); i++ {
+	for i := int32(1); float64(n) >= float64(i); i++ {
 		q := Pos{p.X, p.Y + i, p.Z}
 		if box := f.pathBox(f.world.Block(q), q); box.HasVolume() {
 			return box.Min.Y
@@ -85,7 +85,7 @@ func (f *Finder) ceiling(p Pos) float32 {
 
 // floor is the top of the highest box at or below p within the mob's
 // height.
-func (f *Finder) floor(p Pos) float32 {
+func (f *Finder) floor(p Pos) float64 {
 	n := ceilInt(f.s.Height)
 	if n < 0 {
 		return -maxFloat
@@ -96,11 +96,11 @@ func (f *Finder) floor(p Pos) float32 {
 		if !c.HasVolume() || abs32(c.Max.Y-c.Min.Y) >= almostOne {
 			return box.Max.Y
 		}
-		if abs32(c.Max.Y-float32(p.Y)) <= almostOne {
+		if abs32(c.Max.Y-float64(p.Y)) <= almostOne {
 			return box.Max.Y
 		}
 	}
-	for i := int32(1); float32(n) >= float32(i); i++ {
+	for i := int32(1); float64(n) >= float64(i); i++ {
 		q := Pos{p.X, p.Y - i, p.Z}
 		if box := f.pathBox(f.world.Block(q), q); box.HasVolume() {
 			return box.Max.Y
@@ -122,11 +122,11 @@ func (f *Finder) partialNode(p, from Pos) (NodeType, bool) {
 	if abs32(box.Min.Y-box.Max.Y) >= 1 {
 		return 0, false
 	}
-	var step float32
+	var step float64
 	if p.X == from.X && p.Z == from.Z {
 		if p.Y != from.Y {
 			c := f.space(from)
-			if c.floor > float32(p.Y) || float32(p.Y) > c.ceil {
+			if c.floor > float64(p.Y) || float64(p.Y) > c.ceil {
 				return NodeBlocked, true
 			}
 		}
@@ -141,7 +141,7 @@ func (f *Finder) partialNode(p, from Pos) (NodeType, bool) {
 		return 0, false
 	}
 	dy := p.Y - from.Y
-	top := abs32(box.Max.Y - float32(p.Y))
+	top := abs32(box.Max.Y - float64(p.Y))
 	high := top > almostOne
 	if dy >= 0 && high {
 		return NodeOpen, true
@@ -252,10 +252,10 @@ func (f *Finder) liquidMaterial(p Pos) Material {
 func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) NodeType {
 	s := f.s
 	if s.Restricted {
-		hx := floorInt(float32(s.Home.X) + 0.5)
-		hz := floorInt(float32(s.Home.Z) + 0.5)
+		hx := floorInt(float64(s.Home.X) + 0.5)
+		hz := floorInt(float64(s.Home.Z) + 0.5)
 		dx, dy, dz := int64(p.X-hx), int64(p.Y-s.Home.Y), int64(p.Z-hz)
-		if float32(dx*dx+dy*dy+dz*dz) > s.Radius2 {
+		if float64(dx*dx+dy*dy+dz*dz) > s.Radius2 {
 			return NodeBlocked
 		}
 	}
@@ -278,7 +278,7 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 		if s.Fly {
 			bb := f.world.Block(below)
 			box := f.pathBox(bb, below)
-			if !box.HasVolume() || box.Max.Y <= float32(p.Y)+0.0001 {
+			if !box.HasVolume() || box.Max.Y <= float64(p.Y)+0.0001 {
 				if f.flags&FlagAvoidDamage != 0 && f.propertyNear(p, b, PropHurts, height, false, true) {
 					return NodeBlocked
 				}
@@ -388,7 +388,7 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 		}
 		return NodeLava
 	}
-	if float32(p.Y) < s.MinY {
+	if float64(p.Y) < s.MinY {
 		return NodeBlocked
 	}
 	if canClimb && f.canClimb(b, p) {
@@ -468,7 +468,7 @@ func (f *Finder) isFree(from, p, size Pos, canJump, canClimb bool) NodeType {
 
 // malus is _getPathfindingMalus: the cost of standing in a node of type t at
 // p.
-func (f *Finder) malus(t NodeType, p Pos) float32 {
+func (f *Finder) malus(t NodeType, p Pos) float64 {
 	if t == NodeBlocked {
 		return -1
 	}

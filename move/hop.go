@@ -3,8 +3,8 @@ package move
 // JumpInfo is one kind of jump of the dynamic jump control: how far and
 // high it goes and how long the mob waits before the next one.
 type JumpInfo struct {
-	DistanceScale float32
-	Height        float32
+	DistanceScale float64
+	Height        float64
 	Delay         int32
 	Animation     int8
 }
@@ -41,7 +41,7 @@ type Hopper struct {
 	IsJumping bool
 	JumpTicks int32
 	// SpeedModifier is the navigation speed modifier the jump sets.
-	SpeedModifier float32
+	SpeedModifier float64
 	// Animation is the jump animation the last jump asked for.
 	Animation int8
 }
@@ -141,7 +141,7 @@ func Hop(b *Body, c *Control, d *Dynamic, h *Hopper, pathActive bool, next Vec3)
 
 // SlimeJump is a slime's jump delay range in seconds.
 type SlimeJump struct {
-	Min, Max float32
+	Min, Max float64
 }
 
 // Slimer is the state the slime move control keeps.
@@ -151,7 +151,7 @@ type Slimer struct {
 }
 
 // slimeDelay is a random delay in ticks from the range.
-func slimeDelay(j *SlimeJump, rnd func() float32) int32 {
+func slimeDelay(j *SlimeJump, rnd func() float64) int32 {
 	if j == nil {
 		return 0
 	}
@@ -161,7 +161,7 @@ func slimeDelay(j *SlimeJump, rnd func() float32) int32 {
 // Slime is the slime move control: the mob faces its look target and jumps
 // towards the wanted position at random intervals. rnd is the level's
 // random float.
-func Slime(b *Body, c *Control, s *Slimer, j *SlimeJump, rnd func() float32) {
+func Slime(b *Body, c *Control, s *Slimer, j *SlimeJump, rnd func() float64) {
 	if b.Jump == nil {
 		return
 	}

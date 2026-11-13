@@ -17,7 +17,7 @@ type Pushable interface {
 type TargetWhenPushedConfig struct {
 	// EntityTypes are only read for their filters; every one must pass.
 	EntityTypes   []EntityType
-	PercentChance float32 `json:"percent_chance"`
+	PercentChance float64 `json:"percent_chance"`
 }
 
 // TargetWhenPushed is TargetWhenPushedGoal: for one tick after being

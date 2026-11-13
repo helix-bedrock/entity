@@ -19,7 +19,7 @@ type HorseTrapper interface {
 	Difficulty() int
 	// SpecialMultiplier is Level vt+320 for the mob's dimension, the
 	// moon-phase difficulty share.
-	SpecialMultiplier() float32
+	SpecialMultiplier() float64
 	// LightningRod is 0xC9E6BD0: the lightning rod within 64 blocks a bolt
 	// at p is drawn to.
 	LightningRod(p Pos) (Pos, bool)
@@ -53,8 +53,8 @@ type HorseTrapper interface {
 // the goal.
 type SkeletonHorseTrapConfig struct {
 	// Duration is in seconds.
-	Duration     float32 `json:"duration"`
-	WithinRadius float32 `json:"within_radius"`
+	Duration     float64 `json:"duration"`
+	WithinRadius float64 `json:"within_radius"`
 	// Horses and Rider are the entities the trap spawns, each with Event.
 	Horses       int32  `json:"-"`
 	Horse        string `json:"-"`
@@ -90,11 +90,11 @@ func NewSkeletonHorseTrap(w World, m HorseTrapper, c SkeletonHorseTrapConfig) *S
 // nearest is the nearest living player closer than within_radius (any
 // distance when it is negative).
 func (g *SkeletonHorseTrap) nearest() Actor {
-	r2 := float32(math.MaxFloat32)
+	r2 := float64(math.MaxFloat32)
 	if r := g.cfg.WithinRadius; r >= 0 {
 		r2 = r * r
 	}
-	best := float32(math.MaxFloat32)
+	best := float64(math.MaxFloat32)
 	var near Actor
 	g.players = g.world.Players(g.players[:0])
 	p := g.m.Pos()
@@ -131,7 +131,7 @@ func (g *SkeletonHorseTrap) Tick() {
 	diff := m.Difficulty()
 	at := m.Pos()
 	if rod, ok := m.LightningRod(blockOf(at)); ok {
-		at = Vec3{X: float32(rod.X), Y: float32(rod.Y), Z: float32(rod.Z)}
+		at = Vec3{X: float64(rod.X), Y: float64(rod.Y), Z: float64(rod.Z)}
 	}
 	m.SpawnLightning(at)
 	for range g.cfg.Horses {

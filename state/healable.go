@@ -7,7 +7,7 @@ type HealEffect struct {
 	Name                string
 	Duration, Amplifier int32
 	// Chance is the chance the effect is given; 1 always.
-	Chance float32
+	Chance float64
 }
 
 // HealItem is one of minecraft:healable's items.

@@ -45,17 +45,17 @@ type Dragon interface {
 	DragonPath(dst []Pos, from, to int, final Pos, hasFinal bool) []Pos
 	// SetAirSpeed sets AirSpeedComponent; SetTurnSpeed sets EnderDragon
 	// +1996, how fast the dragon turns toward its fly target.
-	SetAirSpeed(v float32)
-	SetTurnSpeed(v float32)
+	SetAirSpeed(v float64)
+	SetTurnSpeed(v float64)
 	// HeadLook is the head's look vector at the partial tick (vt+288).
-	HeadLook(partial float32) Vec3
+	HeadLook(partial float64) Vec3
 	// HeadBox is the box of the dragon's head part (EnderDragon +1920).
 	HeadBox() Box
 	// Yaw is the yaw of ActorRotationComponent.
-	Yaw() float32
+	Yaw() float64
 	// YawSpeed is MobRotationComponent, the yaw change of the last tick.
-	YawSpeed() float32
-	SetYawSpeed(v float32)
+	YawSpeed() float64
+	SetYawSpeed(v float64)
 	// HorizontalCollision is HorizontalCollisionFlagComponent.
 	HorizontalCollision() bool
 	// StartLanding and StartTakeoff fire the dragon's
@@ -63,8 +63,8 @@ type Dragon interface {
 	StartLanding()
 	StartTakeoff()
 	// Health and SetHealth are the current value of the health attribute.
-	Health() float32
-	SetHealth(v float32)
+	Health() float64
+	SetHealth(v float64)
 	// ActorEvent broadcasts an actor event of the mob.
 	ActorEvent(id, data int32)
 	// ShootFireball lets ShooterComponent pick its projectile, then fires
@@ -72,7 +72,7 @@ type Dragon interface {
 	ShootFireball(t Actor)
 	// SpawnBreath spawns the area effect cloud of dragon's breath that
 	// dragonflaming leaves on the ground, owned by the dragon.
-	SpawnBreath(p Vec3, radius float32, duration int32, colour string)
+	SpawnBreath(p Vec3, radius float64, duration int32, colour string)
 	// Particle adds a level particle of the given type at p.
 	Particle(id int32, p Vec3)
 }
@@ -84,15 +84,15 @@ type DragonFlightConfig struct {
 	Podium Pos
 	// NearDist and FarDist: a fly target nearer than NearDist or farther
 	// than FarDist is done with.
-	NearDist, FarDist float32
+	NearDist, FarDist float64
 	// Rise is the most a path node's height is raised at random.
-	Rise float32
+	Rise float64
 	// AimDist and AimY place the node search point AimDist blocks out from
 	// the podium, at height AimY.
-	AimDist float32
+	AimDist float64
 	AimY    int32
 	// NodeSearch is the squared distance a node must beat to be picked.
-	NodeSearch float32
+	NodeSearch float64
 	// TurnAround is how many nodes around the ring the dragon jumps when it
 	// changes direction.
 	TurnAround int
@@ -158,12 +158,12 @@ func (f *dragonFlight) findPath(from, to int, final Pos, hasFinal bool) {
 func (f *dragonFlight) flyNext() {
 	n := f.path[f.next]
 	f.next++
-	y := float32(n.Y)
+	y := float64(n.Y)
 	h := f.world.IRandom().NextFloat()*f.fcfg.Rise + y
 	for y > h {
 		h = f.world.IRandom().NextFloat()*f.fcfg.Rise + y
 	}
-	f.d.SetFlyTarget(Vec3{X: float32(n.X), Y: h, Z: float32(n.Z)})
+	f.d.SetFlyTarget(Vec3{X: float64(n.X), Y: h, Z: float64(n.Z)})
 }
 
 // skipAndFly skips the first node of a new path and flies to the one after
@@ -190,7 +190,7 @@ func (f *dragonFlight) nearestNode(x, y, z int32) int {
 	best, most := 0, f.fcfg.NodeSearch
 	for i := start; i < len(nodes); i++ {
 		dx, dy, dz := int64(nodes[i].X-x), int64(nodes[i].Y-y), int64(nodes[i].Z-z)
-		d := float32(dx*dx + dy*dy + dz*dz)
+		d := float64(dx*dx + dy*dy + dz*dz)
 		if most > d {
 			best = i
 		}
@@ -230,7 +230,7 @@ func (f *dragonFlight) circle(clockwise *bool, turn bool) {
 
 // aimNode is the node nearest the point AimDist blocks out from the podium
 // against the direction (x, z).
-func (f *dragonFlight) aimNode(x, z float32) int {
+func (f *dragonFlight) aimNode(x, z float64) int {
 	p := f.fcfg.Podium
 	return f.nearestNode(p.X+floorInt(x*-f.fcfg.AimDist), f.fcfg.AimY, p.Z+floorInt(z*-f.fcfg.AimDist))
 }
@@ -239,10 +239,10 @@ func (f *dragonFlight) aimNode(x, z float32) int {
 // nearest live, not invulnerable player within r of at, the range scaled
 // for sneaking, invisibility and, with a source mob, its head being worn.
 // A negative r has no limit.
-func nearestPlayer(w World, buf []Actor, at Vec3, r float32, src Mob) (Actor, []Actor) {
+func nearestPlayer(w World, buf []Actor, at Vec3, r float64, src Mob) (Actor, []Actor) {
 	buf = w.Players(buf[:0])
 	var best Actor
-	most := float32(-1)
+	most := float64(-1)
 	for _, a := range buf {
 		if a.Invulnerable() || !a.Alive() {
 			continue
@@ -273,22 +273,22 @@ const (
 
 // viewAngle is the angle in degrees between the dragon's yaw and the flat
 // direction to p, plus half a degree.
-func viewAngle(d Dragon, p Vec3) float32 {
+func viewAngle(d Dragon, p Vec3) float64 {
 	q := d.Pos()
 	dx, dz := p.X-q.X, p.Z-q.Z
-	l := float32(math.Sqrt(float64(dz*dz + (dx*dx + 0))))
-	var nx, nz float32
+	l := float64(math.Sqrt(float64(dz*dz + (dx*dx + 0))))
+	var nx, nz float64
 	if l >= kineticMinLength {
 		nx, nz = dx/l, dz/l
 	}
 	yaw := d.Yaw() * radPerDeg
-	s, c := float32(math.Sin(float64(yaw))), float32(math.Cos(float64(yaw)))
-	m := float32(math.Sqrt(float64(c*c + (s*s + 0))))
-	var lx, lz float32
+	s, c := float64(math.Sin(float64(yaw))), float64(math.Cos(float64(yaw)))
+	m := float64(math.Sqrt(float64(c*c + (s*s + 0))))
+	var lx, lz float64
 	if m >= kineticMinLength {
 		lx, lz = s/m, -c/m
 	}
-	return float32(math.Acos(float64(lz*nz+(lx*nx+0))))*degPerRad + 0.5
+	return float64(math.Acos(float64(lz*nz+(lx*nx+0))))*degPerRad + 0.5
 }
 
 // sees is the dragon's line of sight to t's head.
@@ -304,7 +304,7 @@ type DragonHoldingPatternConfig struct {
 	// (crystals + LandingChance).
 	LandingChance int32
 	// PlayerRange is how far from the podium players are looked for.
-	PlayerRange float32
+	PlayerRange float64
 	// A found player is picked 1 in n, n being the squared distance to the
 	// podium over PlayerChanceDiv plus PlayerChanceMin, or PlayerChanceMax
 	// for a removed player; or 1 in (crystals + CrystalChance).
@@ -396,7 +396,7 @@ func (g *DragonHoldingPattern) endOfPath() bool {
 	}
 	p := g.fcfg.Podium
 	var t Actor
-	t, g.buf = nearestPlayer(g.world, g.buf, Vec3{X: float32(p.X), Y: float32(h), Z: float32(p.Z)}, g.cfg.PlayerRange, nil)
+	t, g.buf = nearestPlayer(g.world, g.buf, Vec3{X: float64(p.X), Y: float64(h), Z: float64(p.Z)}, g.cfg.PlayerRange, nil)
 	if t == nil {
 		r.NextInt(g.cfg.PlayerChanceMax)
 		return false
@@ -404,8 +404,8 @@ func (g *DragonHoldingPattern) endOfPath() bool {
 	n := g.cfg.PlayerChanceMax
 	if !t.Removed() {
 		q := t.Pos()
-		x, y, z := float32(p.X)+0.5-q.X, float32(h)+0.5-q.Y, float32(p.Z)+0.5-q.Z
-		v := int32((z*z + (x*x + y*y)) / float32(g.cfg.PlayerChanceDiv))
+		x, y, z := float64(p.X)+0.5-q.X, float64(h)+0.5-q.Y, float64(p.Z)+0.5-q.Z
+		v := int32((z*z + (x*x + y*y)) / float64(g.cfg.PlayerChanceDiv))
 		if v < 0 {
 			v = -v
 		}
@@ -426,7 +426,7 @@ func (g *DragonHoldingPattern) endOfPath() bool {
 type DragonTakeoffConfig struct {
 	DragonFlightConfig
 	// PodiumDist is how near the podium the goal keeps running.
-	PodiumDist float32
+	PodiumDist float64
 }
 
 // DefaultDragonTakeoff returns the BDS numbers.
@@ -463,7 +463,7 @@ func (g *DragonTakeoff) CanUse() bool {
 // CanContinueToUse implements goal.Goal: while near the podium.
 func (g *DragonTakeoff) CanContinueToUse() bool {
 	p := g.fcfg.Podium
-	c := Vec3{X: float32(p.X) + 0.5, Y: float32(g.podiumY()) + 0.5, Z: float32(p.Z) + 0.5}
+	c := Vec3{X: float64(p.X) + 0.5, Y: float64(g.podiumY()) + 0.5, Z: float64(p.Z) + 0.5}
 	return dist2(c, g.d.Pos()) <= g.cfg.PodiumDist*g.cfg.PodiumDist
 }
 
@@ -502,15 +502,15 @@ func (g *DragonTakeoff) Tick() {
 type DragonLandingConfig struct {
 	DragonFlightConfig
 	// PlayerRange is how far from the podium players are looked for.
-	PlayerRange float32
+	PlayerRange float64
 	// NoPlayerAim is how far along +x from the podium the dragon comes in
 	// with no player around.
 	NoPlayerAim int32
 	// AirSpeed and TurnSpeed are set while the dragon comes in;
 	// LandAirSpeed and LandTurnSpeed for the last drop to the podium.
-	AirSpeed, TurnSpeed, LandAirSpeed, LandTurnSpeed float32
+	AirSpeed, TurnSpeed, LandAirSpeed, LandTurnSpeed float64
 	// Landed is the squared distance to the podium that counts as landed.
-	Landed float32
+	Landed float64
 }
 
 // DefaultDragonLanding returns the BDS numbers.
@@ -603,13 +603,13 @@ func (g *DragonLanding) findWay() {
 	h := g.podiumY()
 	p := g.fcfg.Podium
 	var t Actor
-	t, g.buf = nearestPlayer(g.world, g.buf, Vec3{X: float32(p.X), Y: float32(h), Z: float32(p.Z)}, g.cfg.PlayerRange, nil)
+	t, g.buf = nearestPlayer(g.world, g.buf, Vec3{X: float64(p.X), Y: float64(h), Z: float64(p.Z)}, g.cfg.PlayerRange, nil)
 	var to int
 	if t != nil && !t.Removed() {
 		// BDS uses the player's position as a direction from the origin.
 		q := t.Pos()
-		l := float32(math.Sqrt(float64(q.Z*q.Z + (q.X*q.X + 0))))
-		var nx, nz float32
+		l := float64(math.Sqrt(float64(q.Z*q.Z + (q.X*q.X + 0))))
+		var nx, nz float64
 		if l >= kineticMinLength {
 			nx, nz = q.X/l, q.Z/l
 		}
@@ -624,7 +624,7 @@ func (g *DragonLanding) findWay() {
 func (g *DragonLanding) land() {
 	g.landing = true
 	p := g.fcfg.Podium
-	g.d.SetFlyTarget(Vec3{X: float32(p.X), Y: float32(g.podiumY()), Z: float32(p.Z)})
+	g.d.SetFlyTarget(Vec3{X: float64(p.X), Y: float64(g.podiumY()), Z: float64(p.Z)})
 	g.d.SetAirSpeed(g.cfg.LandAirSpeed)
 	g.d.SetTurnSpeed(g.cfg.LandTurnSpeed)
 }
@@ -634,19 +634,19 @@ func (g *DragonLanding) land() {
 type DragonScanningConfig struct {
 	// NearRange is how near a player must come to be noticed; after
 	// NoticeTime ticks a noticed player becomes the target.
-	NearRange  float32
-	NoticeTime float32
+	NearRange  float64
+	NoticeTime float64
 	// After GiveUpTime ticks with no one near, a player within FarRange the
 	// dragon can see becomes the target and the dragon takes off.
-	GiveUpTime float32
-	FarRange   float32
+	GiveUpTime float64
+	FarRange   float64
 	// ViewAngle is how far, in degrees, a player may be off the dragon's
 	// yaw before it turns.
-	ViewAngle float32
+	ViewAngle float64
 	// MaxTurn is the largest angle in degrees a turn aims for; TurnDistMin
 	// caps the distance that slows it; TurnDamping keeps that much of the
 	// last turn.
-	MaxTurn, TurnDistMin, TurnDamping float32
+	MaxTurn, TurnDistMin, TurnDamping float64
 }
 
 // DefaultDragonScanning returns the BDS numbers.
@@ -663,7 +663,7 @@ type DragonScanning struct {
 	base
 	d    Dragon
 	cfg  DragonScanningConfig
-	time float32
+	time float64
 	buf  []Actor
 }
 
@@ -735,15 +735,15 @@ func (g *DragonScanning) Tick() {
 		return
 	}
 	c := boxCentre(g.d.HeadBox())
-	dx, dz := q.X-float32(floorInt(c.X)), q.Z-float32(floorInt(c.Z))
+	dx, dz := q.X-float64(floorInt(c.X)), q.Z-float64(floorInt(c.Z))
 	yaw := g.d.Yaw()
-	a := float32(math.Atan2(float64(dx), float64(dz)))
-	turn := float32(math.Mod(float64(((a*-degPerRad+180)-yaw)+180), 360))
+	a := float64(math.Atan2(float64(dx), float64(dz)))
+	turn := float64(math.Mod(float64(((a*-degPerRad+180)-yaw)+180), 360))
 	if turn < 0 {
 		turn += 360
 	}
 	turn = min(max(turn-180, -g.cfg.MaxTurn), g.cfg.MaxTurn)
-	d := float32(math.Sqrt(float64(dx*dx+dz*dz))) + 1
+	d := float64(math.Sqrt(float64(dx*dx+dz*dz))) + 1
 	spin := turn*((1/min(g.cfg.TurnDistMin, d))/d) + g.d.YawSpeed()*g.cfg.TurnDamping
 	g.d.SetYaw(yaw + spin)
 	g.d.SetYawSpeed(spin)
@@ -758,14 +758,14 @@ type DragonFlamingConfig struct {
 	// flame_time, roar_time and smoke_time in ticks. Cooldown is how long
 	// the goal runs after the roar.
 	Cooldown, FlameTime, RoarTime, SmokeTime int32
-	SmokeRadius                              float32 `json:"smoke_radius"`
+	SmokeRadius                              float64 `json:"smoke_radius"`
 	SmokeColour                              string  `json:"smoke_color"`
 	// RoarSound and FlameEvent are the level sound event of the roar and
 	// the actor event of the flames; BreathOffset scales how far toward the
 	// head the breath lands.
 	RoarSound    int
 	FlameEvent   int32
-	BreathOffset float32
+	BreathOffset float64
 }
 
 // DefaultDragonFlaming returns the goal's BDS defaults (definition default
@@ -846,11 +846,11 @@ func (g *DragonFlaming) Tick() {
 // breathe leaves the cloud on the ground in front of the head.
 func (g *DragonFlaming) breathe() {
 	c := boxCentre(g.d.HeadBox())
-	hx, hy, hz := float32(floorInt(c.X)), floorInt(c.Y), float32(floorInt(c.Z))
+	hx, hy, hz := float64(floorInt(c.X)), floorInt(c.Y), float64(floorInt(c.Z))
 	p := g.d.Pos()
 	dx, dz := hx-p.X, hz-p.Z
-	l := float32(math.Sqrt(float64(dz*dz + (dx*dx + 0))))
-	var nx, nz float32
+	l := float64(math.Sqrt(float64(dz*dz + (dx*dx + 0))))
+	var nx, nz float64
 	if l >= kineticMinLength {
 		nx, nz = dx/l, dz/l
 	}
@@ -866,7 +866,7 @@ func (g *DragonFlaming) breathe() {
 			}
 		}
 	}
-	g.d.SpawnBreath(Vec3{X: x, Y: float32(y) + 1, Z: z}, g.cfg.SmokeRadius, g.cfg.SmokeTime, g.cfg.SmokeColour)
+	g.d.SpawnBreath(Vec3{X: x, Y: float64(y) + 1, Z: z}, g.cfg.SmokeRadius, g.cfg.SmokeTime, g.cfg.SmokeColour)
 }
 
 // DragonChargePlayerConfig is the JSON of
@@ -874,12 +874,12 @@ func (g *DragonFlaming) breathe() {
 type DragonChargePlayerConfig struct {
 	// ActiveSpeed and TurnSpeed are set while the goal runs, FlightSpeed
 	// when it stops.
-	ActiveSpeed float32 `json:"active_speed"`
-	FlightSpeed float32 `json:"flight_speed"`
-	TurnSpeed   float32 `json:"turn_speed"`
+	ActiveSpeed float64 `json:"active_speed"`
+	FlightSpeed float64 `json:"flight_speed"`
+	TurnSpeed   float64 `json:"turn_speed"`
 	// TargetZone is the distance from the charge point the charge counts as
 	// on course.
-	TargetZone Range[float32]
+	TargetZone Range[float64]
 	// ContinueChargeThreshold is continue_charge_threshold_time in ticks:
 	// how long the charge goes on once off course.
 	ContinueChargeThreshold int32
@@ -889,7 +889,7 @@ type DragonChargePlayerConfig struct {
 // default 0xEA911D0).
 func DefaultDragonChargePlayer() DragonChargePlayerConfig {
 	return DragonChargePlayerConfig{ActiveSpeed: 3, FlightSpeed: 0.6, TurnSpeed: 0.7,
-		TargetZone: Range[float32]{10, 150}, ContinueChargeThreshold: 10}
+		TargetZone: Range[float64]{10, 150}, ContinueChargeThreshold: 10}
 }
 
 // DragonChargePlayer is DragonChargePlayerGoal (canUse 0x551E410,
@@ -975,27 +975,27 @@ type DragonStrafePlayerConfig struct {
 	DragonFlightConfig
 	// ActiveSpeed and TurnSpeed are set while the goal runs, FlightSpeed
 	// when it stops.
-	ActiveSpeed float32 `json:"active_speed"`
-	FlightSpeed float32 `json:"flight_speed"`
-	TurnSpeed   float32 `json:"turn_speed"`
+	ActiveSpeed float64 `json:"active_speed"`
+	FlightSpeed float64 `json:"flight_speed"`
+	TurnSpeed   float64 `json:"turn_speed"`
 	// TargetZone is the distance from the fly target the dragon keeps
 	// flying it.
-	TargetZone                 Range[float32]
-	SwitchDirectionProbability float32 `json:"switch_direction_probability"`
+	TargetZone                 Range[float64]
+	SwitchDirectionProbability float64 `json:"switch_direction_probability"`
 	// InViewTime is target_in_range_and_in_view_time in ticks.
 	InViewTime    int32
-	FireballRange float32 `json:"fireball_range"`
-	ViewAngle     float32 `json:"view_angle"`
+	FireballRange float64 `json:"fireball_range"`
+	ViewAngle     float64 `json:"view_angle"`
 	// The dragon flies AboveMax at most over the target, less nearer it:
 	// distance / AboveDiv + AboveAdd - AboveSub.
-	AboveMax, AboveDiv, AboveAdd, AboveSub float32
+	AboveMax, AboveDiv, AboveAdd, AboveSub float64
 }
 
 // DefaultDragonStrafePlayer returns the goal's BDS defaults (definition
 // default 0xEA921A0).
 func DefaultDragonStrafePlayer() DragonStrafePlayerConfig {
 	return DragonStrafePlayerConfig{DragonFlightConfig: DefaultDragonFlight(), ActiveSpeed: 0.6, FlightSpeed: 0.6,
-		TurnSpeed: 0.7, TargetZone: Range[float32]{10, 150}, SwitchDirectionProbability: 0.125, InViewTime: 5,
+		TurnSpeed: 0.7, TargetZone: Range[float64]{10, 150}, SwitchDirectionProbability: 0.125, InViewTime: 5,
 		FireballRange: 64, ViewAngle: 10, AboveMax: 10, AboveDiv: 80, AboveAdd: 0.4, AboveSub: 1}
 }
 
@@ -1043,9 +1043,9 @@ func (g *DragonStrafePlayer) strafed() Actor {
 func (g *DragonStrafePlayer) CanContinueToUse() bool { return !g.fired && g.strafed() != nil }
 
 // above is the height over p the dragon aims for, from the flat distance.
-func (g *DragonStrafePlayer) above(dx, dz float32) float32 {
+func (g *DragonStrafePlayer) above(dx, dz float64) float64 {
 	c := g.cfg
-	return min(c.AboveMax, (float32(math.Sqrt(float64(dx*dx+dz*dz)))/c.AboveDiv+c.AboveAdd)-c.AboveSub)
+	return min(c.AboveMax, (float64(math.Sqrt(float64(dx*dx+dz*dz)))/c.AboveDiv+c.AboveAdd)-c.AboveSub)
 }
 
 // Start implements goal.Goal: a path toward the target that ends above it.
@@ -1059,7 +1059,7 @@ func (g *DragonStrafePlayer) Start() {
 		q, p := t.Pos(), g.d.Pos()
 		c := g.d.ClosestNode()
 		to := g.nearestNode(floorInt(q.X), floorInt(q.Y), floorInt(q.Z))
-		x, z := float32(floorInt(q.X)), float32(floorInt(q.Z))
+		x, z := float64(floorInt(q.X)), float64(floorInt(q.Z))
 		y := g.above(x-p.X, z-p.Z) + q.Y
 		g.findPath(c, to, Pos{X: int32(x), Y: floorInt(y), Z: int32(z)}, true)
 		g.skipAndFly()
@@ -1087,7 +1087,7 @@ func (g *DragonStrafePlayer) Tick() {
 	if g.hasPath && g.pathDone() {
 		g.d.SetFlyTarget(Vec3{X: q.X, Y: g.above(q.X-p.X, q.Z-p.Z) + q.Y, Z: q.Z})
 	}
-	var d float32
+	var d float64
 	if f := g.d.FlyTarget(); f != (Vec3{}) {
 		d = dist2(p, f)
 	}
@@ -1139,12 +1139,12 @@ type DragonDeathConfig struct {
 	DragonFlightConfig
 	// AirSpeed and TurnSpeed are set while the dragon dies, StopAirSpeed
 	// when the goal stops.
-	AirSpeed, TurnSpeed, StopAirSpeed float32
+	AirSpeed, TurnSpeed, StopAirSpeed float64
 	// Every ParticleEvery ticks a particle appears within Spread of the
 	// dragon, raised by Lift.
 	ParticleEvery int32
 	Spread        Vec3
-	Lift          float32
+	Lift          float64
 	Particle      int32
 	// DeathEvent is the actor event sent when the dragon reaches the
 	// podium.
@@ -1214,7 +1214,7 @@ func (g *DragonDeath) Tick() {
 	}
 	if g.d.FlyTarget() == (Vec3{}) {
 		p := g.fcfg.Podium
-		g.d.SetFlyTarget(Vec3{X: float32(p.X), Y: float32(g.podiumY()), Z: float32(p.Z)})
+		g.d.SetFlyTarget(Vec3{X: float64(p.X), Y: float64(g.podiumY()), Z: float64(p.Z)})
 	}
 	if g.needsTarget() {
 		g.d.SetHealth(0)

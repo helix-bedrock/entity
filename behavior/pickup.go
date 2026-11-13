@@ -36,11 +36,11 @@ type Picker interface {
 
 // PickupItemsConfig is the JSON of minecraft:behavior.pickup_items.
 type PickupItemsConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	TrackTarget     bool    `json:"track_target"`
 	MaxDist         int32   `json:"max_dist"`
 	SearchHeight    int32   `json:"search_height"`
-	GoalRadius      float32 `json:"goal_radius"`
+	GoalRadius      float64 `json:"goal_radius"`
 	BasedOnChance   bool    `json:"pickup_based_on_chance"`
 	AnyItem         bool    `json:"can_pickup_any_item"`
 	// HurtCooldown is cooldown_after_being_attacked in seconds.
@@ -64,7 +64,7 @@ type PickupItems struct {
 	base
 	m      Picker
 	cfg    PickupItemsConfig
-	r2     float32
+	r2     float64
 	target ID
 	// queue is the candidates of the last search, nearest first; canUse
 	// takes one per call and searches again once it is empty.
@@ -112,7 +112,7 @@ func (g *PickupItems) flags() PickupFlags {
 func (g *PickupItems) search() {
 	m := g.m
 	b := m.Box()
-	d := Vec3{X: float32(g.cfg.MaxDist), Y: float32(g.cfg.SearchHeight), Z: float32(g.cfg.MaxDist)}
+	d := Vec3{X: float64(g.cfg.MaxDist), Y: float64(g.cfg.SearchHeight), Z: float64(g.cfg.MaxDist)}
 	g.near = m.EntitiesOfType(g.near[:0], actorTypeItem, m.ID(), sortedBox(sub(b.Min, d), add(b.Max, d)))
 	p := m.Pos()
 	g.buf = g.buf[:0]
@@ -161,7 +161,7 @@ func (g *PickupItems) CanUse() bool {
 	q := t.Pos()
 	if path {
 		b := m.Box()
-		e := Vec3{X: float32(end.X), Y: float32(end.Y), Z: float32(end.Z)}
+		e := Vec3{X: float64(end.X), Y: float64(end.Y), Z: float64(end.Z)}
 		r := (b.Max.X-b.Min.X)*0.5 + sqrt32(dist2(q, e))
 		if g.r2 <= r*r {
 			return false

@@ -50,7 +50,7 @@ type Resolver interface {
 	// descriptors matches.
 	HoldsItem(a behavior.Actor, items []string) bool
 	// Molang compiles an expression; ok is false when it cannot be.
-	Molang(expr string) (eval func(m behavior.Mob) float32, ok bool)
+	Molang(expr string) (eval func(m behavior.Mob) float64, ok bool)
 }
 
 // Context is what a GoalFactory builds with: the mob the goal is for, its

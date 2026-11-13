@@ -9,8 +9,8 @@ const (
 // MoveTowardsTargetConfig is the JSON of
 // minecraft:behavior.move_towards_target.
 type MoveTowardsTargetConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
-	WithinRadius    float32 `json:"within_radius"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
+	WithinRadius    float64 `json:"within_radius"`
 }
 
 // DefaultMoveTowardsTarget returns the goal's BDS defaults. With within_radius 0

@@ -34,7 +34,7 @@ const (
 	// number, in the same single draw.
 	nextBoolRange = 1 << 28
 	nextBoolBit   = 1 << 27
-	pi32          = float32(math.Pi)
+	pi32          = float64(math.Pi)
 )
 
 // Squid is a squid or glow squid. BDS adds the squid goals only to those two
@@ -65,14 +65,14 @@ func nextBool(r Random) bool { return r.NextInt(nextBoolRange) >= nextBoolBit }
 
 // swimRange is the squid's depth range (0x7211B00): from 5 to 1.5 blocks
 // under the first non-water block above it, kept above the top solid block.
-func swimRange(w World, p Vec3) (lo, hi float32) {
+func swimRange(w World, p Vec3) (lo, hi float64) {
 	b := blockOf(p)
-	top := float32(w.AboveTopSolid(b.X, b.Z))
+	top := float64(w.AboveTopSolid(b.X, b.Z))
 	y := b.Y
 	for y < w.MaxHeight() && w.Block(Pos{X: b.X, Y: y, Z: b.Z}).Material == path.MaterialWater {
 		y++
 	}
-	hi, lo = float32(y)-squidSurfaceGap, float32(y)-squidRangeDepth
+	hi, lo = float64(y)-squidSurfaceGap, float64(y)-squidRangeDepth
 	if top > hi {
 		hi = top + squidAboveFloor
 	}
@@ -94,7 +94,7 @@ func flatDir(r Random) Vec3 {
 // wallCheck is the squid's wall test (0x7211530): it clips dist blocks
 // along d and, on a hit, along d turned 30 degrees each way, flat. It
 // returns the direction to swim and true only when all three rays hit.
-func wallCheck(w World, p, d Vec3, dist float32) (Vec3, bool) {
+func wallCheck(w World, p, d Vec3, dist float64) (Vec3, bool) {
 	l2 := d.Z*d.Z + (d.X*d.X + d.Y*d.Y)
 	if l2 <= 0 {
 		return d, false
@@ -168,7 +168,7 @@ func (g *SquidIdle) Tick() {
 	r.NextFloat()
 	z := r.NextFloat() - 0.5
 	y := (((hi-lo)*r.NextFloat() + lo) - p.Y) * squidIdleDepth
-	s := float32(1)
+	s := float64(1)
 	if l2 := z*z + (x*x + y*y); l2 > 0 {
 		s = squidIdleSpeed / sqrt32(l2)
 		y *= s
@@ -304,7 +304,7 @@ func (g *SquidFlee) Tick() {
 		if l2 := d.Z*d.Z + (d.X*d.X + d.Y*d.Y); l2 > 0 {
 			l := sqrt32(l2)
 			d = scale(d, 1/l)
-			k := float32(squidFleeSpeed)
+			k := float64(squidFleeSpeed)
 			if l > squidFleeFar {
 				k = (l-squidFleeFar)/-squidFleeFar + squidFleeSpeed
 			}

@@ -11,11 +11,11 @@ import (
 type random struct {
 	behavior.Random
 	n int32
-	f float32
+	f float64
 }
 
 func (r random) NextInt(n int32) int32 { return min(r.n, n-1) }
-func (r random) NextFloat() float32    { return r.f }
+func (r random) NextFloat() float64    { return r.f }
 
 type world struct {
 	behavior.World
@@ -484,7 +484,7 @@ func TestSetFlags(t *testing.T) {
 	}
 }
 
-func (m *mob) Hurt(cause int, _ float32)   { m.hurts = append(m.hurts, cause) }
+func (m *mob) Hurt(cause int, _ float64)   { m.hurts = append(m.hurts, cause) }
 func (m *mob) SetOnFire(s int32)           { m.fire = s }
 func (m *mob) CanSeeDaylight() bool        { return m.day }
 func (m *mob) InWaterOrRain() bool         { return false }

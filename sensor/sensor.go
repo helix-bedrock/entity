@@ -56,7 +56,7 @@ func (e *Env) fire(t *definition.Trigger, ctx definition.Tester) {
 const ticksPerSecond = 20
 
 // ticks converts seconds to ticks the way BDS does: (int)(seconds * 20).
-func ticks(seconds float32) int32 { return int32(seconds * ticksPerSecond) }
+func ticks(seconds float64) int32 { return int32(seconds * ticksPerSecond) }
 
 // Set is a mob's sensors; a nil member is a component the mob does not
 // have. Triggers are the plain event components (on_hurt,

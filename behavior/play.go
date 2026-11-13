@@ -15,12 +15,12 @@ type Playmate interface {
 
 // PlayConfig is the JSON of minecraft:behavior.play.
 type PlayConfig struct {
-	SpeedMultiplier float32
+	SpeedMultiplier float64
 	// MaxPlayDuration is max_play_duration_seconds in ticks (BDS truncates
 	// seconds times 20).
 	MaxPlayDuration int32
 	// ChanceToStart is the per-tick chance to start.
-	ChanceToStart float32
+	ChanceToStart float64
 	// FollowDistance is how close the mob gets before it stops chasing
 	// its friend; BDS keeps it as an integer.
 	FollowDistance int32
@@ -98,7 +98,7 @@ func (g *Play) findFriend() Actor {
 	})
 	defer clear(g.buf)
 	var best Actor
-	bestD := float32(math.MaxFloat32)
+	bestD := float64(math.MaxFloat32)
 	for _, c := range g.buf {
 		if c.ID() == g.m.ID() || c.Type() != g.m.Type() || g.m.ChasingDuringPlay(c.ID()) || !g.friendType(c) {
 			continue
@@ -148,7 +148,7 @@ func (g *Play) Tick() {
 		return
 	}
 	if f := g.actor(g.friend); f != nil {
-		if d := float32(g.cfg.FollowDistance * g.cfg.FollowDistance); dist2(g.m.Pos(), f.Pos()) > d {
+		if d := float64(g.cfg.FollowDistance * g.cfg.FollowDistance); dist2(g.m.Pos(), f.Pos()) > d {
 			n.MoveToActor(f, g.cfg.SpeedMultiplier)
 		}
 		return

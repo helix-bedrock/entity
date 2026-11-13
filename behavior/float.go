@@ -3,7 +3,7 @@ package behavior
 // FloatConfig is the JSON of minecraft:behavior.float.
 type FloatConfig struct {
 	SinkWithPassengers   bool    `json:"sink_with_passengers"`
-	ChancePerTickToFloat float32 `json:"chance_per_tick_to_float"`
+	ChancePerTickToFloat float64 `json:"chance_per_tick_to_float"`
 	// DismountTicks is time_under_water_to_dismount_passengers in ticks
 	// (seconds × 20, rounded).
 	DismountTicks int32

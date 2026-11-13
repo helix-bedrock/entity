@@ -16,24 +16,24 @@ func (n *Navigation) climbTick(w World, m *Mob) {
 	}
 	r2 := m.Width * m.Width * 0.75
 	t := n.climbTarget
-	tx, tz := float32(t.X)+0.5, float32(t.Z)+0.5
+	tx, tz := float64(t.X)+0.5, float64(t.Z)+0.5
 	near := false
-	if m.Pos.Y > float32(t.Y) {
+	if m.Pos.Y > float64(t.Y) {
 		dx, dy, dz := tx-m.Pos.X, floor32(m.Pos.Y)+0.5-m.Pos.Y, tz-m.Pos.Z
 		near = r2 > dz*dz+(dx*dx+dy*dy)
 	}
-	dx, dy, dz := tx-m.Pos.X, float32(t.Y)+0.5-m.Pos.Y, tz-m.Pos.Z
+	dx, dy, dz := tx-m.Pos.X, float64(t.Y)+0.5-m.Pos.Y, tz-m.Pos.Z
 	if near || r2 > dz*dz+(dx*dx+dy*dy) {
 		n.climbing = false
 		return
 	}
 	sx := ceilInt(m.Width)
-	to := path.Vec3{X: float32(t.X), Y: float32(t.Y), Z: float32(t.Z)}
+	to := path.Vec3{X: float64(t.X), Y: float64(t.Y), Z: float64(t.Z)}
 	if !walkDirectly(w, m, m.Pos, to, sx, 2*ceilInt(m.Height), sx, true) {
 		n.climbing = false
 		return
 	}
-	m.MoveControl.SetWantedPosition(path.Vec3{X: tx, Y: float32(t.Y), Z: tz}, n.speed)
+	m.MoveControl.SetWantedPosition(path.Vec3{X: tx, Y: float64(t.Y), Z: tz}, n.speed)
 }
 
 // nearBorder reports whether a border block stands in a column within 1.2

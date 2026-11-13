@@ -3,8 +3,8 @@ package behavior
 // CroakConfig is the JSON of minecraft:behavior.croak. The ranges are in
 // seconds and drawn each time.
 type CroakConfig struct {
-	Interval Range[float32]
-	Duration Range[float32]
+	Interval Range[float64]
+	Duration Range[float64]
 	// Filters is tested with the mob as the subject and no other entity.
 	Filters Filter
 }
@@ -13,8 +13,8 @@ type CroakConfig struct {
 // 4.5 s.
 func DefaultCroak() CroakConfig {
 	return CroakConfig{
-		Interval: Range[float32]{Min: 10, Max: 20},
-		Duration: Range[float32]{Min: 4.5, Max: 4.5},
+		Interval: Range[float64]{Min: 10, Max: 20},
+		Duration: Range[float64]{Min: 4.5, Max: 4.5},
 	}
 }
 

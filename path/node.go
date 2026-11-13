@@ -29,12 +29,12 @@ const (
 // node is a PathfinderNode.
 type node struct {
 	heapIdx int32 // -1 when not in the open heap
-	g       float32
-	costH   float32 // cost + h
-	key     float32 // heap key: costH + g
-	cost    float32 // malus; below 0 is impassable
-	extra   float32 // jump cost
-	h       float32
+	g       float64
+	costH   float64 // cost + h
+	key     float64 // heap key: costH + g
+	cost    float64 // malus; below 0 is impassable
+	extra   float64 // jump cost
+	h       float64
 	typ     NodeType
 	parent  *node
 	pos     Pos
@@ -126,7 +126,7 @@ func (f *Finder) siftDown(i int32) {
 }
 
 // heapChanged restores the heap after n's key changed from old.
-func (f *Finder) heapChanged(n *node, old float32) {
+func (f *Finder) heapChanged(n *node, old float64) {
 	if old <= n.key {
 		f.siftDown(n.heapIdx)
 		return

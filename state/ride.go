@@ -11,7 +11,7 @@ import (
 type Seat struct {
 	MinRiderCount, MaxRiderCount int32
 	Position                     behavior.Vec3
-	LockRiderRotation            float32
+	LockRiderRotation            float64
 	// RotateRiderBy stays as written: a number or a Molang expression.
 	RotateRiderBy json.RawMessage
 }
@@ -24,7 +24,7 @@ type RideableConfig struct {
 	// FamilyTypes are the families that may ride; empty lets any entity.
 	FamilyTypes []string
 	// PassengerMaxWidth is the widest passenger, 0 for no limit.
-	PassengerMaxWidth         float32
+	PassengerMaxWidth         float64
 	InteractText              string
 	OnRiderEnter, OnRiderExit *definition.Trigger
 	DismountMode              string
@@ -137,7 +137,7 @@ type TransformationConfig struct {
 	// BlockAssistChance is the chance each tick to look for BlockTypes
 	// within BlockRadius; each of up to BlockMax found speeds the delay by
 	// one tick with chance BlockChance.
-	BlockAssistChance, BlockChance           float32
+	BlockAssistChance, BlockChance           float64
 	BlockRadius, BlockMax                    int32
 	BlockTypes                               []string
 	DropEquipment, DropInventory             bool

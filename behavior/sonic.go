@@ -14,7 +14,7 @@ type SonicBoomer interface {
 	Knocker
 	// SonicHit hurts the entity with the sonic_boom damage cause (31) when
 	// it is not immune to it, the way BDS's Actor::hurt does.
-	SonicHit(a Actor, damage float32)
+	SonicHit(a Actor, damage float64)
 	// SonicCooldown is the warden's own sonic boom cooldown (Warden +1112),
 	// which every sonic_boom goal of the warden shares; ok is false while
 	// it is unset.
@@ -29,14 +29,14 @@ type SonicBoomer interface {
 // in ticks.
 type SonicBoomConfig struct {
 	Duration                    int32
-	SpeedMultiplier             float32 `json:"speed_multiplier"`
-	AttackDamage                float32 `json:"attack_damage"`
-	AttackRangeHorizontal       float32 `json:"attack_range_horizontal"`
-	AttackRangeVertical         float32 `json:"attack_range_vertical"`
+	SpeedMultiplier             float64 `json:"speed_multiplier"`
+	AttackDamage                float64 `json:"attack_damage"`
+	AttackRangeHorizontal       float64 `json:"attack_range_horizontal"`
+	AttackRangeVertical         float64 `json:"attack_range_vertical"`
 	AttackCooldown              int32
-	KnockbackHorizontalStrength float32 `json:"knockback_horizontal_strength"`
-	KnockbackVerticalStrength   float32 `json:"knockback_vertical_strength"`
-	KnockbackHeightCap          float32 `json:"knockback_height_cap"`
+	KnockbackHorizontalStrength float64 `json:"knockback_horizontal_strength"`
+	KnockbackVerticalStrength   float64 `json:"knockback_vertical_strength"`
+	KnockbackHeightCap          float64 `json:"knockback_height_cap"`
 	DurationUntilAttackSound    int32
 	AttackSound                 int
 	ChargeSound                 int
@@ -163,7 +163,7 @@ func (g *SonicBoom) Tick() {
 	dir := normalize(d)
 	steps := floorInt(l) + sonicExtraSteps
 	for i := int32(1); i <= steps; i++ {
-		f := float32(i)
+		f := float64(i)
 		m.LevelEventXYZ(sonicExplosionEvent, Vec3{X: dir.X*f + from.X, Y: dir.Y*f + from.Y, Z: dir.Z*f + from.Z})
 	}
 	g.attack = timer{at: now + uint64(uint16(g.cfg.Duration-g.cfg.DurationUntilAttackSound)), set: true}

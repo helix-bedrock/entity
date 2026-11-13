@@ -41,7 +41,7 @@ func TestSensorReaders(t *testing.T) {
 		t.Errorf("timer %+v", tc)
 	}
 	ec := s.Entity.Config()
-	if !ec.RelativeRange || len(ec.Subsensors) != 1 || ec.Subsensors[0].Range != [2]float32{3, 2} || ec.Subsensors[0].MinCount != 2 || ec.Subsensors[0].MaxCount != -1 || ec.Subsensors[0].Event != "near" {
+	if !ec.RelativeRange || len(ec.Subsensors) != 1 || ec.Subsensors[0].Range != [2]float64{3, 2} || ec.Subsensors[0].MinCount != 2 || ec.Subsensors[0].MaxCount != -1 || ec.Subsensors[0].Event != "near" {
 		t.Errorf("legacy entity sensor %+v", ec)
 	}
 	if c := s.Target.Config(); c.InsideRange != 2.5 || c.OutsideRange != 5 || !c.MustSee || c.OnInside.Event != "in" || c.OnOutside != nil {

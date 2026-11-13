@@ -27,7 +27,7 @@ func newB6World(r *seqRandom) *b6World { return &b6World{b5World: newB5World(r)}
 // b6Mob is a mob with every part the batch 6 goals ask for.
 type b6Mob struct {
 	*b5Mob
-	turn       float32
+	turn       float64
 	hasMove    bool
 	from, dir  []Vec3
 	friction   bool
@@ -46,7 +46,7 @@ type b6Mob struct {
 	faced      int
 	prevented  int
 	fallImmune bool
-	roarHurt   []float32
+	roarHurt   []float64
 	roarEvents int
 	hurtNow    bool
 }
@@ -67,8 +67,8 @@ func (m *b6Mob) AttachPos(loc int) Vec3 {
 	}
 	return m.Eyes()
 }
-func (m *b6Mob) MoveControl() (float32, bool) { return m.turn, m.hasMove }
-func (m *b6Mob) SetBodyYaw(y float32)         { m.body = y }
+func (m *b6Mob) MoveControl() (float64, bool) { return m.turn, m.hasMove }
+func (m *b6Mob) SetBodyYaw(y float64)         { m.body = y }
 func (m *b6Mob) SpawnProjectile(_ string, f, d Vec3) {
 	m.from, m.dir = append(m.from, f), append(m.dir, d)
 }
@@ -81,7 +81,7 @@ func (m *b6Mob) Knockback(_ Actor, k Knockback)    { m.knocks = append(m.knocks,
 func (m *b6Mob) InBoat(Actor) bool                 { return m.boat }
 func (m *b6Mob) WasInWater(a Actor) bool           { return m.wet[a.ID()] }
 func (m *b6Mob) InWater() bool                     { return m.wet[m.id] }
-func (m *b6Mob) MovementAttribute() float32        { return chargeDefaultSpeed }
+func (m *b6Mob) MovementAttribute() float64        { return chargeDefaultSpeed }
 func (m *b6Mob) HorizontalCollision() bool         { return false }
 func (m *b6Mob) VerticalCollision() bool           { return false }
 func (m *b6Mob) ResetLook()                        { m.resets++ }
@@ -89,18 +89,18 @@ func (m *b6Mob) RamHit(a Actor)                    { m.ramHits = append(m.ramHit
 func (m *b6Mob) RamBlockAhead(p Vec3)              { m.ahead = append(m.ahead, p) }
 func (m *b6Mob) RamImpact(p Vec3)                  { m.impacts = append(m.impacts, p) }
 func (m *b6Mob) RamReset()                         { m.ramResets++ }
-func (m *b6Mob) FaceActor(Actor, float32, float32) { m.faced++ }
-func (m *b6Mob) JumpMultiplier() float32           { return 1 }
+func (m *b6Mob) FaceActor(Actor, float64, float64) { m.faced++ }
+func (m *b6Mob) JumpMultiplier() float64           { return 1 }
 func (m *b6Mob) JumpPrevented()                    { m.prevented++ }
 func (m *b6Mob) SetFallImmune(on bool)             { m.fallImmune = on }
-func (m *b6Mob) RoarHurt(_ Actor, d float32)       { m.roarHurt = append(m.roarHurt, d) }
+func (m *b6Mob) RoarHurt(_ Actor, d float64)       { m.roarHurt = append(m.roarHurt, d) }
 func (m *b6Mob) RoarGameEvent(Vec3)                { m.roarEvents++ }
 func (m *b6Mob) WasHurt() bool                     { return m.hurtNow }
 func (m *b6Mob) WantedPos() Vec3                   { return m.wantedAt }
 func (m *b6Mob) SetSneaking(on bool)               { m.sneak, m.flags[flagSneaking] = on, on }
 func (m *b6Mob) SetSprinting(on bool)              { m.sprint, m.flags[FlagSprinting] = on, on }
 
-func near32(a, b float32) bool { return math.Abs(float64(a-b)) < 1e-3 }
+func near32(a, b float64) bool { return math.Abs(float64(a-b)) < 1e-3 }
 
 func nearVec(a, b Vec3) bool { return near32(a.X, b.X) && near32(a.Y, b.Y) && near32(a.Z, b.Z) }
 
@@ -150,7 +150,7 @@ func TestFireAtTargetShootsOnce(t *testing.T) {
 	w.entities = []Actor{b, p}
 	b.target = 2
 	c := DefaultFireAtTarget()
-	c.AttackRange = Range[float32]{0, 16}
+	c.AttackRange = Range[float64]{0, 16}
 	c.ProjectileDef = "minecraft:breeze_wind_charge_projectile"
 	g := NewFireAtTarget(w, b, c)
 	if !g.CanUse() {
@@ -251,7 +251,7 @@ func TestJumpAroundTargetJumpsAndRestores(t *testing.T) {
 }
 
 func TestMoveAroundTargetPicksASpot(t *testing.T) {
-	r := &seqRandom{bools: []bool{true, false}, floats: []float32{0.5, 0.25}}
+	r := &seqRandom{bools: []bool{true, false}, floats: []float64{0.5, 0.25}}
 	w := newB6World(r)
 	m := newB6Mob(w, 1, Vec3{Y: 64}, "minecraft:breeze")
 	p := newB6Mob(w, 2, Vec3{X: 10, Y: 64}, "minecraft:player")
@@ -274,7 +274,7 @@ func TestMoveAroundTargetPicksASpot(t *testing.T) {
 }
 
 func TestAquaticChargeHitsAndCools(t *testing.T) {
-	w := newB6World(&seqRandom{floats: []float32{0.5}})
+	w := newB6World(&seqRandom{floats: []float64{0.5}})
 	m := newB6Mob(w, 1, Vec3{Y: 60}, "minecraft:nautilus")
 	p := newB6Mob(w, 2, Vec3{X: 5, Y: 60}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -312,7 +312,7 @@ func TestRamAttackRunsUpAndRams(t *testing.T) {
 	w.entities = []Actor{m, p}
 	m.target = 2
 	c := DefaultRamAttack()
-	c.Cooldown = Range[float32]{}
+	c.Cooldown = Range[float64]{}
 	g := NewRamAttack(w, m, c)
 	if !g.CanUse() {
 		t.Fatal("did not start")
@@ -416,7 +416,7 @@ func TestKnockbackRoarHitsAtAttackTime(t *testing.T) {
 }
 
 func TestSwoopAttackDelayAndHit(t *testing.T) {
-	w := newB6World(&seqRandom{floats: []float32{0.5}})
+	w := newB6World(&seqRandom{floats: []float64{0.5}})
 	m := newB6Mob(w, 1, Vec3{Y: 70}, "minecraft:phantom")
 	p := newB6Mob(w, 2, Vec3{Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -441,7 +441,7 @@ func TestSwoopAttackDelayAndHit(t *testing.T) {
 }
 
 func TestCircleAroundAnchorCircles(t *testing.T) {
-	w := newB6World(&seqRandom{floats: []float32{0.5}, bools: []bool{true}})
+	w := newB6World(&seqRandom{floats: []float64{0.5}, bools: []bool{true}})
 	m := newB6Mob(w, 1, Vec3{X: 3, Y: 80}, "minecraft:phantom")
 	p := newB6Mob(w, 2, Vec3{Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}

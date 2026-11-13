@@ -82,11 +82,11 @@ type TransportItemsConfig struct {
 	SourceContainerTypes, DestinationContainerTypes []string
 	MaxStackSize                                    int32 `json:"max_stack_size"`
 	// InteractionTime is in seconds.
-	InteractionTime              float32 `json:"interaction_time"`
+	InteractionTime              float64 `json:"interaction_time"`
 	AllowSimultaneousInteraction bool    `json:"allow_simultaneous_interaction"`
 	SearchStrategy               int
 	// SearchDistance is the horizontal and vertical reach of the search.
-	SearchDistance       [2]float32
+	SearchDistance       [2]float64
 	MaxVisitedContainers int32 `json:"max_visited_containers"`
 	// InitialCooldown and IdleCooldown are in whole seconds.
 	InitialCooldown int32 `json:"initial_cooldown"`
@@ -100,7 +100,7 @@ type TransportItemsConfig struct {
 	ContainerKinds, OpenCheckKinds []int32
 	ChestKind                      int32
 	// LookYaw is the look control's yaw limit towards the container.
-	LookYaw float32
+	LookYaw float64
 	// The entity events the goal fires on the mob.
 	StartTakeFail, StartTakeSucceed, StartPlaceFail, StartPlaceSucceed, StopInteraction string
 }
@@ -111,7 +111,7 @@ type TransportItemsConfig struct {
 func DefaultTransportItems() TransportItemsConfig {
 	return TransportItemsConfig{
 		MaxStackSize: 64, InteractionTime: 3, SearchStrategy: TransportRandom,
-		SearchDistance: [2]float32{64, 32}, MaxVisitedContainers: 16, IdleCooldown: 20,
+		SearchDistance: [2]float64{64, 32}, MaxVisitedContainers: 16, IdleCooldown: 20,
 		ContainerKinds: []int32{2, 25, 42}, OpenCheckKinds: []int32{2, 25}, ChestKind: 2,
 		LookYaw:           10,
 		StartTakeFail:     "minecraft:transport_items.start_take_fail",
@@ -285,10 +285,10 @@ func (g *TransportItems) usable(c TransportContainer, search bool, types []strin
 		return false
 	}
 	p, d := g.mob.Pos(), g.cfg.SearchDistance
-	if float32(math.Abs(float64(p.Y-float32(c.Pos.Y)))) > d[1] {
+	if float64(math.Abs(float64(p.Y-float64(c.Pos.Y)))) > d[1] {
 		return false
 	}
-	dx, dz := float32(c.Pos.X)-p.X, float32(c.Pos.Z)-p.Z
+	dx, dz := float64(c.Pos.X)-p.X, float64(c.Pos.Z)-p.Z
 	if dz*dz+dx*dx > d[0]*d[0] {
 		return false
 	}
@@ -309,7 +309,7 @@ func (g *TransportItems) search(holds bool) {
 	}
 	types := g.types(holds)
 	p := g.mob.Pos()
-	h, v := float32(math.Abs(float64(g.cfg.SearchDistance[0]))), float32(math.Abs(float64(g.cfg.SearchDistance[1])))
+	h, v := float64(math.Abs(float64(g.cfg.SearchDistance[0]))), float64(math.Abs(float64(g.cfg.SearchDistance[1])))
 	g.found = g.m.Containers(g.found[:0], Box{Min: Vec3{X: p.X - h, Y: p.Y - v, Z: p.Z - h}, Max: Vec3{X: p.X + h, Y: p.Y + v, Z: p.Z + h}})
 	g.found = slices.DeleteFunc(g.found, func(c TransportContainer) bool { return !g.usable(c, true, types) })
 	if len(g.found) == 0 {
@@ -319,7 +319,7 @@ func (g *TransportItems) search(holds bool) {
 	var c TransportContainer
 	switch g.cfg.SearchStrategy {
 	case TransportNearest:
-		best := float32(0)
+		best := float64(0)
 		for i, f := range g.found {
 			d := dist2(blockCentre(f.Pos), p)
 			if i == 0 || d < best {
@@ -362,8 +362,8 @@ func (g *TransportItems) pathTo(n Navigator, p Pos) bool {
 	b := g.mob.Box()
 	hw, hd := (b.Max.X-b.Min.X)*0.5, (b.Max.Z-b.Min.Z)*0.5
 	at := Box{
-		Min: Vec3{X: float32(end.X) + 0.5 - hw, Y: float32(end.Y), Z: float32(end.Z) + 0.5 - hd},
-		Max: Vec3{X: float32(end.X) + 0.5 + hw, Y: float32(end.Y) + (b.Max.Y - b.Min.Y), Z: float32(end.Z) + 0.5 + hd},
+		Min: Vec3{X: float64(end.X) + 0.5 - hw, Y: float64(end.Y), Z: float64(end.Z) + 0.5 - hd},
+		Max: Vec3{X: float64(end.X) + 0.5 + hw, Y: float64(end.Y) + (b.Max.Y - b.Min.Y), Z: float64(end.Z) + 0.5 + hd},
 	}
 	if !intersects(at, reachBox(p)) {
 		return false

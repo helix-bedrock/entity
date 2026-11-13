@@ -6,10 +6,10 @@ const chargeAim = 6
 
 // ChargeAttackConfig is the JSON of minecraft:behavior.charge_attack.
 type ChargeAttackConfig struct {
-	MinDistance     float32 `json:"min_distance"`
-	MaxDistance     float32 `json:"max_distance"`
-	SpeedMultiplier float32 `json:"speed_multiplier"`
-	SuccessRate     float32 `json:"success_rate"`
+	MinDistance     float64 `json:"min_distance"`
+	MaxDistance     float64 `json:"max_distance"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SuccessRate     float64 `json:"success_rate"`
 	SoundEvent      int     `json:"sound_event"`
 }
 

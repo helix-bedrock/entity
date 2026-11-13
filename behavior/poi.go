@@ -16,7 +16,7 @@ type POI struct {
 	// Pos is the POI block (+128).
 	Pos Pos
 	// Radius is how near counts as there (+168).
-	Radius float32
+	Radius float64
 	// UseBox is +218: the goal aims at the middle of Box and counts as
 	// there once the mob's box touches it.
 	UseBox bool
@@ -52,11 +52,11 @@ type Dweller interface {
 
 // MoveToPOIConfig is the JSON of minecraft:behavior.move_to_poi.
 type MoveToPOIConfig struct {
-	SpeedMultiplier float32 `json:"speed_multiplier"`
+	SpeedMultiplier float64 `json:"speed_multiplier"`
 	// TimeoutCooldown is the rest, in seconds, after a path that did not
 	// move.
-	TimeoutCooldown float32 `json:"timeout_cooldown"`
-	GoalRadius      float32 `json:"goal_radius"`
+	TimeoutCooldown float64 `json:"timeout_cooldown"`
+	GoalRadius      float64 `json:"goal_radius"`
 	POIType         POIKind `json:"poi_type"`
 }
 
@@ -151,7 +151,7 @@ func (g *moveToPOI) begin(kind POIKind) bool {
 	if end == blockOf(g.aim) {
 		return true
 	}
-	c := Vec3{X: float32(end.X) + 0.5, Y: float32(end.Y) + 0.5, Z: float32(end.Z) + 0.5}
+	c := Vec3{X: float64(end.X) + 0.5, Y: float64(end.Y) + 0.5, Z: float64(end.Z) + 0.5}
 	if !g.box {
 		return g.radius2 >= dist2(c, g.aim)
 	}
@@ -163,7 +163,7 @@ func (g *moveToPOI) begin(kind POIKind) bool {
 
 // grow is the box grown by d on every side, with its corners kept in order
 // as BDS's AABB grow does.
-func grow(b Box, d float32) Box {
+func grow(b Box, d float64) Box {
 	lo := Vec3{X: b.Min.X - d, Y: b.Min.Y - d, Z: b.Min.Z - d}
 	hi := Vec3{X: b.Max.X + d, Y: b.Max.Y + d, Z: b.Max.Z + d}
 	return Box{Min: Vec3{X: min(lo.X, hi.X), Y: min(lo.Y, hi.Y), Z: min(lo.Z, hi.Z)},

@@ -29,7 +29,7 @@ type AngryConfig struct {
 	// Sound plays every SoundInterval seconds while angry,
 	// behavior.NoSound for none.
 	Sound         int
-	SoundInterval behavior.Range[float32]
+	SoundInterval behavior.Range[float64]
 	// LastHurtWindow is how recent, in ticks, a hit must be to broadcast
 	// on attack or on being attacked.
 	LastHurtWindow int32
@@ -129,7 +129,7 @@ func (a *Angry) Tick(env *Env) {
 
 // soundDelay draws from sound_interval; RandomValueBounds::getFloat was
 // not read and is taken as a uniform draw.
-func (a *Angry) soundDelay(r behavior.Random) float32 {
+func (a *Angry) soundDelay(r behavior.Random) float64 {
 	iv := a.cfg.SoundInterval
 	return iv.Min + r.NextFloat()*(iv.Max-iv.Min)
 }
@@ -184,7 +184,7 @@ func (a *Angry) alert(env *Env) {
 			return
 		}
 	}
-	r := float32(a.cfg.BroadcastRange)
+	r := float64(a.cfg.BroadcastRange)
 	b := m.Box()
 	b.Min = behavior.Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}
 	b.Max = behavior.Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}

@@ -22,7 +22,7 @@ type b12Mob struct {
 	idx     int
 	doors   map[Pos]DoorState
 	setOpen []bool
-	width   float32
+	width   float64
 	diff    int
 	partner map[ID]ID
 	leader  map[ID]bool
@@ -43,7 +43,7 @@ func (m *b12Mob) UsesDoors() bool                     { return true }
 func (m *b12Mob) PathNodes() ([]Pos, int, bool)       { return m.nodes, m.idx, len(m.nodes) > 0 }
 func (m *b12Mob) Door(p Pos) (DoorState, bool)        { d, ok := m.doors[p]; return d, ok }
 func (m *b12Mob) SetDoorOpen(_ Pos, open bool)        { m.setOpen = append(m.setOpen, open) }
-func (m *b12Mob) Width() float32                      { return m.width }
+func (m *b12Mob) Width() float64                      { return m.width }
 func (m *b12Mob) Difficulty() int                     { return m.diff }
 func (m *b12Mob) DoorEvent(id int32, _ Vec3, _ int32) { m.actorEv = append(m.actorEv, id) }
 func (m *b12Mob) LovePartner(id ID) ID {
@@ -201,8 +201,8 @@ type b12Pet struct {
 	inBed    bool
 	claimed  bool
 	told     int
-	yaw      float32
-	body     float32
+	yaw      float64
+	body     float64
 	vel      Vec3
 	accepts  bool
 	riding   ID
@@ -218,14 +218,14 @@ func (m *b12Pet) OwnerBed() (Pos, bool)          { return m.bed, m.inBed }
 func (m *b12Pet) OwnerSleeping() bool            { return m.inBed }
 func (m *b12Pet) ClaimBed(Pos) bool              { m.claimed = true; return true }
 func (m *b12Pet) TellOwner()                     { m.told++ }
-func (m *b12Pet) SetExactPathEnd(float32)        {}
-func (m *b12Pet) SetPathSpeed(float32)           {}
+func (m *b12Pet) SetExactPathEnd(float64)        {}
+func (m *b12Pet) SetPathSpeed(float64)           {}
 func (m *b12Pet) Velocity() Vec3                 { return m.vel }
 func (m *b12Pet) SetVelocity(v Vec3)             { m.vel = v }
-func (m *b12Pet) Yaw() float32                   { return m.yaw }
-func (m *b12Pet) SetYaw(y float32)               { m.yaw = y }
-func (m *b12Pet) BodyYaw() float32               { return m.body }
-func (m *b12Pet) SetBodyYaw(y float32)           { m.body = y }
+func (m *b12Pet) Yaw() float64                   { return m.yaw }
+func (m *b12Pet) SetYaw(y float64)               { m.yaw = y }
+func (m *b12Pet) BodyYaw() float64               { return m.body }
+func (m *b12Pet) SetBodyYaw(y float64)           { m.body = y }
 func (m *b12Pet) AcceptsRider(ID) bool           { return m.accepts }
 func (m *b12Pet) Sleeping(ID) bool               { return false }
 func (m *b12Pet) Wet(ID) bool                    { return false }
@@ -233,7 +233,7 @@ func (m *b12Pet) CanRide(ID) bool                { return true }
 func (m *b12Pet) StartRiding(id ID)              { m.riding = id }
 func (m *b12Pet) GiveUpRiding()                  { m.gaveUp++ }
 func (m *b12Pet) PathToActor(Actor) (bool, bool) { return true, true }
-func (m *b12Pet) FollowPath(float32)             { m.followed++ }
+func (m *b12Pet) FollowPath(float64)             { m.followed++ }
 func (m *b12Pet) Vehicle() ID                    { return m.riding }
 
 func TestPetSleepWithOwnerHopsOntoTheBed(t *testing.T) {

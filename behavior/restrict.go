@@ -16,14 +16,14 @@ var villagerTypes = [...]string{"minecraft:villager", "minecraft:villager_v2"}
 // pick the centre.
 type towards struct {
 	base
-	speed float32
+	speed float64
 	to    Vec3
 }
 
 // toward finds a random spot on the way to c (0x5752F90).
 func (g *towards) toward(c Pos) bool {
 	p := g.mob.Pos()
-	d := Vec3{X: float32(c.X) - p.X, Y: float32(c.Y) - p.Y, Z: float32(c.Z) - p.Z}
+	d := Vec3{X: float64(c.X) - p.X, Y: float64(c.Y) - p.Y, Z: float64(c.Z) - p.Z}
 	at, ok := randomPos(g.world, g.mob, posSearch{h: towardsXZ, v: towardsY, dir: &d, tries: towardsTries})
 	if ok {
 		g.to = at
@@ -55,7 +55,7 @@ func (g *towards) Tick() {}
 type TowardsHome struct{ towards }
 
 // NewTowardsHome makes the goal; speed is speed_multiplier.
-func NewTowardsHome(w World, m Mob, speed float32) *TowardsHome {
+func NewTowardsHome(w World, m Mob, speed float64) *TowardsHome {
 	return &TowardsHome{towards{base: base{mob: m, world: w, flags: flagsMove}, speed: speed}}
 }
 
@@ -83,7 +83,7 @@ func (g *TowardsHome) CanUse() bool {
 type TowardsDwelling struct{ towards }
 
 // NewTowardsDwelling makes the goal; speed is speed_multiplier.
-func NewTowardsDwelling(w World, m Mob, speed float32) *TowardsDwelling {
+func NewTowardsDwelling(w World, m Mob, speed float64) *TowardsDwelling {
 	return &TowardsDwelling{towards{base: base{mob: m, world: w, flags: flagsMove}, speed: speed}}
 }
 

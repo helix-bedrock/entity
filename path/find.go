@@ -37,7 +37,7 @@ type Finder struct {
 	size   Pos
 	target *node
 	range2 uint64
-	stepUp float32
+	stepUp float64
 
 	nodes  map[Pos]*node
 	pool   []*node
@@ -70,15 +70,15 @@ func (f *Finder) reset(w World, s *Settings, flags Flags) {
 
 // FindPathToBlock finds a path to the block at p, as BDS's findPath to a
 // position does: it aims at (x+0.5, y+0.05, z+0.5).
-func (f *Finder) FindPathToBlock(w World, s *Settings, flags Flags, p Pos, maxDist float32) *Path {
-	return f.FindPath(w, s, flags, Vec3{float32(p.X) + 0.5, float32(p.Y) + 0.05, float32(p.Z) + 0.5}, maxDist)
+func (f *Finder) FindPathToBlock(w World, s *Settings, flags Flags, p Pos, maxDist float64) *Path {
+	return f.FindPath(w, s, flags, Vec3{float64(p.X) + 0.5, float64(p.Y) + 0.05, float64(p.Z) + 0.5}, maxDist)
 }
 
 // FindPath finds a path for the mob s describes to target. maxDist is the
 // search range (the mob's follow range attribute in BDS): nodes at least
 // that far from the target are never expanded. It returns nil when there is
 // no path.
-func (f *Finder) FindPath(w World, s *Settings, flags Flags, target Vec3, maxDist float32) *Path {
+func (f *Finder) FindPath(w World, s *Settings, flags Flags, target Vec3, maxDist float64) *Path {
 	f.reset(w, s, flags)
 	f.range2 = uint64(uint32(int64(maxDist * maxDist)))
 	f.size = Pos{floorInt(s.Width + 1), floorInt(s.Height + 1), floorInt(s.Width + 1)}
@@ -109,7 +109,7 @@ func (f *Finder) findSwimming(target Vec3) *Path {
 			y++
 		}
 	}
-	start := Pos{floorInt(s.Box.Min.X), floorInt(float32(y) + 0.5), floorInt(s.Box.Min.Z)}
+	start := Pos{floorInt(s.Box.Min.X), floorInt(float64(y) + 0.5), floorInt(s.Box.Min.Z)}
 	half := s.Width * 0.5
 	end := Pos{floorInt(target.X - half), floorInt(target.Y + 0.5), floorInt(target.Z - half)}
 	st := f.classify(start, f.world.Block(start), start, false, true)
@@ -133,7 +133,7 @@ func (f *Finder) findWalking(target Vec3) *Path {
 		}
 	}
 	defer func() { f.flags = saved }()
-	var sx, sz float32
+	var sx, sz float64
 	if s.Width <= 1 {
 		sx = s.Box.Min.X + (s.Box.Max.X-s.Box.Min.X)*0.5
 		sz = s.Box.Min.Z + (s.Box.Max.Z-s.Box.Min.Z)*0.5
@@ -213,7 +213,7 @@ func (f *Finder) freeStart(p Pos) NodeType {
 		return f.isFree(p, p, f.size, false, true)
 	}
 	box := f.pathBox(f.world.Block(p), p)
-	x, z := float32(p.X), float32(p.Z)
+	x, z := float64(p.X), float64(p.Z)
 	if min(x, x+1) >= s.Box.Max.X || s.Box.Min.X >= max(x, x+1) ||
 		min(box.Min.Y, box.Max.Y) >= s.Box.Max.Y || s.Box.Min.Y >= max(box.Min.Y, box.Max.Y) ||
 		min(z, z+1) >= s.Box.Max.Z || s.Box.Min.Z >= max(z, z+1) {
@@ -228,11 +228,11 @@ var (
 	specialFlierDirs = [6]uint8{1, 0, 2, 3, 4, 5}
 )
 
-func (f *Finder) distToMob(p Pos) float32 {
-	dx := float32(p.X) + 0.5 - f.s.Pos.X
-	dz := float32(p.Z) + 0.5 - f.s.Pos.Z
-	dy := float32(p.Y) - f.s.Pos.Y
-	return float32(dz*dz) + (float32(dx*dx) + float32(dy*dy))
+func (f *Finder) distToMob(p Pos) float64 {
+	dx := float64(p.X) + 0.5 - f.s.Pos.X
+	dz := float64(p.Z) + 0.5 - f.s.Pos.Z
+	dy := float64(p.Y) - f.s.Pos.Y
+	return float64(dz*dz) + (float64(dx*dx) + float64(dy*dy))
 }
 
 // nearestPathable is _findNearestPathableNeighbor: the start itself when
@@ -260,7 +260,7 @@ func (f *Finder) nearestPathable(start Pos) (Pos, bool) {
 			return c, true
 		}
 	}
-	best := float32(math.MaxFloat32)
+	best := float64(math.MaxFloat32)
 	found := false
 	out := start
 	if s.SpecialStartNeighbours {

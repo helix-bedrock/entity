@@ -14,7 +14,7 @@ var lavaShrink = Vec3{X: 0.1, Y: 0.4, Z: 0.1}
 // that turns inside out collapses to its centre.
 func shrink(b Box, d Vec3) Box {
 	lo, hi := b.Min, b.Max
-	axis := func(min, max, d float32) (float32, float32) {
+	axis := func(min, max, d float64) (float64, float64) {
 		a, z := min+d, max-d
 		if a > z {
 			c := (min + max) * 0.5
@@ -95,7 +95,7 @@ func (b *Body) sense(w World) {
 // groundFriction is the friction of the block under the box
 // (GroundTravelTypeSystem 0x7552A50): air gives 0.546, soul sand is
 // stickier without soul speed, and a zero friction counts as 0.546.
-func (b *Body) groundFriction(w World) float32 {
+func (b *Body) groundFriction(w World) float64 {
 	blk := w.Block(path.Pos{X: floorInt(b.Pos.X), Y: floorInt(b.Box.Min.Y - 0.1), Z: floorInt(b.Pos.Z)})
 	if blk.Air {
 		return airFriction
@@ -130,12 +130,12 @@ func (b *Body) setSpeed(w World) {
 	}
 }
 
-func (b *Body) depthStrider() float32 {
-	return float32(min(max(b.DepthStrider, 0), maxDepthStrider))
+func (b *Body) depthStrider() float64 {
+	return float64(min(max(b.DepthStrider, 0), maxDepthStrider))
 }
 
-func (b *Body) waterSpeed() float32 {
-	var uw float32
+func (b *Body) waterSpeed() float64 {
+	var uw float64
 	if b.Attrs.Underwater != nil {
 		uw = *b.Attrs.Underwater
 	}
@@ -164,10 +164,10 @@ func (b *Body) moveRelative() {
 	if l2 < 0.0001 {
 		return
 	}
-	k := b.speed / max(1, float32(math.Sqrt(float64(l2))))
+	k := b.speed / max(1, float64(math.Sqrt(float64(l2))))
 	x, y, z = x*k, y*k, z*k
 	r := float64(b.Yaw * 0.017453292)
-	s, c := float32(math.Sin(r)), float32(math.Cos(r))
+	s, c := float64(math.Sin(r)), float64(math.Cos(r))
 	b.Vel.X += x*c - z*s
 	b.Vel.Y += y
 	b.Vel.Z += z*c + x*s
@@ -265,7 +265,7 @@ func (b *Body) floatTravel(w World) bool {
 		b.addMove(b.Vel)
 		b.Vel = scale(b.Vel, 0.5)
 	default:
-		var f float32 = blockFrictionScale
+		var f float64 = blockFrictionScale
 		if b.OnGround {
 			blk := w.Block(path.Pos{X: floorInt(b.Pos.X), Y: floorInt(b.Box.Min.Y - 0.5), Z: floorInt(b.Pos.Z)})
 			if blk.Air {
@@ -280,15 +280,15 @@ func (b *Body) floatTravel(w World) bool {
 	dx, dz := b.Pos.X-b.PrevPos.X, b.Pos.Z-b.PrevPos.Z
 	prev := b.WalkAnim[1]
 	b.WalkAnim[0] = prev
-	b.WalkAnim[1] = (min(float32(math.Sqrt(float64(dx*dx+dz*dz)))*4, 1)-prev)*0.4 + prev
+	b.WalkAnim[1] = (min(float64(math.Sqrt(float64(dx*dx+dz*dz)))*4, 1)-prev)*0.4 + prev
 	if b.HasTarget {
 		t := b.Target
 		ddx, ddy, ddz := b.Pos.X-t.X, b.Pos.Y-t.Y, b.Pos.Z-t.Z
 		if ddz*ddz+(ddx*ddx+ddy*ddy) < 4096 {
-			b.Yaw = float32(math.Atan2(float64(t.X-b.Pos.X), float64(t.Z-b.Pos.Z))) * -57.295776
+			b.Yaw = float64(math.Atan2(float64(t.X-b.Pos.X), float64(t.Z-b.Pos.Z))) * -57.295776
 		}
 	} else if abs32(b.Vel.X) > eps || abs32(b.Vel.Z) > eps {
-		b.Yaw = float32(math.Atan2(float64(b.Vel.X), float64(b.Vel.Z))) * -57.295776
+		b.Yaw = float64(math.Atan2(float64(b.Vel.X), float64(b.Vel.Z))) * -57.295776
 	}
 	return false
 }
@@ -315,7 +315,7 @@ func (b *Body) swimTravel() bool {
 	return true
 }
 
-func scale(v Vec3, k float32) Vec3 { return Vec3{X: v.X * k, Y: v.Y * k, Z: v.Z * k} }
+func scale(v Vec3, k float64) Vec3 { return Vec3{X: v.X * k, Y: v.Y * k, Z: v.Z * k} }
 
 // addMove is Actor::move (0xB2CD6D0): it adds to the tick's move request.
 func (b *Body) addMove(v Vec3) {

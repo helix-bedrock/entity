@@ -29,7 +29,7 @@ type posSearch struct {
 type restriction struct {
 	on     bool
 	centre Pos
-	radius float32
+	radius float64
 }
 
 func restrict(m Mob, h int32) restriction {
@@ -47,12 +47,12 @@ func restrict(m Mob, h int32) restriction {
 	}
 	mp := blockOf(m.Pos())
 	dx, dy, dz := int64(hc.X-mp.X), int64(hc.Y-mp.Y), int64(hc.Z-mp.Z)
-	reach := float32(h) + float32(hr)
+	reach := float64(h) + float64(hr)
 	if dx*dx+dy*dy+dz*dz >= int64(reach*reach-homeSlack) {
 		return r
 	}
-	if !r.on || r.radius > float32(hr) {
-		r = restriction{on: true, centre: hc, radius: float32(hr)}
+	if !r.on || r.radius > float64(hr) {
+		r = restriction{on: true, centre: hc, radius: float64(hr)}
 	}
 	return r
 }
@@ -70,7 +70,7 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 	mp := m.Pos()
 	base := blockOf(mp)
 	radius2 := int64(res.radius * res.radius)
-	best := float32(scoreFloor)
+	best := float64(scoreFloor)
 	var out Pos
 	found := false
 	for i := int32(0); i < s.tries; i++ {
@@ -83,18 +83,18 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 			dy = r.NextInt(2*s.v + 1)
 		}
 		dy += s.yOffset - s.v
-		if s.dir != nil && float32(dx)*s.dir.X+float32(dz)*s.dir.Z < 0 {
+		if s.dir != nil && float64(dx)*s.dir.X+float64(dz)*s.dir.Z < 0 {
 			dx, dz = -dx, -dz
 		}
 		if res.on && s.h >= 2 {
 			k := int32(uint32(s.h) >> 1)
 			n := r.NextInt(k)
-			if mp.X > float32(res.centre.X) {
+			if mp.X > float64(res.centre.X) {
 				n = -n
 			}
 			dx += n
 			n = r.NextInt(k)
-			if mp.Z > float32(res.centre.Z) {
+			if mp.Z > float64(res.centre.Z) {
 				n = -n
 			}
 			dz += n
@@ -121,7 +121,7 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 			best, out, found = v, c, true
 		}
 	}
-	return Vec3{X: float32(out.X), Y: float32(out.Y), Z: float32(out.Z)}, found
+	return Vec3{X: float64(out.X), Y: float64(out.Y), Z: float64(out.Z)}, found
 }
 
 // raise lifts a snapped height by n blocks, failing when ground is in the
@@ -215,7 +215,7 @@ const (
 // score 10 over grass; animals and monsters score -0.5 over magma unless
 // fire immune; otherwise animals score brightness - 0.5 and monsters
 // 0.5 - brightness.
-func WalkTarget(k WalkKind, w World, p Pos, fireImmune bool) float32 {
+func WalkTarget(k WalkKind, w World, p Pos, fireImmune bool) float64 {
 	if k == WalkMob {
 		return 0
 	}
@@ -232,7 +232,7 @@ func WalkTarget(k WalkKind, w World, p Pos, fireImmune bool) float32 {
 	return 0.5 - w.Brightness(p)
 }
 
-func max32(a, b float32) float32 {
+func max32(a, b float64) float64 {
 	if a > b {
 		return a
 	}

@@ -45,7 +45,7 @@ func (b *Body) afterMove(w World) {
 	}
 	levitating := b.Levitation >= 0
 	if levitating {
-		b.Vel.Y = float32(b.Levitation+1)*0.01 + b.Vel.Y*0.8
+		b.Vel.Y = float64(b.Levitation+1)*0.01 + b.Vel.Y*0.8
 	}
 	if !levitating && !b.autoClimb {
 		b.gravityStep(w)
@@ -64,7 +64,7 @@ func (b *Body) afterMove(w World) {
 
 // waterDrag is MobMovementDrag::tickApplyWaterDrag (0x726B010).
 func (b *Body) waterDrag() {
-	d := float32(waterDrag)
+	d := float64(waterDrag)
 	switch {
 	case b.Flags.Has(FlagSprinting):
 		d = sprintWaterDrag
@@ -147,7 +147,7 @@ func (b *Body) liquidGravity(w World) bool {
 // verticalDrag is MobMovementDrag's ground, air and lava-walk vertical drag
 // (0x726D710, 0x7271A80).
 func (b *Body) verticalDrag() {
-	var d float32
+	var d float64
 	switch {
 	case b.Flags.Has(FlagUsesUniformAirDrag):
 		d = uniformAirDrag
@@ -156,7 +156,7 @@ func (b *Body) verticalDrag() {
 	default:
 		return
 	}
-	var m float32 = 1
+	var m float64 = 1
 	if b.Attrs.AirDrag != nil {
 		m = *b.Attrs.AirDrag
 	}
@@ -165,7 +165,7 @@ func (b *Body) verticalDrag() {
 
 // keep turns a loss fraction into the factor BDS multiplies by: a negative
 // loss keeps everything, a loss over 1 keeps nothing.
-func keep(loss float32) float32 {
+func keep(loss float64) float64 {
 	if loss < 0 {
 		return 1
 	}
@@ -173,7 +173,7 @@ func keep(loss float32) float32 {
 }
 
 // damp multiplies v by k, zeroing it when it is already tiny.
-func damp(v, k float32) float32 {
+func damp(v, k float64) float64 {
 	if abs32(v) <= eps {
 		return 0
 	}
@@ -193,7 +193,7 @@ func (b *Body) applyFriction() {
 		b.Vel.Z = damp(b.Vel.Z, vexFriction)
 		return
 	}
-	var fr, ad float32 = 1, 1
+	var fr, ad float64 = 1, 1
 	if b.Attrs.Friction != nil {
 		fr = *b.Attrs.Friction
 	}
@@ -201,7 +201,7 @@ func (b *Body) applyFriction() {
 		ad = *b.Attrs.AirDrag
 	}
 	f := b.friction
-	var h float32
+	var h float64
 	legacy := b.FrictionOverride != nil || b.Flags.Has(FlagUsesLegacyFriction)
 	if b.FrictionOverride != nil {
 		fr = *b.FrictionOverride

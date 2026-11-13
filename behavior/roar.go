@@ -18,7 +18,7 @@ type Roarer interface {
 	Knocker
 	// RoarHurt hurts the entity with the roar's damage (cause 11) after
 	// its own immunity checks, the way BDS does it for a server mob.
-	RoarHurt(a Actor, damage float32)
+	RoarHurt(a Actor, damage float64)
 	// RoarGameEvent posts the roar's game event at p.
 	RoarGameEvent(p Vec3)
 }
@@ -31,7 +31,7 @@ type KnockbackRoarConfig struct {
 	KnockbackDamage    int32   `json:"knockback_damage"`
 	HorizontalStrength int32   `json:"knockback_horizontal_strength"`
 	VerticalStrength   int32   `json:"knockback_vertical_strength"`
-	KnockbackHeightCap float32 `json:"knockback_height_cap"`
+	KnockbackHeightCap float64 `json:"knockback_height_cap"`
 	KnockbackRange     int32   `json:"knockback_range"`
 	Cooldown           int32
 	KnockbackFilters   RoarFilter
@@ -109,7 +109,7 @@ func (g *KnockbackRoar) Tick() {
 		return
 	}
 	b := g.m.Box()
-	r := float32(g.cfg.KnockbackRange)
+	r := float64(g.cfg.KnockbackRange)
 	box := sortedBox(sub(b.Min, Vec3{X: r, Y: r, Z: r}), add(b.Max, Vec3{X: r, Y: r, Z: r}))
 	p := g.m.Pos()
 	g.near = g.world.Entities(g.near[:0], g.m.ID(), box)
@@ -119,11 +119,11 @@ func (g *KnockbackRoar) Tick() {
 		}
 		q := e.Pos()
 		g.m.Knockback(e, Knockback{
-			Power: float32(g.cfg.HorizontalStrength) * roarKnockScale, Height: float32(g.cfg.VerticalStrength) * roarKnockScale,
+			Power: float64(g.cfg.HorizontalStrength) * roarKnockScale, Height: float64(g.cfg.VerticalStrength) * roarKnockScale,
 			HeightCap: g.cfg.KnockbackHeightCap, Extra: knockbackExtra, DirX: p.X - q.X, DirZ: p.Z - q.Z,
 		})
 		if g.pass(g.cfg.DamageFilters, e) {
-			g.m.RoarHurt(e, float32(g.cfg.KnockbackDamage))
+			g.m.RoarHurt(e, float64(g.cfg.KnockbackDamage))
 		}
 	}
 	c := boxCentre(b)
