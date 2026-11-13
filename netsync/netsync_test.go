@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 	"github.com/helix-bedrock/protocol"
 	"github.com/helix-bedrock/protocol/packet"
 )
@@ -44,7 +45,7 @@ func TestByteRoundTrip(t *testing.T) {
 
 func TestSignificant(t *testing.T) {
 	th := DefaultThresholds()
-	last := Sent{Position: mgl32.Vec3{0, 64, 0}, Yaw: 10}
+	last := Sent{Position: mgl64.Vec3{0, 64, 0}, Yaw: 10}
 	moving := mgl32.Vec3{0.1, 0, 0}
 	cases := []struct {
 		name   string
@@ -53,9 +54,9 @@ func TestSignificant(t *testing.T) {
 		want   bool
 	}{
 		{"same", last, moving, false},
-		{"step", Sent{Position: mgl32.Vec3{0.011, 64, 0}, Yaw: 10}, moving, true},
-		{"tiny step while moving", Sent{Position: mgl32.Vec3{0.005, 64, 0}, Yaw: 10}, moving, false},
-		{"tiny step after stopping", Sent{Position: mgl32.Vec3{0.005, 64, 0}, Yaw: 10}, mgl32.Vec3{}, true},
+		{"step", Sent{Position: mgl64.Vec3{0.011, 64, 0}, Yaw: 10}, moving, true},
+		{"tiny step while moving", Sent{Position: mgl64.Vec3{0.005, 64, 0}, Yaw: 10}, moving, false},
+		{"tiny step after stopping", Sent{Position: mgl64.Vec3{0.005, 64, 0}, Yaw: 10}, mgl32.Vec3{}, true},
 		{"turn 2 bytes", Sent{Position: last.Position, Yaw: 12}, moving, false},
 		{"turn 3 bytes", Sent{Position: last.Position, Yaw: 13}, moving, true},
 		// No wrap-around: byte 127 to 128 is 178.6 to -180 degrees.
@@ -73,8 +74,8 @@ func TestSignificant(t *testing.T) {
 }
 
 func TestDelta(t *testing.T) {
-	last := Sent{Position: mgl32.Vec3{1, 64, 2}, Pitch: 0, Yaw: 10, HeadYaw: 10}
-	now := Sent{Position: mgl32.Vec3{1.5, 64, 2.25}, Pitch: 0, Yaw: 10, HeadYaw: 12, OnGround: true}
+	last := Sent{Position: mgl64.Vec3{1, 64, 2}, Pitch: 0, Yaw: 10, HeadYaw: 10}
+	now := Sent{Position: mgl64.Vec3{1.5, 64, 2.25}, Pitch: 0, Yaw: 10, HeadYaw: 12, OnGround: true}
 	if h := DeltaHeader(last, now, MoveFlags{}); h != 0x65 {
 		t.Fatalf("header = %#x, want 0x65 (x, z, head yaw, on ground), the most common live header", h)
 	}
@@ -115,7 +116,7 @@ func TestScoreLive(t *testing.T) {
 	b := DefaultBandwidth()
 	exact, forced := 0, 0
 	for _, r := range d.Rows {
-		got := Score(Distance(mgl32.Vec3{r[0], r[1], r[2]}, mgl32.Vec3{r[3], r[4], r[5]}), b)
+		got := Score(Distance(mgl64.Vec3{float64(r[0]), float64(r[1]), float64(r[2])}, mgl64.Vec3{float64(r[3]), float64(r[4]), float64(r[5])}), b)
 		want := int64(r[6])
 		switch {
 		case got == want:
@@ -155,10 +156,10 @@ func TestVanillaView(t *testing.T) {
 	if len(seen) != 57 {
 		t.Fatalf("%d chunks, want 57", len(seen))
 	}
-	if !InVanillaView(mgl32.Vec3{0, 0, 0}, mgl32.Vec3{16 * 4, 0, 16}) || InVanillaView(mgl32.Vec3{}, mgl32.Vec3{16 * 3, 0, 16 * 3}) {
+	if !InVanillaView(mgl64.Vec3{0, 0, 0}, mgl64.Vec3{16 * 4, 0, 16}) || InVanillaView(mgl64.Vec3{}, mgl64.Vec3{16 * 3, 0, 16 * 3}) {
 		t.Error("InVanillaView disagrees with dx² + dz² <= 17")
 	}
-	if c := ChunkAt(mgl32.Vec3{-0.5, 0, 15.9}); c != (ChunkPos{-1, 0}) {
+	if c := ChunkAt(mgl64.Vec3{-0.5, 0, 15.9}); c != (ChunkPos{-1, 0}) {
 		t.Errorf("ChunkAt = %v, want {-1 0}", c)
 	}
 }
@@ -217,15 +218,15 @@ func eq(a, b []string) bool {
 func TestSyncOrderAndSpawn(t *testing.T) {
 	s := New(VanillaOptions())
 	r := &recorder{}
-	s.AddViewer(1, r, mgl32.Vec3{0, 64, 0})
+	s.AddViewer(1, r, mgl64.Vec3{0, 64, 0})
 	bw := DefaultBandwidth()
 	zombie := Entity{Spawn: Spawn{UniqueID: 10, RuntimeID: 10, Type: "minecraft:zombie"}, Mob: true, Bandwidth: &bw}
 	zombie.Equipment.Armour[SlotHelmet] = item(5)
 	zombie.Equipment.MainHand.Item = item(6)
-	s.AddEntity(zombie, Pose{Position: mgl32.Vec3{2, 64, 2}, Yaw: 33})
+	s.AddEntity(zombie, Pose{Position: mgl64.Vec3{2, 64, 2}, Yaw: 33})
 
 	s.See(1, 10)
-	s.Move(10, Pose{Position: mgl32.Vec3{2.5, 64, 2}, Yaw: 33, OnGround: true}, mgl32.Vec3{0.1, 0, 0}, MoveFlags{})
+	s.Move(10, Pose{Position: mgl64.Vec3{2.5, 64, 2}, Yaw: 33, OnGround: true}, mgl32.Vec3{0.1, 0, 0}, MoveFlags{})
 	sound := &packet.LevelSoundEvent{}
 	s.Send(1, sound, PhaseSound)
 	data := Data(10, nil, protocol.EntityProperties{}, 0)
@@ -237,10 +238,10 @@ func TestSyncOrderAndSpawn(t *testing.T) {
 		t.Fatalf("batches = %v, want one batch %v", r.batches, want)
 	}
 	add := r.batches[0][0].(*packet.AddActor)
-	if add.Yaw != ByteDegrees(RotationByte(33)) || add.Position != (mgl32.Vec3{2, 64, 2}) {
+	if add.Yaw != ByteDegrees(RotationByte(33)) || add.Position != (mgl64.Vec3{2, 64, 2}) {
 		t.Errorf("AddActor must use the last-sent pose, got yaw %v pos %v", add.Yaw, add.Position)
 	}
-	if last, _ := s.Last(10); last.Position != (mgl32.Vec3{2.5, 64, 2}) {
+	if last, _ := s.Last(10); last.Position != (mgl64.Vec3{2.5, 64, 2}) {
 		t.Errorf("last-sent not moved after a delta was sent: %v", last.Position)
 	}
 
@@ -254,18 +255,18 @@ func TestSyncOrderAndSpawn(t *testing.T) {
 func TestSyncThrottleAndLastSent(t *testing.T) {
 	s := New(VanillaOptions())
 	near, far := &recorder{}, &recorder{}
-	s.AddViewer(1, near, mgl32.Vec3{0, 64, 0})
-	s.AddViewer(2, far, mgl32.Vec3{500, 64, 0})
+	s.AddViewer(1, near, mgl64.Vec3{0, 64, 0})
+	s.AddViewer(2, far, mgl64.Vec3{500, 64, 0})
 	bw := DefaultBandwidth()
-	s.AddEntity(Entity{Spawn: Spawn{UniqueID: 10, RuntimeID: 10}, Mob: true, Bandwidth: &bw}, Pose{Position: mgl32.Vec3{0, 64, 0}, OnGround: true})
+	s.AddEntity(Entity{Spawn: Spawn{UniqueID: 10, RuntimeID: 10}, Mob: true, Bandwidth: &bw}, Pose{Position: mgl64.Vec3{0, 64, 0}, OnGround: true})
 	s.See(1, 10)
 	s.See(2, 10)
 	s.Flush(100)
 
-	x := float32(0)
+	x := float64(0)
 	for tick := uint64(101); tick <= 114; tick++ {
 		x += 0.2
-		s.Move(10, Pose{Position: mgl32.Vec3{x, 64, 0}, OnGround: true}, mgl32.Vec3{0.2, 0, 0}, MoveFlags{})
+		s.Move(10, Pose{Position: mgl64.Vec3{x, 64, 0}, OnGround: true}, mgl32.Vec3{0.2, 0, 0}, MoveFlags{})
 		s.Flush(tick)
 	}
 	count := func(r *recorder) int {
@@ -291,7 +292,7 @@ func TestSyncThrottleAndLastSent(t *testing.T) {
 	s.Unsee(1, 10)
 	s.Unsee(2, 10)
 	before, _ := s.Last(10)
-	s.Move(10, Pose{Position: mgl32.Vec3{50, 64, 0}, OnGround: true}, mgl32.Vec3{}, MoveFlags{})
+	s.Move(10, Pose{Position: mgl64.Vec3{50, 64, 0}, OnGround: true}, mgl32.Vec3{}, MoveFlags{})
 	s.Flush(200)
 	if after, _ := s.Last(10); after != before {
 		t.Errorf("last-sent moved with no viewer: %v -> %v", before.Position, after.Position)
@@ -301,7 +302,7 @@ func TestSyncThrottleAndLastSent(t *testing.T) {
 func TestSyncOptionsOff(t *testing.T) {
 	s := New(Options{})
 	r := &recorder{}
-	s.AddViewer(1, r, mgl32.Vec3{})
+	s.AddViewer(1, r, mgl64.Vec3{})
 	e := Entity{Spawn: Spawn{UniqueID: 3, RuntimeID: 3}, Mob: true}
 	e.Equipment.MainHand.Item = item(9)
 	s.AddEntity(e, Pose{})
@@ -317,10 +318,10 @@ func TestSyncOptionsOff(t *testing.T) {
 func TestRemoveEntityDropsMove(t *testing.T) {
 	s := New(VanillaOptions())
 	r := &recorder{}
-	s.AddViewer(1, r, mgl32.Vec3{})
+	s.AddViewer(1, r, mgl64.Vec3{})
 	s.AddEntity(Entity{Spawn: Spawn{UniqueID: 0, RuntimeID: 1}}, Pose{})
 	s.See(1, 0)
-	s.Move(0, Pose{Position: mgl32.Vec3{5, 0, 0}}, mgl32.Vec3{}, MoveFlags{})
+	s.Move(0, Pose{Position: mgl64.Vec3{5, 0, 0}}, mgl32.Vec3{}, MoveFlags{})
 	s.RemoveEntity(0)
 	s.Flush(1)
 	if got := names(r.batches[0]); !eq(got, []string{"add", "remove"}) {
@@ -332,7 +333,7 @@ func BenchmarkSyncFlush(b *testing.B) {
 	s := New(VanillaOptions())
 	bw := DefaultBandwidth()
 	for v := range 50 {
-		s.AddViewer(ViewerID(v), &discard{}, mgl32.Vec3{float32(v), 64, 0})
+		s.AddViewer(ViewerID(v), &discard{}, mgl64.Vec3{float64(v), 64, 0})
 	}
 	for e := range 1000 {
 		s.AddEntity(Entity{Spawn: Spawn{UniqueID: int64(e), RuntimeID: uint64(e)}, Mob: true, Bandwidth: &bw}, Pose{})
@@ -346,7 +347,7 @@ func BenchmarkSyncFlush(b *testing.B) {
 	for i := range b.N {
 		x := float32(i%100) * 0.3
 		for e := range 1000 {
-			s.Move(EntityID(e), Pose{Position: mgl32.Vec3{x, 64, float32(e)}, Yaw: x}, mgl32.Vec3{0.3, 0, 0}, MoveFlags{})
+			s.Move(EntityID(e), Pose{Position: mgl64.Vec3{float64(x), 64, float64(e)}, Yaw: x}, mgl32.Vec3{0.3, 0, 0}, MoveFlags{})
 		}
 		s.Flush(uint64(i + 1))
 	}

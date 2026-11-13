@@ -2,6 +2,7 @@ package netsync
 
 import (
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 	"github.com/helix-bedrock/protocol"
 	"github.com/helix-bedrock/protocol/packet"
 )
@@ -121,7 +122,7 @@ type known struct {
 type viewerState struct {
 	id    ViewerID
 	w     Writer
-	pos   mgl32.Vec3
+	pos   mgl64.Vec3
 	known map[EntityID]*known
 	out   [phaseCount][]packet.Packet
 	batch []packet.Packet
@@ -231,7 +232,7 @@ func (s *Sync) RemoveEntity(id EntityID) bool {
 }
 
 // AddViewer adds a viewer at pos that sees nothing yet.
-func (s *Sync) AddViewer(id ViewerID, w Writer, pos mgl32.Vec3) bool {
+func (s *Sync) AddViewer(id ViewerID, w Writer, pos mgl64.Vec3) bool {
 	if _, ok := s.viewerIdx[id]; ok || w == nil {
 		return false
 	}
@@ -259,7 +260,7 @@ func (s *Sync) RemoveViewer(id ViewerID) bool {
 }
 
 // MoveViewer sets the position the throttle measures a viewer from.
-func (s *Sync) MoveViewer(id ViewerID, pos mgl32.Vec3) bool {
+func (s *Sync) MoveViewer(id ViewerID, pos mgl64.Vec3) bool {
 	v, ok := s.viewerIdx[id]
 	if ok {
 		v.pos = pos
