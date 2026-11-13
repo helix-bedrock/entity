@@ -53,7 +53,7 @@ func (m *b11Mob) WalkDirectly(_, to Vec3, _, _, _ int32) bool {
 }
 
 func TestRollSimulatesThePathOnFlatGround(t *testing.T) {
-	w := newB11World(&seqRandom{floats: []float64{0.005}})
+	w := newB11World(&seqRandom{floats: []float32{0.005}})
 	m := newB11Mob(w, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:panda")
 	g := NewRoll(w, m, DefaultRoll())
 	if !g.CanUse() || len(m.walkTo) != 1 {
@@ -66,7 +66,7 @@ func TestRollSimulatesThePathOnFlatGround(t *testing.T) {
 }
 
 func TestRollOffALedgeSkipsTheChance(t *testing.T) {
-	w := newB11World(&seqRandom{floats: []float64{0.5}})
+	w := newB11World(&seqRandom{floats: []float32{0.5}})
 	w.blocks[Pos{Y: 63, Z: 1}] = Block{Name: airName}
 	m := newB11Mob(w, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:panda")
 	g := NewRoll(w, m, RollConfig{})

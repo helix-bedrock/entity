@@ -41,7 +41,7 @@ type DamageTrigger struct {
 	DealsDamage DealsDamage
 	// Multiplier and Modifier change the damage: (damage + modifier) *
 	// multiplier, at least 1 when not 0.
-	Multiplier, Modifier float64
+	Multiplier, Modifier float32
 	// Sound is on_damage_sound_event, behavior.NoSound for none.
 	Sound int
 }
@@ -112,7 +112,7 @@ func (s *DamageSensor) Match(cause int, ctx definition.Tester) *DamageTrigger {
 
 // Adjust returns damage changed by the matching trigger's multiplier and
 // modifier.
-func (s *DamageSensor) Adjust(cause int, damage float64, ctx definition.Tester) float64 {
+func (s *DamageSensor) Adjust(cause int, damage float32, ctx definition.Tester) float32 {
 	if damage <= 0 {
 		return damage
 	}
@@ -131,7 +131,7 @@ func (s *DamageSensor) Adjust(cause int, damage float64, ctx definition.Tester) 
 // matching trigger's event and sound fire when it stops the damage, or
 // when applied is set: BDS passes that flag from its own caller, whose
 // meaning was not read.
-func (s *DamageSensor) Damage(env *Env, cause int, amount, health float64, ctx definition.Tester, applied bool) DealsDamage {
+func (s *DamageSensor) Damage(env *Env, cause int, amount, health float32, ctx definition.Tester, applied bool) DealsDamage {
 	s.last = LastDamage{Amount: int32(amount), Fatal: amount >= health, Cause: cause}
 	t := s.Match(cause, ctx)
 	if t == nil {

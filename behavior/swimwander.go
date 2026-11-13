@@ -32,9 +32,9 @@ var swimNeighbours = [...]Pos{{Y: 1}, {Y: -1}, {Z: -1}, {Z: 1}, {X: -1}, {X: 1}}
 // SwimWanderConfig is the JSON of minecraft:behavior.swim_wander.
 type SwimWanderConfig struct {
 	// Interval is the chance per tick to start.
-	Interval        float64 `json:"interval"`
-	LookAhead       float64 `json:"look_ahead"`
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	Interval        float32 `json:"interval"`
+	LookAhead       float32 `json:"look_ahead"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	// WanderTime is wander_time in ticks.
 	WanderTime int32
 }
@@ -115,8 +115,8 @@ func (g *SwimWander) Tick() {
 	s := m.UnderwaterSpeed()
 	m.Move(Vec3{X: t.X * s * g.cfg.SpeedMultiplier, Y: t.Y * s * g.cfg.SpeedMultiplier, Z: t.Z * s * g.cfg.SpeedMultiplier})
 	_, yaw := m.HeadRotation()
-	want := float64(math.Atan2(float64(g.dir.X), float64(g.dir.Z))) * -degPerRad
-	turn := float64(math.Mod(float64(want-yaw+180), 360))
+	want := float32(math.Atan2(float64(g.dir.X), float64(g.dir.Z))) * -degPerRad
+	turn := float32(math.Mod(float64(want-yaw+180), 360))
 	if turn < 0 {
 		turn += 360
 	}
@@ -144,9 +144,9 @@ func (g *SwimWander) steer() {
 
 // wayOut picks among the 26 directions around the mob the clear one
 // closest to the view; d is reversed when none was found.
-func (g *SwimWander) wayOut(p, d Vec3, l float64) Vec3 {
+func (g *SwimWander) wayOut(p, d Vec3, l float32) Vec3 {
 	var best Vec3
-	bestAngle := float64(math.MaxFloat32)
+	bestAngle := float32(math.MaxFloat32)
 	clear := false
 	for x := int32(-1); x <= 1; x++ {
 		for y := int32(-1); y <= 1; y++ {
@@ -154,10 +154,10 @@ func (g *SwimWander) wayOut(p, d Vec3, l float64) Vec3 {
 				if x|y|z == 0 {
 					continue
 				}
-				dir := normalize(Vec3{X: float64(x) + p.X - p.X, Y: float64(y) + p.Y - p.Y, Z: float64(z) + p.Z - p.Z})
+				dir := normalize(Vec3{X: float32(x) + p.X - p.X, Y: float32(y) + p.Y - p.Y, Z: float32(z) + p.Z - p.Z})
 				at, hit := g.world.Clip(p, add(p, scale(dir, l)))
 				if !hit {
-					a := float64(math.Acos(float64(dir.Z*d.Z + (d.X*dir.X + d.Y*dir.Y))))
+					a := float32(math.Acos(float64(dir.Z*d.Z + (d.X*dir.X + d.Y*dir.Y))))
 					if bestAngle > a {
 						best, bestAngle, clear = dir, a, true
 					}
@@ -181,9 +181,9 @@ func (g *SwimWander) push(p Vec3) Vec3 {
 	w := g.world
 	inWater := g.mob.InWater()
 	var sum Vec3
-	for ox := float64(-swimPushOffset); ox <= swimPushOffset; ox++ {
-		for oy := float64(-swimPushOffset); oy <= swimPushOffset; oy++ {
-			for oz := float64(-swimPushOffset); oz <= swimPushOffset; oz++ {
+	for ox := float32(-swimPushOffset); ox <= swimPushOffset; ox++ {
+		for oy := float32(-swimPushOffset); oy <= swimPushOffset; oy++ {
+			for oz := float32(-swimPushOffset); oz <= swimPushOffset; oz++ {
 				c := Vec3{X: p.X + ox, Y: p.Y + oy, Z: p.Z + oz}
 				b := w.Block(blockOf(c))
 				if !b.BlocksMotion && (!inWater || b.Material != path.MaterialAir) {

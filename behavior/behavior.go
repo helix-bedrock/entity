@@ -140,12 +140,12 @@ type Random interface {
 	// NextInt returns a number in [0, n); 0 when n is 0 or less.
 	NextInt(n int32) int32
 	// NextFloat returns a number in [0, 1).
-	NextFloat() float64
+	NextFloat() float32
 	// NextBool is Random::nextBoolean.
 	NextBool() bool
 	// NextGaussian is Random::nextGaussian, which keeps the second number
 	// of each pair for the next call.
-	NextGaussian() float64
+	NextGaussian() float32
 }
 
 // Actor is another entity a goal looks at. A value is only valid for the
@@ -183,9 +183,9 @@ type Actor interface {
 	// Dimension is the entity's dimension ID.
 	Dimension() int
 	// HeadRotation is the head pitch and yaw in degrees.
-	HeadRotation() (pitch, yaw float64)
+	HeadRotation() (pitch, yaw float32)
 	// BodyYaw is the body rotation in degrees.
-	BodyYaw() float64
+	BodyYaw() float32
 	// Invulnerable reports the creative invulnerable ability.
 	Invulnerable() bool
 	// HasHealth reports that the entity has a health attribute.
@@ -195,7 +195,7 @@ type Actor interface {
 	// Monster reports the hostile-kind component that peaceful removes.
 	Monster() bool
 	// ArmourCoverage is the share of armour slots that are filled, 0 to 1.
-	ArmourCoverage() float64
+	ArmourCoverage() float32
 	// WearsHeadOf reports a player wearing the head of the mob type.
 	WearsHeadOf(mobType string) bool
 	// Target is the entity's target, NoID for none.
@@ -247,7 +247,7 @@ type World interface {
 	// Peaceful reports a peaceful difficulty.
 	Peaceful() bool
 	// Brightness is BlockSource::getBrightness at p, 0 to 1.
-	Brightness(p Pos) float64
+	Brightness(p Pos) float32
 	// Block returns the block facts the goals use at p.
 	Block(p Pos) Block
 	// LiquidMaterial is the material of the liquid layer at p.
@@ -262,7 +262,7 @@ type World interface {
 	// below 4.
 	IsDay() bool
 	// RainLevel is the dimension's rain level, 0 to 1.
-	RainLevel() float64
+	RainLevel() float32
 	// AboveTopSolid is BlockSource::getAboveTopSolidBlock: the height just
 	// above the highest solid block of the column.
 	AboveTopSolid(x, z int32) int32
@@ -313,7 +313,7 @@ type World interface {
 	ChestOpen(p Pos) bool
 	// ThunderLevel is the dimension's rain level times its lightning
 	// level, 0 in a dimension without weather (Dimension +224 off).
-	ThunderLevel() float64
+	ThunderLevel() float32
 	// SetBlock is BlockSource::setBlock with update flags 3, followed by
 	// the block change game event sent by the actor.
 	SetBlock(p Pos, b PlacedBlock, by ID)
@@ -372,10 +372,10 @@ type Block struct {
 	NoJumpLanding bool
 	// ShapeTop is the top of the block's collision shape inside the block
 	// (BlockType::getCollisionShape max y), 0 for none.
-	ShapeTop float64
+	ShapeTop float32
 	// ShapeHeight is the height of the block's AABB (BlockType vt+64, max y
 	// less min y), 0 for none.
-	ShapeHeight float64
+	ShapeHeight float32
 	// Stairs, Slab and Trapdoor are the block type property bits 0, 1 and
 	// 13 (BlockType +264).
 	Stairs, Slab, Trapdoor bool
@@ -394,9 +394,9 @@ type Block struct {
 type Navigator interface {
 	// MoveTo paths to p at the speed multiplier; false when no path was
 	// found.
-	MoveTo(p Vec3, speed float64) bool
+	MoveTo(p Vec3, speed float32) bool
 	// MoveToActor paths to the entity; false when no path was found.
-	MoveToActor(a Actor, speed float64) bool
+	MoveToActor(a Actor, speed float32) bool
 	// PathTo makes a path to the entity without following it and returns
 	// its last node.
 	PathTo(a Actor) (end Pos, ok bool)
@@ -417,7 +417,7 @@ type Navigator interface {
 	SetEndOffset(o Vec3)
 	// SetLastNodeReach makes d2 the squared distance at which the last
 	// node counts as reached, until the next path.
-	SetLastNodeReach(d2 float64)
+	SetLastNodeReach(d2 float32)
 	// Done reports that there is no path or it is finished.
 	Done() bool
 	// Stop stops navigation and resets its speed to 1.
@@ -426,7 +426,7 @@ type Navigator interface {
 	Flags() uint32
 	SetFlags(f uint32)
 	// SetSpeed sets the speed multiplier of the path being followed.
-	SetSpeed(s float64)
+	SetSpeed(s float32)
 }
 
 // Mob is the mob that owns a goal.
@@ -436,14 +436,14 @@ type Mob interface {
 	Nav() Navigator
 	SetFlag(n int, on bool)
 	// WalkTargetValue is Mob::getWalkTargetValue (see WalkTarget).
-	WalkTargetValue(p Pos) float64
+	WalkTargetValue(p Pos) float32
 	// LookAt points the look control at p; it does nothing while a higher
 	// priority look is set this tick.
-	LookAt(p Vec3, yawMax, pitchMax float64)
+	LookAt(p Vec3, yawMax, pitchMax float32)
 	// LookBusy reports a look request made earlier this tick.
 	LookBusy() bool
 	// MaxHeadXRot is Mob::getMaxHeadXRot (40 for most mobs).
-	MaxHeadXRot() float64
+	MaxHeadXRot() float32
 	SetTarget(id ID)
 	// LastHurtBy is the entity that last hurt the mob and the tick it did.
 	LastHurtBy() (id ID, tick uint64)
@@ -464,7 +464,7 @@ type Mob interface {
 	Home() (centre Pos, radius int32, ok bool)
 	// Leash is the leash holder's box centre and the leash's maximum
 	// distance, when the mob is leashed.
-	Leash() (centre Vec3, maxDist float64, ok bool)
+	Leash() (centre Vec3, maxDist float32, ok bool)
 	// InLava is the lava test that stops stroll from snapping to the ground
 	// (BDS checks the mob's box against lava unless it ignores lava drag).
 	InLava() bool
@@ -518,14 +518,14 @@ type Mob interface {
 	Move(v Vec3)
 	// Speed, UnderwaterSpeed and FollowRange are the current values of the
 	// movement, underwater_movement and follow_range attributes.
-	Speed() float64
-	UnderwaterSpeed() float64
-	FollowRange() float64
+	Speed() float32
+	UnderwaterSpeed() float32
+	FollowRange() float32
 	// PrevRotation is the pitch and yaw of ActorRotationComponent last
 	// tick; BDS's view vector with no partial tick uses it.
-	PrevRotation() (pitch, yaw float64)
+	PrevRotation() (pitch, yaw float32)
 	// SetYaw sets the yaw of ActorRotationComponent.
-	SetYaw(yaw float64)
+	SetYaw(yaw float32)
 	// Breathable reports BreathableComponent.
 	Breathable() bool
 	// AirSupply is the air supply actor data (item 7).
@@ -539,7 +539,7 @@ type Mob interface {
 	MoveWanted() (wanted, ok bool)
 	// SetMoveWanted gives the move control a wanted position and speed;
 	// ClearMoveWanted drops it. Both do nothing without a move control.
-	SetMoveWanted(p Vec3, speed float64)
+	SetMoveWanted(p Vec3, speed float32)
 	ClearMoveWanted()
 }
 
@@ -584,12 +584,12 @@ func (b *base) actor(id ID) Actor {
 	return b.world.Actor(id)
 }
 
-func dist2(a, b Vec3) float64 {
+func dist2(a, b Vec3) float32 {
 	dx, dy, dz := a.X-b.X, a.Y-b.Y, a.Z-b.Z
 	return dz*dz + (dx*dx + dy*dy)
 }
 
-func floorInt(v float64) int32 { return int32(math.Floor(float64(v))) }
+func floorInt(v float32) int32 { return int32(math.Floor(float64(v))) }
 
 func blockOf(v Vec3) Pos { return Pos{X: floorInt(v.X), Y: floorInt(v.Y), Z: floorInt(v.Z)} }
 
@@ -619,7 +619,7 @@ func spectator(w World, a Actor) bool {
 }
 
 // Range is a JSON [min, max] pair.
-type Range[T int32 | float64] struct{ Min, Max T }
+type Range[T int32 | float32] struct{ Min, Max T }
 
 // UnmarshalJSON reads a range the ways BDS writes one: [min, max],
 // {"range_min", "range_max"}, {"min", "max"}, or one number for both ends.
@@ -655,7 +655,7 @@ func (r *Range[T]) UnmarshalJSON(b []byte) error {
 
 // randomTicks is a random time from the range in seconds, in ticks, the way
 // the sound timers draw it.
-func randomTicks(r Random, s Range[float64]) uint64 {
+func randomTicks(r Random, s Range[float32]) uint64 {
 	return uint64(int32(((s.Max-s.Min)*r.NextFloat() + s.Min) * ticksPerSecond))
 }
 
@@ -677,7 +677,7 @@ func randomInt(r Random, min, max int32) int32 {
 	return min
 }
 
-func sqrt32(v float64) float64 { return float64(math.Sqrt(float64(v))) }
+func sqrt32(v float32) float32 { return float32(math.Sqrt(float64(v))) }
 
 // minLength is the length below which BDS's normalize gives a zero vector.
 const minLength = 0.0001
@@ -686,14 +686,14 @@ func sub(a, b Vec3) Vec3 { return Vec3{X: a.X - b.X, Y: a.Y - b.Y, Z: a.Z - b.Z}
 
 func add(a, b Vec3) Vec3 { return Vec3{X: a.X + b.X, Y: a.Y + b.Y, Z: a.Z + b.Z} }
 
-func scale(v Vec3, s float64) Vec3 { return Vec3{X: v.X * s, Y: v.Y * s, Z: v.Z * s} }
+func scale(v Vec3, s float32) Vec3 { return Vec3{X: v.X * s, Y: v.Y * s, Z: v.Z * s} }
 
-func length(v Vec3) float64 { return sqrt32(v.Z*v.Z + (v.X*v.X + v.Y*v.Y)) }
+func length(v Vec3) float32 { return sqrt32(v.Z*v.Z + (v.X*v.X + v.Y*v.Y)) }
 
 // approachDegrees turns from towards to by at most limit degrees, by the
 // shorter way (0xED49160).
-func approachDegrees(from, to, limit float64) float64 {
-	d := float64(math.Mod(float64(to-from+180), 360))
+func approachDegrees(from, to, limit float32) float32 {
+	d := float32(math.Mod(float64(to-from+180), 360))
 	if d < 0 {
 		d += 360
 	}

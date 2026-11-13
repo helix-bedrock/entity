@@ -11,15 +11,15 @@ type Navigation struct {
 	// StuckInterval is the ticks between stuck checks; StuckDistance the
 	// blocks the mob must move in that time.
 	StuckInterval int32
-	StuckDistance float64
+	StuckDistance float32
 
 	ticks     int32
 	lastCheck int32
 	lastPos   path.Vec3
-	speed     float64
+	speed     float32
 	// lastReach2, when useLastReach is set, is the squared distance at which
 	// the last node counts as reached.
-	lastReach2   float64
+	lastReach2   float32
 	useLastReach bool
 
 	path  *path.Path
@@ -55,7 +55,7 @@ func (n *Navigation) Done() bool { return n.path == nil || n.index >= len(n.path
 
 // SetLastNodeReach makes the last node count as reached within the squared
 // distance d2. The next MoveTo clears it.
-func (n *Navigation) SetLastNodeReach(d2 float64) {
+func (n *Navigation) SetLastNodeReach(d2 float32) {
 	n.lastReach2, n.useLastReach = d2, true
 }
 
@@ -100,7 +100,7 @@ func (n *Navigation) CreatePathToMob(m *Mob, pf Pathfinder, pos path.Vec3) *path
 }
 
 // MoveTo finds a path to pos and follows it at speed.
-func (n *Navigation) MoveTo(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float64) bool {
+func (n *Navigation) MoveTo(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float32) bool {
 	if n.Kind == KindFloat {
 		return false
 	}
@@ -109,7 +109,7 @@ func (n *Navigation) MoveTo(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed
 
 // MoveToMob finds a path to a mob at pos and follows it at speed. A climbing
 // mob with no path still walks to the mob.
-func (n *Navigation) MoveToMob(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float64) bool {
+func (n *Navigation) MoveToMob(w World, m *Mob, pf Pathfinder, pos path.Vec3, speed float32) bool {
 	if n.Kind == KindFloat {
 		return false
 	}
@@ -138,7 +138,7 @@ func samePositions(a, b *path.Path) bool {
 // Follow makes the mob follow p at speed. A path through the same blocks as
 // the current one keeps the current one and its progress. It returns false
 // when there is nothing to follow.
-func (n *Navigation) Follow(w World, m *Mob, p *path.Path, speed float64) bool {
+func (n *Navigation) Follow(w World, m *Mob, p *path.Path, speed float32) bool {
 	if p == nil || m.NoNewPath {
 		return false
 	}
@@ -225,7 +225,7 @@ func (n *Navigation) walkMobPos(w World, m *Mob) path.Vec3 {
 			}
 		}
 	}
-	return path.Vec3{X: m.Pos.X, Y: float64(y), Z: m.Pos.Z}
+	return path.Vec3{X: m.Pos.X, Y: float32(y), Z: m.Pos.Z}
 }
 
 // nodeCentre is where the mob aims for node i: the middle of its footprint,
@@ -233,8 +233,8 @@ func (n *Navigation) walkMobPos(w World, m *Mob) path.Vec3 {
 func nodeCentre(m *Mob, p *path.Path, i int) path.Vec3 {
 	i = min(i, len(p.Points)-1)
 	pt := p.Points[i]
-	half := float64(int32(m.Width+1)) * 0.5
-	c := path.Vec3{X: float64(pt.Pos.X) + half, Y: float64(pt.Pos.Y), Z: float64(pt.Pos.Z) + half}
+	half := float32(int32(m.Width+1)) * 0.5
+	c := path.Vec3{X: float32(pt.Pos.X) + half, Y: float32(pt.Pos.Y), Z: float32(pt.Pos.Z) + half}
 	if pt.Type == path.NodeAir {
 		c.Y += 0.5
 	}

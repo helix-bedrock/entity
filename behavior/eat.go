@@ -139,9 +139,9 @@ type Snacker interface {
 // are in seconds.
 type SnackingConfig struct {
 	Items       []string
-	Cooldown    float64 `json:"snacking_cooldown"`
-	CooldownMin float64 `json:"snacking_cooldown_min"`
-	StopChance  float64 `json:"snacking_stop_chance"`
+	Cooldown    float32 `json:"snacking_cooldown"`
+	CooldownMin float32 `json:"snacking_cooldown_min"`
+	StopChance  float32 `json:"snacking_stop_chance"`
 }
 
 // DefaultSnacking returns the goal's BDS defaults.
@@ -225,7 +225,7 @@ func (g *Snacking) CanContinueToUse() bool {
 		n := m.Nav()
 		return t != nil && !t.Removed() && n != nil && n.Held()
 	}
-	return !m.InWater() && float64(g.stop) <= g.world.IRandom().NextFloat()
+	return !m.InWater() && float32(g.stop) <= g.world.IRandom().NextFloat()
 }
 
 // Start implements goal.Goal (0x5930640).

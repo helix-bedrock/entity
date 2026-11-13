@@ -63,7 +63,7 @@ type Farmer interface {
 // lookAtFarm is the farm goals' look at the target block's top.
 func lookAtFarm(m Mob, t Pos) {
 	if !m.LookBusy() {
-		m.LookAt(Vec3{X: float64(t.X) + 0.5, Y: float64(t.Y) + 1, Z: float64(t.Z) + 0.5}, farmLook, m.MaxHeadXRot())
+		m.LookAt(Vec3{X: float32(t.X) + 0.5, Y: float32(t.Y) + 1, Z: float32(t.Z) + 0.5}, farmLook, m.MaxHeadXRot())
 	}
 }
 
@@ -74,9 +74,9 @@ func above(p Pos) Pos { return Pos{X: p.X, Y: p.Y + 1, Z: p.Z} }
 type HarvestFarmBlockConfig struct {
 	MoveToConfig
 	// The times are in seconds.
-	MaxSecondsBeforeSearch   float64 `json:"max_seconds_before_search"`
-	SearchCooldownMaxSeconds float64 `json:"search_cooldown_max_seconds"`
-	SecondsUntilNewTask      float64 `json:"seconds_until_new_task"`
+	MaxSecondsBeforeSearch   float32 `json:"max_seconds_before_search"`
+	SearchCooldownMaxSeconds float32 `json:"search_cooldown_max_seconds"`
+	SecondsUntilNewTask      float32 `json:"seconds_until_new_task"`
 	// Farmland is the blocks a crop grows on (BDS's list 0xF613D80).
 	Farmland []string `json:"-"`
 }
@@ -188,7 +188,7 @@ type FertilizeFarmBlockConfig struct {
 	MoveToConfig
 	MaxFertilizerUsage int32 `json:"max_fertilizer_usage"`
 	// SearchCooldownMaxSeconds is in seconds.
-	SearchCooldownMaxSeconds float64  `json:"search_cooldown_max_seconds"`
+	SearchCooldownMaxSeconds float32  `json:"search_cooldown_max_seconds"`
 	Farmland                 []string `json:"-"`
 }
 
@@ -427,7 +427,7 @@ func (g *InspectBookshelf) find() bool {
 	}
 	g.shelf = g.target
 	r := g.world.IRandom().NextInt(bookshelfSides)
-	reach := float64(g.cfg.SearchRange * g.cfg.SearchRange)
+	reach := float32(g.cfg.SearchRange * g.cfg.SearchRange)
 	for i := range int32(bookshelfSides) {
 		dx, dz := bookshelfSide((r + i) % bookshelfSides)
 		x, z := g.shelf.X+dx, g.shelf.Z+dz
@@ -454,6 +454,6 @@ func (g *InspectBookshelf) Tick() {
 	g.moveTo.Tick()
 	if !g.mob.LookBusy() {
 		s := g.shelf
-		g.mob.LookAt(Vec3{X: float64(s.X) + 0.5, Y: float64(s.Y) + 0.5, Z: float64(s.Z) + 0.5}, bookshelfLook, g.mob.MaxHeadXRot())
+		g.mob.LookAt(Vec3{X: float32(s.X) + 0.5, Y: float32(s.Y) + 0.5, Z: float32(s.Z) + 0.5}, bookshelfLook, g.mob.MaxHeadXRot())
 	}
 }

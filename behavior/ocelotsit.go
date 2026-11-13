@@ -71,5 +71,5 @@ func (g *OcelotSitOnBlock) Tick() {
 	}
 	g.mob.SetFlag(FlagSitting, true)
 	t := g.target
-	g.mob.Teleport(Vec3{X: float64(t.X) + ocelotSitCentre, Y: float64(t.Y) + ocelotSitAboveBy, Z: float64(t.Z) + ocelotSitCentre})
+	g.mob.Teleport(Vec3{X: float32(t.X) + ocelotSitCentre, Y: float32(t.Y) + ocelotSitAboveBy, Z: float32(t.Z) + ocelotSitCentre})
 }

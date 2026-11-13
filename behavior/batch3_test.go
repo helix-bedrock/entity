@@ -19,7 +19,7 @@ type b3Mob struct {
 
 func (m *b3Mob) MoveWanted() (bool, bool) { return false, true }
 func (m *b3Mob) TradingPlayer() ID        { return m.trader }
-func (m *b3Mob) MaxHeadXRot() float64     { return 40 }
+func (m *b3Mob) MaxHeadXRot() float32     { return 40 }
 func (m *b3Mob) HasFamily(f string) bool {
 	for _, x := range m.families {
 		if x == f {
@@ -36,7 +36,7 @@ func newB3Mob(w World, id ID, p Vec3, kind string) *b3Mob {
 }
 
 func TestRandomSitTimesAndFlags(t *testing.T) {
-	w := newB3World(&seqRandom{ints: []int32{10, 7, 9}, floats: []float64{0.05}})
+	w := newB3World(&seqRandom{ints: []int32{10, 7, 9}, floats: []float32{0.05}})
 	w.tick = 100
 	m := newB3Mob(w, 1, Vec3{X: 0.5, Y: 64, Z: 0.5}, "minecraft:cat")
 	g := NewRandomSit(w, m, DefaultRandomSit())

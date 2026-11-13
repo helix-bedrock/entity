@@ -34,7 +34,7 @@ func (n *Navigation) genericWaterTick(w World, m *Mob) {
 	default:
 		setFlag(m, ActorSwimming, false)
 		at := blockAt(next)
-		fp := path.Vec3{X: float64(at.X), Y: float64(at.Y), Z: float64(at.Z)}
+		fp := path.Vec3{X: float32(at.X), Y: float32(at.Y), Z: float32(at.Z)}
 		y := next.Y
 		if !m.CanFly && !footprintAir(w, fp, m.Width) {
 			y--
@@ -93,4 +93,4 @@ func (n *Navigation) swimUpdatePath(w World, m *Mob) {
 	n.stuck(w, m, swimStuckInterval, swimStuckDistance, false)
 }
 
-func floor32(v float64) float64 { return float64(floorInt(v)) }
+func floor32(v float32) float32 { return float32(floorInt(v)) }

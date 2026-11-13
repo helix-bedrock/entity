@@ -4,10 +4,10 @@ package behavior
 type MoveAroundTargetConfig struct {
 	// Filters is tested with the mob as the subject and no other entity.
 	Filters                  Filter
-	MovementSpeed            float64 `json:"movement_speed"`
-	Spread                   float64 `json:"destination_pos_spread_degrees"`
-	Range                    Range[float64]
-	HeightDifferenceLimit    float64 `json:"height_difference_limit"`
+	MovementSpeed            float32 `json:"movement_speed"`
+	Spread                   float32 `json:"destination_pos_spread_degrees"`
+	Range                    Range[float32]
+	HeightDifferenceLimit    float32 `json:"height_difference_limit"`
 	HorizontalSearchDistance int32   `json:"horizontal_search_distance"`
 	VerticalSearchDistance   int32   `json:"vertical_search_distance"`
 }
@@ -15,7 +15,7 @@ type MoveAroundTargetConfig struct {
 // DefaultMoveAroundTarget returns the goal's BDS defaults.
 func DefaultMoveAroundTarget() MoveAroundTargetConfig {
 	return MoveAroundTargetConfig{
-		MovementSpeed: 0.6, Spread: 90, Range: Range[float64]{4, 8}, HeightDifferenceLimit: 10,
+		MovementSpeed: 0.6, Spread: 90, Range: Range[float32]{4, 8}, HeightDifferenceLimit: 10,
 		HorizontalSearchDistance: 5, VerticalSearchDistance: 5,
 	}
 }

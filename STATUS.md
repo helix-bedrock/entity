@@ -1,12 +1,12 @@
 # What entity does
 
-Status as of 2026-11-13: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
+Status as of 2026-10-31: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
 its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
 breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
 attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
 hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
-`netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what. Positions and maths are 64-bit everywhere (2026-11-13), so mobs stay exact far from 0,0; packets still carry float32.
+`netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
 
 ## What works
 

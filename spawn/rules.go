@@ -75,7 +75,7 @@ type Rule struct {
 
 	BrightnessMin, BrightnessMax int32
 	AdjustForWeather             bool
-	MoonMin, MoonMax             float64
+	MoonMin, MoonMax             float32
 	HeightMin, HeightMax         int32
 	// Density is the density_limit: [0] surface, [1] underground; −1 is no
 	// limit.

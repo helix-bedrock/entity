@@ -134,7 +134,7 @@ type rawBiome struct {
 		} `json:"description"`
 		Components struct {
 			Climate *struct {
-				Snow []float64 `json:"snow_accumulation"`
+				Snow []float32 `json:"snow_accumulation"`
 			} `json:"minecraft:climate"`
 			Tags *struct {
 				Tags []string `json:"tags"`

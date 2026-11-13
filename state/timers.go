@@ -53,7 +53,7 @@ func (d *DamageOverTime) Tick(env *Env) {
 			return
 		}
 		left = d.cfg.TimeBetweenHurt
-		m.Hurt(d.cfg.Cause, float64(d.cfg.DamagePerHurt))
+		m.Hurt(d.cfg.Cause, float32(d.cfg.DamagePerHurt))
 	}
 	d.left = left
 }
@@ -245,7 +245,7 @@ func (p *Peek) setOpen(m Mob, v int32) {
 // AmbientSound is one of ambient_sound_interval's event_names: the
 // event used while its Molang condition is above zero.
 type AmbientSound struct {
-	Condition func(behavior.Mob) float64
+	Condition func(behavior.Mob) float32
 	Event     string
 }
 
@@ -256,11 +256,11 @@ type AmbientSound struct {
 type AmbientSoundIntervalConfig struct {
 	// Value and Range are the seconds between sounds and their random
 	// extra, written to actor data 108 and 109.
-	Value, Range float64
+	Value, Range float32
 	Event        string
 	Events       []AmbientSound
 	// Epsilon is the condition threshold.
-	Epsilon float64
+	Epsilon float32
 }
 
 // DefaultAmbientSoundInterval is the BDS default. Value 8, range 16 and
@@ -325,7 +325,7 @@ func (a *AmbientSoundInterval) Tick(env *Env) {
 // actor data 126. The system that writes the interval (data 125) each
 // tick was not found; the interval is taken as seconds, written as ticks.
 type HeartbeatConfig struct {
-	Interval func(behavior.Mob) float64
+	Interval func(behavior.Mob) float32
 	Sound    int
 }
 
@@ -390,13 +390,13 @@ func (b *Bribeable) Tick() {
 // 0x140563900).
 type CelebrateHuntConfig struct {
 	Broadcast bool
-	Radius    float64
+	Radius    float32
 	// Duration is in ticks.
 	Duration int32
 	Targets  *definition.Filter
 	Sound    int
 	// SoundInterval is in seconds.
-	SoundInterval behavior.Range[float64]
+	SoundInterval behavior.Range[float32]
 	// Family is the actor type that plays the sound (BDS: type 256, the
 	// piglins); the engine answers HasType.
 	Family string
@@ -471,12 +471,12 @@ type ExplodeConfig struct {
 	// FuseLength is in ticks.
 	FuseLength                                behavior.Range[int32]
 	FuseLit                                   bool
-	Power                                     float64
-	MaxResistance                             float64
+	Power                                     float32
+	MaxResistance                             float32
 	CausesFire, BreaksBlocks                  bool
 	FireAffectedByGriefing, DestroyByGriefing bool
 	AllowUnderwater                           bool
-	DamageScaling, KnockbackScaling           float64
+	DamageScaling, KnockbackScaling           float32
 	NegatesFallDamage, TogglesBlocks          bool
 	ParticleEffect, SoundEffect               string
 	// TNTRuleRequired makes the explosion obey the tntexplodes game rule

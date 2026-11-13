@@ -23,8 +23,8 @@ type Filter func(self Mob, other Actor) bool
 // LookAtConfig is the JSON of minecraft:behavior.look_at_player and
 // look_at_entity.
 type LookAtConfig struct {
-	LookDistance float64 `json:"look_distance"`
-	Probability  float64 `json:"probability"`
+	LookDistance float32 `json:"look_distance"`
+	Probability  float32 `json:"probability"`
 	// AngleVertical and AngleHorizontal are angle_of_view_vertical and
 	// angle_of_view_horizontal in degrees.
 	AngleVertical, AngleHorizontal int32
@@ -57,12 +57,12 @@ func NewLookAt(w World, m Mob, c LookAtConfig) *LookAt {
 // near is one entity of a sorted nearby query.
 type near struct {
 	a  Actor
-	d2 float64
+	d2 float32
 }
 
 // sortedNear is BDS's nearby query (0xB30BE90): the entities in the box
 // grown by d, nearest first. It reuses dst and buf.
-func sortedNear(w World, m Mob, d float64, dst []Actor, buf []near) ([]Actor, []near) {
+func sortedNear(w World, m Mob, d float32, dst []Actor, buf []near) ([]Actor, []near) {
 	b := m.Box()
 	b.Min = Vec3{X: b.Min.X - d, Y: b.Min.Y - d, Z: b.Min.Z - d}
 	b.Max = Vec3{X: b.Max.X + d, Y: b.Max.Y + d, Z: b.Max.Z + d}
@@ -94,8 +94,8 @@ func sortNear(s []near) {
 }
 
 // wrap180 folds an angle into [0, 180] the way the view test does.
-func wrap180(a float64) float64 {
-	v := float64(math.Mod(float64(a), 360))
+func wrap180(a float32) float32 {
+	v := float32(math.Mod(float64(a), 360))
 	if v < 0 {
 		v += 360
 	}
@@ -109,10 +109,10 @@ func inView(m Mob, a Actor, horizontal, vertical int32) bool {
 	}
 	e, t := m.Eyes(), a.Eyes()
 	dx, dy, dz := t.X-e.X, t.Y-e.Y, t.Z-e.Z
-	flat := float64(math.Sqrt(float64(dx*dx + dz*dz)))
-	yaw := float64(math.Atan2(float64(dz), float64(dx)))*degPerRad - 90 - m.BodyYaw()
-	pitch := float64(math.Atan2(float64(dy), float64(flat))) * degPerRad
-	return float64(horizontal) >= wrap180(yaw+180) && float64(vertical) >= wrap180(180-pitch)
+	flat := float32(math.Sqrt(float64(dx*dx + dz*dz)))
+	yaw := float32(math.Atan2(float64(dz), float64(dx)))*degPerRad - 90 - m.BodyYaw()
+	pitch := float32(math.Atan2(float64(dy), float64(flat))) * degPerRad
+	return float32(horizontal) >= wrap180(yaw+180) && float32(vertical) >= wrap180(180-pitch)
 }
 
 // rides reports that b is one of a's riders.
@@ -178,13 +178,13 @@ type RandomLookConfig struct {
 	// LookTime is in ticks.
 	LookTime Range[int32]
 	// Angle is min_angle_of_view_horizontal and max_angle_of_view_horizontal.
-	Angle       Range[float64]
-	Probability float64 `json:"probability"`
+	Angle       Range[float32]
+	Probability float32 `json:"probability"`
 }
 
 // DefaultRandomLook returns the goal's BDS defaults.
 func DefaultRandomLook() RandomLookConfig {
-	return RandomLookConfig{LookTime: Range[int32]{20, 40}, Angle: Range[float64]{-180, 180}, Probability: 0.02}
+	return RandomLookConfig{LookTime: Range[int32]{20, 40}, Angle: Range[float32]{-180, 180}, Probability: 0.02}
 }
 
 // RandomLook is RandomLookAroundGoal: the mob turns its head to a random
@@ -192,7 +192,7 @@ func DefaultRandomLook() RandomLookConfig {
 type RandomLook struct {
 	base
 	cfg   RandomLookConfig
-	yaw   float64
+	yaw   float32
 	timer int32
 }
 
@@ -230,7 +230,7 @@ func (g *RandomLook) Tick() {
 }
 
 // tableSin is entry i of BDS's 65536-entry sine table.
-func tableSin(i uint16) float64 { return float64(math.Sin(float64(i) * math.Pi * 2 / 65536)) }
+func tableSin(i uint16) float32 { return float32(math.Sin(float64(i) * math.Pi * 2 / 65536)) }
 
 // RandomLookSitConfig is the JSON of
 // minecraft:behavior.random_look_around_and_sit.

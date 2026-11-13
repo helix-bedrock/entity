@@ -62,7 +62,7 @@ type Block struct {
 	Air      bool
 	Material path.Material
 	// Friction is the block's friction (block permutation +176).
-	Friction             float64
+	Friction             float32
 	SoulSand, PowderSnow bool
 	// Climbable is block flag bit 33 (ladders, vines and the like).
 	Climbable bool
@@ -75,7 +75,7 @@ type Block struct {
 	// below the feet.
 	JumpFromBelow bool
 	// Restitution is how bouncy the block is (slime, beds); 0 for none.
-	Restitution float64
+	Restitution float32
 }
 
 // World answers physics' questions about the blocks around a mob. It is
@@ -112,7 +112,7 @@ const (
 // Attributes are the optional entries of BDS's MovementAttributesComponent.
 // A nil entry is missing.
 type Attributes struct {
-	Movement, Underwater, Lava, Friction, AirDrag *float64
+	Movement, Underwater, Lava, Friction, AirDrag *float32
 }
 
 // NavTravel is the navigation type's own travel step.
@@ -153,33 +153,33 @@ type Body struct {
 	Pos, PrevPos, Vel Vec3
 	// Box is the mob's collision box; Width and Height its size.
 	Box           Box
-	Width, Height float64
+	Width, Height float32
 	// SubBoxes are the extra collision boxes some mobs have.
 	SubBoxes []Box
 	// YOffset is the height of Pos above the box bottom.
-	YOffset float64
-	Yaw     float64
+	YOffset float32
+	Yaw     float32
 	Flags   path.ActorFlags
 
 	// Input is the move input the move control set (strafe, up, forward).
 	Input Vec3
 	// MovementSpeed is the movement attribute; AirSpeed the
 	// minecraft:flying_speed value.
-	MovementSpeed, AirSpeed float64
+	MovementSpeed, AirSpeed float32
 	Attrs                   Attributes
 	// SwimSpeed is the swim speed multiplier (1 by default).
-	SwimSpeed float64
+	SwimSpeed float32
 	// DepthStrider is the depth strider level of the mob's boots.
 	DepthStrider int32
 	// WaterDrag is minecraft:water_movement's drag factor, nil when absent.
-	WaterDrag *float64
+	WaterDrag *float32
 	// FrictionOverride is a friction modifier override, nil when absent.
-	FrictionOverride *float64
+	FrictionOverride *float32
 	// MaxAutoStep is the highest step the mob walks up.
-	MaxAutoStep float64
+	MaxAutoStep float32
 	// JumpPower is minecraft:jump.static's jump_power, the ground jump's
 	// speed; zero or less uses BDS's 0.42.
-	JumpPower float64
+	JumpPower float32
 	Nav       Nav
 
 	Dolphin, Squid, SoulSpeed, ImmuneToLavaDrag, PowderSnowWalker bool
@@ -193,7 +193,7 @@ type Body struct {
 	// Jumping is set by the jump control for this tick.
 	Jumping    bool
 	Jump       Jump
-	SwimAmount float64
+	SwimAmount float32
 	// Slowdown is the block slowdown multiplier (cobwebs, berry bushes) the
 	// host set for this tick; zero for none.
 	Slowdown Vec3
@@ -202,26 +202,26 @@ type Body struct {
 	// HorizontalCollision is per axis: x then z.
 	HorizontalCollision [2]bool
 	VerticalCollision   bool
-	FallDistance        float64
+	FallDistance        float32
 	// Landed is set on the tick the mob landed; LandedFall is the fall
 	// distance it landed with, for the host's fall damage.
 	Landed     bool
-	LandedFall float64
+	LandedFall float32
 
 	// HasTarget is set when the mob has a target; Target is its position.
 	// Float travel turns the mob toward it.
 	HasTarget bool
 	Target    Vec3
 	// WalkAnim is the walk animation speed (previous, current).
-	WalkAnim [2]float64
+	WalkAnim [2]float32
 
 	travel          Travel
 	liquid          bool
 	prePos          Vec3
-	speed, friction float64
+	speed, friction float32
 	autoClimb       bool
 	depen           uint8
-	gravity         float64
+	gravity         float32
 	slowFall        bool
 	delta, done     Vec3
 	shapes, low     []Box
@@ -231,15 +231,15 @@ type Body struct {
 func (b *Body) Travel() Travel { return b.travel }
 
 // floorInt is BDS's float to block coordinate.
-func floorInt(v float64) int32 {
+func floorInt(v float32) int32 {
 	i := int32(v)
-	if float64(i) > v {
+	if float32(i) > v {
 		i--
 	}
 	return i
 }
 
-func abs32(v float64) float64 {
+func abs32(v float32) float32 {
 	if v < 0 {
 		return -v
 	}

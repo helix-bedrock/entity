@@ -18,7 +18,7 @@ const (
 
 // RollConfig is the JSON of minecraft:behavior.roll.
 type RollConfig struct {
-	Probability float64 `json:"probability"`
+	Probability float32 `json:"probability"`
 }
 
 // DefaultRoll returns the goal's BDS defaults.
@@ -45,7 +45,7 @@ type Roll struct {
 	m   Roller
 	cfg RollConfig
 	// savedX and savedZ are the forward speed the roll keeps between hops.
-	savedX, savedZ float64
+	savedX, savedZ float32
 }
 
 // NewRoll makes the goal.
@@ -78,7 +78,7 @@ func (g *Roll) CanUse() bool {
 	ok := true
 	if !low {
 		var v Vec3
-		var sx, sz float64
+		var sx, sz float32
 		to := p
 		for i := int32(0); i <= rollSteps; i++ {
 			g.step(i, &v, &sx, &sz)
@@ -121,7 +121,7 @@ func (g *Roll) Tick() {
 // step is the roll's motion on tick i (0x59266F0): a push forward and a
 // hop, a stop with a hop on the ground at the hop steps, and the push kept
 // in between.
-func (g *Roll) step(i int32, v *Vec3, sx, sz *float64) {
+func (g *Roll) step(i int32, v *Vec3, sx, sz *float32) {
 	if i > rollSteps {
 		return
 	}
@@ -130,7 +130,7 @@ func (g *Roll) step(i int32, v *Vec3, sx, sz *float64) {
 		v.Y = rollHop
 		_, yaw := g.m.HeadRotation()
 		a := yaw * radPerDeg * sinScale
-		speed := float64(rollSpeed)
+		speed := float32(rollSpeed)
 		if g.m.Flag(FlagBaby) {
 			speed = rollSpeedBaby
 		}

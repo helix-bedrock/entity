@@ -11,23 +11,23 @@ type Circler interface {
 // CircleAroundAnchorConfig is the JSON of
 // minecraft:behavior.circle_around_anchor.
 type CircleAroundAnchorConfig struct {
-	RadiusChange           float64 `json:"radius_change"`
-	RadiusAdjustmentChance float64 `json:"radius_adjustment_chance"`
-	HeightAdjustmentChance float64 `json:"height_adjustment_chance"`
+	RadiusChange           float32 `json:"radius_change"`
+	RadiusAdjustmentChance float32 `json:"radius_adjustment_chance"`
+	HeightAdjustmentChance float32 `json:"height_adjustment_chance"`
 	// GoalRadius is goal_radius, squared.
-	GoalRadius      float64
-	SpeedMultiplier float64 `json:"speed_multiplier"`
-	AngleChange     float64 `json:"angle_change"`
-	RadiusRange     Range[float64]
-	HeightOffset    Range[float64]
-	HeightAbove     Range[float64]
+	GoalRadius      float32
+	SpeedMultiplier float32 `json:"speed_multiplier"`
+	AngleChange     float32 `json:"angle_change"`
+	RadiusRange     Range[float32]
+	HeightOffset    Range[float32]
+	HeightAbove     Range[float32]
 }
 
 // DefaultCircleAroundAnchor returns the goal's BDS defaults.
 func DefaultCircleAroundAnchor() CircleAroundAnchorConfig {
 	return CircleAroundAnchorConfig{
 		RadiusChange: 1, RadiusAdjustmentChance: 0.004, HeightAdjustmentChance: 0.002857, GoalRadius: 0.25,
-		SpeedMultiplier: 1, AngleChange: 15, RadiusRange: Range[float64]{5, 15},
+		SpeedMultiplier: 1, AngleChange: 15, RadiusRange: Range[float32]{5, 15},
 	}
 }
 
@@ -37,10 +37,10 @@ type CircleAroundAnchor struct {
 	base
 	m      Circler
 	cfg    CircleAroundAnchorConfig
-	dir    float64
-	angle  float64
-	height float64
-	radius float64
+	dir    float32
+	angle  float32
+	height float32
+	radius float32
 	anchor Vec3
 }
 
@@ -59,7 +59,7 @@ func (g *CircleAroundAnchor) CanUse() bool {
 func (g *CircleAroundAnchor) CanContinueToUse() bool { return g.CanUse() }
 
 // lerp is a random point of r, drawn only when r has a span.
-func lerp(rnd Random, r Range[float64]) float64 {
+func lerp(rnd Random, r Range[float32]) float32 {
 	v := r.Min
 	if r.Max-r.Min > 0 {
 		v += (r.Max - r.Min) * rnd.NextFloat()
@@ -92,8 +92,8 @@ func (g *CircleAroundAnchor) aboveTarget(t Actor) {
 	if s := g.cfg.HeightAbove.Max - g.cfg.HeightAbove.Min; s > 0 {
 		a.Y = q.Y + g.cfg.HeightAbove.Min + s*g.world.Random().NextFloat()
 	}
-	if sea := g.world.SeaLevel(); float64(sea) >= a.Y {
-		a.Y = float64(sea + 1)
+	if sea := g.world.SeaLevel(); float32(sea) >= a.Y {
+		a.Y = float32(sea + 1)
 	}
 	g.anchor = a
 }
@@ -105,7 +105,7 @@ func (g *CircleAroundAnchor) aboveGround() {
 	c := blockOf(g.m.Pos())
 	y := g.world.HeightMap(c.X, c.Z) + int32(max32(above, 0))
 	y = max(y, g.world.SeaLevel()+1)
-	g.anchor = Vec3{X: float64(c.X), Y: float64(y), Z: float64(c.Z)}
+	g.anchor = Vec3{X: float32(c.X), Y: float32(y), Z: float32(c.Z)}
 }
 
 // next is _selectNext: step the angle around the anchor and fly to the

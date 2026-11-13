@@ -7,7 +7,7 @@ const hoverTries = 10
 
 // RandomHoverConfig is the JSON of minecraft:behavior.random_hover.
 type RandomHoverConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	Interval        int32   `json:"interval"`
 	XZDist          int32   `json:"xz_dist"`
 	YDist           int32   `json:"y_dist"`
@@ -75,7 +75,7 @@ func (g *RandomHover) find() {
 func viewDir(m Mob) Vec3 {
 	_, yaw := m.HeadRotation()
 	r := float64(yaw) * math.Pi / 180
-	return Vec3{X: float64(-math.Sin(r)), Z: float64(math.Cos(r))}
+	return Vec3{X: float32(-math.Sin(r)), Z: float32(math.Cos(r))}
 }
 
 // CanContinueToUse implements goal.Goal.
@@ -113,7 +113,7 @@ const FlagIdling = 41
 // HoverConfig is minecraft:behavior.hover. The component has no fields of
 // its own; Speed is the speed BDS gives the move control (fixed at 1).
 type HoverConfig struct {
-	Speed float64
+	Speed float32
 }
 
 // DefaultHover returns the goal's BDS defaults.

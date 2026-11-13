@@ -22,10 +22,10 @@ type SendEventStage struct {
 
 // SendEventChoice is one entry of event_choices.
 type SendEventChoice struct {
-	MinActivationRange, MaxActivationRange float64
+	MinActivationRange, MaxActivationRange float32
 	// CooldownTime is in ticks.
 	CooldownTime int32
-	Weight       float64
+	Weight       float32
 	LookAtTarget bool
 	DoCasting    bool
 	// ParticleColor is ARGB.
@@ -61,7 +61,7 @@ type SendEventConfig struct {
 	EventChoices []SendEventChoice
 	// LookYaw is the look control's yaw limit; the pitch limit is the
 	// mob's MaxHeadXRot.
-	LookYaw float64
+	LookYaw float32
 	// CastFlags are the control flags the goal is made and stopped with,
 	// IdleFlags the ones once a cast ends.
 	CastFlags, IdleFlags goal.Flags
@@ -120,7 +120,7 @@ func (g *SendEvent) CanUse() bool {
 		if a := g.first(c); a != nil {
 			g.picks = append(g.picks, i)
 			g.found = append(g.found, a.ID())
-			weight = int32(float64(weight) + c.Weight)
+			weight = int32(float32(weight) + c.Weight)
 		}
 	}
 	g.choice = -1
@@ -128,12 +128,12 @@ func (g *SendEvent) CanUse() bool {
 		r := g.world.Random().NextInt(weight)
 		for k, i := range g.picks {
 			w := g.cfg.EventChoices[i].Weight
-			if w > float64(r) {
+			if w > float32(r) {
 				g.choice = i
 				g.to = g.found[k]
 				break
 			}
-			r = int32(float64(r) - w)
+			r = int32(float32(r) - w)
 		}
 	}
 	c := g.picked()

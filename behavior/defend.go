@@ -60,7 +60,7 @@ func (g *DefendTrusted) CanUse() bool {
 func (g *DefendTrusted) attacker() ID {
 	trusted := g.t.Trusted()
 	r := g.t.FollowRange()
-	best, bestD := NoID, float64(math.MaxFloat32)
+	best, bestD := NoID, float32(math.MaxFloat32)
 	for _, id := range trusted {
 		f := g.actor(id)
 		if f == nil || f.Removed() {
@@ -112,7 +112,7 @@ type VillageDefender interface {
 // DefendVillageConfig is the JSON of minecraft:behavior.defend_village_target.
 type DefendVillageConfig struct {
 	NearestAttackableConfig
-	AttackChance float64 `json:"attack_chance"`
+	AttackChance float32 `json:"attack_chance"`
 }
 
 // DefaultDefendVillage returns the goal's BDS defaults.

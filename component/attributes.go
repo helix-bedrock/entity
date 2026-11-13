@@ -63,7 +63,7 @@ func (c *Context) LeashableToConfig(j Object) state.LeashableToConfig {
 // range) and max.
 func (c *Context) AttributeConfig(j Object) state.AttributeConfig {
 	return state.AttributeConfig{
-		Value: c.Range(j, "value", behavior.Range[float64]{}),
+		Value: c.Range(j, "value", behavior.Range[float32]{}),
 		Max:   c.Float(j, "max", 0),
 	}
 }
@@ -149,7 +149,7 @@ func (c *Context) readAttributes(comps definition.Group) map[string]state.Attrib
 		}
 		c.Name = name
 		if f, isNum := number(raw); isNum {
-			out[name] = state.AttributeConfig{Value: behavior.Range[float64]{Min: float64(f), Max: float64(f)}}
+			out[name] = state.AttributeConfig{Value: behavior.Range[float32]{Min: float32(f), Max: float32(f)}}
 			continue
 		}
 		j, err := ParseObject(raw)

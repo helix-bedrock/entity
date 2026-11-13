@@ -10,8 +10,6 @@ github.com/helix-bedrock/protocol v0.0.0-20261027172700-7e1596867172 h1:JTAm8wgO
 github.com/helix-bedrock/protocol v0.0.0-20261027172700-7e1596867172/go.mod h1:P/Hx/evxvG8NJAMihEDULoXQDt2WhgXjloGw8tN/cgA=
 github.com/helix-bedrock/protocol v0.0.0-20261030050828-29574cd0fb81 h1:XU8AhIgBW9wErKejdN3/Y9G0ev80Y8hz4ItWGKniS3Q=
 github.com/helix-bedrock/protocol v0.0.0-20261030050828-29574cd0fb81/go.mod h1:7uEwDr3AXskn3a6zfs+6e+zXH51WVJX+dfUgOyC1TWE=
-github.com/helix-bedrock/protocol v0.0.0-20261113012222-e3b320fa2ea2 h1:r4wqxhEmyHhuDuFRm+RuaIKkRFVDh3MPai18Xbt3sew=
-github.com/helix-bedrock/protocol v0.0.0-20261113012222-e3b320fa2ea2/go.mod h1:7uEwDr3AXskn3a6zfs+6e+zXH51WVJX+dfUgOyC1TWE=
 github.com/klauspost/compress v1.20.3 h1:zWNoFqq/lSuYQRim3dUXlXeA0IqwuZGicdG5ZTfY5j4=
 github.com/klauspost/compress v1.20.3/go.mod h1:LUdAzn7YLVvxLpc7y3V1m40wESHTgc1422pwwBSKYuI=
 golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49 h1:pQo5TwmxKJvI8k39uYS2Gqkk8OXWxX/TMSis2Twp1AQ=

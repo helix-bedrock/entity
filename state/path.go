@@ -5,7 +5,7 @@ import "github.com/helix-bedrock/entity/path"
 // PathCost is one of preferred_path's preferred_path_blocks: the cost of
 // walking on blocks matching the descriptors.
 type PathCost struct {
-	Cost   float64
+	Cost   float32
 	Blocks []string
 }
 
@@ -13,7 +13,7 @@ type PathCost struct {
 // PreferredPathDescription constructor 0x1405CBF10: max_fall_blocks 3,
 // the costs 0).
 type PreferredPathConfig struct {
-	DefaultBlockCost, JumpCost float64
+	DefaultBlockCost, JumpCost float32
 	MaxFallBlocks              int32
 	Costs                      []PathCost
 }

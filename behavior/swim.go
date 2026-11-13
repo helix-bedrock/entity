@@ -24,7 +24,7 @@ const (
 type SwimIdleConfig struct {
 	// IdleTime is idle_time in ticks.
 	IdleTime    int32
-	SuccessRate float64 `json:"success_rate"`
+	SuccessRate float32 `json:"success_rate"`
 }
 
 // DefaultSwimIdle returns the goal's BDS defaults: 5 seconds and 0.1.
@@ -129,9 +129,9 @@ func (g *RandomSwim) position() (Vec3, bool) {
 			at = p
 		}
 		x, z := floorInt(at.X), floorInt(at.Z)
-		floor := float64(w.AboveTopSolid(x, z))
+		floor := float32(w.AboveTopSolid(x, z))
 		top := floor
-		if limit := float64(w.MaxHeight()); limit > floor {
+		if limit := float32(w.MaxHeight()); limit > floor {
 			for w.LiquidMaterial(Pos{X: x, Y: int32(top), Z: z}) == path.MaterialWater {
 				if top++; limit <= top {
 					break
@@ -143,11 +143,11 @@ func (g *RandomSwim) position() (Vec3, bool) {
 		}
 		high := top - swimSurfaceGap
 		y := m.Pos().Y
-		low := max32(top-swimDepth, y-float64(g.cfg.YDist))
+		low := max32(top-swimDepth, y-float32(g.cfg.YDist))
 		if low <= floor {
 			low = floor + swimFloorPad
 		}
-		at.Y = (max32(min(high, y+float64(g.cfg.YDist)), low)-low)*w.Random().NextFloat() + low
+		at.Y = (max32(min(high, y+float32(g.cfg.YDist)), low)-low)*w.Random().NextFloat() + low
 		if low <= high {
 			break
 		}
@@ -164,7 +164,7 @@ func (g *RandomSwim) position() (Vec3, bool) {
 	}
 	p := m.Pos()
 	dx, dz := at.X-p.X, at.Z-p.Z
-	pitch := abs32(float64(math.Atan2(float64(at.Y-p.Y), float64(sqrt32(dz*dz+dx*dx)))) * -degPerRad)
+	pitch := abs32(float32(math.Atan2(float64(at.Y-p.Y), float64(sqrt32(dz*dz+dx*dx)))) * -degPerRad)
 	if pitch > swimMaxPitch && pitch < swimMinPitch {
 		return Vec3{}, false
 	}
@@ -172,9 +172,9 @@ func (g *RandomSwim) position() (Vec3, bool) {
 }
 
 // roundDown is BDS's floor(v + 0).
-func roundDown(v float64) float64 { return float64(math.Floor(float64(v + 0))) }
+func roundDown(v float32) float32 { return float32(math.Floor(float64(v + 0))) }
 
-func ceilInt(v float64) int32 { return int32(math.Ceil(float64(v))) }
+func ceilInt(v float32) int32 { return int32(math.Ceil(float64(v))) }
 
 // RandomBreachConfig is the JSON of minecraft:behavior.random_breach.
 type RandomBreachConfig struct {
@@ -262,7 +262,7 @@ func (g *RandomBreach) position() (Vec3, bool) {
 		return Vec3{}, false
 	}
 	x, z := floorInt(p.X), floorInt(p.Z)
-	limit := float64(w.MaxHeight())
+	limit := float32(w.MaxHeight())
 	if w.LiquidMaterial(Pos{X: x, Y: floorInt(p.Y), Z: z}) != path.MaterialWater || limit <= p.Y+1 {
 		return Vec3{}, false
 	}

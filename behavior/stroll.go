@@ -2,7 +2,7 @@ package behavior
 
 // StrollConfig is the JSON of minecraft:behavior.random_stroll.
 type StrollConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	XZDist          int32   `json:"xz_dist"`
 	YDist           int32   `json:"y_dist"`
 	Interval        int32   `json:"interval"`

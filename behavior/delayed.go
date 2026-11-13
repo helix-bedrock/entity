@@ -108,8 +108,8 @@ func (g *DelayedAttack) Tick() {
 // melee_attack's fields plus the stomp ranges.
 type StompAttackConfig struct {
 	MeleeConfig
-	StompRangeMultiplier    float64 `json:"stomp_range_multiplier"`
-	NoDamageRangeMultiplier float64 `json:"no_damage_range_multiplier"`
+	StompRangeMultiplier    float32 `json:"stomp_range_multiplier"`
+	NoDamageRangeMultiplier float32 `json:"no_damage_range_multiplier"`
 }
 
 // DefaultStompAttack returns the goal's BDS defaults.

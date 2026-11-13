@@ -3,7 +3,7 @@ package netsync
 import (
 	"math"
 
-	"github.com/go-gl/mathgl/mgl64"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // ChunkPos is a chunk column position.
@@ -11,11 +11,11 @@ type ChunkPos struct{ X, Z int32 }
 
 // ChunkAt is the chunk a position is in: floor(x)>>4, floor(z)>>4, as BDS
 // takes a player's view centre (sub_CF12A70).
-func ChunkAt(p mgl64.Vec3) ChunkPos {
+func ChunkAt(p mgl32.Vec3) ChunkPos {
 	return ChunkPos{X: floorBlock(p[0]) >> 4, Z: floorBlock(p[2]) >> 4}
 }
 
-func floorBlock(f float64) int32 {
+func floorBlock(f float32) int32 {
 	v := math.Floor(float64(f))
 	if v != v {
 		return 0
@@ -58,7 +58,7 @@ func VanillaView(centre ChunkPos, dst []ChunkPos) []ChunkPos {
 
 // InVanillaView reports whether an entity at entity is in the view area of
 // a player at viewer.
-func InVanillaView(viewer, entity mgl64.Vec3) bool {
+func InVanillaView(viewer, entity mgl32.Vec3) bool {
 	v, e := ChunkAt(viewer), ChunkAt(entity)
 	dx, dz := int64(e.X)-int64(v.X), int64(e.Z)-int64(v.Z)
 	return dx*dx+dz*dz <= VanillaViewRadius2

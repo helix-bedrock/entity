@@ -55,7 +55,7 @@ func (h *HurtOnCondition) Tick(env *Env) {
 			continue
 		}
 		if c.Filters.Eval(ctx) {
-			m.Hurt(c.Cause, float64(c.DamagePerTick))
+			m.Hurt(c.Cause, float32(c.DamagePerTick))
 		}
 	}
 }
@@ -79,7 +79,7 @@ type BreathableConfig struct {
 	// seconds, at which suffocation damage starts; InhaleTime the seconds
 	// to refill the air (0 refills at once).
 	TotalSupply, SuffocateTime      int32
-	InhaleTime                      float64
+	InhaleTime                      float32
 	BreathesAir, BreathesWater      bool
 	BreathesLava, BreathesSolids    bool
 	GeneratesBubbles                bool
@@ -90,7 +90,7 @@ type BreathableConfig struct {
 	// SuffocateCause and DrownCause are the damage causes in and out of
 	// water; Damage the damage.
 	SuffocateCause, DrownCause int
-	Damage                     float64
+	Damage                     float32
 	// BubbleEvent and BubbleData are the level event of the bubbles.
 	BubbleEvent int32
 	BubbleData  int32
@@ -136,7 +136,7 @@ type Breather interface {
 	// Respiration is the highest respiration level of the worn armour.
 	Respiration() int32
 	// Hurt deals damage of an actor damage cause.
-	Hurt(cause int, amount float64)
+	Hurt(cause int, amount float32)
 	// SetAirSupply sets the air supply and the maximum (actor data 7 and 42).
 	SetAirSupply(air, maxAir int16)
 }
@@ -182,7 +182,7 @@ func (b *Breathable) maxAir() int16 { return b16(b.cfg.TotalSupply * ticksPerSec
 // works it out: total_supply over inhale_time, rounded.
 func (b *Breathable) inhaleRate() int32 {
 	if abs32(b.cfg.InhaleTime*ticksPerSecond) > 0.0001 {
-		return int32(float64(b.cfg.TotalSupply)/b.cfg.InhaleTime + 0.5)
+		return int32(float32(b.cfg.TotalSupply)/b.cfg.InhaleTime + 0.5)
 	}
 	return b.cfg.TotalSupply
 }

@@ -7,7 +7,7 @@ const maxIterations = 140
 
 // hWeight makes the search greedy: BDS scales the straight distance to the
 // target by 1.5.
-const hWeight float64 = 1.5
+const hWeight float32 = 1.5
 
 // offsets are BDS's 18 neighbour offsets: the six faces, the four flat
 // diagonals, then the up and down diagonals.
@@ -38,20 +38,20 @@ func dist2(a, b Pos) int64 {
 
 // stepLength is BDS's edge length: 1 for a face step, else the square root
 // of the squared step.
-func stepLength(d2 int64) float64 {
+func stepLength(d2 int64) float32 {
 	if d2 == 1 {
 		return 1
 	}
-	return float64(math.Sqrt(float64(d2)))
+	return float32(math.Sqrt(float64(d2)))
 }
 
 // heuristic is the weighted straight distance from p to the target.
-func heuristic(target, p Pos) float64 {
-	dx := float64(target.X) - float64(p.X)
-	dy := float64(target.Y) - float64(p.Y)
-	dz := float64(target.Z) - float64(p.Z)
-	sum := float64(dz*dz) + (float64(dx*dx) + float64(dy*dy))
-	return float64(math.Sqrt(float64(sum))) * hWeight
+func heuristic(target, p Pos) float32 {
+	dx := float32(target.X) - float32(p.X)
+	dy := float32(target.Y) - float32(p.Y)
+	dz := float32(target.Z) - float32(p.Z)
+	sum := float32(dz*dz) + (float32(dx*dx) + float32(dy*dy))
+	return float32(math.Sqrt(float64(sum))) * hWeight
 }
 
 // open reports whether the neighbour of cur at offset o may be generated.

@@ -36,10 +36,10 @@ type Mingler interface {
 type MingleConfig struct {
 	MoveToPOIConfig
 	// Duration and CooldownTime are in seconds.
-	Duration          float64 `json:"duration"`
-	CooldownTime      float64 `json:"cooldown_time"`
+	Duration          float32 `json:"duration"`
+	CooldownTime      float32 `json:"cooldown_time"`
 	MinglePartnerType string  `json:"mingle_partner_type"`
-	MingleDistance    float64 `json:"mingle_distance"`
+	MingleDistance    float32 `json:"mingle_distance"`
 	// Sound is the level sound event played while mingling.
 	Sound int `json:"-"`
 	// SoundMin and SoundSpan give the ticks between sounds.
@@ -62,7 +62,7 @@ type Mingle struct {
 	// waited, left, search and soundIn are +184, +192, +200 and +208.
 	waited, left, search, soundIn int32
 	cooldown, duration            int32
-	dist2                         float64
+	dist2                         float32
 	near                          []Actor
 }
 
@@ -214,7 +214,7 @@ func (g *Mingle) scan(s MingleState) {
 	if !ok {
 		return
 	}
-	c := Vec3{X: float64(poi.Pos.X) + 0.5, Y: float64(poi.Pos.Y) + 0.5, Z: float64(poi.Pos.Z) + 0.5}
+	c := Vec3{X: float32(poi.Pos.X) + 0.5, Y: float32(poi.Pos.Y) + 0.5, Z: float32(poi.Pos.Z) + 0.5}
 	r := poi.Radius
 	area := Box{Min: Vec3{X: c.X - r, Y: c.Y - r, Z: c.Z - r}, Max: Vec3{X: c.X + r, Y: c.Y + r, Z: c.Z + r}}
 	id := g.mob.ID()

@@ -29,9 +29,9 @@ type Pouncer interface {
 	Attacker
 	// FaceActor is Mob::lookAt: turn the head and body towards a by at
 	// most yawMax and pitchMax degrees.
-	FaceActor(a Actor, yawMax, pitchMax float64)
+	FaceActor(a Actor, yawMax, pitchMax float32)
 	// JumpMultiplier is Mob::getJumpMultiplier.
-	JumpMultiplier() float64
+	JumpMultiplier() float32
 	// JumpPrevented emits the jump prevented event when the mob's jump is
 	// blocked (Mob::getJumpPrevention, emitJumpPreventedEvent).
 	JumpPrevented()
@@ -43,13 +43,13 @@ type Pouncer interface {
 // minecraft:behavior.stalk_and_pounce_on_target. Distances are squared
 // where noted and times in ticks.
 type StalkAndPounceConfig struct {
-	StalkSpeed float64 `json:"stalk_speed"`
+	StalkSpeed float32 `json:"stalk_speed"`
 	// MaxStalkDist, PounceMaxDist and StrikeDist are squared.
-	MaxStalkDist  float64
-	LeapHeight    float64 `json:"leap_height"`
-	LeapDist      float64 `json:"leap_dist"`
-	PounceMaxDist float64
-	StrikeDist    float64
+	MaxStalkDist  float32
+	LeapHeight    float32 `json:"leap_height"`
+	LeapDist      float32 `json:"leap_dist"`
+	PounceMaxDist float32
+	StrikeDist    float32
 	InterestTime  int32
 	StuckTime     int32
 	SetPersistent bool `json:"set_persistent"`
@@ -287,15 +287,15 @@ func (g *StalkAndPounce) clear(p, q Vec3) bool {
 	}
 	slope := dz / dx
 	for i := 0; i < stalkSamples; i++ {
-		f := float64(i) / stalkSamples
-		var ox, oz float64
+		f := float32(i) / stalkSamples
+		var ox, oz float32
 		if slope == 0 {
 			ox = f * dx
 		} else {
 			oz = f * dz
 			ox = oz / slope
 		}
-		for h := float64(1); h <= stalkClearHeight; h++ {
+		for h := float32(1); h <= stalkClearHeight; h++ {
 			if !g.world.BuiltOver(blockOf(Vec3{X: ox + p.X, Y: h + p.Y, Z: oz + p.Z})) {
 				return false
 			}

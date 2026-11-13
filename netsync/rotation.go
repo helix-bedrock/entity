@@ -3,12 +3,12 @@ package netsync
 import (
 	"math"
 
-	"github.com/go-gl/mathgl/mgl64"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Pose is where an entity is and where it looks, as the engine knows it.
 type Pose struct {
-	Position mgl64.Vec3
+	Position mgl32.Vec3
 	// Pitch, Yaw, HeadYaw and BodyYaw are in degrees. HeadYaw and BodyYaw
 	// are only sent for mobs.
 	Pitch, Yaw, HeadYaw, BodyYaw float32
@@ -19,7 +19,7 @@ type Pose struct {
 // (MoveActorAbsoluteData, built by sub_85A44D0): the position as float32,
 // the rotations as bytes. It is what a viewer last saw.
 type Sent struct {
-	Position                     mgl64.Vec3
+	Position                     mgl32.Vec3
 	Pitch, Yaw, HeadYaw, BodyYaw byte
 	OnGround                     bool
 }

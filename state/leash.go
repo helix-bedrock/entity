@@ -37,9 +37,9 @@ type LeashPreset struct {
 	// SoftDistance is where the mob starts walking to the holder,
 	// HardDistance where the leash pulls it and MaxDistance where it
 	// breaks.
-	SoftDistance, HardDistance, MaxDistance float64
+	SoftDistance, HardDistance, MaxDistance float32
 	SpringType                              string
-	RotationAdjustment                      float64
+	RotationAdjustment                      float32
 }
 
 // DefaultLeashPreset is a preset's defaults (1.26.60 parser 0x71258E0:
@@ -75,7 +75,7 @@ type LeashableConfig struct {
 	// PathSpeed is the speed the mob walks to its holder at; PullFactor
 	// scales the pull past the hard distance; ChunkMargin grows the mob's
 	// box for the chunk check while the holder is missing.
-	PathSpeed, PullFactor, ChunkMargin float64
+	PathSpeed, PullFactor, ChunkMargin float32
 }
 
 // DefaultLeashable is BDS's leashable (1.26.60 parser 0x71258E0: can_be_cut,
@@ -168,7 +168,7 @@ func (l *Leashable) Tick(env *Env, chunks LeashChunks) {
 		}
 	}
 	if d2 > p.HardDistance*p.HardDistance {
-		inv := 1 / float64(math.Sqrt(float64(d2)))
+		inv := 1 / float32(math.Sqrt(float64(d2)))
 		n := behavior.Vec3{X: d.X * inv, Y: d.Y * inv, Z: d.Z * inv}
 		v := m.Velocity()
 		v.X += abs32(n.X) * n.X * l.cfg.PullFactor

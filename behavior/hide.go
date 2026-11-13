@@ -28,7 +28,7 @@ type Hider interface {
 type HideConfig struct {
 	MoveToPOIConfig
 	// Duration is in seconds.
-	Duration float64 `json:"duration"`
+	Duration float32 `json:"duration"`
 }
 
 // DefaultHide returns the goal's BDS defaults (TypeSchema 0xDF6BF90).

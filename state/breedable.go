@@ -20,7 +20,7 @@ type BreedType struct {
 type EnvironmentRequirement struct {
 	Blocks []string
 	Count  int32
-	Radius float64
+	Radius float32
 }
 
 // BreedableConfig is minecraft:breedable.
@@ -28,9 +28,9 @@ type BreedableConfig struct {
 	RequireTame, InheritTamed, BlendAttributes, AllowSitting bool
 	CausesPregnancy, RequireFullHealth                       bool
 	// ExtraBabyChance is the chance of each extra baby, up to 16.
-	ExtraBabyChance float64
+	ExtraBabyChance float32
 	// Cooldown is breed_cooldown in seconds.
-	Cooldown    float64
+	Cooldown    float32
 	BreedItems  []Item
 	BreedsWith  []BreedType
 	LoveFilters *definition.Filter

@@ -28,15 +28,15 @@ func BuoyancyMovementNames() []string { return []string{"none", "waves", "bobbin
 // 0x7925140).
 type BuoyantConfig struct {
 	// BaseBuoyancy is how high in its block the mob floats (0 to 1).
-	BaseBuoyancy float64
+	BaseBuoyancy float32
 	ApplyGravity bool
 	Movement     BuoyancyMovement
 	// BigWaveProbability is the chance per tick that the wave timer runs
 	// BigWaveSpeed times faster.
-	BigWaveProbability, BigWaveSpeed float64
+	BigWaveProbability, BigWaveSpeed float32
 	// DragDownOnRemoved is taken off the vertical speed when the
 	// component is removed.
-	DragDownOnRemoved float64
+	DragDownOnRemoved float32
 	// CanAutoStepFromLiquid lets the mob always auto step while it floats
 	// (BDS adds CanAlwaysAutoStepFlagComponent).
 	CanAutoStepFromLiquid bool
@@ -44,24 +44,24 @@ type BuoyantConfig struct {
 	LiquidBlocks []string
 
 	// Gravity and GravityDrag are BuoyancyGravity's pull and drag.
-	Gravity, GravityDrag float64
+	Gravity, GravityDrag float32
 	// FloatScale and FloatBase turn the depth into the float target;
 	// WaveHeight is the wave's height; Lift scales the rise; Damping and
 	// MaxRiseAdd cap it by the current speed.
-	FloatScale, FloatBase, WaveHeight, Lift, Damping, MaxRiseAdd float64
+	FloatScale, FloatBase, WaveHeight, Lift, Damping, MaxRiseAdd float32
 	// TimerSpeed scales the horizontal speed into the wave timer;
 	// TimerStep is the timer's step per tick.
-	TimerSpeed, TimerStep float64
+	TimerSpeed, TimerStep float32
 	// The bobbing wave: (sin(timer*BobFrequency) + BobOffset) * BobScale,
 	// with the timer stepping BobStep a tick.
 	BobFrequency, BobStep float64
-	BobOffset, BobScale   float64
+	BobOffset, BobScale   float32
 	// LeashedRiseCap lets a leashed mob that is rising keep rising, as
 	// BDS does for worlds whose base game version passes a check that was
 	// not identified; a current world is assumed to pass.
 	LeashedRiseCap bool
 	// LeashedRiseScale scales the leashed mob's rise.
-	LeashedRiseScale float64
+	LeashedRiseScale float32
 }
 
 // DefaultBuoyant is the BDS default. LiquidBlocks is empty: BDS's default
@@ -73,7 +73,7 @@ func DefaultBuoyant() BuoyantConfig {
 		Gravity: 0.04, GravityDrag: 0.98,
 		FloatScale: 0.9, FloatBase: 0.1, WaveHeight: 0.035, Lift: 0.15, Damping: 0.7, MaxRiseAdd: 0.05,
 		TimerSpeed: 30, TimerStep: 0.05,
-		BobFrequency: float64(float64(math.Pi / 10)), BobOffset: 1.2, BobScale: 0.5, BobStep: 1,
+		BobFrequency: float64(float32(math.Pi / 10)), BobOffset: 1.2, BobScale: 0.5, BobStep: 1,
 		LeashedRiseCap: true, LeashedRiseScale: 0.05,
 	}
 }
@@ -83,7 +83,7 @@ type Liquids interface {
 	// LiquidHeight is the world height of the top of the liquid in the
 	// block at p (BlockUtils::getLiquidBlockHeight), below p.Y when the
 	// block holds none.
-	LiquidHeight(p behavior.Pos) float64
+	LiquidHeight(p behavior.Pos) float32
 }
 
 // Buoyant is a mob's minecraft:buoyant.
@@ -134,16 +134,16 @@ func (b *Buoyant) Tick(env *Env, l Liquids) {
 	if c.ApplyGravity {
 		v.Y = (v.Y - c.Gravity) * c.GravityDrag
 	}
-	var target, wave float64
+	var target, wave float32
 	switch {
 	case canFloat:
-		target = (c.BaseBuoyancy-(pos.Y-float64(p.Y)))*c.FloatScale + c.FloatBase
+		target = (c.BaseBuoyancy-(pos.Y-float32(p.Y)))*c.FloatScale + c.FloatBase
 		target = min(max(target, 0), 1)
 		switch c.Movement {
 		case BuoyancyWaves:
-			wave = (float64(math.Sin(b.timer)) + 1) * c.WaveHeight
+			wave = (float32(math.Sin(b.timer)) + 1) * c.WaveHeight
 		case BuoyancyBobbing:
-			wave = (float64(math.Sin(b.timer*c.BobFrequency)) + c.BobOffset) * c.BobScale
+			wave = (float32(math.Sin(b.timer*c.BobFrequency)) + c.BobOffset) * c.BobScale
 		}
 	case resurface:
 		target = 1
@@ -168,11 +168,11 @@ func (b *Buoyant) tickTimer(env *Env, v behavior.Vec3) {
 		b.timer += c.BobStep
 		return
 	}
-	speed := float64(float64(math.Sqrt(float64(v.X*v.X+v.Z*v.Z))))*float64(c.TimerSpeed) + 1
+	speed := float64(float32(math.Sqrt(float64(v.X*v.X+v.Z*v.Z))))*float64(c.TimerSpeed) + 1
 	if env.World.Random().NextFloat() <= c.BigWaveProbability {
 		speed *= float64(c.BigWaveSpeed)
 	}
-	b.timer += float64(float64(speed * float64(c.TimerStep)))
+	b.timer += float64(float32(speed * float64(c.TimerStep)))
 }
 
 // Removed is BuoyancyDefinition::uninitialize (1.21.3 0x1405BD210): the
@@ -189,4 +189,4 @@ func (b *Buoyant) liquid(env *Env, p behavior.Pos) bool {
 	return env.BlockMatches != nil && len(b.cfg.LiquidBlocks) > 0 && env.BlockMatches(p, b.cfg.LiquidBlocks)
 }
 
-func floor(v float64) int32 { return int32(math.Floor(float64(v))) }
+func floor(v float32) int32 { return int32(math.Floor(float64(v))) }

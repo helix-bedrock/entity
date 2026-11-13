@@ -8,7 +8,7 @@ import (
 // TameableConfig is minecraft:tameable.
 type TameableConfig struct {
 	// Probability is the chance each tame item tames the mob.
-	Probability float64
+	Probability float32
 	TameItems   []Item
 	TameEvent   *definition.Trigger
 	// FailEvent and SuccessEvent are the actor events of a failed and a

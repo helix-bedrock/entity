@@ -41,7 +41,7 @@ func (f *flat) Light(p path.Pos) (uint8, uint8) {
 	}
 	return 0, 0
 }
-func (f *flat) NearestPlayer(p path.Vec3, maxDist float64) (path.Vec3, bool) {
+func (f *flat) NearestPlayer(p path.Vec3, maxDist float32) (path.Vec3, bool) {
 	dx, dy, dz := p.X-f.player.X, p.Y-f.player.Y, p.Z-f.player.Z
 	return f.player, dx*dx+dy*dy+dz*dz <= maxDist*maxDist
 }
@@ -80,7 +80,7 @@ func (m *fakeMob) Persist()           {}
 type pcg struct{ r *rand.Rand }
 
 func (p pcg) Int(n int32) int32 { return p.r.Int32N(n) }
-func (p pcg) Float() float64    { return float64(p.r.Float32()) }
+func (p pcg) Float() float32    { return p.r.Float32() }
 
 func vanilla(t testing.TB) (*Rules, []BiomeInfo) {
 	t.Helper()

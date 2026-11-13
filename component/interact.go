@@ -129,7 +129,7 @@ func (c *Context) TransformationConfig(j Object) state.TransformationConfig {
 	if !j.Has("delay") {
 		return t
 	}
-	var secs float64
+	var secs float32
 	if json.Unmarshal(j["delay"], &secs) == nil {
 		t.Delay = int32(secs * ticksPerSecond)
 		return t

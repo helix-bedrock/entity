@@ -71,15 +71,15 @@ type Rammer interface {
 type RamAttackConfig struct {
 	RamDistance     int32   `json:"ram_distance"`
 	MinRamDistance  int32   `json:"min_ram_distance"`
-	KnockbackForce  float64 `json:"knockback_force"`
-	KnockbackHeight float64 `json:"knockback_height"`
-	BabyModifier    float64 `json:"baby_knockback_modifier"`
-	RunSpeed        float64 `json:"run_speed"`
-	RamSpeed        float64 `json:"ram_speed"`
+	KnockbackForce  float32 `json:"knockback_force"`
+	KnockbackHeight float32 `json:"knockback_height"`
+	BabyModifier    float32 `json:"baby_knockback_modifier"`
+	RunSpeed        float32 `json:"run_speed"`
+	RamSpeed        float32 `json:"ram_speed"`
 	PreRamSound     int
 	RamImpactSound  int
 	// Cooldown is cooldown_range in seconds.
-	Cooldown Range[float64]
+	Cooldown Range[float32]
 	OnStart  string
 }
 
@@ -87,14 +87,14 @@ type RamAttackConfig struct {
 func DefaultRamAttack() RamAttackConfig {
 	return RamAttackConfig{
 		RamDistance: 7, MinRamDistance: 4, KnockbackForce: 5, KnockbackHeight: 0.1, BabyModifier: 1.0 / 3,
-		RunSpeed: 1, RamSpeed: 2, PreRamSound: NoSound, RamImpactSound: NoSound, Cooldown: Range[float64]{10, 20},
+		RunSpeed: 1, RamSpeed: 2, PreRamSound: NoSound, RamImpactSound: NoSound, Cooldown: Range[float32]{10, 20},
 	}
 }
 
 // ramSpot is a run-up spot in one direction from the target.
 type ramSpot struct {
 	pos   Vec3
-	dist  float64
+	dist  float32
 	dir   int32
 	valid bool
 }
@@ -108,8 +108,8 @@ type RamAttack struct {
 	state    ramState
 	start    Vec3
 	dest     Vec3
-	dirX     float64
-	dirZ     float64
+	dirX     float32
+	dirZ     float32
 	wait     uint64
 	ramUntil uint64
 	settle   uint64
@@ -192,7 +192,7 @@ func (g *RamAttack) initiate() bool {
 		return false
 	}
 	f := blockOf(t.AttachPos(attachFeet))
-	g.dest = Vec3{X: float64(f.X) + ramBlockCentre, Y: float64(f.Y) + ramBlockCentre, Z: float64(f.Z) + ramBlockCentre}
+	g.dest = Vec3{X: float32(f.X) + ramBlockCentre, Y: float32(f.Y) + ramBlockCentre, Z: float32(f.Z) + ramBlockCentre}
 	g.m.SetTarget(NoID)
 	g.spots = [ramDirections]ramSpot{{dir: ramDirPlusX}, {dir: ramDirMinusX}, {dir: ramDirPlusZ}, {dir: ramDirMinusZ}}
 	for i := range g.spots {
@@ -246,7 +246,7 @@ func (g *RamAttack) walkOut(s *ramSpot) bool {
 		}
 		s.pos = Vec3{X: x, Y: y, Z: z}
 		c := blockOf(g.m.AttachPos(attachFeet))
-		d := Vec3{X: float64(c.X) + ramBlockCentre - x, Y: float64(c.Y) + ramBlockCentre - y, Z: float64(c.Z) + ramBlockCentre - z}
+		d := Vec3{X: float32(c.X) + ramBlockCentre - x, Y: float32(c.Y) + ramBlockCentre - y, Z: float32(c.Z) + ramBlockCentre - z}
 		s.dist, s.valid = length(d), true
 	}
 	return true
@@ -254,7 +254,7 @@ func (g *RamAttack) walkOut(s *ramSpot) bool {
 
 // pathable is _pathablePos: solid ground under the block and room for the
 // mob's height.
-func (g *RamAttack) pathable(x, y, z float64) bool {
+func (g *RamAttack) pathable(x, y, z float32) bool {
 	p := Pos{X: floorInt(x), Y: floorInt(y), Z: floorInt(z)}
 	if !g.world.Block(Pos{X: p.X, Y: p.Y - 1, Z: p.Z}).BlockSolid {
 		return false
@@ -295,7 +295,7 @@ func (g *RamAttack) Tick() {
 		g.toStart(t, n)
 	case ramTurning:
 		p := g.m.Pos()
-		yaw := float64(math.Atan2(float64(g.dest.X-p.X), float64(g.dest.Z-p.Z))) * -degPerRad
+		yaw := float32(math.Atan2(float64(g.dest.X-p.X), float64(g.dest.Z-p.Z))) * -degPerRad
 		if wrap180(faceYaw(g.m, g.m, yaw, turn)-yaw+180) < ramFaced {
 			g.state = ramChecking
 		}
@@ -382,7 +382,7 @@ func (g *RamAttack) check(t Actor, now uint64) {
 func (g *RamAttack) ram(n Navigator, now uint64) {
 	g.knock()
 	f := blockOf(g.m.AttachPos(attachFeet))
-	c := Vec3{X: float64(f.X) + ramBlockCentre, Y: float64(f.Y) + ramBlockCentre, Z: float64(f.Z) + ramBlockCentre}
+	c := Vec3{X: float32(f.X) + ramBlockCentre, Y: float32(f.Y) + ramBlockCentre, Z: float32(f.Z) + ramBlockCentre}
 	if dist2(g.dest, c) < ramSlowDist2 {
 		n.SetSpeed(ramSlowSpeed)
 	}
@@ -417,9 +417,9 @@ func (g *RamAttack) blockAhead() Vec3 {
 	dx := int32(math.Round(float64(p.X - x)))
 	dz := int32(math.Round(float64(p.Z - z)))
 	switch {
-	case abs32(float64(dx)) <= abs32(float64(dz)) && dz < 0:
+	case abs32(float32(dx)) <= abs32(float32(dz)) && dz < 0:
 		z++
-	case abs32(float64(dx)) <= abs32(float64(dz)):
+	case abs32(float32(dx)) <= abs32(float32(dz)):
 		z--
 	case dx < 0:
 		x++
@@ -456,7 +456,7 @@ func (g *RamAttack) knock() {
 
 // knockOne knocks the hit mob back by the ram's speed.
 func (g *RamAttack) knockOne(e Actor) {
-	f := float64(1)
+	f := float32(1)
 	if e.Flag(FlagBlockedUsingShield) {
 		f = ramShieldFactor
 	}

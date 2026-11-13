@@ -15,7 +15,7 @@ type PlayerTrader interface {
 // TradeWithPlayerConfig is the JSON of minecraft:behavior.trade_with_player.
 type TradeWithPlayerConfig struct {
 	Filters               Filter  `json:"-"`
-	MaxDistanceFromPlayer float64 `json:"max_distance_from_player"`
+	MaxDistanceFromPlayer float32 `json:"max_distance_from_player"`
 }
 
 // DefaultTradeWithPlayer returns the goal's BDS defaults (TypeSchema
@@ -93,14 +93,14 @@ type TradeInterested interface {
 
 // TradeInterestConfig is the JSON of minecraft:behavior.trade_interest.
 type TradeInterestConfig struct {
-	WithinRadius float64 `json:"within_radius"`
+	WithinRadius float32 `json:"within_radius"`
 	// The times are in seconds.
-	InterestTime          float64 `json:"interest_time"`
-	RemoveItemTime        float64 `json:"remove_item_time"`
-	CarriedItemSwitchTime float64 `json:"carried_item_switch_time"`
-	Cooldown              float64 `json:"cooldown"`
+	InterestTime          float32 `json:"interest_time"`
+	RemoveItemTime        float32 `json:"remove_item_time"`
+	CarriedItemSwitchTime float32 `json:"carried_item_switch_time"`
+	Cooldown              float32 `json:"cooldown"`
 	// LookedAtTime caps the interest while the player looks at the mob.
-	LookedAtTime float64 `json:"-"`
+	LookedAtTime float32 `json:"-"`
 }
 
 // DefaultTradeInterest returns the goal's BDS defaults (the goal 0x5346840).

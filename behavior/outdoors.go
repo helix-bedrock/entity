@@ -12,7 +12,7 @@ type MoveOutdoorsConfig struct {
 	MoveToConfig
 	// TimeoutCooldown is the rest, in seconds, after a path that did not
 	// move.
-	TimeoutCooldown float64 `json:"timeout_cooldown"`
+	TimeoutCooldown float32 `json:"timeout_cooldown"`
 }
 
 // DefaultMoveOutdoors returns the goal's BDS defaults (TypeSchema
@@ -89,9 +89,9 @@ type Indoorer interface {
 
 // MoveIndoorsConfig is the JSON of minecraft:behavior.move_indoors.
 type MoveIndoorsConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	// TimeoutCooldown is the wait, in seconds, after a failed path.
-	TimeoutCooldown float64 `json:"timeout_cooldown"`
+	TimeoutCooldown float32 `json:"timeout_cooldown"`
 }
 
 // DefaultMoveIndoors returns the goal's BDS defaults. The TypeSchema

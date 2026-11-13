@@ -17,7 +17,7 @@ const (
 
 // FleeSunConfig is the JSON of minecraft:behavior.flee_sun.
 type FleeSunConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	// Cooldown is the ticks after a run before the next search.
 	Cooldown int32
 }
@@ -64,12 +64,12 @@ func (g *FleeSun) shade() (Vec3, bool) {
 	m := g.mob
 	for i := 0; i < shadeTries; i++ {
 		p, b := m.Pos(), m.Box()
-		z := floorInt(float64(r.NextInt(shadeXZ)) + p.Z + shadeXZOff)
+		z := floorInt(float32(r.NextInt(shadeXZ)) + p.Z + shadeXZOff)
 		dy := r.NextInt(shadeY)
 		dx := r.NextInt(shadeXZ)
-		c := Pos{X: floorInt(float64(dx) + p.X + shadeXZOff), Y: floorInt(float64(dy) + b.Min.Y + shadeYOff), Z: z}
+		c := Pos{X: floorInt(float32(dx) + p.X + shadeXZOff), Y: floorInt(float32(dy) + b.Min.Y + shadeYOff), Z: z}
 		if !g.world.SkyVisible(c) && m.WalkTargetValue(c) < 0 {
-			return Vec3{X: float64(c.X), Y: float64(c.Y), Z: float64(c.Z)}, true
+			return Vec3{X: float32(c.X), Y: float32(c.Y), Z: float32(c.Z)}, true
 		}
 	}
 	return Vec3{}, false

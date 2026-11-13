@@ -119,7 +119,7 @@ type Admirer interface {
 type AdmireItemConfig struct {
 	Sound int `json:"admire_item_sound"`
 	// SoundInterval is sound_interval in seconds.
-	SoundInterval Range[float64]
+	SoundInterval Range[float32]
 	OnStart       string `json:"on_admire_item_start"`
 	OnStop        string `json:"on_admire_item_stop"`
 }
@@ -289,7 +289,7 @@ func (g *Barter) throw() Vec3 {
 	g.near = m.EntitiesOfType(g.near[:0], actorTypePlayer, m.ID(), sortedBox(sub(b.Min, r), add(b.Max, r)))
 	p := m.Pos()
 	var best Actor
-	var bestD2 float64
+	var bestD2 float32
 	for _, a := range g.near {
 		if d2 := dist2(p, a.Pos()); best == nil || d2 < bestD2 {
 			best, bestD2 = a, d2

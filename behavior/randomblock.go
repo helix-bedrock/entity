@@ -36,9 +36,9 @@ var dirOffsets = [...]Vec3{{Y: -1}, {Y: 1}, {Z: -1}, {Z: 1}, {X: -1}, {X: 1}}
 // MoveToRandomBlockConfig is the JSON of
 // minecraft:behavior.move_to_random_block.
 type MoveToRandomBlockConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
-	WithinRadius    float64 `json:"within_radius"`
-	BlockDistance   float64 `json:"block_distance"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
+	WithinRadius    float32 `json:"within_radius"`
+	BlockDistance   float32 `json:"block_distance"`
 }
 
 // DefaultMoveToRandomBlock returns the goal's BDS defaults.
@@ -51,7 +51,7 @@ func DefaultMoveToRandomBlock() MoveToRandomBlockConfig {
 type MoveToRandomBlock struct {
 	base
 	cfg      MoveToRandomBlockConfig
-	within2  float64
+	within2  float32
 	target   Vec3
 	last     Vec3
 	stuck    int32
@@ -90,7 +90,7 @@ func (g *MoveToRandomBlock) CanUse() bool {
 			p = Vec3{}
 		}
 		b := blockOf(p)
-		p.Y = float64(g.world.AboveTopSolid(b.X, b.Z))
+		p.Y = float32(g.world.AboveTopSolid(b.X, b.Z))
 		g.target = p
 	}
 	return g.standable()
@@ -187,7 +187,7 @@ func turnAside(w World, dir uint8) uint8 {
 }
 
 // facing is the direction of d's largest axis; up when d is about zero.
-func facing(d Vec3, d2 float64) uint8 {
+func facing(d Vec3, d2 float32) uint8 {
 	if d2 <= randomBlockAxis {
 		return dirUp
 	}
@@ -211,9 +211,9 @@ func boolDir(positive bool, neg uint8) uint8 {
 
 // floorVec floors each axis.
 func floorVec(v Vec3) Vec3 {
-	return Vec3{X: float64(math.Floor(float64(v.X))), Y: float64(math.Floor(float64(v.Y))), Z: float64(math.Floor(float64(v.Z)))}
+	return Vec3{X: float32(math.Floor(float64(v.X))), Y: float32(math.Floor(float64(v.Y))), Z: float32(math.Floor(float64(v.Z)))}
 }
 
 // truncFloor is floor then a truncating int conversion, as BDS rounds the
 // far aim.
-func truncFloor(v float64) float64 { return float64(int32(math.Floor(float64(v)))) }
+func truncFloor(v float32) float32 { return float32(int32(math.Floor(float64(v)))) }

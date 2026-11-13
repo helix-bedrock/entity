@@ -149,7 +149,7 @@ func (g *MakeLove) find() Actor {
 	g.near = m.EntitiesOfType(g.near[:0], actorTypeVillagerV2, m.ID(), area)
 	n := m.Nav()
 	var best Actor
-	bestD := float64(math.MaxFloat32)
+	bestD := float32(math.MaxFloat32)
 	for _, c := range g.near {
 		if partner := m.LovePartner(c.ID()); partner != NoID {
 			if partner == m.ID() {

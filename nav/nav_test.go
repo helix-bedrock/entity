@@ -35,7 +35,7 @@ func (w *flatWorld) CollisionBox(b path.Block, p path.Pos) path.Box {
 	if b == air {
 		return path.Box{}
 	}
-	f := path.Vec3{X: float64(p.X), Y: float64(p.Y), Z: float64(p.Z)}
+	f := path.Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	return path.Box{Min: f, Max: path.Vec3{X: f.X + 1, Y: f.Y + 1, Z: f.Z + 1}}
 }
 func (w *flatWorld) Door(path.Block) (int32, bool, bool)   { return 0, false, false }
@@ -51,10 +51,10 @@ type control struct {
 	set    bool
 }
 
-func (c *control) SetWantedPosition(p path.Vec3, _ float64) { c.wanted, c.set = p, true }
+func (c *control) SetWantedPosition(p path.Vec3, _ float32) { c.wanted, c.set = p, true }
 func (c *control) ClearWanted()                             { c.set = false }
 
-func walker(x, z float64, mc MoveControl) *Mob {
+func walker(x, z float32, mc MoveControl) *Mob {
 	return &Mob{
 		Pos:         path.Vec3{X: x, Y: 64, Z: z},
 		Box:         path.Box{Min: path.Vec3{X: x - 0.3, Y: 64, Z: z - 0.3}, Max: path.Vec3{X: x + 0.3, Y: 65.9, Z: z + 0.3}},

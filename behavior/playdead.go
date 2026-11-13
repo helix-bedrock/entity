@@ -16,7 +16,7 @@ type PlayDeader interface {
 	Mob
 	// LastDamage is the mob's last damage: a stamp that changes with each
 	// hit (Mob +792), its cause (-1 for none) and its amount.
-	LastDamage() (stamp uint64, cause int, amount float64)
+	LastDamage() (stamp uint64, cause int, amount float32)
 	// Health is the health attribute's current value as an integer.
 	Health() int32
 	// AddEffect gives the mob a mob effect for the ticks at the amplifier.
@@ -27,7 +27,7 @@ type PlayDeader interface {
 // in ticks (BDS truncates the seconds times 20).
 type PlayDeadConfig struct {
 	Duration          int32
-	RandomStartChance float64 `json:"random_start_chance"`
+	RandomStartChance float32 `json:"random_start_chance"`
 	ForceBelowHealth  int32   `json:"force_below_health"`
 	RandomDamageRange Range[int32]
 	// DamageSources are the damage cause values; empty or DamageAll matches
@@ -94,7 +94,7 @@ func (g *PlayDead) CanUse() bool {
 	if g.cfg.RandomDamageRange.Max > d {
 		d += r.NextInt(g.cfg.RandomDamageRange.Max - d + 1)
 	}
-	return amount > float64(d)
+	return amount > float32(d)
 }
 
 // CanContinueToUse implements goal.Goal (0x575B560).
@@ -136,7 +136,7 @@ type Begger interface {
 // (BDS multiplies the JSON's whole seconds by 20).
 type BegConfig struct {
 	Items        []string
-	LookDistance float64 `json:"look_distance"`
+	LookDistance float32 `json:"look_distance"`
 	LookTime     Range[int32]
 }
 
@@ -177,7 +177,7 @@ func (g *Beg) CanUse() bool {
 		r2 = math.MaxFloat32
 	}
 	var near Actor
-	best := float64(math.MaxFloat32)
+	best := float32(math.MaxFloat32)
 	g.players = g.world.Players(g.players[:0])
 	for _, p := range g.players {
 		if !p.Pickable() {

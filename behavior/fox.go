@@ -23,8 +23,8 @@ const flagsAll = goal.FlagMove | goal.FlagLook | goal.FlagJump
 type NapConfig struct {
 	CooldownMin     int32
 	CooldownMax     int32
-	MobDetectDist   float64 `json:"mob_detect_dist"`
-	MobDetectHeight float64 `json:"mob_detect_height"`
+	MobDetectDist   float32 `json:"mob_detect_dist"`
+	MobDetectHeight float32 `json:"mob_detect_height"`
 	// CanNapFilters is tested with the mob as self and its target as
 	// other.
 	CanNapFilters Filter
@@ -139,7 +139,7 @@ func (g *Nap) Tick() {}
 // FindCoverConfig is the JSON of minecraft:behavior.find_cover. Cooldown
 // is cooldown_time in ticks (BDS truncates the seconds times 20).
 type FindCoverConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	Cooldown        int32
 }
 
@@ -193,12 +193,12 @@ func (g *FindCover) find() (Vec3, bool) {
 	m := g.mob
 	for range coverTries {
 		p, b := m.Pos(), m.Box()
-		z := floorInt(float64(r.NextInt(coverSpread)) + p.Z - coverOffsetH)
+		z := floorInt(float32(r.NextInt(coverSpread)) + p.Z - coverOffsetH)
 		y := r.NextInt(coverHeight)
 		x := r.NextInt(coverSpread)
-		c := Pos{X: floorInt(float64(x) + p.X - coverOffsetH), Y: floorInt(float64(y) + b.Min.Y - coverOffsetV), Z: z}
+		c := Pos{X: floorInt(float32(x) + p.X - coverOffsetH), Y: floorInt(float32(y) + b.Min.Y - coverOffsetV), Z: z}
 		if !g.open(c) && m.WalkTargetValue(c) < 0 {
-			return Vec3{X: float64(c.X), Y: float64(c.Y), Z: float64(c.Z)}, true
+			return Vec3{X: float32(c.X), Y: float32(c.Y), Z: float32(c.Z)}, true
 		}
 	}
 	return Vec3{}, false

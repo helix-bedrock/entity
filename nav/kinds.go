@@ -140,14 +140,14 @@ func boxCentre(b path.Box) path.Vec3 {
 }
 
 // dist2 is the squared distance from a to b.
-func dist2(a, b path.Vec3) float64 {
+func dist2(a, b path.Vec3) float32 {
 	dx, dy, dz := b.X-a.X, b.Y-a.Y, b.Z-a.Z
 	return dz*dz + (dx*dx + dy*dy)
 }
 
 // stuck runs the stuck check: every more than interval ticks, a mob that
 // moved less than dist blocks stops.
-func (n *Navigation) stuck(w World, m *Mob, interval int32, d float64, skip bool) {
+func (n *Navigation) stuck(w World, m *Mob, interval int32, d float32, skip bool) {
 	if n.ticks-n.lastCheck <= interval {
 		return
 	}

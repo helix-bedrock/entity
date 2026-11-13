@@ -3,8 +3,8 @@ package behavior
 // AvoidType is one entry of avoid_mob_type's entity_types.
 type AvoidType struct {
 	Filters     Filter
-	WalkSpeed   float64 `json:"walk_speed_multiplier"`
-	SprintSpeed float64 `json:"sprint_speed_multiplier"`
+	WalkSpeed   float32 `json:"walk_speed_multiplier"`
+	SprintSpeed float32 `json:"sprint_speed_multiplier"`
 	// CheckOutnumbered skips entities the mob's mark variant is not below
 	// (check_if_outnumbered); BDS compares the two mark variants.
 	CheckOutnumbered bool `json:"check_if_outnumbered"`
@@ -17,13 +17,13 @@ type AvoidConfig struct {
 	RemoveTarget     bool    `json:"remove_target"`
 	H                int32   `json:"avoid_target_xz"`
 	V                int32   `json:"avoid_target_y"`
-	MaxDist          float64 `json:"max_dist"`
-	MaxFlee          float64 `json:"max_flee"`
+	MaxDist          float32 `json:"max_dist"`
+	MaxFlee          float32 `json:"max_flee"`
 	// ProbabilityPerStrength is the flee chance per point of strength.
-	ProbabilityPerStrength float64 `json:"probability_per_strength"`
-	SprintDistance         float64 `json:"sprint_distance"`
+	ProbabilityPerStrength float32 `json:"probability_per_strength"`
+	SprintDistance         float32 `json:"sprint_distance"`
 	Sound                  int
-	SoundInterval          Range[float64]
+	SoundInterval          Range[float32]
 	OnEscape               string
 }
 
@@ -55,9 +55,9 @@ type CanSeer interface {
 type Avoid struct {
 	base
 	cfg         AvoidConfig
-	sprint2     float64
-	walk        float64
-	sprintSpeed float64
+	sprint2     float32
+	walk        float32
+	sprintSpeed float32
 	threat      ID
 	pos         Vec3
 	nextSound   uint64
@@ -78,7 +78,7 @@ func markVariant(a any) int32 {
 
 // find is the entity search: entries in order, and in each the first
 // entity in BDS's getEntities order that passes, not the nearest.
-func (g *Avoid) find(r float64) Actor {
+func (g *Avoid) find(r float32) Actor {
 	for i := range g.cfg.Types {
 		t := &g.cfg.Types[i]
 		b := g.mob.Box()

@@ -96,7 +96,7 @@ func (in *Interact) Run(env *Env, i int, player behavior.Actor) {
 type GiveTrigger struct {
 	Items []string
 	// Cooldown is in seconds.
-	Cooldown float64
+	Cooldown float32
 	OnGive   *definition.Trigger
 }
 

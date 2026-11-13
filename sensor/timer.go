@@ -9,7 +9,7 @@ import (
 type TimeChoice struct {
 	Weight int32
 	// Value is in seconds.
-	Value float64
+	Value float32
 }
 
 // TimerConfig is minecraft:timer.
@@ -21,7 +21,7 @@ type TimerConfig struct {
 	// drawn when the timer was made is kept.
 	RandomInterval bool
 	// Time is the range a time is drawn from, in seconds.
-	Time behavior.Range[float64]
+	Time behavior.Range[float32]
 	// Choices, when not empty, are drawn from by weight instead of Time.
 	Choices []TimeChoice
 	// Event is time_down_event.

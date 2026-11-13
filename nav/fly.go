@@ -102,7 +102,7 @@ func (n *Navigation) hoverTick(w World, m *Mob) {
 	}
 	pts := n.path.Points
 	pt := pts[min(n.index, len(pts)-1)].Pos
-	t := path.Vec3{X: float64(pt.X) + 0.5, Y: float64(pt.Y) + 0.5, Z: float64(pt.Z) + 0.5}
+	t := path.Vec3{X: float32(pt.X) + 0.5, Y: float32(pt.Y) + 0.5, Z: float32(pt.Z) + 0.5}
 	if n.index == len(pts)-1 && n.EndOffset != (path.Vec3{}) {
 		t.X += n.EndOffset.X
 		t.Y += n.EndOffset.Y

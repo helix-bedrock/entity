@@ -14,16 +14,16 @@ type otherMob struct {
 	box      behavior.Box
 	alive    bool
 	ints     map[int]int32
-	floats   map[int]float64
+	floats   map[int]float32
 	strs     map[int]string
 	games    []string
-	yaw      float64
+	yaw      float32
 	wet      bool
-	hurtSeen []float64
+	hurtSeen []float32
 }
 
 func newOtherMob(id behavior.ID) *otherMob {
-	return &otherMob{mob: newMob(id), alive: true, ints: map[int]int32{}, floats: map[int]float64{}, strs: map[int]string{}}
+	return &otherMob{mob: newMob(id), alive: true, ints: map[int]int32{}, floats: map[int]float32{}, strs: map[int]string{}}
 }
 
 func (m *otherMob) Alive() bool                                        { return m.alive }
@@ -31,23 +31,23 @@ func (m *otherMob) Box() behavior.Box                                  { return 
 func (m *otherMob) Eyes() behavior.Vec3                                { return m.pos }
 func (m *otherMob) PlaySound(s int)                                    { m.sounds = append(m.sounds, s) }
 func (m *otherMob) GameEvent(n string, _ behavior.ID, _ behavior.Vec3) { m.games = append(m.games, n) }
-func (m *otherMob) HeadRotation() (float64, float64)                   { return 0, m.yaw }
+func (m *otherMob) HeadRotation() (float32, float32)                   { return 0, m.yaw }
 func (m *otherMob) InWaterOrRain() bool                                { return m.wet }
 func (m *otherMob) SetIntData(k int, v int32)                          { m.ints[k] = v }
-func (m *otherMob) SetFloatData(k int, v float64)                      { m.floats[k] = v }
+func (m *otherMob) SetFloatData(k int, v float32)                      { m.floats[k] = v }
 func (m *otherMob) SetStringData(k int, v string)                      { m.strs[k] = v }
-func (m *otherMob) Hurt(cause int, amount float64) {
+func (m *otherMob) Hurt(cause int, amount float32) {
 	m.hurts, m.hurtSeen = append(m.hurts, cause), append(m.hurtSeen, amount)
 }
 
 type otherWorld struct {
 	*world
-	bright float64
+	bright float32
 	sky    bool
 	grief  bool
 }
 
-func (w *otherWorld) Brightness(behavior.Pos) float64 { return w.bright }
+func (w *otherWorld) Brightness(behavior.Pos) float32 { return w.bright }
 func (w *otherWorld) SkyVisible(behavior.Pos) bool    { return w.sky }
 func (w *otherWorld) MobGriefing() bool               { return w.grief }
 
@@ -63,7 +63,7 @@ type actions struct {
 	tnt       bool
 }
 
-func (a *actions) Hurt(t behavior.Actor, _ behavior.ID, _ int, _ float64) {
+func (a *actions) Hurt(t behavior.Actor, _ behavior.ID, _ int, _ float32) {
 	a.hurt = append(a.hurt, t.ID())
 }
 func (a *actions) CanReceiveEffect(behavior.Actor, behavior.ID) bool { return true }
@@ -97,7 +97,7 @@ func TestDamageOverTimeAndDryingOut(t *testing.T) {
 	for range 6 {
 		d.Tick(env)
 	}
-	if !slices.Equal(m.hurtSeen, []float64{2, 2}) {
+	if !slices.Equal(m.hurtSeen, []float32{2, 2}) {
 		t.Fatalf("hurts %v", m.hurtSeen)
 	}
 	m.alive = false
@@ -151,10 +151,10 @@ func TestPeek(t *testing.T) {
 func TestAmbientSoundAndHeartbeat(t *testing.T) {
 	m := newOtherMob(1)
 	env, _ := otherEnv(m, &otherWorld{world: &world{}})
-	angry := float64(0)
+	angry := float32(0)
 	c := DefaultAmbientSoundInterval()
 	c.Value = 0.2
-	c.Events = []AmbientSound{{Condition: func(behavior.Mob) float64 { return angry }, Event: "angry"}}
+	c.Events = []AmbientSound{{Condition: func(behavior.Mob) float32 { return angry }, Event: "angry"}}
 	a := NewAmbientSoundInterval(c, m)
 	if m.floats[DataAmbientInterval] != 0.2 || m.strs[DataAmbientEvent] != "ambient" {
 		t.Fatalf("data %v %v", m.floats, m.strs)
@@ -169,7 +169,7 @@ func TestAmbientSoundAndHeartbeat(t *testing.T) {
 	if m.strs[DataAmbientEvent] != "angry" {
 		t.Errorf("event %q", m.strs[DataAmbientEvent])
 	}
-	h := HeartbeatConfig{Interval: func(behavior.Mob) float64 { return 1.5 }, Sound: 9}
+	h := HeartbeatConfig{Interval: func(behavior.Mob) float32 { return 1.5 }, Sound: 9}
 	h.Apply(m)
 	h.Tick(m)
 	if m.ints[DataHeartbeatSound] != 9 || m.ints[DataHeartbeatInterval] != 30 {
@@ -381,7 +381,7 @@ func TestCombatRegenerationAndTrust(t *testing.T) {
 type seqRandom struct {
 	behavior.Random
 	bools  []bool
-	floats []float64
+	floats []float32
 	n      int32
 }
 
@@ -390,7 +390,7 @@ func (r *seqRandom) NextBool() bool {
 	r.bools = r.bools[1:]
 	return b
 }
-func (r *seqRandom) NextFloat() float64 {
+func (r *seqRandom) NextFloat() float32 {
 	f := r.floats[0]
 	r.floats = r.floats[1:]
 	return f
@@ -418,7 +418,7 @@ func TestGenetics(t *testing.T) {
 	w := &otherWorld{world: &world{}}
 	env, ev := otherEnv(m, w)
 	w.r = random{}
-	r2 := &seqRandom{bools: []bool{true, false, true}, floats: []float64{0.5, 0.5}}
+	r2 := &seqRandom{bools: []bool{true, false, true}, floats: []float32{0.5, 0.5}}
 	g2 := &Genetics{cfg: cfg}
 	got := g2.cross(gene, Alleles{5, 6}, Alleles{0, 4}, r2)
 	// a first: main is a's hidden (6), hidden is b's hidden (4).

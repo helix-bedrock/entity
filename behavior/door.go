@@ -57,7 +57,7 @@ type DoorUser interface {
 	// 0xC580E70).
 	SetDoorOpen(p Pos, open bool)
 	// Width is the mob's collision box width.
-	Width() float64
+	Width() float32
 	// Difficulty is the level's difficulty, 0 (peaceful) to 3 (hard).
 	Difficulty() int
 	// DoorEvent broadcasts a level event at p with a number as its data
@@ -118,7 +118,7 @@ func (g *DoorInteract) CanUse() bool {
 func (g *DoorInteract) find(nodes []Pos, idx int) bool {
 	g.in, g.out = noDir, noDir
 	p, d := g.m.Pos(), g.door
-	dx, dz := p.X-float64(d.X), p.Z-float64(d.Z)
+	dx, dz := p.X-float32(d.X), p.Z-float32(d.Z)
 	if dz*dz+dx*dx > doorReach2 {
 		return false
 	}
@@ -130,7 +130,7 @@ func (g *DoorInteract) find(nodes []Pos, idx int) bool {
 	last := len(nodes) - 1
 	for i := 1; i < limit; i++ {
 		n := nodes[min(i, last)]
-		if n.X != d.X || n.Z != d.Z || abs32(float64(n.Y-d.Y)) > 1 {
+		if n.X != d.X || n.Z != d.Z || abs32(float32(n.Y-d.Y)) > 1 {
 			continue
 		}
 		if prev := nodes[min(i-1, last)]; prev.X != d.X || prev.Z != d.Z {
@@ -153,7 +153,7 @@ func (g *DoorInteract) find(nodes []Pos, idx int) bool {
 // pathDir is the direction of a step from the door: 0 and 2 along z, 1
 // and 3 along x.
 func pathDir(dx, dz int32) int8 {
-	if abs32(float64(dx)) <= abs32(float64(dz)) {
+	if abs32(float32(dx)) <= abs32(float32(dz)) {
 		if dz > 0 {
 			return 2
 		}
@@ -207,7 +207,7 @@ func (g *DoorInteract) Start() {
 	g.wasOpen = st.Open
 	g.passed = false
 	p := g.m.Pos()
-	g.toDoor = Vec3{X: float64(g.door.X) + 0.5 - p.X, Z: float64(g.door.Z) + 0.5 - p.Z}
+	g.toDoor = Vec3{X: float32(g.door.X) + 0.5 - p.X, Z: float32(g.door.Z) + 0.5 - p.Z}
 }
 
 // Tick implements goal.Goal (0x576DE90): the mob is through once it is past
@@ -215,7 +215,7 @@ func (g *DoorInteract) Start() {
 func (g *DoorInteract) Tick() { g.passed = g.through() }
 
 func (g *DoorInteract) through() bool {
-	x, z := float64(g.door.X), float64(g.door.Z)
+	x, z := float32(g.door.X), float32(g.door.Z)
 	p := g.m.Pos()
 	switch g.out {
 	case 0:
@@ -312,7 +312,7 @@ func (g *BreakDoor) CanContinueToUse() bool {
 	if !g.angry() || g.time > breakDoorTime {
 		return false
 	}
-	d := Vec3{X: float64(g.door.X), Y: float64(g.door.Y), Z: float64(g.door.Z)}
+	d := Vec3{X: float32(g.door.X), Y: float32(g.door.Y), Z: float32(g.door.Z)}
 	if dist2(g.m.Pos(), d) >= breakDoorReach2 {
 		return false
 	}
@@ -334,14 +334,14 @@ func (g *BreakDoor) Start() {
 	g.DoorInteract.Start()
 	g.time = 0
 	if g.m.Difficulty() == difficultyHard {
-		g.m.DoorEvent(eventDoorCrack, Vec3{X: float64(g.door.X), Y: float64(g.door.Y), Z: float64(g.door.Z)}, breakDoorCrackSpeed)
+		g.m.DoorEvent(eventDoorCrack, Vec3{X: float32(g.door.X), Y: float32(g.door.Y), Z: float32(g.door.Z)}, breakDoorCrackSpeed)
 	}
 }
 
 // Stop implements goal.Goal (0x48CA250).
 func (g *BreakDoor) Stop() {
 	if g.m.Difficulty() == difficultyHard {
-		g.m.DoorEvent(eventDoorCrackStop, Vec3{X: float64(g.door.X), Y: float64(g.door.Y), Z: float64(g.door.Z)}, 0)
+		g.m.DoorEvent(eventDoorCrackStop, Vec3{X: float32(g.door.X), Y: float32(g.door.Y), Z: float32(g.door.Z)}, 0)
 	}
 }
 
@@ -350,7 +350,7 @@ func (g *BreakDoor) Stop() {
 func (g *BreakDoor) Tick() {
 	g.DoorInteract.Tick()
 	w := g.world
-	centre := Vec3{X: float64(g.door.X) + 0.5, Y: float64(g.door.Y) + 0.5, Z: float64(g.door.Z) + 0.5}
+	centre := Vec3{X: float32(g.door.X) + 0.5, Y: float32(g.door.Y) + 0.5, Z: float32(g.door.Z) + 0.5}
 	if w.IRandom().NextInt(breakDoorKnock) == 0 {
 		g.m.DoorEvent(eventDoorKnock, centre, 0)
 	}

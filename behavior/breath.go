@@ -10,7 +10,7 @@ const (
 
 // SwimUpForBreathConfig is the JSON of minecraft:behavior.swim_up_for_breath.
 type SwimUpForBreathConfig struct {
-	SpeedMod     float64 `json:"speed_mod"`
+	SpeedMod     float32 `json:"speed_mod"`
 	SearchRadius int32   `json:"search_radius"`
 	SearchHeight int32   `json:"search_height"`
 	// Material is material_type: "water", "lava", or "any" for anything
@@ -65,10 +65,10 @@ func (g *SwimUpForBreath) layersUp() int32 {
 	p := g.mob.Pos()
 	r := g.cfg.SearchRadius
 	y := p.Y
-	for k := int32(0); float64(g.world.MaxHeight()) > y; k++ {
+	for k := int32(0); float32(g.world.MaxHeight()) > y; k++ {
 		for dx := -r; dx <= r; dx++ {
 			for dz := -r; dz <= r; dz++ {
-				if g.surfaceBelow(Pos{X: floorInt(float64(dx) + p.X), Y: floorInt(y + 0), Z: floorInt(float64(dz) + p.Z)}) {
+				if g.surfaceBelow(Pos{X: floorInt(float32(dx) + p.X), Y: floorInt(y + 0), Z: floorInt(float32(dz) + p.Z)}) {
 					return k
 				}
 			}
@@ -128,7 +128,7 @@ func (g *SwimUpForBreath) find() {
 	}
 	g.found = len(g.spots) != 0
 	if !g.found {
-		g.target = Vec3{X: p.X, Y: float64(h) + p.Y, Z: p.Z + 0}
+		g.target = Vec3{X: p.X, Y: float32(h) + p.Y, Z: p.Z + 0}
 	}
 	for _, c := range g.spots {
 		dx, dz := c.X-at.X, c.Z-at.Z

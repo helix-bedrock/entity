@@ -30,7 +30,7 @@ const (
 type GroundDigger interface {
 	Mob
 	// Rotation is the pitch and yaw of ActorRotationComponent.
-	Rotation() (pitch, yaw float64)
+	Rotation() (pitch, yaw float32)
 	// SpawnLoot rolls the loot table with the mob and spawns each item at
 	// p; false when the table is missing or gave nothing.
 	SpawnLoot(table string, p Vec3) bool
@@ -43,19 +43,19 @@ type GroundDigger interface {
 // minecraft:behavior.random_search_and_dig.
 type RandomSearchAndDigConfig struct {
 	// CooldownRange and DiggingDurationRange are in seconds.
-	CooldownRange            Range[float64] `json:"cooldown_range"`
-	SpeedMultiplier          float64        `json:"speed_multiplier"`
+	CooldownRange            Range[float32] `json:"cooldown_range"`
+	SpeedMultiplier          float32        `json:"speed_multiplier"`
 	FindValidPositionRetries int32          `json:"find_valid_position_retries"`
-	TargetDigPositionOffset  float64        `json:"target_dig_position_offset"`
+	TargetDigPositionOffset  float32        `json:"target_dig_position_offset"`
 	SearchRangeXZ            int32          `json:"search_range_xz"`
 	SearchRangeY             int32          `json:"search_range_y"`
-	GoalRadius               float64        `json:"goal_radius"`
+	GoalRadius               float32        `json:"goal_radius"`
 	TargetBlocks             []string       `json:"target_blocks"`
-	DiggingDurationRange     Range[float64] `json:"digging_duration_range"`
+	DiggingDurationRange     Range[float32] `json:"digging_duration_range"`
 	ItemTable                string         `json:"item_table"`
 	// SpawnItemAfterSeconds is in seconds.
-	SpawnItemAfterSeconds float64 `json:"spawn_item_after_seconds"`
-	SpawnItemPosOffset    float64 `json:"spawn_item_pos_offset"`
+	SpawnItemAfterSeconds float32 `json:"spawn_item_after_seconds"`
+	SpawnItemPosOffset    float32 `json:"spawn_item_pos_offset"`
 	OnSearchingStart      []string
 	OnFailDuringSearching []string
 	OnDiggingStart        []string
@@ -68,7 +68,7 @@ type RandomSearchAndDigConfig struct {
 func DefaultRandomSearchAndDig() RandomSearchAndDigConfig {
 	return RandomSearchAndDigConfig{SpeedMultiplier: 1, GoalRadius: 1.5, TargetDigPositionOffset: 2.25,
 		FindValidPositionRetries: 5, SearchRangeXZ: 10, SearchRangeY: 7,
-		DiggingDurationRange: Range[float64]{Min: 8, Max: 10}}
+		DiggingDurationRange: Range[float32]{Min: 8, Max: 10}}
 }
 
 // RandomSearchAndDig is RandomSearchAndDigGoal: the sniffer walks to a
@@ -77,7 +77,7 @@ type RandomSearchAndDig struct {
 	base
 	m       GroundDigger
 	cfg     RandomSearchAndDigConfig
-	radius2 float64
+	radius2 float32
 	// cooldown, digging and spawnAfter are drawn once, when the goal is
 	// made.
 	cooldown, digging, spawnAfter uint64
@@ -103,7 +103,7 @@ func NewRandomSearchAndDig(w World, m GroundDigger, c RandomSearchAndDigConfig) 
 
 // roundTicks is seconds to ticks rounded the way BDS stores them (an
 // unsigned 16-bit count).
-func roundTicks(s float64) uint64 {
+func roundTicks(s float32) uint64 {
 	return uint64(uint16(int32(math.Round(float64(s * ticksPerSecond)))))
 }
 
@@ -148,12 +148,12 @@ func (g *RandomSearchAndDig) CanUse() bool {
 	if !ok {
 		return false
 	}
-	end, ok := n.PathToPoint(Vec3{X: float64(p.X), Y: float64(p.Y), Z: float64(p.Z)})
+	end, ok := n.PathToPoint(Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)})
 	if !ok {
 		return false
 	}
-	c := Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}
-	if dist2(c, Vec3{X: float64(end.X), Y: float64(end.Y), Z: float64(end.Z)}) > g.radius2 {
+	c := Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}
+	if dist2(c, Vec3{X: float32(end.X), Y: float32(end.Y), Z: float32(end.Z)}) > g.radius2 {
 		return false
 	}
 	g.pos, g.state = p, digSearching
@@ -191,7 +191,7 @@ func (g *RandomSearchAndDig) CanContinueToUse() bool {
 func (g *RandomSearchAndDig) Start() {
 	m := g.m
 	if n := m.Nav(); n != nil {
-		if n.MoveTo(Vec3{X: float64(g.pos.X), Y: float64(g.pos.Y), Z: float64(g.pos.Z)}, g.cfg.SpeedMultiplier) {
+		if n.MoveTo(Vec3{X: float32(g.pos.X), Y: float32(g.pos.Y), Z: float32(g.pos.Z)}, g.cfg.SpeedMultiplier) {
 			n.SetLastNodeReach(digLastNodeReach)
 		}
 	}
@@ -243,7 +243,7 @@ func (g *RandomSearchAndDig) search() {
 	m.SetFlag(FlagSearching, false)
 	now := w.CurrentTick()
 	at := blockOf(m.Pos())
-	d := Vec3{X: float64(g.pos.X) + 0.5 - float64(at.X), Y: float64(g.pos.Y) + 0.5 - float64(at.Y), Z: float64(g.pos.Z) + 0.5 - float64(at.Z)}
+	d := Vec3{X: float32(g.pos.X) + 0.5 - float32(at.X), Y: float32(g.pos.Y) + 0.5 - float32(at.Y), Z: float32(g.pos.Z) + 0.5 - float32(at.Z)}
 	if g.radius2 < length2(d) {
 		g.fire(g.cfg.OnFailDuringSearching)
 		g.state = digDone

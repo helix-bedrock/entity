@@ -18,8 +18,8 @@ type Creeper interface {
 
 // SwellConfig is the JSON of minecraft:behavior.swell.
 type SwellConfig struct {
-	StartDistance float64 `json:"start_distance"`
-	StopDistance  float64 `json:"stop_distance"`
+	StartDistance float32 `json:"start_distance"`
+	StopDistance  float32 `json:"stop_distance"`
 }
 
 // DefaultSwell returns the goal's BDS defaults.
@@ -89,8 +89,8 @@ func (g *Swell) Tick() {
 
 // boxDistance is the distance between two boxes, 0 when they overlap
 // (0xD781B70).
-func boxDistance(a, b Box) float64 {
-	var d float64
+func boxDistance(a, b Box) float32 {
+	var d float32
 	switch {
 	case a.Min.X > b.Max.X:
 		d += (b.Max.X - a.Min.X) * (b.Max.X - a.Min.X)

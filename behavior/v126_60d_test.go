@@ -7,7 +7,7 @@ type knightMob struct {
 	*b2Mob
 	weapon   bool
 	charging bool
-	starts   []float64
+	starts   []float32
 	stops    int
 }
 
@@ -18,8 +18,8 @@ func (m *knightMob) Attack(a Actor, then AttackResult) {
 		then.AttackResult(a.ID(), true, false)
 	}
 }
-func (m *knightMob) KineticReach() (Range[float64], bool) { return Range[float64]{1, 3}, m.weapon }
-func (m *knightMob) StartKineticCharge(s float64) {
+func (m *knightMob) KineticReach() (Range[float32], bool) { return Range[float32]{1, 3}, m.weapon }
+func (m *knightMob) StartKineticCharge(s float32) {
 	m.starts = append(m.starts, s)
 	m.charging = true
 }
@@ -54,7 +54,7 @@ func TestUseKineticWeaponChargesAndCoolsDown(t *testing.T) {
 		t.Fatal("did not start")
 	}
 	g.Start()
-	if g.repath != 15 || g.reach != (Range[float64]{1, 3}) {
+	if g.repath != 15 || g.reach != (Range[float32]{1, 3}) {
 		t.Fatalf("repath %d reach %v, want the fail increase and the weapon's reach", g.repath, g.reach)
 	}
 	// 20 blocks away, past approach_distance 8: still chasing.
@@ -105,7 +105,7 @@ func TestUseKineticWeaponChargesAndCoolsDown(t *testing.T) {
 type witherMob struct {
 	*b2Mob
 	wants, dashing bool
-	air            float64
+	air            float32
 	delay          int32
 	tally          []Damager
 }
@@ -113,7 +113,7 @@ type witherMob struct {
 func (m *witherMob) WantsDash() bool         { return m.wants }
 func (m *witherMob) StartDash()              { m.dashing = true }
 func (m *witherMob) EndDash(d int32)         { m.wants, m.dashing, m.delay = false, false, d }
-func (m *witherMob) ScaleAirSpeed(f float64) { m.air *= f }
+func (m *witherMob) ScaleAirSpeed(f float32) { m.air *= f }
 func (m *witherMob) Damagers(dst []Damager) []Damager {
 	return append(dst, m.tally...)
 }

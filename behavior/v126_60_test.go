@@ -57,7 +57,7 @@ func TestRangedAttackJSONFormats(t *testing.T) {
 	for _, c := range []struct {
 		name, json             string
 		lo, hi                 int32
-		radiusMin, radius      float64
+		radiusMin, radius      float32
 		inRange, sightTicks    int32
 		shots, shootTrigger    int32
 		persistent, followMode bool
@@ -106,7 +106,7 @@ func TestRangedAttackJSONErrors(t *testing.T) {
 type v60Mob struct {
 	*fakeMob
 	vel          Vec3
-	speed        float64
+	speed        float32
 	wanted       bool
 	wantedAt     Vec3
 	hasControl   bool
@@ -124,13 +124,13 @@ func newV60Mob(w World, id ID, p Vec3) *v60Mob {
 
 func (m *v60Mob) Velocity() Vec3     { return m.vel }
 func (m *v60Mob) SetVelocity(v Vec3) { m.vel = v }
-func (m *v60Mob) Speed() float64     { return m.speed }
+func (m *v60Mob) Speed() float32     { return m.speed }
 func (m *v60Mob) Alive() bool        { return m.alive }
 func (m *v60Mob) Removed() bool      { return m.removedState }
 func (m *v60Mob) MoveWanted() (bool, bool) {
 	return m.wanted, m.hasControl
 }
-func (m *v60Mob) SetMoveWanted(p Vec3, _ float64) { m.wanted, m.wantedAt = true, p }
+func (m *v60Mob) SetMoveWanted(p Vec3, _ float32) { m.wanted, m.wantedAt = true, p }
 func (m *v60Mob) ClearMoveWanted()                { m.wanted = false }
 func (m *v60Mob) Flag(n int) bool {
 	if n == FlagLeashed {
@@ -212,4 +212,4 @@ func TestFollowTargetLeaderFindsLeader(t *testing.T) {
 
 func (m *v60Mob) LookBusy() bool                   { return true }
 func (m *v60Mob) Riders() []ID                     { return nil }
-func (m *v60Mob) HeadRotation() (float64, float64) { return 0, 0 }
+func (m *v60Mob) HeadRotation() (float32, float32) { return 0, 0 }

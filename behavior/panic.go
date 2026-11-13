@@ -24,7 +24,7 @@ const (
 
 // PanicConfig is the JSON of minecraft:behavior.panic.
 type PanicConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	Force           bool    `json:"force"`
 	IgnoreMobDamage bool    `json:"ignore_mob_damage"`
 	PreferWater     bool    `json:"prefer_water"`
@@ -32,7 +32,7 @@ type PanicConfig struct {
 	DamageSources []int
 	// Sound is the panic_sound level sound event; NoSound for none.
 	Sound         int
-	SoundInterval Range[float64]
+	SoundInterval Range[float32]
 }
 
 // DefaultPanic returns BDS 1.26.60's panic defaults (legacy goal parser
@@ -133,7 +133,7 @@ func (g *Panic) waterTarget() (Vec3, bool) {
 		return Vec3{}, false
 	}
 	o := blockOf(g.mob.Pos())
-	best := float64(scoreFloor)
+	best := float32(scoreFloor)
 	var out Pos
 	found := false
 	for dy := int32(waterMinY); dy <= waterMaxY; dy++ {
@@ -144,13 +144,13 @@ func (g *Panic) waterTarget() (Vec3, bool) {
 					continue
 				}
 				d := int64(dx)*int64(dx) + int64(dy)*int64(dy) + int64(dz)*int64(dz)
-				if s := float64(d)*-panicWaterDist + g.mob.WalkTargetValue(p); s > best {
+				if s := float32(d)*-panicWaterDist + g.mob.WalkTargetValue(p); s > best {
 					best, out, found = s, p, true
 				}
 			}
 		}
 	}
-	return Vec3{X: float64(out.X), Y: float64(out.Y), Z: float64(out.Z)}, found
+	return Vec3{X: float32(out.X), Y: float32(out.Y), Z: float32(out.Z)}, found
 }
 
 // CanContinueToUse implements goal.Goal (0xBF9C5B0). Since 1.26.60 the mob
@@ -192,7 +192,7 @@ func (g *Panic) Tick() {
 }
 
 // playSound is the sound timer the panic, tempt and avoid goals share.
-func playSound(w World, m Mob, sound int, interval Range[float64], now uint64, next *uint64) {
+func playSound(w World, m Mob, sound int, interval Range[float32], now uint64, next *uint64) {
 	if *next >= now {
 		return
 	}

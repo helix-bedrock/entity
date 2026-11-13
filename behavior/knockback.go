@@ -7,13 +7,13 @@ const knockbackExtra = 0.5
 // Knockback is the argument block of Actor::knockback (Actor vtable +1096)
 // as aquatic_charge_attack, ram_attack and knockback_roar fill it.
 type Knockback struct {
-	Power     float64
-	Height    float64
-	HeightCap float64
+	Power     float32
+	Height    float32
+	HeightCap float32
 	// Extra is the unnamed fourth float; BDS passes 0.5.
-	Extra float64
+	Extra float32
 	// DirX and DirZ are the direction arguments, as BDS passes them.
-	DirX, DirZ float64
+	DirX, DirZ float32
 }
 
 // Knocker is a mob that can knock another entity back.
@@ -26,14 +26,14 @@ type Knocker interface {
 type MoveController interface {
 	// MoveControl reports the move control's maximum turn per tick (its
 	// +20); ok is false when the mob has none.
-	MoveControl() (maxTurn float64, ok bool)
+	MoveControl() (maxTurn float32, ok bool)
 	// SetBodyYaw sets the body rotation (MobBodyRotationComponent).
-	SetBodyYaw(yaw float64)
+	SetBodyYaw(yaw float32)
 }
 
 // faceYaw turns the mob's rotation and body towards yaw by at most limit
 // degrees, the turn step fire_at_target and ram_attack share.
-func faceYaw(m Mob, c MoveController, yaw, limit float64) float64 {
+func faceYaw(m Mob, c MoveController, yaw, limit float32) float32 {
 	_, cur := m.HeadRotation()
 	v := approachDegrees(cur, yaw, limit)
 	c.SetBodyYaw(v)

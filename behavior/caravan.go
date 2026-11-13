@@ -21,7 +21,7 @@ const minDirLen = 0.0001
 
 // FollowCaravanConfig is the JSON of minecraft:behavior.follow_caravan.
 type FollowCaravanConfig struct {
-	SpeedMultiplier float64
+	SpeedMultiplier float32
 	// EntityCount is how many mobs long the caravan may get.
 	EntityCount int32
 	// EntityTypes are the filters a leader (and everyone in front of it)
@@ -30,16 +30,16 @@ type FollowCaravanConfig struct {
 	// SearchBox is how far around the mob's box a leader is looked for.
 	SearchBox Vec3
 	// MinLeaderDist2 is the squared distance a new leader must be at least.
-	MinLeaderDist2 float64
+	MinLeaderDist2 float32
 	// CatchUpDist2 is the squared distance to the mob in front past which
 	// the mob speeds up; CatchUpFactor is the speed-up, at most
 	// MaxSpeedFactor times speed_multiplier, held CatchUpTicks ticks.
-	CatchUpDist2   float64
-	CatchUpFactor  float64
-	MaxSpeedFactor float64
+	CatchUpDist2   float32
+	CatchUpFactor  float32
+	MaxSpeedFactor float32
 	CatchUpTicks   int32
 	// FollowDist is how close the mob walks to the one in front.
-	FollowDist float64
+	FollowDist float32
 }
 
 // DefaultFollowCaravan returns the goal's BDS defaults (0xE4ADC10, numbers
@@ -58,7 +58,7 @@ type FollowCaravan struct {
 	base
 	m     Caravanner
 	cfg   FollowCaravanConfig
-	speed float64
+	speed float32
 	timer int32
 	buf   []Actor
 }
@@ -97,7 +97,7 @@ func (g *FollowCaravan) CanUse() bool {
 		Max: Vec3{X: b.Max.X + s.X, Y: b.Max.Y + s.Y, Z: b.Max.Z + s.Z},
 	})
 	defer clear(g.buf)
-	best := float64(temptFloatMaxValue)
+	best := float32(temptFloatMaxValue)
 	lead := g.nearest(&best, func(c Caravanner) bool { return c.InCaravan() })
 	if lead == nil {
 		lead = g.nearest(&best, func(c Caravanner) bool { return c.Flag(FlagLeashed) })
@@ -117,7 +117,7 @@ func (g *FollowCaravan) CanUse() bool {
 
 // nearest is the closest candidate passing ok that has no mob behind it.
 // best carries the running minimum from one pass to the next, as in BDS.
-func (g *FollowCaravan) nearest(best *float64, ok func(Caravanner) bool) Caravanner {
+func (g *FollowCaravan) nearest(best *float32, ok func(Caravanner) bool) Caravanner {
 	var out Caravanner
 	for _, a := range g.buf {
 		c, isC := a.(Caravanner)
@@ -231,7 +231,7 @@ func (g *FollowCaravan) Tick() {
 	}
 	dx, dy, dz := q.X-p.X, q.Y-p.Y, q.Z-p.Z
 	l := sqrt32(dz*dz + (dx*dx + dy*dy))
-	var ux, uy, uz float64
+	var ux, uy, uz float32
 	if l >= minDirLen {
 		ux, uy, uz = dx/l, dy/l, dz/l
 	}

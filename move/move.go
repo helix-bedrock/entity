@@ -36,13 +36,13 @@ type Control struct {
 	HasWanted bool
 	Wanted    Vec3
 	// MaxTurn is max_turn: the most the mob turns in a tick, in degrees.
-	MaxTurn float64
+	MaxTurn float32
 	// Speed is the speed modifier navigation passed with the position.
-	Speed float64
+	Speed float32
 }
 
 // SetWantedPosition makes the mob move to p at the speed modifier speed.
-func (c *Control) SetWantedPosition(p Vec3, speed float64) {
+func (c *Control) SetWantedPosition(p Vec3, speed float32) {
 	c.HasWanted, c.Wanted, c.Speed = true, p, speed
 }
 
@@ -53,14 +53,14 @@ func (c *Control) ClearWanted() { c.HasWanted = false }
 type Look struct {
 	Has                  bool
 	Pos                  Vec3
-	YawSpeed, PitchSpeed float64
+	YawSpeed, PitchSpeed float32
 	// Mode is 0 when nothing else drives the look; the swim control sets 2.
 	Mode int32
 	// HasYaw makes the look control turn to Yaw instead of Pos.
 	HasYaw bool
 	// Pitch is the look pitch the glide control sets with HasYaw.
-	Pitch float64
-	Yaw   float64
+	Pitch float32
+	Yaw   float32
 }
 
 // Body is the part of a mob the move controls read and change. The host
@@ -69,10 +69,10 @@ type Body struct {
 	Pos, Vel Vec3
 	Box      Box
 	// Width is the collision shape's width (BDS keeps it apart from the box).
-	Width float64
+	Width float32
 	// Pitch and Yaw are the mob's rotation; BodyYaw and HeadYaw its body and
 	// head rotations.
-	Pitch, Yaw, BodyYaw, HeadYaw float64
+	Pitch, Yaw, BodyYaw, HeadYaw float32
 	Flags                        Flags
 
 	OnGround, WasOnGround, WasInWater bool
@@ -81,19 +81,19 @@ type Body struct {
 	InWater bool
 
 	// MovementSpeed is the movement attribute's current value.
-	MovementSpeed float64
+	MovementSpeed float32
 	// AirSpeed is the speed a hovering mob uses (the flying speed for its
 	// state); the host works it out.
-	AirSpeed float64
+	AirSpeed float32
 	// Speed is the mob's speed setting (MovementSpeedComponent).
-	Speed float64
+	Speed float32
 	// MoveSpeed is the speed the move control last chose (Mob::mSpeed).
-	MoveSpeed float64
+	MoveSpeed float32
 	// LocalMove is the move input: strafe, up and forward.
 	LocalMove Vec3
 	// MaxAutoStep is the step height without jumping.
-	MaxAutoStep  float64
-	FallDistance float64
+	MaxAutoStep  float32
+	FallDistance float32
 
 	// Jump is the jump control, nil when the mob has none.
 	Jump *Jump
@@ -111,25 +111,25 @@ type Body struct {
 }
 
 // SetSpeed is Mob::setSpeed: the speed setting and the forward input.
-func (b *Body) SetSpeed(v float64) {
+func (b *Body) SetSpeed(v float32) {
 	b.Speed = v
 	b.LocalMove.Z = v
 }
 
 // faceYaw turns both the body and the mob to yaw.
-func (b *Body) faceYaw(yaw float64) {
+func (b *Body) faceYaw(yaw float32) {
 	b.BodyYaw = yaw
 	b.Yaw = yaw
 }
 
 const degrees = 57.295776
 
-func atan2(y, x float64) float64 { return float64(math.Atan2(float64(y), float64(x))) }
-func sqrt(v float64) float64     { return float64(math.Sqrt(float64(v))) }
-func fmod(x, y float64) float64  { return float64(math.Mod(float64(x), float64(y))) }
+func atan2(y, x float32) float32 { return float32(math.Atan2(float64(y), float64(x))) }
+func sqrt(v float32) float32     { return float32(math.Sqrt(float64(v))) }
+func fmod(x, y float32) float32  { return float32(math.Mod(float64(x), float64(y))) }
 
 // approach turns from towards to, clamped to max degrees.
-func approach(from, to, max float64) float64 {
+func approach(from, to, max float32) float32 {
 	d := fmod(to-from+180, 360)
 	if d < 0 {
 		d += 360
@@ -137,7 +137,7 @@ func approach(from, to, max float64) float64 {
 	return max32(-max, min(max, d-180)) + from
 }
 
-func max32(a, b float64) float64 {
+func max32(a, b float32) float32 {
 	if a > b {
 		return a
 	}
@@ -150,13 +150,13 @@ func boxCentre(b Box) Vec3 {
 }
 
 // avgSize is the average of a box's three sizes.
-func avgSize(b Box) float64 {
+func avgSize(b Box) float32 {
 	return ((b.Max.Y - b.Min.Y) + ((b.Max.X - b.Min.X) + (b.Max.Z - b.Min.Z))) / 3
 }
 
 // turnYaw is the yaw a walking mob turns to for a move of dx, dz: it turns
 // faster while it speeds up to newSpeed, and not at all for tiny moves.
-func turnYaw(b *Body, maxTurn, dx, dz, newSpeed float64) float64 {
+func turnYaw(b *Body, maxTurn, dx, dz, newSpeed float32) float32 {
 	w := ((b.Box.Max.Z - b.Box.Min.Z) + (b.Box.Max.X - b.Box.Min.X)) * 0.5 * 0.25
 	r := max32(w, 0.05)
 	if w > 0.25 {
@@ -181,11 +181,11 @@ func turnYaw(b *Body, maxTurn, dx, dz, newSpeed float64) float64 {
 // moveSpeed is the speed a mob walks at towards p: it slows down over the
 // last block of its path and speeds up by a tenth of speed per tick. Without
 // a path it keeps its speed.
-func moveSpeed(b *Body, p Vec3, speed float64) float64 {
+func moveSpeed(b *Body, p Vec3, speed float32) float32 {
 	if b.PathEnd == nil {
 		return b.MoveSpeed
 	}
-	var d2 float64
+	var d2 float32
 	if b.Flags.Has(FlagSwimming) || !b.OnGround {
 		c := boxCentre(b.Box)
 		d2 = (c.Z-p.Z)*(c.Z-p.Z) + ((c.X-p.X)*(c.X-p.X) + (c.Y-p.Y)*(c.Y-p.Y))
@@ -194,8 +194,8 @@ func moveSpeed(b *Body, p Vec3, speed float64) float64 {
 	}
 	cur := b.MoveSpeed
 	end := *b.PathEnd
-	var s float64
-	if floor(p.X) == float64(end.X) && floor(p.Y) == float64(end.Y) && d2 < 1 && floor(p.Z+0) == float64(end.Z) {
+	var s float32
+	if floor(p.X) == float32(end.X) && floor(p.Y) == float32(end.Y) && d2 < 1 && floor(p.Z+0) == float32(end.Z) {
 		s = max32(0.5*speed, speed-(1-d2)*speed)
 	} else {
 		s = speed
@@ -205,7 +205,7 @@ func moveSpeed(b *Body, p Vec3, speed float64) float64 {
 	}
 	if s > 0.25 && b.Pos.Y > p.Y {
 		attr := b.MovementSpeed
-		v := float64(0.25)
+		v := float32(0.25)
 		if cur > attr {
 			v = max32(attr, cur+speed*-0.1)
 		}
@@ -215,10 +215,10 @@ func moveSpeed(b *Body, p Vec3, speed float64) float64 {
 	return s
 }
 
-func floor(v float64) float64 { return float64(math.Floor(float64(v))) }
+func floor(v float32) float32 { return float32(math.Floor(float64(v))) }
 
 // damp scales the mob's velocity.
-func damp(b *Body, f float64) {
+func damp(b *Body, f float32) {
 	b.Vel.X *= f
 	b.Vel.Y *= f
 	b.Vel.Z *= f

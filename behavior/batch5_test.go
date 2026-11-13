@@ -33,8 +33,8 @@ type b5Mob struct {
 	unloaded        bool
 	charge          int8
 	shots, ranged   int
-	power           float64
-	body            float64
+	power           float32
+	body            float32
 	played          []int
 	swings, restart int
 }
@@ -53,7 +53,7 @@ func (m *b5Mob) PlayersTargetable() bool { return true }
 func (m *b5Mob) Team() int               { return 0 }
 func (m *b5Mob) Invulnerable() bool      { return false }
 func (m *b5Mob) HasHealth() bool         { return true }
-func (m *b5Mob) BodyYaw() float64        { return m.body }
+func (m *b5Mob) BodyYaw() float32        { return m.body }
 func (m *b5Mob) Swing()                  { m.swings++ }
 func (m *b5Mob) Attack(a Actor, then AttackResult) {
 	m.hits = append(m.hits, a.ID())
@@ -62,13 +62,13 @@ func (m *b5Mob) Attack(a Actor, then AttackResult) {
 	}
 }
 func (m *b5Mob) MoveWanted() (bool, bool)            { return m.wanted, true }
-func (m *b5Mob) SetMoveWanted(p Vec3, _ float64)     { m.wanted, m.wantedAt = true, p }
+func (m *b5Mob) SetMoveWanted(p Vec3, _ float32)     { m.wanted, m.wantedAt = true, p }
 func (m *b5Mob) ClearMoveWanted()                    { m.wanted = false }
 func (m *b5Mob) Eyes() Vec3                          { return Vec3{X: m.pos.X, Y: m.pos.Y + 1.5, Z: m.pos.Z} }
 func (m *b5Mob) AttachPos(int) Vec3                  { return m.Eyes() }
 func (m *b5Mob) PlaySoundAt(s int, _ Vec3)           { m.played = append(m.played, s) }
 func (m *b5Mob) PlaySound(s int)                     { m.played = append(m.played, s) }
-func (m *b5Mob) LookAt(p Vec3, _, _ float64)         { m.look, m.looked = p, m.looked+1 }
+func (m *b5Mob) LookAt(p Vec3, _, _ float32)         { m.look, m.looked = p, m.looked+1 }
 func (m *b5Mob) HasLookControl() bool                { return true }
 func (m *b5Mob) AmbientSound()                       { m.ambient++ }
 func (m *b5Mob) SwellDir() int32                     { return m.swell }
@@ -86,7 +86,7 @@ func (m *b5Mob) ChargeAmount() int8                  { return m.charge }
 func (m *b5Mob) SetChargeAmount(v int8)              { m.charge = v }
 func (m *b5Mob) Shoot()                              { m.shots++ }
 func (m *b5Mob) RestartAngry()                       { m.restart++ }
-func (m *b5Mob) RangedAttack(_ Actor, power float64) { m.ranged, m.power = m.ranged+1, power }
+func (m *b5Mob) RangedAttack(_ Actor, power float32) { m.ranged, m.power = m.ranged+1, power }
 
 func TestBoxDistance(t *testing.T) {
 	a := Box{Max: Vec3{X: 1, Y: 1, Z: 1}}
@@ -99,7 +99,7 @@ func TestBoxDistance(t *testing.T) {
 }
 
 func TestTargetWhenPushed(t *testing.T) {
-	w := newB5World(&seqRandom{floats: []float64{0.4, 0.6}})
+	w := newB5World(&seqRandom{floats: []float32{0.4, 0.6}})
 	m := newB5Mob(w, 1, Vec3{}, "minecraft:iron_golem")
 	p := newB5Mob(w, 2, Vec3{X: 1}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -189,7 +189,7 @@ func TestHoldGround(t *testing.T) {
 }
 
 func TestChargeAttack(t *testing.T) {
-	w := newB5World(&seqRandom{floats: []float64{0.1}})
+	w := newB5World(&seqRandom{floats: []float32{0.1}})
 	m := newB5Mob(w, 1, Vec3{}, "minecraft:vex")
 	p := newB5Mob(w, 2, Vec3{X: 2.5}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -213,7 +213,7 @@ func TestChargeAttack(t *testing.T) {
 }
 
 func TestDelayedAttackHitsPartWay(t *testing.T) {
-	w := newB5World(&seqRandom{floats: []float64{1}})
+	w := newB5World(&seqRandom{floats: []float32{1}})
 	m := newB5Mob(w, 1, Vec3{Y: 64}, "minecraft:ravager")
 	p := newB5Mob(w, 2, Vec3{X: 1, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -246,7 +246,7 @@ func TestDelayedAttackHitsPartWay(t *testing.T) {
 }
 
 func TestStompAttackStandsThenStomps(t *testing.T) {
-	w := newB5World(&seqRandom{floats: []float64{1}})
+	w := newB5World(&seqRandom{floats: []float32{1}})
 	m := newB5Mob(w, 1, Vec3{Y: 64}, "minecraft:polar_bear")
 	p := newB5Mob(w, 2, Vec3{X: 1.2, Y: 64}, "minecraft:player")
 	w.entities = []Actor{m, p}
@@ -409,7 +409,7 @@ func TestDefendTrusted(t *testing.T) {
 }
 
 func TestDefendVillage(t *testing.T) {
-	w := newB5World(&seqRandom{floats: []float64{0.01, 0.5}})
+	w := newB5World(&seqRandom{floats: []float32{0.01, 0.5}})
 	golem := newB5Mob(w, 1, Vec3{}, "minecraft:iron_golem")
 	zombie := newB5Mob(w, 2, Vec3{X: 3}, "minecraft:zombie")
 	player := newB5Mob(w, 3, Vec3{X: 2}, "minecraft:player")
@@ -430,13 +430,13 @@ func TestDefendVillage(t *testing.T) {
 	if g.CanUse() {
 		t.Fatal("started on a 0.5 draw above attack_chance")
 	}
-	w.r.floats = []float64{0}
+	w.r.floats = []float32{0}
 	golem.aggressor = 3
 	if g.CanUse() {
 		t.Fatal("targeted a player the village does not dislike")
 	}
 	golem.badPlayer = 3
-	w.r.floats = []float64{0}
+	w.r.floats = []float32{0}
 	if !g.CanUse() || g.candidate != 3 {
 		t.Fatalf("candidate %d, want the disliked player", g.candidate)
 	}

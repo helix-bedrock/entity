@@ -45,7 +45,7 @@ type Host interface {
 	NameTag() string
 	// NextFloat draws a float in [0, 1) from the actor's random, for
 	// randomize.
-	NextFloat() float64
+	NextFloat() float32
 	// BeforeEvent is called once an event's nodes are picked and before
 	// they run (BDS's scripting event); false cancels the event.
 	BeforeEvent(event string, ctx Tester) bool
@@ -339,7 +339,7 @@ func (in *Instance) setProperties(data json.RawMessage, ctx Tester) {
 		case kindNumber:
 			var f float64
 			_ = json.Unmarshal(raw, &f)
-			v.Number = float64(f)
+			v.Number = float32(f)
 		case kindString:
 			var s string
 			_ = json.Unmarshal(raw, &s)

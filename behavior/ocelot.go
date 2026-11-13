@@ -16,15 +16,15 @@ type Prowler interface {
 type OcelotAttackConfig struct {
 	// Cooldown is cooldown_time in ticks.
 	Cooldown         int32
-	XMaxRotation     float64 `json:"x_max_rotation"`
-	YMaxHeadRotation float64 `json:"y_max_head_rotation"`
-	MaxDistance      float64 `json:"max_distance"`
-	MaxSneakRange    float64 `json:"max_sneak_range"`
-	MaxSprintRange   float64 `json:"max_sprint_range"`
-	ReachMultiplier  float64 `json:"reach_multiplier"`
-	SneakSpeed       float64 `json:"sneak_speed_multiplier"`
-	SprintSpeed      float64 `json:"sprint_speed_multiplier"`
-	WalkSpeed        float64 `json:"walk_speed_multiplier"`
+	XMaxRotation     float32 `json:"x_max_rotation"`
+	YMaxHeadRotation float32 `json:"y_max_head_rotation"`
+	MaxDistance      float32 `json:"max_distance"`
+	MaxSneakRange    float32 `json:"max_sneak_range"`
+	MaxSprintRange   float32 `json:"max_sprint_range"`
+	ReachMultiplier  float32 `json:"reach_multiplier"`
+	SneakSpeed       float32 `json:"sneak_speed_multiplier"`
+	SprintSpeed      float32 `json:"sprint_speed_multiplier"`
+	WalkSpeed        float32 `json:"walk_speed_multiplier"`
 }
 
 // DefaultOcelotAttack returns the goal's BDS defaults.

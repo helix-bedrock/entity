@@ -3,7 +3,7 @@ package netsync
 import (
 	"math"
 
-	"github.com/go-gl/mathgl/mgl64"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Bandwidth is minecraft:conditional_bandwidth_optimization's values: how
@@ -22,9 +22,9 @@ func DefaultBandwidth() Bandwidth {
 
 // Distance is the float32 distance BDS throttles on, between the entity
 // and the viewer.
-func Distance(entity, viewer mgl64.Vec3) float32 {
+func Distance(entity, viewer mgl32.Vec3) float32 {
 	// sqrt in float64 then rounded is the correctly rounded float32 sqrt.
-	return float32(math.Sqrt(entity.Sub(viewer).LenSqr()))
+	return float32(math.Sqrt(float64(entity.Sub(viewer).LenSqr())))
 }
 
 // Score is how many ticks a viewer at dist may wait between two movement

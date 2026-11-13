@@ -13,8 +13,8 @@ type b12Rider struct {
 	*b12Mob
 	riders    []ID
 	held      Item
-	yaw       float64
-	yaws      map[ID]float64
+	yaw       float32
+	yaws      map[ID]float32
 	vel       Vec3
 	ground    bool
 	jumps     int
@@ -27,7 +27,7 @@ type b12Rider struct {
 }
 
 func newB12Rider(w World, p Vec3) *b12Rider {
-	return &b12Rider{b12Mob: newB12Mob(w, p), yaws: map[ID]float64{}, rides: map[ID]ID{}}
+	return &b12Rider{b12Mob: newB12Mob(w, p), yaws: map[ID]float32{}, rides: map[ID]ID{}}
 }
 
 func (m *b12Rider) Riders() []ID { return m.riders }
@@ -35,23 +35,23 @@ func (m *b12Rider) ControlItems() ([]string, bool) {
 	return []string{"minecraft:carrot_on_a_stick"}, true
 }
 func (m *b12Rider) HeldItem(ID) Item                    { return m.held }
-func (m *b12Rider) Yaw() float64                        { return m.yaw }
-func (m *b12Rider) YawOf(id ID) float64                 { return m.yaws[id] }
-func (m *b12Rider) SetYaw(y float64)                    { m.yaw = y }
+func (m *b12Rider) Yaw() float32                        { return m.yaw }
+func (m *b12Rider) YawOf(id ID) float32                 { return m.yaws[id] }
+func (m *b12Rider) SetYaw(y float32)                    { m.yaw = y }
 func (m *b12Rider) SetSprinting(on bool)                { m.sprint = append(m.sprint, on) }
-func (m *b12Rider) SetSpeed(float64)                    {}
+func (m *b12Rider) SetSpeed(float32)                    {}
 func (m *b12Rider) ResetMovement()                      {}
-func (m *b12Rider) Speed() float64                      { return 0.25 }
-func (m *b12Rider) RideFriction(Pos) float64            { return 0.6 }
-func (m *b12Rider) MaxAutoStep() (float64, bool)        { return 0.5625, true }
+func (m *b12Rider) Speed() float32                      { return 0.25 }
+func (m *b12Rider) RideFriction(Pos) float32            { return 0.6 }
+func (m *b12Rider) MaxAutoStep() (float32, bool)        { return 0.5625, true }
 func (m *b12Rider) WalkThrough(Pos) bool                { return false }
 func (m *b12Rider) Jump()                               { m.jumps++ }
-func (m *b12Rider) MoveRelativeSpeed() float64          { return 0.1 }
+func (m *b12Rider) MoveRelativeSpeed() float32          { return 0.1 }
 func (m *b12Rider) OnGround() bool                      { return m.ground }
 func (m *b12Rider) Velocity() Vec3                      { return m.vel }
 func (m *b12Rider) SetVelocity(v Vec3)                  { m.vel = v }
 func (m *b12Rider) Remove()                             { m.removedMe++ }
-func (m *b12Rider) SpecialMultiplier() float64          { return 0 }
+func (m *b12Rider) SpecialMultiplier() float32          { return 0 }
 func (m *b12Rider) LightningRod(Pos) (Pos, bool)        { return Pos{}, false }
 func (m *b12Rider) SpawnLightning(Vec3)                 { m.spawned = append(m.spawned, "lightning") }
 func (m *b12Rider) SetInvulnerableTime(ID, int32)       {}

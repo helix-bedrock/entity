@@ -15,16 +15,16 @@ type Swooper interface {
 
 // SwoopAttackConfig is the JSON of minecraft:behavior.swoop_attack.
 type SwoopAttackConfig struct {
-	DamageReach     float64 `json:"damage_reach"`
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	DamageReach     float32 `json:"damage_reach"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	// DelayRange is delay_range in ticks. BDS turns the span into ticks a
 	// second time when it draws a delay.
-	DelayRange Range[float64]
+	DelayRange Range[float32]
 }
 
 // DefaultSwoopAttack returns the goal's BDS defaults.
 func DefaultSwoopAttack() SwoopAttackConfig {
-	return SwoopAttackConfig{DamageReach: 0.2, SpeedMultiplier: 1, DelayRange: Range[float64]{200, 400}}
+	return SwoopAttackConfig{DamageReach: 0.2, SpeedMultiplier: 1, DelayRange: Range[float32]{200, 400}}
 }
 
 // SwoopAttack is SwoopAttackGoal: the phantom dives at its target and

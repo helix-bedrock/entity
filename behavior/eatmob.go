@@ -38,10 +38,10 @@ type MobEater interface {
 
 // EatMobConfig is the JSON of minecraft:behavior.eat_mob.
 type EatMobConfig struct {
-	RunSpeed         float64 `json:"run_speed"`
-	EatAnimationTime float64 `json:"eat_animation_time"`
-	PullInForce      float64 `json:"pull_in_force"`
-	ReachMobDistance float64 `json:"reach_mob_distance"`
+	RunSpeed         float32 `json:"run_speed"`
+	EatAnimationTime float32 `json:"eat_animation_time"`
+	PullInForce      float32 `json:"pull_in_force"`
+	ReachMobDistance float32 `json:"reach_mob_distance"`
 	// EatMobSound is the eat_mob_sound level sound event, 0 for none.
 	EatMobSound int32
 	LootTable   string `json:"loot_table"`

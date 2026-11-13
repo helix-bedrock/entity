@@ -18,9 +18,9 @@ const stateLiquidDepth = "liquid_depth"
 // RiseToLiquidLevelConfig is the JSON of
 // minecraft:behavior.rise_to_liquid_level.
 type RiseToLiquidLevelConfig struct {
-	LiquidYOffset float64 `json:"liquid_y_offset"`
-	RiseDelta     float64 `json:"rise_delta"`
-	SinkDelta     float64 `json:"sink_delta"`
+	LiquidYOffset float32 `json:"liquid_y_offset"`
+	RiseDelta     float32 `json:"rise_delta"`
+	SinkDelta     float32 `json:"sink_delta"`
 }
 
 // DefaultRiseToLiquidLevel returns the goal's BDS defaults: all zero.
@@ -70,13 +70,13 @@ func (g *RiseToLiquidLevel) Tick() {
 	b := m.Box()
 	c := boxCentre(b)
 	x, z := floorInt(c.X), floorInt(c.Z)
-	top := float64(-1)
+	top := float32(-1)
 	for y := b.Min.Y + riseScanStart; g.world.Block(Pos{X: x, Y: floorInt(y), Z: z}).Liquid; y += riseScanStep {
 		top = y
 	}
-	h := float64(1)
+	h := float32(1)
 	if d, ok := g.world.BlockState(Pos{X: x, Y: floorInt(top), Z: z}, stateLiquidDepth); ok && d < riseFullDepth {
-		h = float64(d + 1)
+		h = float32(d + 1)
 	}
 	want := top + (h/-riseDepthSteps + 1) - riseSurface - g.cfg.LiquidYOffset
 	v := m.Velocity()

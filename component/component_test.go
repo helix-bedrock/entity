@@ -34,8 +34,8 @@ func (r *testResolver) Tester(self, other behavior.Actor, block *behavior.Pos) d
 
 func (r *testResolver) HoldsItem(a behavior.Actor, items []string) bool { return len(items) > 0 }
 
-func (r *testResolver) Molang(expr string) (func(behavior.Mob) float64, bool) {
-	return func(behavior.Mob) float64 { return 0.5 }, true
+func (r *testResolver) Molang(expr string) (func(behavior.Mob) float32, bool) {
+	return func(behavior.Mob) float32 { return 0.5 }, true
 }
 
 type passTester struct{}
@@ -164,13 +164,13 @@ func TestReaders(t *testing.T) {
 		"d": ["minecraft:stone", {"name": "minecraft:dirt"}], "dmg": ["all", "fall", "bogus"],
 		"mat": "lava", "mat2": "honey", "flag": 1, "s": "sound.name"
 	}`))
-	if r := c.Range(j, "a", behavior.Range[float64]{}); r.Min != 1 || r.Max != 2 {
+	if r := c.Range(j, "a", behavior.Range[float32]{}); r.Min != 1 || r.Max != 2 {
 		t.Errorf("array range %v", r)
 	}
 	if r := c.RangeInt(j, "b", behavior.Range[int32]{}); r.Min != 3 || r.Max != 4 {
 		t.Errorf("object range %v", r)
 	}
-	if r := c.Range(j, "n", behavior.Range[float64]{}); r.Min != 5 || r.Max != 5 {
+	if r := c.Range(j, "n", behavior.Range[float32]{}); r.Min != 5 || r.Max != 5 {
 		t.Errorf("number range %v", r)
 	}
 	if v := c.Ticks(j, "t", 9); v != 30 {

@@ -11,8 +11,8 @@ import (
 // once by the engine (BDS's draw was not read). Max is 0 when the JSON has
 // none.
 type AttributeConfig struct {
-	Value behavior.Range[float64]
-	Max   float64
+	Value behavior.Range[float32]
+	Max   float32
 }
 
 // AttributeComponents are the attribute components a mob's JSON may list.
@@ -29,7 +29,7 @@ func AttributeComponents() []string {
 // AttackConfig is minecraft:attack: the melee damage (a range the engine
 // draws from) and the mob effect a hit gives.
 type AttackConfig struct {
-	Damage     behavior.Range[float64]
+	Damage     behavior.Range[float32]
 	EffectName string
 	// EffectDuration is in seconds.
 	EffectDuration, EffectAmplifier int32
@@ -43,7 +43,7 @@ func DefaultAttack() AttackConfig { return AttackConfig{EffectDuration: 1} }
 // SlotDropChance is the chance an equipment slot's item drops on death.
 type SlotDropChance struct {
 	Slot       string
-	DropChance float64
+	DropChance float32
 }
 
 // EquipmentConfig is minecraft:equipment: the loot table the engine fills
@@ -122,7 +122,7 @@ type ExperienceRewardConfig struct {
 
 // ScaleConfig is minecraft:scale. Its default of 1 was not read from BDS
 // (ScaleDefinition::buildSchema 0x14062CE00 shows none).
-type ScaleConfig struct{ Value float64 }
+type ScaleConfig struct{ Value float32 }
 
 // DefaultScale is the scale's default.
 func DefaultScale() ScaleConfig { return ScaleConfig{Value: 1} }
@@ -130,14 +130,14 @@ func DefaultScale() ScaleConfig { return ScaleConfig{Value: 1} }
 // AttackCooldownConfig is minecraft:attack_cooldown.
 type AttackCooldownConfig struct {
 	// Time is the cooldown in seconds, drawn once each time it starts.
-	Time       behavior.Range[float64]
+	Time       behavior.Range[float32]
 	OnComplete *definition.Trigger
 }
 
 // DefaultAttackCooldown is BDS's attack_cooldown (1.21.3
 // AttackCooldownDefinition::buildSchema 0x140562020: 0 to 1 seconds).
 func DefaultAttackCooldown() AttackCooldownConfig {
-	return AttackCooldownConfig{Time: behavior.Range[float64]{Min: 0, Max: 1}}
+	return AttackCooldownConfig{Time: behavior.Range[float32]{Min: 0, Max: 1}}
 }
 
 // AttackCooldown is minecraft:attack_cooldown (1.21.3

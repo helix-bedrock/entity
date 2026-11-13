@@ -30,13 +30,13 @@ type Firer interface {
 type FireAtTargetConfig struct {
 	// Filters is tested with the mob as the subject and no other entity.
 	Filters          Filter
-	AttackRange      Range[float64]
+	AttackRange      Range[float32]
 	AttackCooldown   int32
 	PreShootDelay    int32
 	PostShootDelay   int32
-	MaxHeadRotationX float64 `json:"max_head_rotation_x"`
-	MaxHeadRotationY float64 `json:"max_head_rotation_y"`
-	RangedFOV        float64 `json:"ranged_fov"`
+	MaxHeadRotationX float32 `json:"max_head_rotation_x"`
+	MaxHeadRotationY float32 `json:"max_head_rotation_y"`
+	RangedFOV        float32 `json:"ranged_fov"`
 	ProjectileDef    string  `json:"projectile_def"`
 	OwnerAnchor      int32   `json:"owner_anchor"`
 	OwnerOffset      Vec3
@@ -117,7 +117,7 @@ func (g *FireAtTarget) Tick() {
 	}
 	if turn, ok := g.m.MoveControl(); ok {
 		p, q := g.m.Pos(), t.Pos()
-		faceYaw(g.m, g.m, float64(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z)))*-degPerRad, turn)
+		faceYaw(g.m, g.m, float32(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z)))*-degPerRad, turn)
 	}
 	g.m.LookAt(lookPoint(t), g.cfg.MaxHeadRotationY, g.cfg.MaxHeadRotationX)
 	if g.fired || g.world.CurrentTick() < g.shoot {
@@ -141,7 +141,7 @@ func anchorPos(a Actor, anchor int32, off Vec3, rotate bool) Vec3 {
 	if rotate {
 		_, yaw := a.HeadRotation()
 		r := float64(yaw * -radPerDeg)
-		x = off.X*float64(math.Cos(r)) + off.Z*float64(math.Sin(r))
+		x = off.X*float32(math.Cos(r)) + off.Z*float32(math.Sin(r))
 	}
 	loc := attachFeet
 	switch anchor {
@@ -158,7 +158,7 @@ func anchorPos(a Actor, anchor int32, off Vec3, rotate bool) Vec3 {
 // inViewCone is the shot's view test (0x7267140): the angle between the
 // view vector from the eyes and the line to p is below fov degrees. BDS
 // takes the previous pitch and the yaw at partial tick 0.
-func inViewCone(m Mob, p Vec3, fov float64) bool {
+func inViewCone(m Mob, p Vec3, fov float32) bool {
 	pitch, _ := m.PrevRotation()
 	_, yaw := m.HeadRotation()
 	a := (yaw*-radPerDeg - math.Pi) * sinScale
@@ -168,5 +168,5 @@ func inViewCone(m Mob, p Vec3, fov float64) bool {
 	d := sub(p, m.AttachPos(attachEyes))
 	dir := normalize(d)
 	dot := sp*dir.Y - s*cp*dir.X - c*cp*dir.Z
-	return fov > float64(math.Acos(float64(dot)))*degPerRad
+	return fov > float32(math.Acos(float64(dot)))*degPerRad
 }

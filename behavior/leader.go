@@ -11,10 +11,10 @@ type LeaderFollower interface {
 // FollowTargetLeaderConfig is the JSON of
 // minecraft:behavior.follow_target_leader.
 type FollowTargetLeaderConfig struct {
-	SpeedMultiplier float64
-	WithinRadius    float64
+	SpeedMultiplier float32
+	WithinRadius    float32
 	// FollowDistance is how close the mob stays to its leader.
-	FollowDistance      float64
+	FollowDistance      float32
 	AlwaysLookForLeader bool
 	LeaderFilters       Filter
 	SearchCooldown      int32 // ticks
@@ -25,7 +25,7 @@ type FollowTargetLeaderConfig struct {
 	SearchBox Vec3
 	// StepFactor scales the movement speed into the length of each step
 	// toward the leader.
-	StepFactor float64
+	StepFactor float32
 }
 
 // DefaultFollowTargetLeader returns the goal's BDS defaults (0xE4AEC20,
@@ -164,12 +164,12 @@ func (g *FollowTargetLeader) step() {
 	}
 	dx, dy, dz := q.X-p.X, q.Y-p.Y, q.Z-p.Z
 	n := sqrt32(dz*dz + (dx*dx + dy*dy))
-	var ux, uz float64
+	var ux, uz float32
 	if n >= minDirLen {
 		ux, uz = dx/n, dz/n
 	}
 	k := g.m.Speed() * g.cfg.StepFactor
-	x := float64(floorInt(k*ux)) + p.X
-	z := float64(floorInt(k*uz)) + p.Z
-	g.to = Vec3{X: x, Y: float64(g.world.AboveTopSolid(floorInt(x), floorInt(z))), Z: z}
+	x := float32(floorInt(k*ux)) + p.X
+	z := float32(floorInt(k*uz)) + p.Z
+	g.to = Vec3{X: x, Y: float32(g.world.AboveTopSolid(floorInt(x), floorInt(z))), Z: z}
 }

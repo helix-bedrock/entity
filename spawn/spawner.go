@@ -35,12 +35,12 @@ var caps = [3][2][numPools]int32{
 
 // ramp is the dimension brightness ramp before its base is added: the
 // brightness of each light level.
-var ramp = [16]float64{0, 0.017543858, 0.037037037, 0.058823526, 0.083333328, 0.11111113,
+var ramp = [16]float32{0, 0.017543858, 0.037037037, 0.058823526, 0.083333328, 0.11111113,
 	0.14285712, 0.1794872, 0.22222225, 0.27272731, 0.33333334, 0.40740743, 0.50000006,
 	0.61904764, 0.77777773, 1}
 
 // moon is the moon brightness of each moon phase.
-var moon = [8]float64{1, 0.75, 0.5, 0.25, 0, 0.25, 0.5, 0.75}
+var moon = [8]float32{1, 0.75, 0.5, 0.25, 0, 0.25, 0.5, 0.75}
 
 // maxHerdTotal caps how many mobs one cluster may add.
 const maxHerdTotal = 200
@@ -279,8 +279,8 @@ func rawBrightness(w World, p path.Pos, darken uint8) int32 {
 }
 
 // brightness is BDS's getBrightness: the ramp value of the raw brightness.
-func brightness(w World, lv *Level, p path.Pos) float64 {
-	base := float64(0)
+func brightness(w World, lv *Level, p path.Pos) float32 {
+	base := float32(0)
 	if lv.Dimension == Nether {
 		base = 0.1
 	}
@@ -315,7 +315,7 @@ func (s *State) cluster(w World, lv *Level, r Rand, c *conditions) {
 		return
 	}
 	f := r.Float()
-	n := herd.Min + int32(math.Round(float64(f*f*float64(herd.Max-herd.Min))))
+	n := herd.Min + int32(math.Round(float64(f*f*float32(herd.Max-herd.Min))))
 	if n <= 0 || !s.placement(w, lv, rule, up) {
 		return
 	}
@@ -414,7 +414,7 @@ func (s *State) capOK(lv *Level, rule *Rule, si int) bool {
 
 // spawnOne is BDS's spawn of one mob of a cluster, standing on the floor.
 func (s *State) spawnOne(w World, lv *Level, r Rand, typ string, c *conditions) {
-	pos := path.Vec3{X: float64(c.pos.X) + 0.49, Y: float64(c.pos.Y + 1), Z: float64(c.pos.Z) + 0.49}
+	pos := path.Vec3{X: float32(c.pos.X) + 0.49, Y: float32(c.pos.Y + 1), Z: float32(c.pos.Z) + 0.49}
 	m := w.NewMob(typ, pos, c.surface)
 	if m == nil || !checkSpawn(w, lv, r, typ, m) {
 		return
@@ -517,17 +517,17 @@ func (s *State) placement(w World, lv *Level, rule *Rule, p path.Pos) bool {
 		}
 		limit = min(limit, edgeDistance)
 	}
-	maxDist := float64(math.MaxFloat32)
+	maxDist := float32(math.MaxFloat32)
 	if limit >= 0 {
-		maxDist = float64(limit)
+		maxDist = float32(limit)
 	}
-	pv := path.Vec3{X: float64(p.X), Y: float64(p.Y), Z: float64(p.Z)}
+	pv := path.Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	pl, ok := w.NearestPlayer(pv, maxDist)
 	if !ok {
 		return false
 	}
 	dx, dy, dz := pv.X-pl.X, pv.Y-pl.Y, pv.Z-pl.Z
-	if float64(rule.DistanceMin*rule.DistanceMin) > dx*dx+dy*dy+dz*dz {
+	if float32(rule.DistanceMin*rule.DistanceMin) > dx*dx+dy*dy+dz*dz {
 		return false
 	}
 	below := w.Block(path.Pos{X: p.X, Y: p.Y - 1, Z: p.Z})

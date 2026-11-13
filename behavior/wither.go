@@ -18,7 +18,7 @@ type Dasher interface {
 	// to delay.
 	EndDash(delay int32)
 	// ScaleAirSpeed multiplies the mob's AirSpeedComponent by f.
-	ScaleAirSpeed(f float64)
+	ScaleAirSpeed(f float32)
 }
 
 // WitherRandomAttackPosConfig is the JSON of
@@ -27,7 +27,7 @@ type Dasher interface {
 type WitherRandomAttackPosConfig struct {
 	StrollConfig
 	// AirSpeedScale multiplies the air speed while the dash runs.
-	AirSpeedScale float64
+	AirSpeedScale float32
 	// EndDelay is what the WitherBoss timer is set to when a dash ends.
 	EndDelay int32
 }
@@ -81,12 +81,12 @@ func (g *WitherRandomAttackPos) CanUse() bool {
 	// target along the flat line from itself to the spot, at its own height.
 	p := g.mob.Pos()
 	dx, dz := r.X-p.X, r.Z-p.Z
-	l := float64(math.Sqrt(float64(dx*dx + dz*dz)))
-	var nx, nz float64
+	l := float32(math.Sqrt(float64(dx*dx + dz*dz)))
+	var nx, nz float32
 	if l >= kineticMinLength {
 		nx, nz = dx/l, dz/l
 	}
-	d := float64(g.cfg.XZDist)
+	d := float32(g.cfg.XZDist)
 	g.wanted = Vec3{X: q.X + nx*d, Y: p.Y, Z: q.Z + nz*d}
 	return true
 }

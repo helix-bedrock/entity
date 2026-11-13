@@ -17,10 +17,10 @@ type Celebrator interface {
 // CelebrateConfig is the JSON of minecraft:behavior.celebrate.
 type CelebrateConfig struct {
 	// Duration and the intervals are in seconds.
-	Duration              float64        `json:"duration"`
+	Duration              float32        `json:"duration"`
 	CelebrationSound      int            `json:"celebration_sound"`
-	SoundInterval         Range[float64] `json:"sound_interval"`
-	JumpInterval          Range[float64] `json:"jump_interval"`
+	SoundInterval         Range[float32] `json:"sound_interval"`
+	JumpInterval          Range[float32] `json:"jump_interval"`
 	OnCelebrationEndEvent []string       `json:"on_celebration_end_event"`
 }
 
@@ -30,7 +30,7 @@ func DefaultCelebrate() CelebrateConfig {
 }
 
 // intervalTicks is a random time in the range, in ticks.
-func intervalTicks(r Random, s Range[float64]) int32 {
+func intervalTicks(r Random, s Range[float32]) int32 {
 	return int32(((s.Max-s.Min)*r.NextFloat() + s.Min) * ticksPerSecond)
 }
 
@@ -107,15 +107,15 @@ type FireworkLauncher interface {
 // CelebrateSurviveConfig is the JSON of minecraft:behavior.celebrate_survive.
 type CelebrateSurviveConfig struct {
 	// Duration and FireworksInterval are in seconds.
-	Duration              float64        `json:"duration"`
-	FireworksInterval     Range[float64] `json:"fireworks_interval"`
+	Duration              float32        `json:"duration"`
+	FireworksInterval     Range[float32] `json:"fireworks_interval"`
 	OnCelebrationEndEvent []string       `json:"on_celebration_end_event"`
 }
 
 // DefaultCelebrateSurvive returns the goal's BDS defaults (TypeSchema
 // 0xE0F2DD0).
 func DefaultCelebrateSurvive() CelebrateSurviveConfig {
-	return CelebrateSurviveConfig{Duration: 30, FireworksInterval: Range[float64]{Min: 10, Max: 20}}
+	return CelebrateSurviveConfig{Duration: 30, FireworksInterval: Range[float32]{Min: 10, Max: 20}}
 }
 
 // CelebrateSurvive is VillagerCelebrationGoal: villagers set off fireworks

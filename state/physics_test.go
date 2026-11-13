@@ -12,11 +12,11 @@ import (
 
 type pushMob struct {
 	*leashMob
-	yaw  float64
-	half float64
+	yaw  float32
+	half float32
 }
 
-func (m *pushMob) BodyYaw() float64 { return m.yaw }
+func (m *pushMob) BodyYaw() float32 { return m.yaw }
 func (m *pushMob) Box() behavior.Box {
 	return behavior.Box{
 		Min: behavior.Vec3{X: m.pos.X - m.half, Y: m.pos.Y, Z: m.pos.Z - m.half},
@@ -24,7 +24,7 @@ func (m *pushMob) Box() behavior.Box {
 	}
 }
 
-func newPushMob(id behavior.ID, x float64) *pushMob {
+func newPushMob(id behavior.ID, x float32) *pushMob {
 	m := &pushMob{leashMob: newLeashMob(id)}
 	m.pos = behavior.Vec3{X: x}
 	return m
@@ -32,7 +32,7 @@ func newPushMob(id behavior.ID, x float64) *pushMob {
 
 type pushWorld struct {
 	comps      map[behavior.ID]*PushableByEntity
-	through    float64
+	through    float32
 	controlled behavior.ID
 	prev       behavior.ID
 	cleared    bool
@@ -44,7 +44,7 @@ type pushWorld struct {
 }
 
 func (w *pushWorld) PushableByEntity(a behavior.Actor) *PushableByEntity { return w.comps[a.ID()] }
-func (w *pushWorld) PushThrough(behavior.Actor) float64                  { return w.through }
+func (w *pushWorld) PushThrough(behavior.Actor) float32                  { return w.through }
 func (w *pushWorld) SameVehicle(_, _ behavior.Actor) bool                { return false }
 func (w *pushWorld) PrevVehicle(a behavior.Actor) behavior.ID {
 	if a.ID() == 1 {
@@ -69,11 +69,11 @@ func (w *pushWorld) Push(a, _ behavior.Actor, v behavior.Vec3) {
 	w.pushes[a.ID()] = behavior.Vec3{X: p.X + v.X, Y: p.Y + v.Y, Z: p.Z + v.Z}
 }
 
-func near(a, b float64) bool { return math.Abs(float64(a-b)) < 1e-6 }
+func near(a, b float32) bool { return math.Abs(float64(a-b)) < 1e-6 }
 
 // pushSetup has mob 1 at x 0 (the pusher, default component) next to mob
 // 2 at x with component c.
-func pushSetup(x float64, c *PushableByEntity) (*Env, *pushWorld, *pushMob, *pushMob) {
+func pushSetup(x float32, c *PushableByEntity) (*Env, *pushWorld, *pushMob, *pushMob) {
 	w := &world{tick: 100}
 	self, other := newPushMob(1, 0), newPushMob(2, x)
 	env, _ := leashEnv(self.leashMob, w)
@@ -87,7 +87,7 @@ func pushSetup(x float64, c *PushableByEntity) (*Env, *pushWorld, *pushMob, *pus
 	return env, pw, self, other
 }
 
-func pushPair(x float64, c *PushableByEntity) *pushWorld {
+func pushPair(x float32, c *PushableByEntity) *pushWorld {
 	env, pw, _, _ := pushSetup(x, c)
 	PushActors(env, pw.comps[1], pw, nil)
 	return pw
@@ -102,7 +102,7 @@ func preset(p PushPreset) *PushableByEntity {
 func TestPushModes(t *testing.T) {
 	pw := pushPair(0.5, NewPushableByEntity(DefaultPushableByEntity()))
 	// default: 0.5 / sqrt(0.5) * min(1/sqrt(0.5), 1) * 0.05 away from each other.
-	want := float64(0.5 / math.Sqrt(0.5) * 0.05)
+	want := float32(0.5 / math.Sqrt(0.5) * 0.05)
 	if !near(pw.pushes[2].X, want) || !near(pw.pushes[1].X, -want) {
 		t.Fatalf("default pushes %v", pw.pushes)
 	}
@@ -230,9 +230,9 @@ func TestPushActorsSkips(t *testing.T) {
 	}
 }
 
-type liquids struct{ top float64 }
+type liquids struct{ top float32 }
 
-func (l liquids) LiquidHeight(behavior.Pos) float64 { return l.top }
+func (l liquids) LiquidHeight(behavior.Pos) float32 { return l.top }
 
 func buoyantSetup(c BuoyantConfig) (*Env, *world, *leashMob, *Buoyant) {
 	w := &world{r: random{f: 0.5}}
@@ -252,7 +252,7 @@ func TestBuoyant(t *testing.T) {
 	m.pos = behavior.Vec3{Y: 10.3}
 	b.Tick(env, liquids{top: 11})
 	// gravity (0 - 0.04) * 0.98, then min((0.73 - 0.1) * 0.15, v*0.7 + 0.05).
-	if !near(m.vel.Y, -0.0392*0.7+0.05) || !near(float64(b.Timer()), 0.05) || b.AutoStep() {
+	if !near(m.vel.Y, -0.0392*0.7+0.05) || !near(float32(b.Timer()), 0.05) || b.AutoStep() {
 		t.Fatalf("float vel %v timer %v", m.vel, b.Timer())
 	}
 
@@ -272,7 +272,7 @@ func TestBuoyant(t *testing.T) {
 	m.pos, m.vel = behavior.Vec3{Y: 20}, behavior.Vec3{}
 	w.r.f = 0.01
 	b.Tick(env, liquids{top: 11})
-	if !near(m.vel.Y, -0.0392) || !near(float64(b.Timer()), 0.05*3+0.5) {
+	if !near(m.vel.Y, -0.0392) || !near(float32(b.Timer()), 0.05*3+0.5) {
 		t.Fatalf("out of water vel %v timer %v", m.vel, b.Timer())
 	}
 
@@ -291,8 +291,8 @@ func TestBuoyantBobbingAndLeash(t *testing.T) {
 	env, _, m, b := buoyantSetup(c)
 	m.pos = behavior.Vec3{Y: 10.3}
 	b.Tick(env, liquids{top: 11})
-	wave := (float64(math.Sin(c.BobFrequency)) + 1.2) * 0.5
-	want := min((float64(0.73)-wave-0.1)*0.15, float64(-0.0392*0.7+0.05))
+	wave := (float32(math.Sin(c.BobFrequency)) + 1.2) * 0.5
+	want := min((float32(0.73)-wave-0.1)*0.15, float32(-0.0392*0.7+0.05))
 	if b.Timer() != 1 || !near(m.vel.Y, want) || !b.AutoStep() {
 		t.Fatalf("bobbing timer %v vel %v want %v autostep %v", b.Timer(), m.vel, want, b.AutoStep())
 	}
@@ -315,7 +315,7 @@ func TestBuoyantBobbingAndLeash(t *testing.T) {
 	m.flags[FlagLeashed] = false
 	m.vel = behavior.Vec3{Y: 1}
 	b.Tick(env, liquids{top: 11})
-	rise := ((1-(float64(10.95)-10))*0.9 + 0.1 - 0.1) * 0.15
+	rise := ((1-(float32(10.95)-10))*0.9 + 0.1 - 0.1) * 0.15
 	if !near(m.vel.Y, rise) {
 		t.Errorf("unleashed rise %v want %v", m.vel, rise)
 	}

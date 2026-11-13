@@ -31,7 +31,7 @@ type MountSeeker interface {
 	// later; complete is the path's status 2.
 	PathToActor(a Actor) (ok, complete bool)
 	// FollowPath walks the path PathToActor made, at the speed.
-	FollowPath(speed float64)
+	FollowPath(speed float32)
 	// EntitiesOfType appends the entities of the BDS actor type whose boxes
 	// touch b to dst, excluding self.
 	EntitiesOfType(dst []Actor, actorType int, self ID, b Box) []Actor
@@ -39,13 +39,13 @@ type MountSeeker interface {
 
 // FindMountConfig is the JSON of minecraft:behavior.find_mount.
 type FindMountConfig struct {
-	WithinRadius float64 `json:"within_radius"`
+	WithinRadius float32 `json:"within_radius"`
 	// StartDelay is in ticks.
 	StartDelay   int32 `json:"start_delay"`
 	AvoidWater   bool  `json:"avoid_water"`
 	TargetNeeded bool  `json:"target_needed"`
 	// MountDistance below 0 uses the two widths plus two.
-	MountDistance     float64 `json:"mount_distance"`
+	MountDistance     float32 `json:"mount_distance"`
 	MaxFailedAttempts int32   `json:"max_failed_attempts"`
 }
 
@@ -93,7 +93,7 @@ func (g *FindMount) CanUse() bool {
 	b := m.Box()
 	area := Box{Min: Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}, Max: Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}}
 	g.near = m.EntitiesOfType(g.near[:0], actorTypeMob, m.ID(), area)
-	best := float64(-1)
+	best := float32(-1)
 	g.mount = NoID
 	for _, c := range g.near {
 		if c.ID() == m.ID() || !c.Alive() || !m.AcceptsRider(c.ID()) || m.Sleeping(c.ID()) {
@@ -127,7 +127,7 @@ func (g *FindMount) CanContinueToUse() bool {
 }
 
 // reach2 is the squared distance at which the mob gets on.
-func (g *FindMount) reach2(t Actor) float64 {
+func (g *FindMount) reach2(t Actor) float32 {
 	if g.cfg.MountDistance >= 0 {
 		return g.cfg.MountDistance
 	}
@@ -136,7 +136,7 @@ func (g *FindMount) reach2(t Actor) float64 {
 	return d * d
 }
 
-func boxWidth(b Box) float64 { return b.Max.X - b.Min.X }
+func boxWidth(b Box) float32 { return b.Max.X - b.Min.X }
 
 // Start implements goal.Goal (0x573AF90): a far mount needs a complete
 // path, or the goal ends at once and backs off.

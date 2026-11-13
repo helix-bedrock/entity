@@ -34,8 +34,8 @@ const MaterialAny = materialAny
 
 // MoveToConfig is the JSON the move-to-block goals share.
 type MoveToConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
-	GoalRadius      float64 `json:"goal_radius"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
+	GoalRadius      float32 `json:"goal_radius"`
 	// SearchCount is how many random spots move_to_land tries; 0 or less
 	// uses the ring search. The liquid goals read it but do not use it.
 	SearchCount  int32 `json:"search_count"`
@@ -65,7 +65,7 @@ type moveToHooks interface {
 type moveTo struct {
 	base
 	cfg      MoveToConfig
-	radius2  float64
+	radius2  float32
 	interval int32
 	hooks    moveToHooks
 	// tries counts ticks spent walking, stay ticks spent at the target.
@@ -147,7 +147,7 @@ func (g *moveTo) targetPos() Vec3 {
 		}
 		return g.aim
 	}
-	return Vec3{X: float64(g.target.X) + g.offset.X, Y: float64(g.target.Y) + g.offset.Y, Z: float64(g.target.Z) + g.offset.Z}
+	return Vec3{X: float32(g.target.X) + g.offset.X, Y: float32(g.target.Y) + g.offset.Y, Z: float32(g.target.Z) + g.offset.Z}
 }
 
 // moveToBlock is the base moveMobToBlock.
@@ -164,7 +164,7 @@ func (g *moveTo) reachable(p Pos) bool {
 	if n == nil {
 		return false
 	}
-	at := Vec3{X: float64(p.X) + g.offset.X, Y: float64(p.Y) + g.offset.Y, Z: float64(p.Z) + g.offset.Z}
+	at := Vec3{X: float32(p.X) + g.offset.X, Y: float32(p.Y) + g.offset.Y, Z: float32(p.Z) + g.offset.Z}
 	end, ok := n.PathToPoint(at)
 	return ok && g.radius2 >= dist2(vecOf(end), at)
 }
@@ -223,7 +223,7 @@ func (g *moveTo) stuck() bool {
 }
 
 // vecOf is the corner of a block as a position.
-func vecOf(p Pos) Vec3 { return Vec3{X: float64(p.X), Y: float64(p.Y), Z: float64(p.Z)} }
+func vecOf(p Pos) Vec3 { return Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)} }
 
 // MoveToLiquidConfig is the JSON of move_to_water, move_to_lava and
 // move_to_liquid.
@@ -343,7 +343,7 @@ const (
 
 // moveToBlock is the goal's moveMobToBlock (0x52788E0).
 func (g *MoveToLand) moveToBlock() {
-	c := Vec3{X: float64(g.target.X) + landAimCentre, Y: float64(g.target.Y) + 1, Z: float64(g.target.Z) + landAimCentre}
+	c := Vec3{X: float32(g.target.X) + landAimCentre, Y: float32(g.target.Y) + 1, Z: float32(g.target.Z) + landAimCentre}
 	d := sub(c, g.mob.Pos())
 	d = scale(normalize(d), landAimPast)
 	if n := g.mob.Nav(); n != nil {
@@ -379,7 +379,7 @@ func (g *moveTo) findBlock() bool {
 					if !g.hooks.valid(c) {
 						continue
 					}
-					d := float64(blockDist2(mp, c))
+					d := float32(blockDist2(mp, c))
 					if moveToFar > d && g.hooks.reachable(c) {
 						g.target, found = c, true
 						if d <= g.radius2 {
@@ -403,7 +403,7 @@ func (g *moveTo) findRandom(mp Pos) bool {
 			continue
 		}
 		c := blockOf(Vec3{X: p.X, Y: p.Y - 1, Z: p.Z})
-		if g.hooks.valid(c) && moveToFar > float64(blockDist2(mp, c)) && g.hooks.reachable(c) {
+		if g.hooks.valid(c) && moveToFar > float32(blockDist2(mp, c)) && g.hooks.reachable(c) {
 			g.target, found = c, true
 		}
 	}

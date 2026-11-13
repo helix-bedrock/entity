@@ -68,7 +68,7 @@ func (m *b9Mob) UseDuration(it Item) int32                 { return m.durations[
 func (m *b9Mob) ActorEvent(id, _ int32)                    { m.actorEv = append(m.actorEv, id) }
 func (m *b9Mob) RemoveAllEffects()                         { m.cleared++ }
 func (m *b9Mob) DrinkPotion(aux int16)                     { m.potions = append(m.potions, aux) }
-func (m *b9Mob) SpeedModifier(on bool, _ float64)          { m.speedOn = append(m.speedOn, on) }
+func (m *b9Mob) SpeedModifier(on bool, _ float32)          { m.speedOn = append(m.speedOn, on) }
 func (m *b9Mob) Food(it Item) bool                         { return m.food[it.Name] }
 func (m *b9Mob) EatCounter() int32                         { return m.eat }
 func (m *b9Mob) SetEatCounter(c int32)                     { m.eat = c }
@@ -173,7 +173,7 @@ func TestDrinkMilkClearsEffects(t *testing.T) {
 }
 
 func TestDrinkPotionEverySixthCall(t *testing.T) {
-	w := newB8World(&seqRandom{floats: []float64{0.9, 0.1}})
+	w := newB8World(&seqRandom{floats: []float32{0.9, 0.1}})
 	m := newB9Mob(w, 1, Vec3{Y: 64}, "minecraft:witch")
 	m.durations[itemPotion] = 32
 	g := NewDrinkPotion(w, m, DrinkPotionConfig{Potions: []Potion{{ID: 5, Chance: 0.5}, {ID: 19, Chance: 0.5}}})
@@ -314,11 +314,11 @@ func TestEquipItemStacksOrDrops(t *testing.T) {
 }
 
 func TestAdmireItemHoldsItUp(t *testing.T) {
-	w := newB8World(&seqRandom{floats: []float64{0.5}})
+	w := newB8World(&seqRandom{floats: []float32{0.5}})
 	m := newB9Mob(w, 1, Vec3{Y: 64}, "minecraft:piglin")
 	m.admiring, m.admireItem, m.admireEnd = true, Item{Name: "minecraft:gold_ingot", Count: 1}, 100
 	m.slots[SlotOffhand] = Item{Name: "minecraft:torch", Count: 1}
-	g := NewAdmireItem(w, m, AdmireItemConfig{Sound: 7, SoundInterval: Range[float64]{Min: 2, Max: 4}})
+	g := NewAdmireItem(w, m, AdmireItemConfig{Sound: 7, SoundInterval: Range[float32]{Min: 2, Max: 4}})
 	if !g.CanUse() {
 		t.Fatal("did not admire")
 	}

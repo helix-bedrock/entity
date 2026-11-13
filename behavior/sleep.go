@@ -13,9 +13,9 @@ type Sleeper interface {
 	SetSleeping(on bool)
 	// SetSleepCollider clears the movement interpolation and sets the
 	// collision box (0xB2D5FC0).
-	SetSleepCollider(width, height float64)
+	SetSleepCollider(width, height float32)
 	// SetSleepYaw sets the body, head and look yaw while lying down.
-	SetSleepYaw(yaw float64)
+	SetSleepYaw(yaw float32)
 	// HealOnWake heals the missing health (0xB303CA0) unless the mob may
 	// not (Actor +761).
 	HealOnWake()
@@ -29,24 +29,24 @@ type Sleeper interface {
 // geometry BDS writes into the goal.
 type SleepConfig struct {
 	MoveToPOIConfig
-	SleepColliderHeight float64 `json:"sleep_collider_height"`
-	SleepColliderWidth  float64 `json:"sleep_collider_width"`
-	SleepYOffset        float64 `json:"sleep_y_offset"`
+	SleepColliderHeight float32 `json:"sleep_collider_height"`
+	SleepColliderWidth  float32 `json:"sleep_collider_width"`
+	SleepYOffset        float32 `json:"sleep_y_offset"`
 	// CooldownTime is counted in ticks, the way BDS copies it.
-	CooldownTime        float64 `json:"cooldown_time"`
+	CooldownTime        float32 `json:"cooldown_time"`
 	CanSleepWhileRiding bool    `json:"can_sleep_while_riding"`
 	// DirYaw and DirOffset are the yaw and the x, z spot in the bed block
 	// for each bed direction.
-	DirYaw    [4]float64    `json:"-"`
-	DirOffset [4][2]float64 `json:"-"`
+	DirYaw    [4]float32    `json:"-"`
+	DirOffset [4][2]float32 `json:"-"`
 }
 
 // DefaultSleep returns the goal's BDS defaults (TypeSchema 0xDF84F60; the
 // bed table from the goal 0x592D090).
 func DefaultSleep() SleepConfig {
 	return SleepConfig{MoveToPOIConfig: DefaultMoveToPOI(), SleepColliderHeight: 1, SleepColliderWidth: 1,
-		DirYaw:    [4]float64{180, 270, 0, 90},
-		DirOffset: [4][2]float64{{0.5, -0.125}, {1.125, 0.5}, {0.5, 1.125}, {-0.125, 0.5}}}
+		DirYaw:    [4]float32{180, 270, 0, 90},
+		DirOffset: [4][2]float32{{0.5, -0.125}, {1.125, 0.5}, {0.5, 1.125}, {-0.125, 0.5}}}
 }
 
 // Sleep is SleepGoal: a villager walks to its bed at night and lies in it.
@@ -58,7 +58,7 @@ type Sleep struct {
 	// spot and yaw are where and how the mob lies; laidFrom is where it
 	// stood when it lay down.
 	spot, laidFrom Vec3
-	yaw            float64
+	yaw            float32
 	// resting and rest are +336 and +328: the cooldown after waking.
 	resting bool
 	rest    int64
@@ -88,7 +88,7 @@ func (g *Sleep) CanUse() bool {
 	}
 	if g.resting {
 		g.rest++
-		if float64(g.rest) <= g.cfg.CooldownTime {
+		if float32(g.rest) <= g.cfg.CooldownTime {
 			return false
 		}
 		g.resting = false
@@ -98,11 +98,11 @@ func (g *Sleep) CanUse() bool {
 	if !ok {
 		return false
 	}
-	off, yaw := [2]float64{0.5, 0.5}, float64(0)
+	off, yaw := [2]float32{0.5, 0.5}, float32(0)
 	if dir >= 0 && int(dir) < len(g.cfg.DirOffset) {
 		off, yaw = g.cfg.DirOffset[dir], g.cfg.DirYaw[dir]
 	}
-	g.spot = Vec3{X: float64(g.bed.X) + off[0], Y: float64(g.bed.Y) + g.cfg.SleepYOffset, Z: float64(g.bed.Z) + off[1]}
+	g.spot = Vec3{X: float32(g.bed.X) + off[0], Y: float32(g.bed.Y) + g.cfg.SleepYOffset, Z: float32(g.bed.Z) + off[1]}
 	g.yaw = yaw
 	return true
 }
@@ -132,7 +132,7 @@ func (g *Sleep) Stop() {
 		if p, ok := m.StandUpSpot(g.bed, g.laidFrom); ok {
 			at = p
 		}
-		m.Teleport(Vec3{X: float64(at.X) + 0.5, Y: float64(at.Y), Z: float64(at.Z) + 0.5})
+		m.Teleport(Vec3{X: float32(at.X) + 0.5, Y: float32(at.Y), Z: float32(at.Z) + 0.5})
 		m.SetVelocity(Vec3{})
 		g.resting = true
 		m.SetSleeping(false)

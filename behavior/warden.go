@@ -66,7 +66,7 @@ type Warden interface {
 // distance.
 type sniffTarget struct {
 	a  Actor
-	d2 float64
+	d2 float32
 }
 
 // suspectFinder is the shared search of sniff (0xBDCC790): the nearest
@@ -77,7 +77,7 @@ type suspectFinder struct {
 }
 
 // nearest returns the nearest valid player, else the nearest valid mob.
-func (f *suspectFinder) nearest(m Warden, r float64) Actor {
+func (f *suspectFinder) nearest(m Warden, r float32) Actor {
 	for _, t := range [...]int{actorTypePlayer, actorTypeMob} {
 		if a := f.nearestOf(m, t, r); a != nil {
 			return a
@@ -88,7 +88,7 @@ func (f *suspectFinder) nearest(m Warden, r float64) Actor {
 
 // nearestOf is 0xBDCCD20 on top of 0xB30BE90: entities sorted by squared
 // distance from the mob, then the invalid suspects dropped.
-func (f *suspectFinder) nearestOf(m Warden, actorType int, r float64) Actor {
+func (f *suspectFinder) nearestOf(m Warden, actorType int, r float32) Actor {
 	b := m.Box()
 	box := sortedBox(sub(b.Min, Vec3{X: r, Y: r, Z: r}), add(b.Max, Vec3{X: r, Y: r, Z: r}))
 	f.near = m.EntitiesOfType(f.near[:0], actorType, m.ID(), box)
@@ -108,7 +108,7 @@ func (f *suspectFinder) nearestOf(m Warden, actorType int, r float64) Actor {
 
 // withinBox is 0xB2E2660: the other entity is closer than h on the flat
 // and closer than v up or down.
-func withinBox(a, b Vec3, h, v float64) bool {
+func withinBox(a, b Vec3, h, v float32) bool {
 	dx, dz := float64(b.X-a.X), float64(b.Z-a.Z)
 	dy := b.Y - a.Y
 	return dx*dx+dz*dz < float64(h*h) && dy*dy < v*v
@@ -355,10 +355,10 @@ func (g *Roar) Tick() {
 // ticks; the cooldown is in seconds, drawn each time.
 type SniffConfig struct {
 	Duration                  int32
-	SniffingRadius            float64 `json:"sniffing_radius"`
-	SuspicionRadiusHorizontal float64 `json:"suspicion_radius_horizontal"`
-	SuspicionRadiusVertical   float64 `json:"suspicion_radius_vertical"`
-	Cooldown                  Range[float64]
+	SniffingRadius            float32 `json:"sniffing_radius"`
+	SuspicionRadiusHorizontal float32 `json:"suspicion_radius_horizontal"`
+	SuspicionRadiusVertical   float32 `json:"suspicion_radius_vertical"`
+	Cooldown                  Range[float32]
 }
 
 // DefaultSniff returns the goal's BDS defaults: duration 1 s, radius 5,
@@ -366,7 +366,7 @@ type SniffConfig struct {
 func DefaultSniff() SniffConfig {
 	return SniffConfig{
 		Duration: 20, SniffingRadius: 5, SuspicionRadiusHorizontal: 3, SuspicionRadiusVertical: 3,
-		Cooldown: Range[float64]{Min: 3, Max: 10},
+		Cooldown: Range[float32]{Min: 3, Max: 10},
 	}
 }
 
@@ -423,8 +423,8 @@ func (g *Sniff) Tick() {}
 // InvestigateConfig is the JSON of
 // minecraft:behavior.investigate_suspicious_location.
 type InvestigateConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
-	GoalRadius      float64 `json:"goal_radius"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
+	GoalRadius      float32 `json:"goal_radius"`
 }
 
 // DefaultInvestigate returns the goal's BDS defaults.
@@ -438,7 +438,7 @@ type Investigate struct {
 	base
 	m       Warden
 	cfg     InvestigateConfig
-	radius2 float64
+	radius2 float32
 	at      Vec3
 	end     Pos
 	failed  bool
@@ -451,8 +451,8 @@ func NewInvestigate(w World, m Warden, c InvestigateConfig) *Investigate {
 }
 
 // centre2 is the squared distance from the mob to the middle of block p.
-func (g *Investigate) centre2(p Pos) float64 {
-	return dist2(Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}, g.m.Pos())
+func (g *Investigate) centre2(p Pos) float32 {
+	return dist2(Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}, g.m.Pos())
 }
 
 // CanUse implements goal.Goal (0xBDFC820): a suspicious location further
@@ -465,7 +465,7 @@ func (g *Investigate) CanUse() bool {
 	if !ok || g.centre2(p) <= g.radius2 {
 		return false
 	}
-	g.at = Vec3{X: float64(p.X), Y: float64(p.Y), Z: float64(p.Z)}
+	g.at = Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	return true
 }
 
@@ -516,7 +516,7 @@ func (g *Investigate) Tick() {
 	switch {
 	case g.centre2(g.end) <= g.radius2:
 		g.reached = true
-	case n == nil || !n.MoveTo(Vec3{X: float64(g.end.X), Y: float64(g.end.Y), Z: float64(g.end.Z)}, g.cfg.SpeedMultiplier):
+	case n == nil || !n.MoveTo(Vec3{X: float32(g.end.X), Y: float32(g.end.Y), Z: float32(g.end.Z)}, g.cfg.SpeedMultiplier):
 		g.failed = true
 	}
 }

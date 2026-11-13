@@ -31,7 +31,7 @@ func isWaterAt(w path.World, p path.Pos) bool {
 
 // canLeap reports whether the water surface ahead, five blocks in steps of
 // (fx, fz), has water with air above it all the way.
-func canLeap(w WaterWorld, b *Body, fx, fz float64) bool {
+func canLeap(w WaterWorld, b *Body, fx, fz float32) bool {
 	p := path.Pos{X: floorInt(b.Pos.X), Y: floorInt(b.Pos.Y), Z: floorInt(b.Pos.Z)}
 	top := w.MaxHeight()
 	if p.Y < top {
@@ -61,7 +61,7 @@ func canLeap(w WaterWorld, b *Body, fx, fz float64) bool {
 }
 
 // unitSign is BDS's table pick: 1 when neg is set, -1 otherwise.
-func unitSign(pos bool) float64 {
+func unitSign(pos bool) float32 {
 	if pos {
 		return 1
 	}
@@ -71,7 +71,7 @@ func unitSign(pos bool) float64 {
 // DolphinMove is minecraft:movement.dolphin: swimming that pitches with the
 // path, and leaps out of the water when the breach goal asks.
 // stopNav stops the mob's navigation while it leaps.
-func DolphinMove(w WaterWorld, b *Body, c *Control, d *Dolphin, underwaterSpeed float64, stopNav func()) {
+func DolphinMove(w WaterWorld, b *Body, c *Control, d *Dolphin, underwaterSpeed float32, stopNav func()) {
 	if d.Breaching {
 		if stopNav != nil {
 			stopNav()
@@ -103,14 +103,14 @@ func DolphinMove(w WaterWorld, b *Body, c *Control, d *Dolphin, underwaterSpeed 
 		b.Vel.Y = 0
 		b.jump()
 		r := float64(b.Yaw * 0.017453292)
-		cy, sy := float64(math.Cos(r)), float64(math.Sin(r))
-		var fx, fz float64
+		cy, sy := float32(math.Cos(r)), float32(math.Sin(r))
+		var fx, fz float32
 		if abs32(cy) <= abs32(sy) {
 			fx = unitSign(sy < 0)
 		} else {
 			fz = unitSign(cy > 0)
 		}
-		dirs := [4][2]float64{{fx, fz}, {fz, fx}, {-fz, -fx}, {-fx, -fz}}
+		dirs := [4][2]float32{{fx, fz}, {fz, fx}, {-fz, -fx}, {-fx, -fz}}
 		for _, dir := range dirs {
 			if canLeap(w, b, dir[0], dir[1]) {
 				b.Vel.X += dir[0] * 0.4
@@ -161,6 +161,6 @@ func DolphinMove(w WaterWorld, b *Body, c *Control, d *Dolphin, underwaterSpeed 
 		l.Yaw = b.Yaw
 		l.YawSpeed, l.PitchSpeed = 10, 5
 	}
-	b.LocalMove.Y = -float64(math.Sin(float64(up*0.017453292))) * s
-	b.LocalMove.Z = float64(math.Cos(float64(b.Pitch*0.017453292))) * s
+	b.LocalMove.Y = -float32(math.Sin(float64(up*0.017453292))) * s
+	b.LocalMove.Z = float32(math.Cos(float64(b.Pitch*0.017453292))) * s
 }

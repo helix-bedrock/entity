@@ -8,9 +8,9 @@ import (
 // SubsensorConfig is one entry of minecraft:entity_sensor's subsensors.
 type SubsensorConfig struct {
 	// Range is the horizontal and vertical half size of the box.
-	Range [2]float64
+	Range [2]float32
 	// YOffset moves the box up.
-	YOffset float64
+	YOffset float32
 	// RequireAll fires only when every entity in the box passes the
 	// filters.
 	RequireAll bool
@@ -19,7 +19,7 @@ type SubsensorConfig struct {
 	MinCount, MaxCount int32
 	// Cooldown is the time between checks in seconds; below 0 checks
 	// every tick.
-	Cooldown float64
+	Cooldown float32
 	// Event is the event fired on the mob.
 	Event string
 	// Filters are event_filters, with the sensed entity as other.
@@ -29,7 +29,7 @@ type SubsensorConfig struct {
 // DefaultSubsensor is BDS's subsensor: range 10 by 10, at least one
 // entity, no maximum, cooldown -1 (1.26.60 schema 0x724B1D0).
 func DefaultSubsensor() SubsensorConfig {
-	return SubsensorConfig{Range: [2]float64{10, 10}, MinCount: 1, MaxCount: -1, Cooldown: -1}
+	return SubsensorConfig{Range: [2]float32{10, 10}, MinCount: 1, MaxCount: -1, Cooldown: -1}
 }
 
 // EntitySensorConfig is minecraft:entity_sensor.

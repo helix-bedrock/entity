@@ -70,10 +70,10 @@ func (c PhysicsConfig) Apply(m behavior.Mob) {
 // CollisionBoxConfig is minecraft:collision_box (1.21.3
 // CollisionBoxDefinition::setWidth 0x14056F1F0, setHeight 0x14056EC00).
 type CollisionBoxConfig struct {
-	Width, Height float64
+	Width, Height float32
 	// MinSize is the smallest width BDS keeps; a smaller width is raised
 	// to it and a smaller height replaced by it.
-	MinSize float64
+	MinSize float32
 }
 
 // DefaultCollisionBox is a 1 by 1 box; the BDS default was not read.
@@ -82,7 +82,7 @@ func DefaultCollisionBox() CollisionBoxConfig {
 }
 
 // Size returns the width and height with BDS's minimum applied.
-func (c CollisionBoxConfig) Size() (w, h float64) {
+func (c CollisionBoxConfig) Size() (w, h float32) {
 	w, h = max(c.Width, c.MinSize), c.Height
 	if h < c.MinSize {
 		h = c.MinSize
@@ -92,7 +92,7 @@ func (c CollisionBoxConfig) Size() (w, h float64) {
 
 // HitBox is one box of minecraft:custom_hit_test, around Pivot.
 type HitBox struct {
-	Width, Height float64
+	Width, Height float32
 	Pivot         behavior.Vec3
 }
 
@@ -105,7 +105,7 @@ type CustomHitTestConfig struct {
 // ValueConfig is a component with one number: friction_modifier,
 // air_drag_modifier, bounciness and movement_sound_distance_offset.
 type ValueConfig struct {
-	Value float64
+	Value float32
 }
 
 // DefaultFrictionModifier is an assumed default of 1. Its 1.26.60 parser
@@ -121,7 +121,7 @@ func DefaultBounciness() ValueConfig { return ValueConfig{} }
 
 // WaterMovementConfig is minecraft:water_movement (1.26.60 0x6FAACA0).
 type WaterMovementConfig struct {
-	DragFactor float64
+	DragFactor float32
 }
 
 // DefaultWaterMovement is the 1.26.60 default drag of 0.8.
@@ -131,7 +131,7 @@ func DefaultWaterMovement() WaterMovementConfig { return WaterMovementConfig{Dra
 // 0x6FA96B0; 1.21.3 VariableMaxAutoStepSystemImpl::_tickEntity
 // 0x140B17AD0).
 type VariableMaxAutoStepConfig struct {
-	Base, Controlled, JumpPrevented float64
+	Base, Controlled, JumpPrevented float32
 }
 
 // DefaultVariableMaxAutoStep is 0.5625 for all three, as 1.26.60.
@@ -142,7 +142,7 @@ func DefaultVariableMaxAutoStep() VariableMaxAutoStepConfig {
 // Step returns the max auto step: the jump-prevented value when the mob
 // may not jump, the controlled value while a player steers it with WASD,
 // else the base value.
-func (c VariableMaxAutoStepConfig) Step(jumpPrevented, wasdControlled bool) float64 {
+func (c VariableMaxAutoStepConfig) Step(jumpPrevented, wasdControlled bool) float32 {
 	switch {
 	case jumpPrevented:
 		return c.JumpPrevented
@@ -154,7 +154,7 @@ func (c VariableMaxAutoStepConfig) Step(jumpPrevented, wasdControlled bool) floa
 
 // JumpStaticConfig is minecraft:jump.static (1.26.60 0x7124C50).
 type JumpStaticConfig struct {
-	JumpPower float64
+	JumpPower float32
 }
 
 // DefaultJumpStatic is the 1.26.60 jump power of 0.42.
@@ -162,7 +162,7 @@ func DefaultJumpStatic() JumpStaticConfig { return JumpStaticConfig{JumpPower: 0
 
 // JumpInfo is one skip of minecraft:jump.dynamic.
 type JumpInfo struct {
-	DistanceScale, Height        float64
+	DistanceScale, Height        float32
 	JumpDelay, AnimationDuration int32
 }
 
@@ -180,7 +180,7 @@ func DefaultJumpDynamic() JumpDynamicConfig {
 
 // fixedJump makes one jump kind; BDS's fixed kinds are set in 1.21.3
 // JumpControlComponent::initializeFromDefinition (0x1405E6C70).
-func fixedJump(distance, height float64, delay int32, anim int8) move.JumpInfo {
+func fixedJump(distance, height float32, delay int32, anim int8) move.JumpInfo {
 	return move.JumpInfo{DistanceScale: distance, Height: height, Delay: delay, Animation: anim}
 }
 
@@ -210,7 +210,7 @@ type SlowdownImmunityConfig struct {
 // RailMovementConfig is minecraft:rail_movement, held for the engine's
 // minecart movement.
 type RailMovementConfig struct {
-	MaxSpeed float64
+	MaxSpeed float32
 }
 
 // DefaultRailMovement is 0.4 (1.21.3 RailMovementDefinition ctor

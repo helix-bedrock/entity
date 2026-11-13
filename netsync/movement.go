@@ -34,7 +34,7 @@ func DefaultThresholds() Thresholds {
 // a turn from 179 to -180 degrees counts as almost 360.
 func Significant(last, now Sent, motion mgl32.Vec3, t Thresholds) bool {
 	d2 := now.Position.Sub(last.Position).LenSqr()
-	if d2 > float64(t.Distance2) {
+	if d2 > t.Distance2 {
 		return true
 	}
 	turn := abs32(ByteDegrees(now.Pitch)-ByteDegrees(last.Pitch)) +
@@ -43,7 +43,7 @@ func Significant(last, now Sent, motion mgl32.Vec3, t Thresholds) bool {
 	if turn > t.Rotation {
 		return true
 	}
-	return motion.LenSqr() < t.StoppedMotion2 && d2 > float64(t.SettleDistance2)
+	return motion.LenSqr() < t.StoppedMotion2 && d2 > t.SettleDistance2
 }
 
 func abs32(f float32) float32 {

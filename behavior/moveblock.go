@@ -9,14 +9,14 @@ const (
 
 // MoveToBlockConfig is the JSON of minecraft:behavior.move_to_block.
 type MoveToBlockConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	SearchRange     int32   `json:"search_range"`
 	SearchHeight    int32   `json:"search_height"`
 	TickInterval    int32   `json:"tick_interval"`
 	// StayDuration is in seconds.
-	StayDuration float64 `json:"stay_duration"`
-	GoalRadius   float64 `json:"goal_radius"`
-	StartChance  float64 `json:"start_chance"`
+	StayDuration float32 `json:"stay_duration"`
+	GoalRadius   float32 `json:"goal_radius"`
+	StartChance  float32 `json:"start_chance"`
 	// Method is target_selection_method (ParseSelection).
 	Method          int
 	TargetOffset    Vec3
@@ -41,7 +41,7 @@ func DefaultMoveToBlock() MoveToBlockConfig {
 type MoveToBlock struct {
 	base
 	cfg       MoveToBlockConfig
-	radius2   float64
+	radius2   float32
 	stay      int32
 	target    Pos
 	cooldown  int32
@@ -102,7 +102,7 @@ func (g *MoveToBlock) centre() Vec3 { return add(vecOf(g.target), Vec3{X: 0.5, Y
 
 // distance is the squared distance from the aimed point to the mob's box
 // middle height.
-func (g *MoveToBlock) distance() float64 {
+func (g *MoveToBlock) distance() float32 {
 	c, o, p := g.centre(), g.cfg.TargetOffset, g.mob.Pos()
 	b := g.mob.Box()
 	dy := (o.Y + c.Y) - ((b.Max.Y-b.Min.Y)*0.5 + b.Min.Y)

@@ -8,9 +8,9 @@ import (
 // seqRandom returns its values in order, then repeats the last.
 type seqRandom struct {
 	ints   []int32
-	floats []float64
+	floats []float32
 	bools  []bool
-	gauss  []float64
+	gauss  []float32
 }
 
 func (r *seqRandom) NextInt(n int32) int32 {
@@ -24,8 +24,8 @@ func (r *seqRandom) NextInt(n int32) int32 {
 	return v % n
 }
 
-func (r *seqRandom) NextFloat() float64 {
-	v := float64(0)
+func (r *seqRandom) NextFloat() float32 {
+	v := float32(0)
 	if len(r.floats) != 0 {
 		v, r.floats = r.floats[0], r.floats[1:]
 	}
@@ -40,8 +40,8 @@ func (r *seqRandom) NextBool() bool {
 	return v
 }
 
-func (r *seqRandom) NextGaussian() float64 {
-	v := float64(0)
+func (r *seqRandom) NextGaussian() float32 {
+	v := float32(0)
 	if len(r.gauss) != 0 {
 		v, r.gauss = r.gauss[0], r.gauss[1:]
 	}
@@ -61,7 +61,7 @@ func (w *flatWorld) IRandom() Random        { return w.r }
 func (w *flatWorld) ThreadRandom() Random   { return w.r }
 func (w *flatWorld) CurrentTick() uint64    { return w.tick }
 func (w *flatWorld) DefaultGameMode() int   { return 0 }
-func (w *flatWorld) Brightness(Pos) float64 { return 1 }
+func (w *flatWorld) Brightness(Pos) float32 { return 1 }
 func (w *flatWorld) Actor(id ID) Actor {
 	for _, e := range w.entities {
 		if e.ID() == id {
@@ -104,16 +104,16 @@ func (w *flatWorld) Entities(dst []Actor, self ID, b Box) []Actor {
 // fakeNav records the last move.
 type fakeNav struct {
 	to    Vec3
-	speed float64
+	speed float32
 	moves int
 	done  bool
 }
 
-func (n *fakeNav) MoveTo(p Vec3, s float64) bool {
+func (n *fakeNav) MoveTo(p Vec3, s float32) bool {
 	n.to, n.speed, n.moves = p, s, n.moves+1
 	return true
 }
-func (n *fakeNav) MoveToActor(a Actor, s float64) bool {
+func (n *fakeNav) MoveToActor(a Actor, s float32) bool {
 	return n.MoveTo(a.Pos(), s)
 }
 func (n *fakeNav) PathTo(Actor) (Pos, bool) { return Pos{}, false }
@@ -123,11 +123,11 @@ func (n *fakeNav) Done() bool               { return n.done }
 func (n *fakeNav) Stop()                    { n.done = true }
 func (n *fakeNav) Flags() uint32            { return 0 }
 func (n *fakeNav) SetFlags(uint32)          {}
-func (n *fakeNav) SetSpeed(s float64)       { n.speed = s }
+func (n *fakeNav) SetSpeed(s float32)       { n.speed = s }
 func (n *fakeNav) Held() bool               { return n.moves != 0 }
 func (n *fakeNav) PathStart() (Pos, bool)   { return Pos{}, n.moves != 0 }
 func (n *fakeNav) SetEndOffset(Vec3)        {}
-func (n *fakeNav) SetLastNodeReach(float64) {}
+func (n *fakeNav) SetLastNodeReach(float32) {}
 func (n *fakeNav) PathToPoint(p Vec3) (Pos, bool) {
 	return blockOf(p), true
 }
@@ -167,14 +167,14 @@ func (m *fakeMob) Vehicle() ID                   { return NoID }
 func (m *fakeMob) InLava() bool                  { return false }
 func (m *fakeMob) InWater() bool                 { return false }
 func (m *fakeMob) Home() (Pos, int32, bool)      { return Pos{}, 0, false }
-func (m *fakeMob) Leash() (Vec3, float64, bool)  { return Vec3{}, 0, false }
+func (m *fakeMob) Leash() (Vec3, float32, bool)  { return Vec3{}, 0, false }
 func (m *fakeMob) SetTarget(ID)                  {}
 func (m *fakeMob) Event(name string, _ ID)       { m.events = append(m.events, name) }
-func (m *fakeMob) WalkTargetValue(p Pos) float64 { return WalkTarget(WalkAnimal, m.w, p, false) }
+func (m *fakeMob) WalkTargetValue(p Pos) float32 { return WalkTarget(WalkAnimal, m.w, p, false) }
 
 func TestRandomTicks(t *testing.T) {
-	r := &seqRandom{floats: []float64{0.5}}
-	if got := randomTicks(r, Range[float64]{2, 4}); got != 60 {
+	r := &seqRandom{floats: []float32{0.5}}
+	if got := randomTicks(r, Range[float32]{2, 4}); got != 60 {
 		t.Fatalf("randomTicks = %d, want 60", got)
 	}
 }
@@ -251,7 +251,7 @@ func BenchmarkStrollCanUse(b *testing.B) {
 }
 
 func TestRangeJSON(t *testing.T) {
-	cases := map[string]Range[float64]{
+	cases := map[string]Range[float32]{
 		`[1, 2]`:                           {1, 2},
 		`3`:                                {3, 3},
 		`{"range_min": 4, "range_max": 5}`: {4, 5},
@@ -259,7 +259,7 @@ func TestRangeJSON(t *testing.T) {
 		`{"max": 8}`:                       {0, 8},
 	}
 	for src, want := range cases {
-		var r Range[float64]
+		var r Range[float32]
 		if err := json.Unmarshal([]byte(src), &r); err != nil || r != want {
 			t.Errorf("%s: got %v %v, want %v", src, r, err, want)
 		}

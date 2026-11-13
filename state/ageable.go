@@ -10,13 +10,13 @@ type FeedItem struct {
 	Item
 	// Growth is the share of the time as a baby that feeding the item
 	// takes off.
-	Growth float64
+	Growth float32
 }
 
 // AgeableConfig is minecraft:ageable.
 type AgeableConfig struct {
 	// Duration is the time as a baby in seconds; -1 never grows up.
-	Duration  float64
+	Duration  float32
 	FeedItems []FeedItem
 	// DropItems are dropped when the mob grows up.
 	DropItems []string
@@ -37,7 +37,7 @@ func DefaultAgeable() AgeableConfig { return AgeableConfig{Duration: 1200} }
 
 // DefaultFeedGrowth is a feed item's growth when it gives none (1.21.3
 // AgeableDefinition::addFeedItemByName 0x14055D380).
-func DefaultFeedGrowth() float64 { return 0.1 }
+func DefaultFeedGrowth() float32 { return 0.1 }
 
 // Ageable is minecraft:ageable: a baby's age counts up to 0, when the mob
 // grows up (1.21.3 _tickAgeableComponent 0x14015B630,
@@ -125,11 +125,11 @@ func (a *Ageable) Feed(env *Env, player behavior.Actor, h Hand) int {
 	if i < 0 {
 		return -1
 	}
-	a.SetAge(a.age + int32(a.cfg.FeedItems[i].Growth*float64(a.TicksAsBaby())))
+	a.SetAge(a.age + int32(a.cfg.FeedItems[i].Growth*float32(a.TicksAsBaby())))
 	return i
 }
 
-func abs32(v float64) float64 {
+func abs32(v float32) float32 {
 	if v < 0 {
 		return -v
 	}

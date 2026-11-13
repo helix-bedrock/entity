@@ -7,12 +7,12 @@ type b8World struct {
 	*b7World
 	open    map[Pos]bool
 	head    map[Pos]int32
-	thunder float64
+	thunder float32
 	players []Actor
 }
 
 func (w *b8World) ChestOpen(p Pos) bool        { return w.open[p] }
-func (w *b8World) ThunderLevel() float64       { return w.thunder }
+func (w *b8World) ThunderLevel() float32       { return w.thunder }
 func (w *b8World) Players(dst []Actor) []Actor { return append(dst, w.players...) }
 func (w *b8World) BlockState(p Pos, s string) (int32, bool) {
 	if s == stateHeadPiece {
@@ -31,7 +31,7 @@ type b8Mob struct {
 	*b7Mob
 	stamp    uint64
 	cause    int
-	amount   float64
+	amount   float32
 	health   int32
 	effects  []int32
 	carried  map[ID]string
@@ -45,7 +45,7 @@ func newB8Mob(w World, id ID, p Vec3, kind string) *b8Mob {
 	return &b8Mob{b7Mob: newB7Mob(w, id, p, kind), cause: -1, health: 14, carried: map[ID]string{}}
 }
 
-func (m *b8Mob) LastDamage() (uint64, int, float64) { return m.stamp, m.cause, m.amount }
+func (m *b8Mob) LastDamage() (uint64, int, float32) { return m.stamp, m.cause, m.amount }
 func (m *b8Mob) Health() int32                      { return m.health }
 func (m *b8Mob) AddEffect(id int, ticks, _ int32)   { m.effects = append(m.effects, int32(id), ticks) }
 func (m *b8Mob) Carried(a Actor) (string, bool) {
@@ -100,7 +100,7 @@ func TestScaredInAThunderstorm(t *testing.T) {
 }
 
 func TestSneezeStartlesAndDrops(t *testing.T) {
-	w := newB8World(&seqRandom{floats: []float64{0.01, 0.5}})
+	w := newB8World(&seqRandom{floats: []float32{0.01, 0.5}})
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:panda")
 	o := newB8Mob(w, 2, Vec3{X: 2, Y: 64}, "minecraft:panda")
 	w.entities = []Actor{m, o}
@@ -171,7 +171,7 @@ func TestFindCoverPicksACoveredSpot(t *testing.T) {
 }
 
 func TestPlayDeadOncePerHit(t *testing.T) {
-	w := newB8World(&seqRandom{floats: []float64{0.1}, ints: []int32{1}})
+	w := newB8World(&seqRandom{floats: []float32{0.1}, ints: []int32{1}})
 	m := newB8Mob(w, 1, Vec3{Y: 64}, "minecraft:axolotl")
 	c := DefaultPlayDead()
 	c.Duration, c.RandomStartChance, c.ForceBelowHealth = 200, 0.33, 8

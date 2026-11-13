@@ -46,21 +46,21 @@ func newB4Squid(w World, p Vec3) *b4Squid {
 // b4Slime adds the slime controls to b3Mob.
 type b4Slime struct {
 	*b3Mob
-	turn            float64
+	turn            float32
 	noMove, noJump  bool
 	look            bool
-	moving, lookYaw float64
+	moving, lookYaw float32
 	jumps           int
 	lava            bool
 }
 
-func (m *b4Slime) MoveTurn() (float64, bool) { return m.turn, !m.noMove }
-func (m *b4Slime) KeepMoving(s float64)      { m.moving = s }
+func (m *b4Slime) MoveTurn() (float32, bool) { return m.turn, !m.noMove }
+func (m *b4Slime) KeepMoving(s float32)      { m.moving = s }
 func (m *b4Slime) HasJumpControl() bool      { return !m.noJump }
 func (m *b4Slime) FloatJump()                { m.jumps++ }
-func (m *b4Slime) Yaw() float64              { return m.yaw }
+func (m *b4Slime) Yaw() float32              { return m.yaw }
 func (m *b4Slime) InLava() bool              { return m.lava }
-func (m *b4Slime) LookYaw(y, _ float64) bool {
+func (m *b4Slime) LookYaw(y, _ float32) bool {
 	m.lookYaw = y
 	return m.look
 }
@@ -111,7 +111,7 @@ func TestWallCheckTurnsAway(t *testing.T) {
 }
 
 func TestSquidIdlePicksInRange(t *testing.T) {
-	w := newB4World(&seqRandom{floats: []float64{0.75, 0.9, 0.25, 0.5}})
+	w := newB4World(&seqRandom{floats: []float32{0.75, 0.9, 0.25, 0.5}})
 	w.waterColumn(60, 69)
 	s := newB4Squid(w, Vec3{X: 0.5, Y: 65, Z: 0.5})
 	s.inWater = true
@@ -133,7 +133,7 @@ func TestSquidIdlePicksInRange(t *testing.T) {
 }
 
 func TestSquidDiveAndOutOfWater(t *testing.T) {
-	w := newB4World(&seqRandom{floats: []float64{0.5, 0.5}})
+	w := newB4World(&seqRandom{floats: []float32{0.5, 0.5}})
 	s := newB4Squid(w, Vec3{X: 0.5, Y: 66, Z: 0.5})
 	g := NewSquidDive(w, s)
 	if !g.CanUse() {
@@ -148,7 +148,7 @@ func TestSquidDiveAndOutOfWater(t *testing.T) {
 		t.Fatal("squid_dive started over ground")
 	}
 	o := NewSquidOutOfWater(w, s)
-	w.r.floats = []float64{0, 1}
+	w.r.floats = []float32{0, 1}
 	o.Start()
 	if s.swim != (Vec3{X: 0.2, Y: 0.1}) {
 		t.Fatalf("out of water %v, want (0.2, 0.1, 0)", s.swim)
@@ -181,7 +181,7 @@ func TestSquidFleeRunsAndPuffs(t *testing.T) {
 }
 
 func TestSquidMoveAwayFromGround(t *testing.T) {
-	w := newB4World(&seqRandom{floats: []float64{0, 0.5}})
+	w := newB4World(&seqRandom{floats: []float32{0, 0.5}})
 	s := newB4Squid(w, Vec3{X: 0.5, Y: 65, Z: 0.5})
 	g := NewSquidMoveAwayFromGround(w, s)
 	if g.CanUse() {
@@ -219,7 +219,7 @@ func TestSlimeRandomDirectionTurns(t *testing.T) {
 }
 
 func TestSlimeFloatAndKeepJumping(t *testing.T) {
-	w := newB4World(&seqRandom{floats: []float64{0.5, 0.9}})
+	w := newB4World(&seqRandom{floats: []float32{0.5, 0.9}})
 	s := newB4Slime(w)
 	f := NewSlimeFloat(w, s, DefaultSlimeFloat())
 	if f.CanUse() {

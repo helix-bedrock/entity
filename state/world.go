@@ -13,18 +13,18 @@ type TeleportConfig struct {
 	RandomTeleports              bool
 	MinRandomTime, MaxRandomTime int32
 	Cube                         behavior.Vec3
-	TargetDistance, TargetChance float64
-	LightChance, DarkChance      float64
+	TargetDistance, TargetChance float32
+	LightChance, DarkChance      float32
 	TeleportsOnProjectileHit     bool
 	// Brightness is the light level above which LightChance is used (and
 	// only under the open sky).
-	Brightness float64
+	Brightness float32
 	// TowardsSpread, TowardsHeight and TowardsDistance shape the jump
 	// towards a target: a random spot within TowardsSpread/2 sideways and
 	// TowardsHeight/2 up or down, pulled TowardsDistance towards it.
-	TowardsSpread                 float64
+	TowardsSpread                 float32
 	TowardsHeight                 int32
-	TowardsDistance, MinDirLength float64
+	TowardsDistance, MinDirLength float32
 }
 
 // DefaultTeleport is the BDS default.
@@ -110,9 +110,9 @@ func (t *Teleport) Towards(env *Env, a Actions, target behavior.Actor) bool {
 	p, b, tp := m.Pos(), m.Box(), target.Pos()
 	d := behavior.Vec3{X: p.X - tp.X, Y: b.Min.Y + (b.Max.Y-b.Min.Y)*0.5 - target.Eyes().Y, Z: p.Z - tp.Z}
 	x := (r.NextFloat()-0.5)*c.TowardsSpread + p.X
-	y := float64(r.NextInt(c.TowardsHeight)-c.TowardsHeight/2) + p.Y
+	y := float32(r.NextInt(c.TowardsHeight)-c.TowardsHeight/2) + p.Y
 	z := (r.NextFloat()-0.5)*c.TowardsSpread + p.Z
-	if l := float64(math.Sqrt(float64(d.X*d.X + d.Y*d.Y + d.Z*d.Z))); l >= c.MinDirLength {
+	if l := float32(math.Sqrt(float64(d.X*d.X + d.Y*d.Y + d.Z*d.Z))); l >= c.MinDirLength {
 		d = behavior.Vec3{X: d.X / l, Y: d.Y / l, Z: d.Z / l}
 	} else {
 		d = behavior.Vec3{}
@@ -121,7 +121,7 @@ func (t *Teleport) Towards(env *Env, a Actions, target behavior.Actor) bool {
 	return a != nil && a.Teleport(dst)
 }
 
-func distSqr(a, b behavior.Vec3) float64 {
+func distSqr(a, b behavior.Vec3) float32 {
 	dx, dy, dz := a.X-b.X, a.Y-b.Y, a.Z-b.Z
 	return dx*dx + dy*dy + dz*dz
 }
@@ -140,7 +140,7 @@ type TrailConfig struct {
 	Solid bool
 	// Spread is how far from the mob's centre the four trail blocks are
 	// taken, on each axis.
-	Spread float64
+	Spread float32
 }
 
 // DefaultTrail is the BDS default.
@@ -148,7 +148,7 @@ func DefaultTrail() TrailConfig { return TrailConfig{Block: "minecraft:air", Spr
 
 // ClampOffset is initFromDefinition's clamp.
 func ClampOffset(v behavior.Vec3) behavior.Vec3 {
-	c := func(f float64) float64 { return float64(min(max(int32(f), -16), 16)) }
+	c := func(f float32) float32 { return float32(min(max(int32(f), -16), 16)) }
 	return behavior.Vec3{X: c(v.X), Y: c(v.Y), Z: c(v.Z)}
 }
 
@@ -168,12 +168,12 @@ func Trail(env *Env, c *TrailConfig, a Actions) {
 	pos := m.Pos()
 	_, yaw := m.HeadRotation()
 	s, co := math.Sincos(float64(yaw) * math.Pi / 180)
-	fx, fz := float64(-s), float64(co)
+	fx, fz := float32(-s), float32(co)
 	for i := 0; i < 4; i++ {
-		x := float64(floor(float64(2*(i&1)-1)*c.Spread + pos.X))
-		y := float64(floor(pos.Y))
-		z := float64(floor(float64(2*((i>>1)&1)-1)*c.Spread + pos.Z))
-		var px, pz float64
+		x := float32(floor(float32(2*(i&1)-1)*c.Spread + pos.X))
+		y := float32(floor(pos.Y))
+		z := float32(floor(float32(2*((i>>1)&1)-1)*c.Spread + pos.Z))
+		var px, pz float32
 		switch {
 		case abs(fx) <= abs(fz) && fz <= 0:
 			px, pz = x+c.Offset.X, z-c.Offset.Z
@@ -191,7 +191,7 @@ func Trail(env *Env, c *TrailConfig, a Actions) {
 // GroupSizeConfig is minecraft:group_size (1.21.3 schema 0x1405AC5E0;
 // the radius default was not read).
 type GroupSizeConfig struct {
-	Radius float64
+	Radius float32
 	Filter *definition.Filter
 	// Interval is the ticks between counts.
 	Interval uint64
@@ -376,7 +376,7 @@ func (n *InsideBlockNotifier) Tick(env *Env) {
 // AreaAttackConfig is minecraft:area_attack (1.21.3 initialize
 // 0x140569AF0; defaults were not read and are zero).
 type AreaAttackConfig struct {
-	DamageRange   float64
+	DamageRange   float32
 	DamagePerTick int32
 	Cause         int
 	// Cooldown is in ticks.
@@ -446,14 +446,14 @@ func (a *AreaAttack) Tick(env *Env, act Actions) {
 			}
 			a.cooldowns[o.ID()] = now + uint64(c.Cooldown)
 		}
-		act.Hurt(o, by, c.Cause, float64(c.DamagePerTick))
+		act.Hurt(o, by, c.Cause, float32(c.DamagePerTick))
 		if c.PlaySound {
 			m.PlaySound(c.AttackSound)
 		}
 	}
 }
 
-func grow(b behavior.Box, r float64) behavior.Box {
+func grow(b behavior.Box, r float32) behavior.Box {
 	return behavior.Box{
 		Min: behavior.Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r},
 		Max: behavior.Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r},
@@ -463,7 +463,7 @@ func grow(b behavior.Box, r float64) behavior.Box {
 // MobEffectConfig is minecraft:mob_effect (1.21.3 schema 0x1405D...;
 // defaults were not read and are zero). Times are in ticks here.
 type MobEffectConfig struct {
-	Range    float64
+	Range    float32
 	Effect   string
 	Duration int32
 	Cooldown int32
@@ -612,7 +612,7 @@ type BlockBreakEntry struct {
 // not found): the engine reports broken blocks and BlockBroken runs the
 // matching entries' events.
 type BlockSensorConfig struct {
-	Radius  float64
+	Radius  float32
 	OnBreak []BlockBreakEntry
 	// Sources filters the entity that broke the block.
 	Sources *definition.Filter
@@ -622,7 +622,7 @@ type BlockSensorConfig struct {
 // broken at p by source, when p is within the radius.
 func (c *BlockSensorConfig) BlockBroken(env *Env, p behavior.Pos, source behavior.Actor) {
 	m := env.Self
-	centre := behavior.Vec3{X: float64(p.X) + 0.5, Y: float64(p.Y) + 0.5, Z: float64(p.Z) + 0.5}
+	centre := behavior.Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}
 	if distSqr(centre, m.Pos()) > c.Radius*c.Radius || env.BlockMatches == nil || env.Events == nil {
 		return
 	}

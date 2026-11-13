@@ -121,7 +121,7 @@ type Hurter interface {
 
 // repathTicks is the next repath delay pickup_items and share_items draw:
 // 4 to 10 ticks, 5 more past 16 blocks, 10 more past 32.
-func repathTicks(r Random, d2 float64) int32 {
+func repathTicks(r Random, d2 float32) int32 {
 	t := r.NextInt(itemRepathSpread)
 	switch {
 	case d2 > itemRepathFar2:

@@ -163,7 +163,7 @@ func (c *Context) readTimers(env *state.Env, s, prev *state.Set, read func(strin
 				Duration:      c.Ticks(j, "duration", 0),
 				Targets:       c.filter(j, "celebration_targets"),
 				Sound:         c.Sound(j, "celebrate_sound", 0),
-				SoundInterval: c.Range(j, "sound_interval", behavior.Range[float64]{}),
+				SoundInterval: c.Range(j, "sound_interval", behavior.Range[float32]{}),
 			})
 		}
 	}
@@ -491,7 +491,7 @@ func (c *Context) AngerLevelConfig(j Object) state.AngerLevelConfig {
 }
 
 // molang compiles a Molang member, nil when missing or not compilable.
-func (c *Context) molang(j Object, k string) func(behavior.Mob) float64 {
+func (c *Context) molang(j Object, k string) func(behavior.Mob) float32 {
 	if !j.Has(k) || c.Resolver == nil {
 		return nil
 	}
@@ -646,7 +646,7 @@ func (c *Context) readEngine(s *state.Set, read func(string) (Object, bool)) {
 	if j, ok := read(LookedAtName); ok {
 		l := state.LookedAtConfig{
 			SearchRadius: c.Float(j, "search_radius", 0), SetTarget: c.String(j, "set_target", ""),
-			FindPlayersOnly: c.Bool(j, "find_players_only", false), Cooldown: c.Range(j, "looked_at_cooldown", behavior.Range[float64]{}),
+			FindPlayersOnly: c.Bool(j, "find_players_only", false), Cooldown: c.Range(j, "looked_at_cooldown", behavior.Range[float32]{}),
 			FieldOfView: c.Float(j, "field_of_view", 0), ScaleFOVByDistance: c.Bool(j, "scale_fov_by_distance", false),
 			LineOfSightObstruction: c.String(j, "line_of_sight_obstruction_type", ""),
 			MinLookedAtDuration:    c.Float(j, "min_looked_at_duration", 0), Filters: c.filter(j, "filters"),

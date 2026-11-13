@@ -26,14 +26,14 @@ const (
 // CostEntry is one preferred_path entry: blocks and the cost of walking on
 // them.
 type CostEntry struct {
-	Cost   float64
+	Cost   float32
 	Blocks func(Block) bool
 }
 
 // PreferredPath is the minecraft:preferred_path component.
 type PreferredPath struct {
-	DefaultBlockCost float64
-	JumpCost         float64
+	DefaultBlockCost float32
+	JumpCost         float32
 	MaxFallBlocks    int32
 	Costs            []CostEntry
 }
@@ -43,14 +43,14 @@ type PreferredPath struct {
 type Settings struct {
 	// Box is the mob's bounding box; Width and Height its size.
 	Box           Box
-	Width, Height float64
+	Width, Height float32
 	// Pos is the mob's position.
 	Pos Vec3
 	// MinY is the lowest height a node may have.
-	MinY float64
+	MinY float32
 	// StepHeight is the height the mob can step or jump up: the largest of
 	// 1.2 and its step-height component.
-	StepHeight float64
+	StepHeight float32
 
 	// The mob's movement abilities, from its actor flags.
 	Swim, Fly, Walk        bool
@@ -87,5 +87,5 @@ type Settings struct {
 	// Restricted limits nodes to Radius2 (squared) around Home.
 	Restricted bool
 	Home       Pos
-	Radius2    float64
+	Radius2    float32
 }

@@ -24,22 +24,22 @@ type PlayerControlled interface {
 	// HeldItem is the player's selected item (Actor vt+624).
 	HeldItem(id ID) Item
 	// Yaw is ActorRotationComponent's yaw; YawOf is another entity's.
-	Yaw() float64
-	YawOf(id ID) float64
+	Yaw() float32
+	YawOf(id ID) float32
 	// SetSprinting is Mob vt+1112.
 	SetSprinting(on bool)
 	// SetSpeed is Mob vt+1128.
-	SetSpeed(s float64)
+	SetSpeed(s float32)
 	// ResetMovement sets the movement attribute's current value back to
 	// its base (start's AttributeInstance +124 = +112).
 	ResetMovement()
 	// RideFriction is the friction of the block at p: BDS uses 0.6 for one
 	// block (qword 0xF5EAEC0, taken to be air) and the block's own friction
 	// (BlockType +176) for the others.
-	RideFriction(p Pos) float64
+	RideFriction(p Pos) float32
 	// MaxAutoStep is the MaxAutoStepComponent height; ok is false without
 	// it.
-	MaxAutoStep() (h float64, ok bool)
+	MaxAutoStep() (h float32, ok bool)
 	// WalkThrough is 0x7219C00: the block at p is one the mob passes (a
 	// block with the type bit +264 and two door-like states).
 	WalkThrough(p Pos) bool
@@ -47,15 +47,15 @@ type PlayerControlled interface {
 	Jump()
 	// MoveRelativeSpeed is the move speed for the mob's travel type
 	// (0xBE81390 of 0xBE810B0).
-	MoveRelativeSpeed() float64
+	MoveRelativeSpeed() float32
 }
 
 // ControlledByPlayerConfig is the JSON of
 // minecraft:behavior.controlled_by_player.
 type ControlledByPlayerConfig struct {
-	FractionalRotation      float64 `json:"fractional_rotation"`
-	FractionalRotationLimit float64 `json:"fractional_rotation_limit"`
-	MountSpeedMultiplier    float64 `json:"mount_speed_multiplier"`
+	FractionalRotation      float32 `json:"fractional_rotation"`
+	FractionalRotationLimit float32 `json:"fractional_rotation_limit"`
+	MountSpeedMultiplier    float32 `json:"mount_speed_multiplier"`
 }
 
 // DefaultControlledByPlayer returns the goal's BDS defaults (0x5394770).
@@ -155,15 +155,15 @@ func (g *ControlledByPlayer) Tick() {
 
 	f := m.MoveRelativeSpeed()
 	if d2 := speed*speed + 0; d2 >= rideMoveMin2 {
-		fwd := speed * (f / max(1, float64(math.Sqrt(float64(d2)))))
+		fwd := speed * (f / max(1, float32(math.Sqrt(float64(d2)))))
 		s, c := math.Sincos(float64(yaw * radPerDeg))
 		v := m.Velocity()
-		m.SetVelocity(Vec3{X: v.X - fwd*float64(s), Y: v.Y, Z: v.Z + fwd*float64(c)})
+		m.SetVelocity(Vec3{X: v.X - fwd*float32(s), Y: v.Y, Z: v.Z + fwd*float32(c)})
 	}
 }
 
 // friction is the tick's ground friction factor.
-func (g *ControlledByPlayer) friction() float64 {
+func (g *ControlledByPlayer) friction() float32 {
 	if !g.m.OnGround() {
 		return rideAirFriction
 	}
@@ -172,18 +172,18 @@ func (g *ControlledByPlayer) friction() float64 {
 
 // stepUp jumps when the block half a width ahead is a step between the
 // auto step height and a full block.
-func (g *ControlledByPlayer) stepUp(yaw, speed float64) {
+func (g *ControlledByPlayer) stepUp(yaw, speed float32) {
 	m := g.m
-	var k float64
+	var k float32
 	if fr := g.friction(); abs32(fr) >= rideFrictionMin {
-		k = float64(rideFrictionNorm / math.Pow(float64(fr), rideFrictionFactor))
+		k = float32(rideFrictionNorm / math.Pow(float64(fr), rideFrictionFactor))
 	}
 	a := yaw * radPerDeg * sinScale
 	sin, cos := tableSin(uint16(int32(a))), tableSin(uint16(int32(a+sinQuarter)))
 	move := k * speed / max(speed, 1) * speed
 	dx, dz := -sin*move, cos*move
 	half := boxWidth(m.Box()) * rideHalf
-	var ox, oz float64
+	var ox, oz float32
 	if abs32(dx) <= abs32(dz) {
 		oz = signedHalf(dz, half) + dz
 	} else {
@@ -194,9 +194,9 @@ func (g *ControlledByPlayer) stepUp(yaw, speed float64) {
 	if m.WalkThrough(ahead) || ahead.X == floorInt(p.X) && ahead.Z == floorInt(p.Z) {
 		return
 	}
-	var top float64
+	var top float32
 	if b := g.world.Block(ahead); b.HasCollision {
-		top = float64(ahead.Y) + b.ShapeTop
+		top = float32(ahead.Y) + b.ShapeTop
 	}
 	step := top - m.Box().Min.Y
 	if h, ok := m.MaxAutoStep(); ok && step <= rideStepMax && step > h {
@@ -205,7 +205,7 @@ func (g *ControlledByPlayer) stepUp(yaw, speed float64) {
 }
 
 // signedHalf is half the width with the sign of v; 0 counts as positive.
-func signedHalf(v, half float64) float64 {
+func signedHalf(v, half float32) float32 {
 	if v < 0 {
 		return -half
 	}

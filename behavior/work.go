@@ -21,7 +21,7 @@ type Worker interface {
 
 // WorkConfig is the JSON of minecraft:behavior.work.
 type WorkConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	// The times are in ticks.
 	SoundDelayMin       int32    `json:"sound_delay_min"`
 	SoundDelayMax       int32    `json:"sound_delay_max"`

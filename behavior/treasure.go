@@ -31,7 +31,7 @@ type TreasureHunter interface {
 	// ActorEvent broadcasts an actor event of the mob.
 	ActorEvent(id, data int32)
 	// FollowRange is the follow_range attribute.
-	FollowRange() float64
+	FollowRange() float32
 	// ResetTreasureTimer resets the component BDS keeps next to the
 	// treasure flag (hash 0x8F990EF0: +8 = 0, +12 = +16).
 	ResetTreasureTimer()
@@ -40,11 +40,11 @@ type TreasureHunter interface {
 // FindUnderwaterTreasureConfig is the JSON of
 // minecraft:behavior.find_underwater_treasure.
 type FindUnderwaterTreasureConfig struct {
-	SpeedMultiplier float64 `json:"speed_multiplier"`
+	SpeedMultiplier float32 `json:"speed_multiplier"`
 	SearchRange     int32   `json:"search_range"`
 	// StopDistance is how far, in whole blocks, the mob swims before it
 	// gives up; BDS truncates the JSON number.
-	StopDistance float64 `json:"stop_distance"`
+	StopDistance float32 `json:"stop_distance"`
 }
 
 // DefaultFindUnderwaterTreasure returns the goal's BDS defaults
@@ -102,7 +102,7 @@ func (g *FindUnderwaterTreasure) Start() {
 	default:
 		g.target = Pos{}
 	}
-	r := float64(g.cfg.SearchRange)
+	r := float32(g.cfg.SearchRange)
 	b := m.Box()
 	area := Box{Min: Vec3{X: b.Min.X - r, Y: b.Min.Y - treasureChestY, Z: b.Min.Z - r},
 		Max: Vec3{X: b.Max.X + r, Y: b.Max.Y + treasureChestY, Z: b.Max.Z + r}}
@@ -139,7 +139,7 @@ func (g *FindUnderwaterTreasure) Tick() {
 	}
 	g.timer = treasureCheck
 	p := m.Pos()
-	t := Vec3{X: float64(g.target.X), Y: float64(g.target.Y), Z: float64(g.target.Z)}
+	t := Vec3{X: float32(g.target.X), Y: float32(g.target.Y), Z: float32(g.target.Z)}
 	if dist2(p, t) < treasureNear2 || g.total >= randomBlockMaxStuck {
 		g.Stop()
 		return
@@ -160,7 +160,7 @@ func (g *FindUnderwaterTreasure) Tick() {
 	}
 	m.ActorEvent(actorEventTreasure, 0)
 	at := blockOf(p)
-	d := Vec3{X: float64(g.target.X - at.X), Y: float64(g.target.Y - at.Y), Z: float64(g.target.Z - at.Z)}
+	d := Vec3{X: float32(g.target.X - at.X), Y: float32(g.target.Y - at.Y), Z: float32(g.target.Z - at.Z)}
 	d2 := d.Z*d.Z + (d.X*d.X + d.Y*d.Y)
 	dir := facing(d, d2)
 	if g.stuck >= randomBlockTurn {

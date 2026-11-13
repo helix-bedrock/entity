@@ -49,7 +49,7 @@ type swimMob struct {
 	inWater bool
 	air     int16
 	moved   Vec3
-	yaw     float64
+	yaw     float32
 	sounds  []int
 }
 
@@ -59,12 +59,12 @@ func (m *swimMob) AirSupply() int16                   { return m.air }
 func (m *swimMob) VerticalCollision() bool            { return true }
 func (m *swimMob) PlaySoundAt(sound int, _ Vec3)      { m.sounds = append(m.sounds, sound) }
 func (m *swimMob) Move(v Vec3)                        { m.moved = v }
-func (m *swimMob) UnderwaterSpeed() float64           { return 0.02 }
-func (m *swimMob) Speed() float64                     { return 0.1 }
-func (m *swimMob) FollowRange() float64               { return 16 }
-func (m *swimMob) PrevRotation() (pitch, yaw float64) { return 0, m.yaw }
-func (m *swimMob) HeadRotation() (pitch, yaw float64) { return 0, m.yaw }
-func (m *swimMob) SetYaw(y float64)                   { m.yaw = y }
+func (m *swimMob) UnderwaterSpeed() float32           { return 0.02 }
+func (m *swimMob) Speed() float32                     { return 0.1 }
+func (m *swimMob) FollowRange() float32               { return 16 }
+func (m *swimMob) PrevRotation() (pitch, yaw float32) { return 0, m.yaw }
+func (m *swimMob) HeadRotation() (pitch, yaw float32) { return 0, m.yaw }
+func (m *swimMob) SetYaw(y float32)                   { m.yaw = y }
 func (m *swimMob) HasEffect(int) bool                 { return false }
 
 func newSwimMob(w World, p Vec3) *swimMob { return &swimMob{bodyMob: newBody(w, 1, p)} }
@@ -217,7 +217,7 @@ func TestStompEggBreaksAfter61Ticks(t *testing.T) {
 }
 
 func TestFloatWanderPicksInBoxAndPushes(t *testing.T) {
-	w := newBlockWorld(&seqRandom{floats: []float64{1, 0.75, 0.5}})
+	w := newBlockWorld(&seqRandom{floats: []float32{1, 0.75, 0.5}})
 	m := newSwimMob(w, Vec3{X: 0, Y: 80, Z: 0})
 	c := DefaultFloatWander()
 	c.UseHomeRestriction = false

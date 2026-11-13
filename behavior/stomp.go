@@ -94,7 +94,7 @@ func (g *StompEgg) moveToBlock() {
 	if n == nil {
 		return
 	}
-	t := Vec3{X: float64(floorInt(float64(g.target.X) + 0)), Y: float64(floorInt(float64(g.target.Y) + 1)), Z: float64(floorInt(float64(g.target.Z) + 0))}
+	t := Vec3{X: float32(floorInt(float32(g.target.X) + 0)), Y: float32(floorInt(float32(g.target.Y) + 1)), Z: float32(floorInt(float32(g.target.Z) + 0))}
 	n.SetEndOffset(g.offset)
 	n.MoveTo(t, g.cfg.SpeedMultiplier)
 	if end, ok := n.PathEnd(); ok && end == g.target {
@@ -113,7 +113,7 @@ func (g *StompEgg) Tick() {
 	t := g.targetPos()
 	m := g.mob
 	at := blockOf(m.Pos())
-	dx, dz := t.X-float64(at.X), t.Z-float64(at.Z)
+	dx, dz := t.X-float32(at.X), t.Z-float32(at.Z)
 	if !g.reached || dz*dz+dx*dx > g.radius2 {
 		g.moveTo.Tick()
 	}

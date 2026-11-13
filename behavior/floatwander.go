@@ -14,7 +14,7 @@ const (
 type FloatWanderConfig struct {
 	XZDist  int32   `json:"xz_dist"`
 	YDist   int32   `json:"y_dist"`
-	YOffset float64 `json:"y_offset"`
+	YOffset float32 `json:"y_offset"`
 	// MustReach checks the way to the target with the mob's box.
 	MustReach      bool `json:"must_reach"`
 	RandomReselect bool `json:"random_reselect"`
@@ -22,7 +22,7 @@ type FloatWanderConfig struct {
 	// which keeps to the home and leash.
 	UseHomeRestriction bool `json:"use_home_position_restriction"`
 	// FloatDuration is float_duration in seconds.
-	FloatDuration Range[float64]
+	FloatDuration Range[float32]
 	// HasMoveControl gives the goal the Move control flag; without it the
 	// goal has none.
 	HasMoveControl         bool  `json:"float_wander_has_move_control"`
@@ -121,7 +121,7 @@ func (g *FloatWander) pick() Vec3 {
 		t = g.next()
 	}
 	b := blockOf(t)
-	if h := g.world.HeightMap(b.X, b.Z); h > g.world.MinHeight() && t.Y > float64(h) {
+	if h := g.world.HeightMap(b.X, b.Z); h > g.world.MinHeight() && t.Y > float32(h) {
 		y := g.mob.Pos().Y
 		t.Y = y - abs32(y-t.Y)
 	}
@@ -141,9 +141,9 @@ func (g *FloatWander) next() Vec3 {
 	r := g.world.Random()
 	p := m.Pos()
 	var t Vec3
-	t.X = (2*r.NextFloat()-1)*float64(g.cfg.XZDist) + p.X
-	t.Y = ((2*r.NextFloat()-1)*float64(g.cfg.YDist) + g.cfg.YOffset) + p.Y
-	t.Z = (2*r.NextFloat()-1)*float64(g.cfg.XZDist) + p.Z
+	t.X = (2*r.NextFloat()-1)*float32(g.cfg.XZDist) + p.X
+	t.Y = ((2*r.NextFloat()-1)*float32(g.cfg.YDist) + g.cfg.YOffset) + p.Y
+	t.Z = (2*r.NextFloat()-1)*float32(g.cfg.XZDist) + p.Z
 	return t
 }
 
@@ -185,14 +185,14 @@ var floatSurfaceDirs = [...]Pos{{Z: -1}, {X: 1}, {Z: 1}, {X: -1}}
 
 // reaches is the must_reach sweep (0x573EAE0): the mob's box moved a block
 // at a time toward t hits no block, nor liquid unless allowed.
-func (g *FloatWander) reaches(t Vec3, dist float64) bool {
+func (g *FloatWander) reaches(t Vec3, dist float32) bool {
 	if dist <= 1 {
 		return true
 	}
 	m, w := g.mob, g.world
 	step := scale(sub(t, m.Pos()), 1/dist)
 	b := m.Box()
-	for i := float64(1); ; {
+	for i := float32(1); ; {
 		b.Min, b.Max = add(b.Min, step), add(b.Max, step)
 		if dist-1 == i && g.cfg.CollisionBuffer {
 			lo := Vec3{X: b.Min.X - floatBuffer, Y: b.Min.Y - floatBuffer, Z: b.Min.Z - floatBuffer}

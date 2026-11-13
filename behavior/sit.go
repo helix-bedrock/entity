@@ -9,11 +9,11 @@ const (
 
 // RandomSitConfig is the JSON of minecraft:behavior.random_sitting.
 type RandomSitConfig struct {
-	StartChance float64 `json:"start_chance"`
-	StopChance  float64 `json:"stop_chance"`
+	StartChance float32 `json:"start_chance"`
+	StopChance  float32 `json:"stop_chance"`
 	// Cooldown and MinSitTime are in seconds.
-	Cooldown   float64 `json:"cooldown"`
-	MinSitTime float64 `json:"min_sit_time"`
+	Cooldown   float32 `json:"cooldown"`
+	MinSitTime float32 `json:"min_sit_time"`
 }
 
 // DefaultRandomSit returns the goal's BDS defaults.
