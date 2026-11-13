@@ -99,7 +99,7 @@ func (m *villager) StopOfferingFlower(id ID, _ int32) {
 func (m *villager) OfferDuration(ID) (int32, bool) { return 400, true }
 func (m *villager) HasTradeTable() bool            { return true }
 func (m *villager) HeldItem(id ID) Item            { return m.held[id] }
-func (m *villager) CanSee(ID) bool                 { return true }
+func (m *villager) CanSeePlayer(ID) bool           { return true }
 func (m *villager) SetCarriedItem(it Item)         { m.shown = it }
 func (m *villager) LooksAtMe(ID) bool              { return false }
 func (m *villager) TradingPlayer() ID              { return m.trading }

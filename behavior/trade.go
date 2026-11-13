@@ -77,8 +77,9 @@ type TradeInterested interface {
 	HasTradeTable() bool
 	// HeldItem is the entity's selected item.
 	HeldItem(id ID) Item
-	// CanSee is the VisibilityCacheComponent's answer, true without one.
-	CanSee(id ID) bool
+	// CanSeePlayer is the VisibilityCacheComponent's answer about the player,
+	// true without one.
+	CanSeePlayer(id ID) bool
 	// TradeShow is the sell item of the first unlocked trade from index
 	// from on that wants held, and the index after it; ok is false when no
 	// trade wants it.
@@ -156,7 +157,7 @@ func (g *TradeInterest) CanUse() bool {
 	nearestFirst(g.players, p)
 	for _, a := range g.players {
 		held := m.HeldItem(a.ID())
-		if held.Empty() || !m.CanSee(a.ID()) {
+		if held.Empty() || !m.CanSeePlayer(a.ID()) {
 			continue
 		}
 		show, next, ok := m.TradeShow(held, 0)
@@ -190,7 +191,7 @@ func (g *TradeInterest) show(it Item) {
 func (g *TradeInterest) CanContinueToUse() bool {
 	m := g.m
 	p := g.actor(g.player)
-	if p == nil || p.Removed() || !m.CanSee(g.player) || g.elapsed > g.interest {
+	if p == nil || p.Removed() || !m.CanSeePlayer(g.player) || g.elapsed > g.interest {
 		return false
 	}
 	if sqrt32(dist2(m.Pos(), p.Pos())) > g.cfg.WithinRadius {
