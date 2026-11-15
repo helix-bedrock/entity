@@ -134,10 +134,24 @@ func (t *target) reachable(a Actor) bool {
 	return dx*dx+dz*dz < reachClose2
 }
 
-// keep is the base target goal's canContinue (0xBDD6E10).
+// keep is the base target goal's canContinue (1.26.60 0xBF30AE0): when the target is
+// there but no longer a fit one (dead, out of range, unseen too long...), it also clears
+// the mob's target, as BDS does here rather than in stop. A target already gone is left.
 func (t *target) keep(a Actor) bool {
+	if a == nil {
+		return false
+	}
+	if !t.keepCheck(a) {
+		t.m.SetTarget(NoID)
+		return false
+	}
+	return true
+}
+
+// keepCheck is keep's test.
+func (t *target) keepCheck(a Actor) bool {
 	m := t.m
-	if a == nil || !a.Alive() || a.Flag(FlagCannotTarget) {
+	if !a.Alive() || a.Flag(FlagCannotTarget) {
 		return false
 	}
 	if t.world.Peaceful() && a.Monster() {
@@ -332,7 +346,7 @@ func (g *NearestAttackable) pick(a Actor, i int) {
 	if g.cfg.SetPersistent && (!g.prioritized || a.IsPlayer()) {
 		g.m.SetPersistent()
 	}
-	g.m.SetTarget(a.ID())
+	g.candidate = a.ID()
 	g.entry, g.unseen = i, 0
 	g.cooldown[i] = g.world.CurrentTick() + uint64(max(g.cfg.EntityTypes[i].Cooldown, 0))
 }
@@ -379,24 +393,29 @@ func (g *NearestAttackable) CanContinueToUse() bool {
 		return false
 	}
 	if g.entry >= 0 && !inRange(g.m, a, &g.cfg.EntityTypes[g.entry], g.vis(), g.cfg.TargetSearchHeight) {
+		// 0xBF30920: out of the entry's range clears the target here.
+		g.m.SetTarget(NoID)
 		return false
 	}
 	if g.cfg.ReselectTargets {
 		if b, i := g.search(); b != nil && b.ID() != a.ID() {
 			g.pick(b, i)
+			g.m.SetTarget(b.ID())
 		}
 	}
 	return true
 }
 
-// Start implements goal.Goal.
-func (g *NearestAttackable) Start() {}
-
-// Stop implements goal.Goal.
-func (g *NearestAttackable) Stop() {
-	g.m.SetTarget(NoID)
-	g.entry = -1
+// Start implements goal.Goal: the mob takes the target canUse picked (1.26.60 0xBF2FAD0).
+func (g *NearestAttackable) Start() {
+	if a := g.actor(g.candidate); a != nil {
+		g.m.SetTarget(a.ID())
+	}
 }
+
+// Stop implements goal.Goal. BDS's stop is empty (0xBF321A0): the target stays, so a
+// goal of better priority taking over keeps the target the mob had.
+func (g *NearestAttackable) Stop() { g.entry = -1 }
 
 // Tick implements goal.Goal.
 func (g *NearestAttackable) Tick() {}
@@ -472,8 +491,10 @@ func (g *HurtBy) Start() {
 	}
 }
 
-// Stop implements goal.Goal.
-func (g *HurtBy) Stop() { g.m.SetTarget(NoID) }
+// Stop implements goal.Goal. BDS's stop is empty (1.26.60 HurtByTargetGoal vtable
+// 0xFAEF428, stop 0xBF321A0): stopping, as when nearest_attackable_target takes over,
+// keeps the target. Clearing it here reset a creeper's fuse every scan.
+func (g *HurtBy) Stop() {}
 
 // Tick implements goal.Goal.
 func (g *HurtBy) Tick() {}

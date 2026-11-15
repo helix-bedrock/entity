@@ -370,11 +370,11 @@ func TestNearestPrioritizedPicksLowestPriority(t *testing.T) {
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:zombie" }, MaxDist: 16, Priority: 1},
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:player" }, MaxDist: 16, Priority: 0},
 	}
-	if g := NewNearestAttackable(w, m, c); !g.CanUse() || m.target != 2 {
+	if !canStart(NewNearestAttackable(w, m, c)) || m.target != 2 {
 		t.Fatalf("nearest_attackable picked %d, want the nearest", m.target)
 	}
 	m.target = NoID
-	if g := NewNearestPrioritized(w, m, c); !g.CanUse() || m.target != 3 {
+	if !canStart(NewNearestPrioritized(w, m, c)) || m.target != 3 {
 		t.Fatalf("prioritized picked %d, want the priority 0 player", m.target)
 	}
 }
@@ -440,4 +440,13 @@ func TestDefendVillage(t *testing.T) {
 	if !g.CanUse() || g.candidate != 3 {
 		t.Fatalf("candidate %d, want the disliked player", g.candidate)
 	}
+}
+
+// canStart runs CanUse and, when it says yes, Start, as the selector does.
+func canStart(g *NearestAttackable) bool {
+	if !g.CanUse() {
+		return false
+	}
+	g.Start()
+	return true
 }
