@@ -86,10 +86,13 @@ func (c IntDataConfig) Apply(m Mob) { setInt(m, c.Key, c.Value) }
 // FireImmuneDefinition::initialize (0x140638B70: flag 50, and the actor's
 // own fire immunity, the engine's); out_of_control is
 // OutOfControlDefinition::initialize (0x140638FF0: flag 96). The other
-// two were not read: their names match the flags.
+// two were not read: their names match the flags. is_charged is 1.26.60's
+// IsChargedDefinition, which sets flag 9 (Powered, the charged creeper's
+// glow) when added (0xC144DE0) and clears it when removed (0xC144EE0).
 func MarkerFlagComponents() map[string]int {
 	return map[string]int{
 		"minecraft:fire_immune":              FlagFireImmune,
+		"minecraft:is_charged":               FlagPowered,
 		"minecraft:out_of_control":           FlagOutOfControl,
 		"minecraft:is_hidden_when_invisible": FlagHiddenWhenInvisible,
 		"minecraft:renders_when_invisible":   FlagRendersInvisible,
