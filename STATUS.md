@@ -1,12 +1,16 @@
 # What entity does
 
-Status as of 2026-10-31: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
+Status as of 2026-11-15: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
 its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
 breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
 attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
 hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
 `netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
+
+2026-11-15: ports can now be checked against BDS itself. `physics/oracle_test.go` reads a file from the private
+BDS component oracle (BDS's own functions run on generated inputs) and requires the same answer bit for bit; collision
+`clip` matches BDS 1.26.60 on 300,000 cases. The test skips when no oracle file is given.
 
 ## What works
 
