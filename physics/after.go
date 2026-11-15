@@ -99,9 +99,14 @@ func (b *Body) gravityStep(w World) {
 	case b.travel == TravelLava, b.travel == TravelWater:
 		have = b.liquidGravity(w)
 	}
-	if !have {
-		return
+	if have {
+		b.applyGravity()
 	}
+}
+
+// applyGravity is ApplyGravity: it adds the chosen acceleration, and slow
+// falling clears the fall distance.
+func (b *Body) applyGravity() {
 	b.Vel.Y += b.gravity
 	if b.slowFall {
 		b.FallDistance = 0
@@ -172,10 +177,11 @@ func keep(loss float32) float32 {
 	return 1 - min(1, loss)
 }
 
-// damp multiplies v by k, zeroing it when it is already tiny.
+// damp multiplies v by k, or by 0 when v is already tiny, which keeps a
+// negative v's sign (-0), as BDS's masked multiply does.
 func damp(v, k float32) float32 {
 	if abs32(v) <= eps {
-		return 0
+		k = 0
 	}
 	return v * k
 }
@@ -212,7 +218,7 @@ func (b *Body) applyFriction() {
 	case lavaWalk:
 		h = keep(fr * 0.39999998)
 	case legacy:
-		h = blockFrictionScale * f * fr
+		h = blockFrictionScale * (f * fr)
 	case b.travel == TravelGround:
 		h = keep((1-f)*fr) * keep(0.089999974*ad)
 	default:
@@ -220,6 +226,9 @@ func (b *Body) applyFriction() {
 	}
 	b.Vel.X = damp(b.Vel.X, h)
 	b.Vel.Z = damp(b.Vel.Z, h)
+	if b.VerticalFriction {
+		b.Vel.Y = damp(b.Vel.Y, h)
+	}
 }
 
 // climbOutOfLiquid is ClimbOutOfLiquidSystem (0x725DE90): a mob pressing

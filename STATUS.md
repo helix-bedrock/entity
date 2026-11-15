@@ -11,6 +11,11 @@ hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in 
 2026-11-15: ports can now be checked against BDS itself. `physics/oracle_test.go` reads a file from the private
 BDS component oracle (BDS's own functions run on generated inputs) and requires the same answer bit for bit; collision
 `clip` matches BDS 1.26.60 on 300,000 cases. The test skips when no oracle file is given.
+`physics/oracle_after_test.go` does the same for a ground mob's after-move systems (gravity choice, apply gravity,
+vertical drag, friction), called through BDS's own system objects on a live cow: all four match on 200,000 cases.
+The oracle found three friction differences, now fixed: a tiny velocity zeroed by friction keeps its sign (-0), legacy
+friction multiplies as 0.91 x (friction x modifier), and a new `Body.VerticalFriction` input also slows y (when BDS
+sets that flag is not yet found, so it stays off).
 
 ## What works
 

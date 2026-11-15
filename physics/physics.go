@@ -178,6 +178,9 @@ type Body struct {
 	WaterDrag *float32
 	// FrictionOverride is a friction modifier override, nil when absent.
 	FrictionOverride *float32
+	// VerticalFriction is MobTravelComponent's vertical friction flag: ground
+	// friction slows the y velocity too.
+	VerticalFriction bool
 	// MaxAutoStep is the highest step the mob walks up.
 	MaxAutoStep float32
 	// JumpPower is minecraft:jump.static's jump_power, the ground jump's
