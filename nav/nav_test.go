@@ -38,7 +38,7 @@ func (w *flatWorld) CollisionBox(b path.Block, p path.Pos) path.Box {
 	f := path.Vec3{X: float32(p.X), Y: float32(p.Y), Z: float32(p.Z)}
 	return path.Box{Min: f, Max: path.Vec3{X: f.X + 1, Y: f.Y + 1, Z: f.Z + 1}}
 }
-func (w *flatWorld) Door(path.Block) (int32, bool, bool)   { return 0, false, false }
+func (w *flatWorld) Door(path.Pos) (int32, bool, bool)     { return 0, false, false }
 func (w *flatWorld) HeightRange() (int32, int32)           { return -64, 320 }
 func (w *flatWorld) Height(_, _ int32) (int32, bool)       { return 64 + 64, true }
 func (w *flatWorld) IsDay() bool                           { return true }

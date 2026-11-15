@@ -19,7 +19,7 @@ var oppositeDir = [4]int32{2, 3, 0, 1}
 // passDoor reports whether the mob can go through door b at node i towards
 // the next node: the door's open side faces that way, or the mob is clear of
 // the door's block.
-func passDoor(w World, m *Mob, b path.Block, p *path.Path, i int) bool {
+func passDoor(w World, m *Mob, p *path.Path, i int) bool {
 	if i+1 >= len(p.Points) {
 		return false
 	}
@@ -37,7 +37,7 @@ func passDoor(w World, m *Mob, b path.Block, p *path.Path, i int) bool {
 		dir = 1
 	}
 
-	facing, open, hinge := w.Door(b)
+	facing, open, hinge := w.Door(at)
 	h := int32(0)
 	if hinge {
 		h = 1

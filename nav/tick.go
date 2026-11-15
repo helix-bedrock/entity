@@ -196,7 +196,7 @@ func (n *Navigation) walkUpdatePath(w World, m *Mob, water bool) {
 	for i := start; i < end; i++ {
 		pt := pts[i]
 		b := w.Block(pt.Pos)
-		if w.Info(b).Props&path.PropDoor != 0 && (m.OpensDoors || canBreakDoor(w, m, b)) && passDoor(w, m, b, n.path, i) {
+		if w.Info(b).Props&path.PropDoor != 0 && (m.OpensDoors || canBreakDoor(w, m, b)) && passDoor(w, m, n.path, i) {
 			door = true
 			break
 		}

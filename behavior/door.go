@@ -2,10 +2,12 @@ package behavior
 
 import "github.com/helix-bedrock/entity/nav"
 
-// The actor flags that keep a mob from using doors.
+// The actor flags that keep a mob from using the door goals: DoorBreaker
+// and DoorOpener. A mob with minecraft:annotation.open_door has DoorOpener
+// set and leaves its doors to that annotation's system (nav.OpenDoors).
 const (
-	FlagDoorBlocked1 = 79
-	FlagDoorBlocked2 = 81
+	FlagDoorBreaker = 79
+	FlagDoorOpener  = 81
 )
 
 // The door goal numbers.
@@ -98,7 +100,7 @@ func (g *DoorInteract) CanUse() bool {
 	if !ok || idx >= len(nodes) || nav.Flags(n.Flags())&nav.FlagCanOpenDoors == 0 {
 		return false
 	}
-	if m.Flag(FlagDoorBlocked1) || m.Flag(FlagDoorBlocked2) {
+	if m.Flag(FlagDoorBreaker) || m.Flag(FlagDoorOpener) {
 		return false
 	}
 	p := m.Pos()
