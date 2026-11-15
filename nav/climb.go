@@ -1,6 +1,16 @@
 package nav
 
-import "github.com/helix-bedrock/entity/path"
+import (
+	"github.com/helix-bedrock/entity/path"
+	"github.com/helix-bedrock/entity/trace"
+)
+
+// The bits of a climb trace record's N.
+const (
+	traceClimbing int64 = 1 << iota // heading for a target it has no path to
+	traceWall                       // bumped into a wall last tick
+	traceBorder                     // a border block is near
+)
 
 // climbTick is navigation.climb's tick. The mob climbs walls while it
 // heads for a target and bumps into one, and walks straight to a target it
@@ -9,7 +19,27 @@ func (n *Navigation) climbTick(w World, m *Mob) {
 	if m.MoveControl == nil {
 		return
 	}
-	setFlag(m, ActorWallClimbing, n.climbing && m.HorizontalCollision && !nearBorder(w, m.Box))
+	// The border is only looked for when it decides, as BDS's && does.
+	border := n.climbing && m.HorizontalCollision && nearBorder(w, m.Box)
+	wall := n.climbing && m.HorizontalCollision && !border
+	if m.Trace.On() && m.Actor != nil && m.Actor.Flag(ActorWallClimbing) != wall {
+		var bits int64
+		if n.climbing {
+			bits |= traceClimbing
+		}
+		if m.HorizontalCollision {
+			bits |= traceWall
+		}
+		if border {
+			bits |= traceBorder
+		}
+		what := "wall climb off"
+		if wall {
+			what = "wall climb on"
+		}
+		m.Trace.Note(trace.KindNav, what, "", bits)
+	}
+	setFlag(m, ActorWallClimbing, wall)
 	if !n.Done() || !n.climbing {
 		n.walkTick(w, m)
 		return

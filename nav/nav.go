@@ -12,6 +12,7 @@ import (
 	"math"
 
 	"github.com/helix-bedrock/entity/path"
+	"github.com/helix-bedrock/entity/trace"
 )
 
 // Flags are the navigation component's switches. The bit order is BDS's.
@@ -272,6 +273,9 @@ type Mob struct {
 	BreakDoors  *BreakDoors // nil when the mob has none
 	Difficulty  int32
 	MobGriefing bool
+
+	// Trace, when set, records navigation's decisions.
+	Trace *trace.Log
 }
 
 // ShouldTick reports whether the navigation system ticks a mob: not when it

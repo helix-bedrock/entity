@@ -3,6 +3,8 @@ package definition
 import (
 	"encoding/json"
 	"slices"
+
+	"github.com/helix-bedrock/entity/trace"
 )
 
 // InitMethod is how an actor came to be (BDS's ActorInitializationMethod).
@@ -93,6 +95,9 @@ type Instance struct {
 	pending, pendingLocked map[int]Value
 	components             Group
 	order                  []string
+
+	// Trace, when set, records the events that run and the groups they add and remove.
+	Trace *trace.Log
 }
 
 // New makes an actor's state. initEvent is used only with InitEvent.
@@ -209,13 +214,17 @@ func (in *Instance) Trigger(event string, ctx Tester, g *Guard) bool {
 		mods = ev.evaluate(ctx, in.host.NextFloat, nil)
 	}
 	if !in.host.BeforeEvent(event, ctx) {
+		in.Trace.Note(trace.KindEvent, "event cancelled", event, 0)
 		return false
 	}
+	in.Trace.Note(trace.KindEvent, "event", event, 0)
 	for _, m := range mods {
 		for _, name := range m.remove {
+			in.Trace.Note(trace.KindEvent, "remove group", name, 0)
 			in.stack.push(name, false)
 		}
 		for _, name := range m.add {
+			in.Trace.Note(trace.KindEvent, "add group", name, 0)
 			in.stack.push(name, true)
 		}
 		for _, r := range m.responses {
@@ -255,10 +264,16 @@ func (in *Instance) runTrigger(t *Trigger, ctx Tester, g *Guard) {
 }
 
 // AddGroup adds a component group, as an event's add does.
-func (in *Instance) AddGroup(name string) { in.stack.push(name, true) }
+func (in *Instance) AddGroup(name string) {
+	in.Trace.Note(trace.KindEvent, "add group", name, 0)
+	in.stack.push(name, true)
+}
 
 // RemoveGroup removes a component group, as an event's remove does.
-func (in *Instance) RemoveGroup(name string) { in.stack.push(name, false) }
+func (in *Instance) RemoveGroup(name string) {
+	in.Trace.Note(trace.KindEvent, "remove group", name, 0)
+	in.stack.push(name, false)
+}
 
 // Stack returns the groups added and removed after the base components, in
 // order.

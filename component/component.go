@@ -192,7 +192,7 @@ type Goals struct {
 // Apply hands the goals to the mob's selector, which drops its target
 // goals, stops its running goals and takes the new list, as BDS's rebuild
 // does.
-func (g Goals) Apply(s *goal.Selector) { s.SetGoals(g.Goals, g.Priorities) }
+func (g Goals) Apply(s *goal.Selector) { s.SetNamedGoals(g.Goals, g.Priorities, g.Names) }
 
 // BehaviorPrefix starts the names of the goal components.
 const BehaviorPrefix = "minecraft:behavior."

@@ -10,7 +10,10 @@
 // package, only on path's shared types, and can move into the engine whole.
 package physics
 
-import "github.com/helix-bedrock/entity/path"
+import (
+	"github.com/helix-bedrock/entity/path"
+	"github.com/helix-bedrock/entity/trace"
+)
 
 // Vec3 is the pathfinder's position type.
 type Vec3 = path.Vec3
@@ -214,6 +217,9 @@ type Body struct {
 	Target    Vec3
 	// WalkAnim is the walk animation speed (previous, current).
 	WalkAnim [2]float32
+
+	// Trace, when set, records the velocity after each step of the movement pipeline.
+	Trace *trace.Log
 
 	travel          Travel
 	liquid          bool
