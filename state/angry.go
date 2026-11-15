@@ -98,7 +98,8 @@ func (a *Angry) Tick(env *Env) {
 	m := env.Self
 	w := env.World
 	target := w.Actor(m.Target())
-	if !a.CanGetAngry(env, m, m, target, false) {
+	if ok, why := a.canGetAngry(env, m, m, target, false); !ok {
+		env.note("calm down", why)
 		a.calmDown(env)
 		return
 	}
@@ -117,6 +118,7 @@ func (a *Angry) Tick(env *Env) {
 	}
 	a.timer--
 	if a.timer <= 0 {
+		env.note("calm down", "anger timer ran out")
 		a.calmDown(env)
 	}
 	if a.nextSound < uint64(now) {
@@ -147,25 +149,40 @@ func (a *Angry) calmDown(env *Env) {
 // stays angry only when filters is empty. forced is set for alerted
 // friends, who skip the player checks.
 func (a *Angry) CanGetAngry(env *Env, self Mob, checker behavior.Mob, target behavior.Actor, forced bool) bool {
+	ok, _ := a.canGetAngry(env, self, checker, target, forced)
+	return ok
+}
+
+// canGetAngry is CanGetAngry with the reason it says no, for traces.
+func (a *Angry) canGetAngry(env *Env, self Mob, checker behavior.Mob, target behavior.Actor, forced bool) (bool, string) {
 	if target == nil {
-		return emptyFilter(a.cfg.Filters)
+		if emptyFilter(a.cfg.Filters) {
+			return true, ""
+		}
+		return false, "no target and the angry filters are not empty"
 	}
 	if target.Removed() || checker == nil || checker.Removed() || target.ID() == checker.ID() {
-		return false
+		return false, "target gone or itself"
 	}
-	if !a.cfg.Filters.Eval(env.tester(self, target)) || !target.Alive() {
-		return false
+	if !a.cfg.Filters.Eval(env.tester(self, target)) {
+		return false, "target fails the angry filters"
+	}
+	if !target.Alive() {
+		return false, "target dead"
 	}
 	if c, ok := checker.(Mob); ok && !c.CanAttack(target, forced) {
-		return false
+		return false, "cannot attack target (game mode, invulnerable)"
 	}
 	if checker.Owner() == behavior.NoID {
 		if target.IsPlayer() && !forced && (target.Invulnerable() || env.World.Peaceful()) {
-			return false
+			return false, "target an invulnerable player, or peaceful"
 		}
-		return true
+		return true, ""
 	}
-	return target.Owner() != checker.Owner() && target.Owner() != self.Owner()
+	if target.Owner() == checker.Owner() || target.Owner() == self.Owner() {
+		return false, "target has the same owner"
+	}
+	return true, ""
 }
 
 // alert sets the mob's friends on its target: mobs within broadcast_range

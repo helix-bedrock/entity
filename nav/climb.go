@@ -22,7 +22,7 @@ func (n *Navigation) climbTick(w World, m *Mob) {
 	// The border is only looked for when it decides, as BDS's && does.
 	border := n.climbing && m.HorizontalCollision && nearBorder(w, m.Box)
 	wall := n.climbing && m.HorizontalCollision && !border
-	if m.Trace.On() && m.Actor != nil && m.Actor.Flag(ActorWallClimbing) != wall {
+	if m.Trace.Wants(trace.KindNav) && m.Actor != nil && m.Actor.Flag(ActorWallClimbing) != wall {
 		var bits int64
 		if n.climbing {
 			bits |= traceClimbing

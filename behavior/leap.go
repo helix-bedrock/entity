@@ -40,17 +40,20 @@ func NewLeap(w World, m Mob, c LeapConfig) *Leap {
 func (g *Leap) CanUse() bool {
 	t := g.actor(g.mob.Target())
 	if t == nil {
-		return false
+		return g.no("no target")
 	}
 	d2 := dist2(g.mob.Pos(), t.Pos())
-	if d2 < leapMin2 || d2 > leapMax2 {
-		return false
+	if d2 < leapMin2 {
+		return g.no("target nearer than 2 blocks")
+	}
+	if d2 > leapMax2 {
+		return g.no("target farther than 4 blocks")
 	}
 	if g.cfg.MustBeOnGround && !g.mob.OnGround() {
-		return false
+		return g.no("not on the ground")
 	}
 	if g.world.Random().NextInt(leapChance) != 0 {
-		return false
+		return g.no("random 1 in 5 failed")
 	}
 	g.target = t.ID()
 	if g.cfg.SetPersistent && t.IsPlayer() {

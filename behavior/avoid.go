@@ -113,15 +113,15 @@ func (g *Avoid) find(r float32) Actor {
 // flee picks the flee position from e and makes the path to it.
 func (g *Avoid) flee(e Actor) bool {
 	if e == nil || e.Removed() {
-		return false
+		return g.no("nothing to avoid near")
 	}
 	g.threat = e.ID()
 	if !g.cfg.IgnoreVisibility {
 		if e.IsPlayer() && spectator(g.world, e) {
-			return false
+			return g.no("threat is a spectator")
 		}
 		if s, ok := g.mob.(CanSeer); ok && !s.CanSee(e) {
-			return false
+			return g.no("cannot see threat")
 		}
 	}
 	n := g.mob.Nav()
@@ -129,7 +129,7 @@ func (g *Avoid) flee(e Actor) bool {
 	p, ok := awayPos(g.world, g.mob, g.cfg.H, g.cfg.V, from, true)
 	if !ok {
 		if n != nil {
-			return false
+			return g.no("no position away from threat")
 		}
 		// Without navigation BDS mirrors the threat through the mob.
 		mp := g.mob.Pos()
@@ -137,7 +137,7 @@ func (g *Avoid) flee(e Actor) bool {
 	}
 	g.pos = p
 	if dist2(from, g.mob.Pos()) > dist2(from, p) {
-		return false
+		return g.no("flee position nearer the threat")
 	}
 	if s, ok := g.mob.(Avoider); ok && g.cfg.ProbabilityPerStrength < 1 {
 		if v, has := s.Strength(); has && v > 0 {

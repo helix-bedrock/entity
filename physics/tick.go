@@ -42,7 +42,7 @@ func (b *Body) Tick(w World) {
 
 // traceStep records the velocity and what the body touches after a step.
 func (b *Body) traceStep(w World, step string) {
-	if !b.Trace.On() {
+	if !b.Trace.Wants(trace.KindPhysics) {
 		return
 	}
 	var n int64

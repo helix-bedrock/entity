@@ -50,17 +50,21 @@ func (g *Stroll) position() (Vec3, bool) {
 
 // CanUse implements goal.Goal.
 func (g *Stroll) CanUse() bool {
-	if g.mob.Nav() == nil || g.mob.Vehicle() != NoID {
-		return false
+	if g.mob.Nav() == nil {
+		return g.no("no navigation")
+	}
+	if g.mob.Vehicle() != NoID {
+		return g.no("riding")
 	}
 	if g.cfg.Interval != 0 && g.world.IRandom().NextInt(g.cfg.Interval) != 0 {
-		return false
+		return g.no("random interval failed")
 	}
 	p, ok := g.finder.position()
-	if ok {
-		g.wanted = p
+	if !ok {
+		return g.no("no stroll position found")
 	}
-	return ok
+	g.wanted = p
+	return true
 }
 
 // CanContinueToUse implements goal.Goal.

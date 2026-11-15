@@ -77,20 +77,28 @@ func (t *target) IsTargetGoal() bool { return true }
 // as every goal calls it: invulnerable players are not targets.
 func (t *target) canAttack(a Actor) bool {
 	m := t.m
-	if a == nil || a.ID() == m.ID() || a.Removed() || m.Removed() || !a.Targetable() || !a.Alive() {
-		return false
-	}
-	if a.ID() == m.Owner() && !t.attackOwner {
-		return false
-	}
-	if !m.CanAttack(a) {
-		return false
+	switch {
+	case a == nil || a.Removed() || m.Removed():
+		return t.no("no candidate")
+	case a.ID() == m.ID():
+		return t.no("candidate is itself")
+	case !a.Targetable():
+		return t.no("candidate not targetable")
+	case !a.Alive():
+		return t.no("candidate dead")
+	case a.ID() == m.Owner() && !t.attackOwner:
+		return t.no("candidate is its owner")
+	case !m.CanAttack(a):
+		return t.no("cannot attack candidate (game mode, invulnerable)")
 	}
 	if !t.attackOwner && m.Team() != 0 {
-		return a.Team() != m.Team()
+		if a.Team() == m.Team() {
+			return t.no("candidate on its team")
+		}
+		return true
 	}
 	if a.IsPlayer() && (a.Invulnerable() || !m.PlayersTargetable()) {
-		return false
+		return t.no("player invulnerable or not targetable")
 	}
 	return true
 }
@@ -341,15 +349,21 @@ func (g *NearestAttackable) due() bool {
 
 // CanUse implements goal.Goal.
 func (g *NearestAttackable) CanUse() bool {
-	if g.m.Admiring() || len(g.cfg.EntityTypes) == 0 || !g.due() {
-		return false
+	if g.m.Admiring() {
+		return g.no("admiring an item")
+	}
+	if len(g.cfg.EntityTypes) == 0 {
+		return g.no("no entity_types")
+	}
+	if !g.due() {
+		return g.no("not a scan tick")
 	}
 	if g.cfg.Probability < 1 && g.world.Random().NextFloat() >= g.cfg.Probability {
-		return false
+		return g.no("probability roll failed")
 	}
 	a, i := g.search()
 	if a == nil {
-		return false
+		return g.no("no candidate in range that passes the filters")
 	}
 	g.pick(a, i)
 	return true
@@ -432,10 +446,19 @@ func (g *HurtBy) matches(a Actor) bool {
 // CanUse implements goal.Goal.
 func (g *HurtBy) CanUse() bool {
 	a := g.attacker()
-	if a == nil || !g.canAttack(a) || !g.matches(a) {
+	if a == nil {
+		return g.no("not hurt by anything")
+	}
+	if !g.canAttack(a) {
 		return false
 	}
-	return !g.mustReach || g.canReach(a)
+	if !g.matches(a) {
+		return g.no("attacker fails entity_types")
+	}
+	if g.mustReach && !g.canReach(a) {
+		return g.no("cannot reach attacker (must_reach)")
+	}
+	return true
 }
 
 // CanContinueToUse implements goal.Goal.

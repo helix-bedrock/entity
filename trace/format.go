@@ -18,6 +18,15 @@ func (r *Record) String() string {
 	switch r.Kind {
 	case KindTick:
 		fmt.Fprintf(&b, " pos %s health %.2f", vec(r.V), r.F)
+	case KindVelocity:
+		fmt.Fprintf(&b, " %s", vec(r.V))
+	case KindTarget:
+		fmt.Fprintf(&b, " id %d", r.N)
+		if r.V != [3]float32{} {
+			fmt.Fprintf(&b, " at %s dist %.2f", vec(r.V), r.F)
+		}
+	case KindBlock:
+		fmt.Fprintf(&b, " at (%d %d %d)", int(r.V[0]), int(r.V[1]), int(r.V[2]))
 	case KindPhysics:
 		fmt.Fprintf(&b, " vel %s%s", vec(r.V), physicsBits(r.N))
 	case KindFlag:
@@ -38,6 +47,15 @@ func (r *Record) String() string {
 		if r.F != 0 {
 			fmt.Fprintf(&b, " %.3f", r.F)
 		}
+	}
+	if r.Why != "" {
+		b.WriteString(" because ")
+		b.WriteString(r.Why)
+	}
+	if r.Who != "" {
+		b.WriteString(" [by ")
+		b.WriteString(r.Who)
+		b.WriteString("]")
 	}
 	return b.String()
 }

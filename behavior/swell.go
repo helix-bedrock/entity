@@ -44,16 +44,22 @@ func NewSwell(w World, c Creeper, cfg SwellConfig) *Swell {
 // CanUse implements goal.Goal (0x533D530).
 func (g *Swell) CanUse() bool {
 	if g.c.Nav() == nil {
-		return false
+		return g.no("no navigation")
 	}
 	if g.c.SwellDir() > 0 {
 		return true
 	}
 	t := g.actor(g.c.Target())
-	if t == nil || g.cfg.StartDistance <= boxDistance(g.c.Box(), t.Box()) {
-		return false
+	if t == nil {
+		return g.no("no target")
 	}
-	return g.c.CanSee(t)
+	if g.cfg.StartDistance <= boxDistance(g.c.Box(), t.Box()) {
+		return g.no("target beyond start_distance")
+	}
+	if !g.c.CanSee(t) {
+		return g.no("cannot see target")
+	}
+	return true
 }
 
 // CanContinueToUse implements goal.Goal.

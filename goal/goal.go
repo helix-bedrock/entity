@@ -44,8 +44,14 @@ type entry struct {
 	toStart  bool
 	// name is the goal's component name, for traces.
 	name string
-	// could is the last CanUse answer traced: 0 none yet, 1 yes, -1 no.
+	// could is the last CanUse answer traced: 0 none yet, 1 yes, -1 no; why its reason.
 	could int8
+	why   string
+}
+
+// Reasoner is a goal that can say why its CanUse said no, for traces.
+type Reasoner interface {
+	Why() string
 }
 
 // Selector holds one mob's goals. It is not safe for concurrent use; the
@@ -245,15 +251,18 @@ func (s *Selector) tick(target bool) {
 // differs from the last one.
 func (s *Selector) canUse(e *entry) bool {
 	ok := e.goal.CanUse()
-	if s.Trace.On() {
+	if s.Trace.Wants(trace.KindGoal) {
 		c := int8(-1)
 		what := trace.GoalCannotUse
+		why := ""
 		if ok {
 			c, what = 1, trace.GoalCanUse
+		} else if r, has := e.goal.(Reasoner); has {
+			why = r.Why()
 		}
-		if c != e.could {
-			e.could = c
-			s.traceGoal(e, what)
+		if c != e.could || why != e.why {
+			e.could, e.why = c, why
+			s.Trace.Add(trace.Record{Kind: trace.KindGoal, What: what, Name: e.name, N: int64(e.priority), Why: why})
 		}
 	}
 	return ok

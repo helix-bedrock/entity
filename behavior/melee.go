@@ -106,15 +106,18 @@ func NewMeleeBox(w World, m Attacker, c MeleeConfig) *Melee {
 // CanUse implements goal.Goal.
 func (g *Melee) CanUse() bool {
 	if g.m.Admiring() {
-		return false
+		return g.no("admiring an item")
 	}
 	n := g.m.Nav()
 	t := g.actor(g.m.Target())
-	if n == nil || t == nil || !t.Alive() {
-		return false
+	if n == nil {
+		return g.no("no navigation")
+	}
+	if t == nil || !t.Alive() {
+		return g.no("no living target")
 	}
 	if len(g.cfg.AttackTypes) != 0 && !contains(g.cfg.AttackTypes, t.Type()) {
-		return false
+		return g.no("target not in attack_types")
 	}
 	g.target = t.ID()
 	if g.m.Vehicle() != NoID {
@@ -122,11 +125,10 @@ func (g *Melee) CanUse() bool {
 	}
 	end, ok := n.PathTo(t)
 	if !ok {
-		return false
+		return g.no("no path to target")
 	}
-	if g.cfg.RequireCompletePath {
-		p := blockOf(t.Pos())
-		return end == p
+	if g.cfg.RequireCompletePath && end != blockOf(t.Pos()) {
+		return g.no("path does not reach target (require_complete_path)")
 	}
 	return true
 }

@@ -31,6 +31,7 @@ import (
 	"github.com/helix-bedrock/entity/behavior"
 	"github.com/helix-bedrock/entity/definition"
 	"github.com/helix-bedrock/entity/sensor"
+	"github.com/helix-bedrock/entity/trace"
 )
 
 // The actor flags the state components set, by BDS's actor flag number,
@@ -158,6 +159,8 @@ type Env struct {
 	// CanRide is the passenger's own test that it can ride the vehicle;
 	// nil allows it.
 	CanRide func(passenger, vehicle behavior.Actor) bool
+	// Trace, when set, records the triggers the components fire and their decisions.
+	Trace *trace.Log
 }
 
 func (e *Env) tester(self, other behavior.Actor) definition.Tester {
@@ -170,8 +173,26 @@ func (e *Env) tester(self, other behavior.Actor) definition.Tester {
 // fire tests a trigger's filters and runs it on the mob, as BDS's
 // executeTrigger does.
 func (e *Env) fire(t *definition.Trigger, ctx definition.Tester) {
-	if t != nil && e.Events != nil && t.Filters.Eval(ctx) {
+	if t == nil || e.Events == nil {
+		return
+	}
+	pass := t.Filters.Eval(ctx)
+	if e.Trace.Wants(trace.KindState) {
+		what := "trigger"
+		if !pass {
+			what = "trigger filtered out"
+		}
+		e.Trace.Add(trace.Record{Kind: trace.KindState, What: what, Name: t.Event, Who: trace.Caller(1)})
+	}
+	if pass {
 		e.Events.RunTrigger(t, ctx)
+	}
+}
+
+// note records a state component's decision with its reason.
+func (e *Env) note(what, why string) {
+	if e.Trace.Wants(trace.KindState) {
+		e.Trace.Add(trace.Record{Kind: trace.KindState, What: what, Why: why, Who: trace.Caller(1)})
 	}
 }
 

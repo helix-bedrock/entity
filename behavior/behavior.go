@@ -556,6 +556,17 @@ type base struct {
 	mob   Mob
 	world World
 	flags goal.Flags
+	// why is why CanUse last said no, for traces ("" when it did not say).
+	why string
+}
+
+// Why is why the goal's CanUse last said no, "" when it gave no reason.
+func (b *base) Why() string { return b.why }
+
+// no notes why the goal cannot be used and returns false.
+func (b *base) no(why string) bool {
+	b.why = why
+	return false
 }
 
 // ControlFlags implements goal.Goal.

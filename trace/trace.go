@@ -8,22 +8,49 @@
 // and event names, the constant step names below).
 package trace
 
+import (
+	"runtime"
+	"strings"
+)
+
 // Kind is what part of the mob a record is about.
 type Kind uint8
 
 // The record kinds.
 const (
-	KindTick    Kind = iota // the start of a tick: position, velocity, health
-	KindGoal                // the goal selector
-	KindNav                 // navigation and the move control
-	KindPhysics             // a step of the movement pipeline
-	KindFlag                // an actor flag changed
-	KindEvent               // a definition event fired or a component group came or went
-	KindHurt                // damage taken
-	KindNote                // anything else the engine records
+	KindTick     Kind = iota // the start of a tick: position, velocity, health
+	KindGoal                 // the goal selector
+	KindNav                  // navigation and the move control
+	KindPhysics              // a step of the movement pipeline
+	KindFlag                 // an actor flag changed
+	KindEvent                // a definition event fired or a component group came or went
+	KindHurt                 // damage taken
+	KindNote                 // anything else the engine records
+	KindTarget               // the target changed, and what changed it
+	KindVelocity             // something set or added to the velocity, and what
+	KindState                // a state component decided something (angry, timers, sensors)
+	KindAttack               // an attack, explosion, shot or other action on the world
+	KindBlock                // a block the mob touches or stands on
+	KindSound                // a sound the mob played
 )
 
-var kindNames = [...]string{"tick", "goal", "nav", "phys", "flag", "event", "hurt", "note"}
+var kindNames = [...]string{"tick", "goal", "nav", "phys", "flag", "event", "hurt", "note", "target", "vel", "state", "act", "block", "sound"}
+
+// kindLevel is the detail level a kind is recorded from: 1 is goals starting and stopping,
+// targets, events, hurts and actions; 2 adds navigation, flags, state decisions, velocity
+// changes, sounds and goals' CanUse answers; 3 adds every movement step and the blocks
+// touched.
+var kindLevel = [...]uint8{
+	KindTick: 1, KindGoal: 1, KindNav: 2, KindPhysics: 3, KindFlag: 2, KindEvent: 1, KindHurt: 1,
+	KindNote: 1, KindTarget: 1, KindVelocity: 2, KindState: 2, KindAttack: 1, KindBlock: 3, KindSound: 2,
+}
+
+// The detail levels.
+const (
+	LevelLow  = 1
+	LevelMid  = 2
+	LevelHigh = 3
+)
 
 // String is the kind's short name.
 func (k Kind) String() string {
@@ -77,6 +104,10 @@ type Record struct {
 	V [3]float32
 	// F is another number.
 	F float32
+	// Why is the reason, when the recorder knows it.
+	Why string
+	// Who is the code that did it (Caller), when the recorder asked.
+	Who string
 }
 
 // Log is one mob's trace.
@@ -89,6 +120,8 @@ type Log struct {
 	// Paused stops the mob's ticks while set; Steps lets that many run anyway.
 	Paused bool
 	Steps  int
+	// Level is how much is recorded, LevelLow to LevelHigh.
+	Level uint8
 }
 
 // DefaultSize is how many records New keeps when given 0: a few seconds of a busy mob.
@@ -99,7 +132,51 @@ func New(n int) *Log {
 	if n <= 0 {
 		n = DefaultSize
 	}
-	return &Log{recs: make([]Record, n)}
+	return &Log{recs: make([]Record, n), Level: LevelHigh}
+}
+
+// Wants reports whether records of kind k are kept at the log's level. Hooks that must
+// build something to record check it first; Add checks it too.
+func (l *Log) Wants(k Kind) bool {
+	if l == nil {
+		return false
+	}
+	return int(k) >= len(kindLevel) || kindLevel[k] <= l.Level
+}
+
+// Caller names the function skip calls above the one calling Caller ("behavior.(*Leap).Start"),
+// for records of who did something. It allocates: call it only when Wants says yes.
+func Caller(skip int) string {
+	pc, _, _, ok := runtime.Caller(skip + 1)
+	if !ok {
+		return ""
+	}
+	f := runtime.FuncForPC(pc)
+	if f == nil {
+		return ""
+	}
+	name := f.Name()
+	if i := strings.LastIndex(name, "/"); i >= 0 {
+		name = name[i+1:]
+	}
+	return name
+}
+
+// Callers is Caller for the skip..skip+n-1 functions above, joined with " < ", for when the
+// nearest one is only a helper.
+func Callers(skip, n int) string {
+	var b strings.Builder
+	for i := range n {
+		c := Caller(skip + 1 + i)
+		if c == "" {
+			break
+		}
+		if i > 0 {
+			b.WriteString(" < ")
+		}
+		b.WriteString(c)
+	}
+	return b.String()
 }
 
 // On reports whether l records. Hooks that must build something to record check it first.
@@ -122,7 +199,7 @@ func (l *Log) Tick() uint64 {
 
 // Add records r, stamped with the current tick.
 func (l *Log) Add(r Record) {
-	if l == nil || len(l.recs) == 0 {
+	if l == nil || len(l.recs) == 0 || !l.Wants(r.Kind) {
 		return
 	}
 	r.Tick = l.tick
@@ -137,6 +214,13 @@ func (l *Log) Add(r Record) {
 func (l *Log) Note(k Kind, what, name string, n int64) {
 	if l != nil {
 		l.Add(Record{Kind: k, What: what, Name: name, N: n})
+	}
+}
+
+// Why records something of kind k with its reason.
+func (l *Log) Why(k Kind, what, name, why string) {
+	if l != nil {
+		l.Add(Record{Kind: k, What: what, Name: name, Why: why})
 	}
 }
 
