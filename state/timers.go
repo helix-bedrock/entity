@@ -552,6 +552,12 @@ func (e *Explode) Tick(env *Env, a Actions) {
 	setInt(m, DataFuseTime, e.fuse)
 }
 
+// ExplodeRemoved is what removing minecraft:explode does (BDS 1.26.60's component
+// storage removal 0xB4AE1E0 -> 0x725A1D0): the ignited flag drops. A creeper whose
+// target walks out of range loses its exploding group this way, and its swell then
+// shrinks back.
+func ExplodeRemoved(m behavior.Mob) { m.SetFlag(FlagIgnited, false) }
+
 // Detonate is ExplodeComponent::explode (1.21.3 0x1405AFFF0): fire and
 // block breaking obey mobGriefing when asked to, then the mob is removed.
 func (e *Explode) Detonate(env *Env, a Actions, at behavior.Vec3) {

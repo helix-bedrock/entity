@@ -689,6 +689,9 @@ func othersChanged(m state.Mob, s, prev *state.Set, prevComps, comps definition.
 	if prev.Sittable != nil && s.Sittable == nil {
 		state.SittableRemoved(m)
 	}
+	if prev.Explode != nil && s.Explode == nil {
+		state.ExplodeRemoved(m)
+	}
 	if s.Heartbeat != nil && prev.Heartbeat == nil {
 		s.Heartbeat.Apply(m)
 	}
