@@ -37,7 +37,7 @@ func NewTradeWithPlayer(w World, m PlayerTrader, c TradeWithPlayerConfig) *Trade
 	return &TradeWithPlayer{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5348ED0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x569FBE0).
 func (g *TradeWithPlayer) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil || g.actor(m.TradingPlayer()) == nil || m.TradeInterrupted() {
@@ -46,7 +46,7 @@ func (g *TradeWithPlayer) CanUse() bool {
 	return g.cfg.Filters == nil || g.cfg.Filters(m, m)
 }
 
-// CanContinueToUse implements goal.Goal (0x5349090).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x569FDA0).
 func (g *TradeWithPlayer) CanContinueToUse() bool {
 	if !g.CanUse() {
 		return false
@@ -56,7 +56,7 @@ func (g *TradeWithPlayer) CanContinueToUse() bool {
 	return p != nil && dist2(g.mob.Pos(), p.Pos()) <= d*d
 }
 
-// Start implements goal.Goal (0x5349170).
+// Start implements goal.Goal (BDS 1.26.60 0x569FE80).
 func (g *TradeWithPlayer) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()

@@ -88,7 +88,7 @@ func NewTowardsDwelling(w World, m Mob, speed float32) *TowardsDwelling {
 	return &TowardsDwelling{towards{base: base{mob: m, world: w, flags: flagsMove}, speed: speed}}
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal (BDS 1.26.60 0x543D6A0).
 func (g *TowardsDwelling) CanUse() bool {
 	m := g.mob
 	if m.Nav() == nil {

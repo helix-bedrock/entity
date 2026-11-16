@@ -36,19 +36,20 @@ func NewRandomHover(w World, m Mob, c RandomHoverConfig) *RandomHover {
 	return &RandomHover{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal (BDS 1.26.60 0xBF9CC30): the interval roll
+// is on Level::getRandom.
 func (g *RandomHover) CanUse() bool {
 	if g.mob.Nav() == nil || g.mob.Flag(FlagResting) {
 		return false
 	}
-	if g.world.IRandom().NextInt(g.cfg.Interval) != 0 {
+	if g.world.Random().NextInt(g.cfg.Interval) != 0 {
 		return false
 	}
 	g.find()
 	return g.have
 }
 
-// find is the path search (0xBDC8850): a spot on the ground lifted by the
+// find is the path search (BDS 1.26.60 0xBF9D3D0): a spot on the ground lifted by the
 // hover height, then a spot in the air, each kept only when a path to it
 // exists.
 func (g *RandomHover) find() {
@@ -78,12 +79,12 @@ func viewDir(m Mob) Vec3 {
 	return Vec3{X: float32(-math.Sin(r)), Z: float32(math.Cos(r))}
 }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0xBF9D2D0).
 func (g *RandomHover) CanContinueToUse() bool {
 	return g.mob.Nav() != nil && !g.mob.Flag(FlagResting) && g.have
 }
 
-// Start implements goal.Goal.
+// Start implements goal.Goal (BDS 1.26.60 0xBF9CDF0).
 func (g *RandomHover) Start() { g.move() }
 
 func (g *RandomHover) move() {
@@ -99,7 +100,8 @@ func (g *RandomHover) move() {
 // Stop implements goal.Goal.
 func (g *RandomHover) Stop() {}
 
-// Tick implements goal.Goal: on arrival it looks for the next spot.
+// Tick implements goal.Goal (BDS 1.26.60 0xBF9D130): on arrival it looks
+// for the next spot.
 func (g *RandomHover) Tick() {
 	if n := g.mob.Nav(); n != nil && n.Done() {
 		g.find()

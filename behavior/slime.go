@@ -73,7 +73,8 @@ func (g *SlimeKeepOnJumping) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeKeepOnJumping) Stop() {}
 
-// Tick implements goal.Goal (0x592ECE0).
+// Tick implements goal.Goal (BDS 1.26.60 canUse 0x5B05040, tick
+// 0x5B050F0).
 func (g *SlimeKeepOnJumping) Tick() { g.s.KeepMoving(g.cfg.SpeedMultiplier) }
 
 // SlimeFloatConfig is the JSON of minecraft:behavior.slime_float.
@@ -101,7 +102,7 @@ func NewSlimeFloat(w World, s Slime, c SlimeFloatConfig) *SlimeFloat {
 	return &SlimeFloat{base: base{mob: s, world: w}, s: s, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x592E720).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5B04B20).
 func (g *SlimeFloat) CanUse() bool {
 	if _, ok := g.s.MoveTurn(); !ok || !g.s.HasJumpControl() {
 		return false
@@ -118,9 +119,10 @@ func (g *SlimeFloat) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeFloat) Stop() {}
 
-// Tick implements goal.Goal (0x592E8F0).
+// Tick implements goal.Goal (BDS 1.26.60 0x5B04D00): the jump roll is on
+// the thread random.
 func (g *SlimeFloat) Tick() {
-	if g.cfg.JumpChance > g.world.Random().NextFloat() {
+	if g.cfg.JumpChance > g.world.ThreadRandom().NextFloat() {
 		g.s.FloatJump()
 	}
 	g.s.KeepMoving(g.cfg.SpeedMultiplier)
@@ -159,7 +161,7 @@ func NewSlimeRandomDirection(w World, s Slime, c SlimeRandomDirectionConfig) *Sl
 		minTime: int32(c.MinChangeTime * ticksPerSecond), addTime: c.AddRandomTime * ticksPerSecond}
 }
 
-// CanUse implements goal.Goal (0x592EE40).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5B05250).
 func (g *SlimeRandomDirection) CanUse() bool {
 	if _, ok := g.s.MoveTurn(); !ok || g.actor(g.s.Target()) != nil {
 		return false
@@ -176,12 +178,13 @@ func (g *SlimeRandomDirection) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeRandomDirection) Stop() {}
 
-// Tick implements goal.Goal (0x592F040).
+// Tick implements goal.Goal (BDS 1.26.60 0x5B05450): both rolls are on the
+// thread random.
 func (g *SlimeRandomDirection) Tick() {
 	t := g.timer
 	g.timer--
 	if t < 2 {
-		r := g.world.Random()
+		r := g.world.ThreadRandom()
 		g.timer = g.minTime + r.NextInt(g.addTime)
 		g.yaw = float32(r.NextInt(g.cfg.TurnRange))
 	}

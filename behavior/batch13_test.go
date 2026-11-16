@@ -296,7 +296,7 @@ func TestTakeFlowerWaitsThenTakes(t *testing.T) {
 	if g.walking {
 		t.Fatal("walked before the wait was over")
 	}
-	m.offers[2] = 396
+	m.offers[2] = 320
 	g.Tick()
 	if !g.walking || len(m.stopped) != 1 {
 		t.Fatalf("walking %v taken %v", g.walking, m.stopped)

@@ -107,8 +107,8 @@ func (g *OfferFlower) Tick() {
 type TakeFlowerConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
 	Filters         Filter  `json:"-"`
-	// MinWaitTime and MaxWaitTime are taken from the offer's length as
-	// whole numbers of ticks, the way BDS casts them.
+	// MinWaitTime and MaxWaitTime are in seconds; BDS turns them into whole
+	// ticks and takes the roll from the offer's length.
 	MinWaitTime         float32  `json:"min_wait_time"`
 	MaxWaitTime         float32  `json:"max_wait_time"`
 	SearchArea          Vec3     `json:"search_area"`
@@ -136,14 +136,20 @@ type TakeFlower struct {
 	takeAt  int32
 	walking bool
 	near    []Actor
+	// minWait and maxWait are the wait times in ticks, minDist2 is
+	// min_distance_to_target squared (BDS 1.26.60 init 0x5555740).
+	minWait, maxWait int32
+	minDist2         float32
 }
 
-// NewTakeFlower makes the goal (0x5371FF0).
+// NewTakeFlower makes the goal (BDS 1.26.60 0x581E4C0).
 func NewTakeFlower(w World, m FlowerOfferer, c TakeFlowerConfig) *TakeFlower {
-	return &TakeFlower{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID}
+	return &TakeFlower{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID,
+		minWait: int32(c.MinWaitTime * ticksPerSecond), maxWait: int32(c.MaxWaitTime * ticksPerSecond),
+		minDist2: c.MinDistanceToTarget * c.MinDistanceToTarget}
 }
 
-// CanUse implements goal.Goal (0x5342340).
+// CanUse implements goal.Goal (BDS 1.26.60 0x569A470).
 func (g *TakeFlower) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil || g.cfg.Filters != nil && !g.cfg.Filters(m, m) {
@@ -163,7 +169,7 @@ func (g *TakeFlower) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x5342700).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x569A830).
 func (g *TakeFlower) CanContinueToUse() bool {
 	if g.actor(g.target) == nil {
 		return false
@@ -172,22 +178,22 @@ func (g *TakeFlower) CanContinueToUse() bool {
 	return ok
 }
 
-// Start implements goal.Goal (0x53428F0): the mob takes the flower some
-// way into the offer.
+// Start implements goal.Goal (BDS 1.26.60 0x569AA20): the mob takes the
+// flower some way into the offer; the roll is on the thread random.
 func (g *TakeFlower) Start() {
 	g.walking = false
 	if g.actor(g.target) == nil {
 		return
 	}
 	if d, ok := g.m.OfferDuration(g.target); ok {
-		g.takeAt = d - randomInt(g.world.Random(), int32(g.cfg.MinWaitTime), int32(g.cfg.MaxWaitTime))
+		g.takeAt = d - randomInt(g.world.ThreadRandom(), g.minWait, g.maxWait)
 	}
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
 	}
 }
 
-// Stop implements goal.Goal (0x5342CF0).
+// Stop implements goal.Goal (BDS 1.26.60 0x569AE30).
 func (g *TakeFlower) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -195,7 +201,7 @@ func (g *TakeFlower) Stop() {
 	g.target = NoID
 }
 
-// Tick implements goal.Goal (0x5342E20).
+// Tick implements goal.Goal (BDS 1.26.60 0x569AF60).
 func (g *TakeFlower) Tick() {
 	t := g.actor(g.target)
 	if t == nil {
@@ -212,8 +218,7 @@ func (g *TakeFlower) Tick() {
 		}
 		g.walking = true
 	}
-	// BDS compares the squared distance with the plain setting.
-	if g.cfg.MinDistanceToTarget <= dist2(g.mob.Pos(), t.Pos()) {
+	if g.minDist2 <= dist2(g.mob.Pos(), t.Pos()) {
 		return
 	}
 	g.m.StopOfferingFlower(g.target, g.cfg.StopEvent)
