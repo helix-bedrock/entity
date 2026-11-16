@@ -70,7 +70,7 @@ func DefaultUseKineticWeapon() UseKineticWeaponConfig {
 	}
 }
 
-// UseKineticWeapon is UseKineticWeaponGoal (canUse 0x56A0310, canContinue
+// UseKineticWeapon is UseKineticWeaponGoal (BDS 1.26.60 canUse 0x56A0310, canContinue
 // 0x56A03F0, start 0x569FFA0, stop 0x56A0260, tick 0x56A04D0): a
 // melee_attack whose mob, holding a kinetic weapon, closes in, charges
 // through the target, runs past it and turns for another charge, and backs
@@ -254,14 +254,14 @@ func (g *UseKineticWeapon) walk() {
 
 // follow is 0x56A0F10: when the repath timer runs out the walk to the spot
 // is made again, unless a path still runs and the roll keeps it. The timer
-// is not reset.
+// is not reset. The roll draws from the thread random.
 func (g *UseKineticWeapon) follow() {
 	old := g.repath
 	g.repath--
 	if old > 1 {
 		return
 	}
-	if g.hasSpot && !g.pathDone() && g.world.Random().NextFloat() >= kineticKeepPath {
+	if g.hasSpot && !g.pathDone() && g.world.ThreadRandom().NextFloat() >= kineticKeepPath {
 		return
 	}
 	n := g.m.Nav()
@@ -274,9 +274,9 @@ func (g *UseKineticWeapon) follow() {
 // to lie beyond it in the direction from the mob turned by up to half
 // melee_fov. BDS turns the angle, already in radians, from degrees once
 // more, so the spot ends up close to +z of the target whatever the
-// direction.
+// direction. The rolls draw from the thread random.
 func (g *UseKineticWeapon) past(t Actor, r Range[float32]) {
-	r1 := g.world.Random()
+	r1 := g.world.ThreadRandom()
 	p, q := g.m.AttachPos(0), t.AttachPos(0)
 	dx, dy, dz := q.X-p.X, q.Y-p.Y, q.Z-p.Z
 	l := float32(math.Sqrt(float64(dz*dz + dx*dx + dy*dy)))
