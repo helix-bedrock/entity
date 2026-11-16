@@ -44,21 +44,32 @@ func DefaultSwimWander() SwimWanderConfig {
 	return SwimWanderConfig{Interval: 0.00833, LookAhead: 5, SpeedMultiplier: 1, WanderTime: 5 * ticksPerSecond}
 }
 
-// SwimWander is SwimWanderGoal: a fish swims along its view, steering away
-// from blocks ahead and around it.
+// SwimWanderer is the part of the mob swim_wander needs on top of Mob.
+type SwimWanderer interface {
+	Mob
+	// Yaw is ActorRotationComponent's yaw, which the turn reads.
+	Yaw() float32
+}
+
+// SwimWander is SwimWanderGoal (BDS 1.26.60 canUse 0x5696850,
+// canContinueToUse 0x5697AF0, start 0x5697C50, tick 0x5697C60, the steer
+// 0x5696B40; stop is BaseGoal's): a fish swims along its view, steering
+// away from blocks ahead and around it.
 type SwimWander struct {
 	base
+	m     SwimWanderer
 	cfg   SwimWanderConfig
 	ticks int32
 	dir   Vec3
 }
 
 // NewSwimWander makes the goal.
-func NewSwimWander(w World, m Mob, c SwimWanderConfig) *SwimWander {
-	return &SwimWander{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
+func NewSwimWander(w World, m SwimWanderer, c SwimWanderConfig) *SwimWander {
+	return &SwimWander{base: base{mob: m, world: w, flags: flagsMove}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal. The chance roll draws from the thread
+// random.
 func (g *SwimWander) CanUse() bool {
 	m := g.mob
 	if !swimming(m) {
@@ -79,7 +90,7 @@ func (g *SwimWander) CanUse() bool {
 	if n == nil || n.Held() || n.Flags()&navHeld != 0 {
 		return false
 	}
-	if g.cfg.Interval <= g.world.Random().NextFloat() {
+	if g.cfg.Interval <= g.world.ThreadRandom().NextFloat() {
 		return false
 	}
 	g.steer()
@@ -101,7 +112,8 @@ func (g *SwimWander) Start() { g.ticks = 0 }
 // Stop implements goal.Goal.
 func (g *SwimWander) Stop() {}
 
-// Tick implements goal.Goal.
+// Tick implements goal.Goal. The turn starts from the body's yaw
+// (ActorRotationComponent), not the head's.
 func (g *SwimWander) Tick() {
 	g.ticks++
 	g.steer()
@@ -114,7 +126,7 @@ func (g *SwimWander) Tick() {
 	t := normalize(Vec3{X: (g.dir.X-v.X)*swimBlend + v.X, Y: (g.dir.Y-v.Y)*swimBlend + v.Y, Z: (g.dir.Z-v.Z)*swimBlend + v.Z})
 	s := m.UnderwaterSpeed()
 	m.Move(Vec3{X: t.X * s * g.cfg.SpeedMultiplier, Y: t.Y * s * g.cfg.SpeedMultiplier, Z: t.Z * s * g.cfg.SpeedMultiplier})
-	_, yaw := m.HeadRotation()
+	yaw := g.m.Yaw()
 	want := float32(math.Atan2(float64(g.dir.X), float64(g.dir.Z))) * -degPerRad
 	turn := float32(math.Mod(float64(want-yaw+180), 360))
 	if turn < 0 {
@@ -123,7 +135,7 @@ func (g *SwimWander) Tick() {
 	m.SetYaw(max(-swimMaxTurn, min(swimMaxTurn, turn-180)) + yaw)
 }
 
-// steer is the steering step (0x533E830): along the view, or the clearest
+// steer is the steering step: along the view, or the clearest
 // way out when a ray ahead hits a block, pushed away from blocks around the
 // mob.
 func (g *SwimWander) steer() {

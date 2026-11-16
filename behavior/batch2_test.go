@@ -65,6 +65,7 @@ func (m *swimMob) FollowRange() float32               { return 16 }
 func (m *swimMob) PrevRotation() (pitch, yaw float32) { return 0, m.yaw }
 func (m *swimMob) HeadRotation() (pitch, yaw float32) { return 0, m.yaw }
 func (m *swimMob) SetYaw(y float32)                   { m.yaw = y }
+func (m *swimMob) Yaw() float32                       { return m.yaw }
 func (m *swimMob) HasEffect(int) bool                 { return false }
 
 func newSwimMob(w World, p Vec3) *swimMob { return &swimMob{bodyMob: newBody(w, 1, p)} }

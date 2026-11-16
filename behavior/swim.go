@@ -32,8 +32,10 @@ func DefaultSwimIdle() SwimIdleConfig {
 	return SwimIdleConfig{IdleTime: 5 * ticksPerSecond, SuccessRate: 0.1}
 }
 
-// SwimIdle is SwimIdleGoal: a fish that is not moving now and then stays
-// still for a while.
+// SwimIdle is SwimIdleGoal (BDS 1.26.60 canUse 0x56964A0, canContinueToUse
+// 0x56966B0, start 0x5696700, tick 0x5696820; stop is BaseGoal's): a fish
+// that is not moving now and then stays still for a while. The chance roll
+// draws from the thread random.
 type SwimIdle struct {
 	base
 	cfg   SwimIdleConfig
@@ -56,7 +58,7 @@ func (g *SwimIdle) CanUse() bool {
 	if n := g.mob.Nav(); n != nil && !n.Done() {
 		return false
 	}
-	return g.cfg.SuccessRate > g.world.Random().NextFloat()
+	return g.cfg.SuccessRate > g.world.ThreadRandom().NextFloat()
 }
 
 // CanContinueToUse implements goal.Goal.

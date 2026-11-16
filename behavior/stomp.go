@@ -29,8 +29,12 @@ func DefaultStompEgg() StompEggConfig {
 	return StompEggConfig{MoveToConfig: DefaultMoveTo(), Interval: stompInterval}
 }
 
-// StompEgg is StompEggGoal: a mob walks to a turtle egg and jumps on it
-// until it breaks.
+// StompEgg is StompEggGoal, a StompBlockGoal (BDS 1.26.60 canUse
+// 0x5694020, start 0x56940A0, tick 0x5694150, findTargetBlock 0x5693E20,
+// isValidTarget 0x5694A80, _canReach 0x5694E70, _moveToBlock 0x5694BD0;
+// canContinueToUse and stop are the move-to base's): a mob walks to a
+// turtle egg and jumps on it until it breaks. Not ported: the gameplay
+// event BDS sends before removing the egg, which can keep it.
 type StompEgg struct {
 	moveTo
 	counter int32
@@ -51,20 +55,21 @@ func (g *StompEgg) CanUse() bool { return g.world.MobGriefing() && g.canStart() 
 // CanContinueToUse implements goal.Goal.
 func (g *StompEgg) CanContinueToUse() bool { return g.keep() }
 
-// matches is the search predicate (0x53728A0): a turtle egg in any state.
+// matches is the search predicate: a turtle egg in any state.
 func (g *StompEgg) matches(b Block) bool { return b.Name == turtleEggName }
 
-// find is the goal's findTargetBlock (0x533BC10): a random egg in range.
+// find is the goal's findTargetBlock: a random egg in range, drawn from
+// the thread random.
 func (g *StompEgg) find() bool {
 	g.hits = searchBlocks(g.hits[:0], g.world, blockOf(g.mob.Pos()), g.cfg.SearchRange, g.cfg.SearchHeight, g)
 	if len(g.hits) == 0 {
 		return false
 	}
-	g.target = g.hits[g.world.Random().NextInt(int32(len(g.hits)))].pos
+	g.target = g.hits[g.world.ThreadRandom().NextInt(int32(len(g.hits)))].pos
 	return true
 }
 
-// valid is the goal's isValidTarget (0x533C810): an egg with air above, or
+// valid is the goal's isValidTarget: an egg with air above, or
 // one block up when the spot has no collision.
 func (g *StompEgg) valid(p Pos) bool {
 	w := g.world
@@ -75,7 +80,7 @@ func (g *StompEgg) valid(p Pos) bool {
 	return w.Block(up).Name == airName && w.Block(p).Name == turtleEggName
 }
 
-// reachable is the goal's path check (0x533CBF0): the path ends next to
+// reachable is the goal's _canReach: the path ends next to
 // the egg.
 func (g *StompEgg) reachable(p Pos) bool {
 	n := g.mob.Nav()
@@ -87,7 +92,7 @@ func (g *StompEgg) reachable(p Pos) bool {
 	return ok && uint32(dx*dx+dz*dz) < stompNear
 }
 
-// moveToBlock is the goal's moveMobToBlock (0x533C960): onto the egg, with
+// moveToBlock is the goal's _moveToBlock: onto the egg, with
 // a tight reach when the path ends on it.
 func (g *StompEgg) moveToBlock() {
 	n := g.mob.Nav()
@@ -108,7 +113,7 @@ func (g *StompEgg) Start() {
 	g.counter = 0
 }
 
-// Tick implements goal.Goal (0x533BF30).
+// Tick implements goal.Goal.
 func (g *StompEgg) Tick() {
 	t := g.targetPos()
 	m := g.mob

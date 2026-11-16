@@ -159,8 +159,10 @@ func (g *MountPathing) outOfReach(t Actor) bool {
 	return reach <= dist2(g.mob.Pos(), c)
 }
 
-// RunAroundLikeCrazy is RunAroundLikeCrazyGoal: an untamed horse with a
-// player on its back runs to random spots nearby.
+// RunAroundLikeCrazy is RunAroundLikeCrazyGoal (BDS 1.26.60 canUse
+// 0x5AFCAF0, canContinueToUse 0x5AFCD60, start 0x5AFCC50; stop and tick are
+// BaseGoal's): an untamed horse with a player on its back runs to random
+// spots nearby.
 type RunAroundLikeCrazy struct {
 	base
 	speed float32
@@ -187,7 +189,9 @@ func (g *RunAroundLikeCrazy) CanUse() bool {
 		return false
 	}
 	p, ok := landPos(g.world, m, crazyXZ, crazyY)
-	g.to = p
+	if ok {
+		g.to = p
+	}
 	return ok
 }
 
