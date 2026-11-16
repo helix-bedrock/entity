@@ -10,6 +10,7 @@ const (
 	groundJump        = 0.42
 	squidJump         = 0.2
 	lowJumpFactor     = 0.6
+	variantJump       = 0.1
 	jumpDelay         = 10
 )
 
@@ -83,11 +84,9 @@ func (b *Body) jumpFromGround(w World) {
 	b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
 }
 
-// jumpPower is the ground jump speed: the mob's jump.static power, else
-// BDS's default.
+// jumpPower is the ground jump speed: 0.42 plus 0.1 per variant step, read
+// from the variant actor data. BDS's ground jump never reads
+// minecraft:jump.static's jump_power.
 func (b *Body) jumpPower() float32 {
-	if b.JumpPower > 0 {
-		return b.JumpPower
-	}
-	return groundJump
+	return float32(b.Variant)*variantJump + groundJump
 }

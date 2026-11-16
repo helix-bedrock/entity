@@ -183,10 +183,10 @@ type Body struct {
 	VerticalFriction bool
 	// MaxAutoStep is the highest step the mob walks up.
 	MaxAutoStep float32
-	// JumpPower is minecraft:jump.static's jump_power, the ground jump's
-	// speed; zero or less uses BDS's 0.42.
-	JumpPower float32
-	Nav       Nav
+	// Variant is the mob's variant actor data (minecraft:variant): each step
+	// adds 0.1 to the ground jump.
+	Variant int32
+	Nav     Nav
 
 	Dolphin, Squid, SoulSpeed, ImmuneToLavaDrag, PowderSnowWalker bool
 	Vex, DiscardFriction, HasPhysics, CanAlwaysAutoStep           bool

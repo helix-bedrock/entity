@@ -241,8 +241,10 @@ func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 	if s.VariableMaxAutoStep != nil {
 		b.MaxAutoStep = s.VariableMaxAutoStep.Step(jumpPrevented, wasdControlled)
 	}
-	if s.JumpStatic != nil {
-		b.JumpPower = s.JumpStatic.JumpPower
+	for _, d := range s.IntData {
+		if d.Key == DataVariant {
+			b.Variant = d.Value
+		}
 	}
 	b.PowderSnowWalker = b.PowderSnowWalker || s.CanStandOnPowderSnow
 	if s.Buoyant != nil && s.Buoyant.AutoStep() {

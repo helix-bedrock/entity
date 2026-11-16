@@ -362,12 +362,12 @@ func TestApplyBody(t *testing.T) {
 		FrictionModifier:    &ValueConfig{Value: 0.3},
 		AirDragModifier:     &ValueConfig{Value: 0.1},
 		VariableMaxAutoStep: &VariableMaxAutoStepConfig{Base: 1.0625, Controlled: 1.5625, JumpPrevented: 0.5625},
-		JumpStatic:          &JumpStaticConfig{JumpPower: 0.6},
+		IntData:             []IntDataConfig{{Key: DataVariant, Value: 3}},
 	}
 	var b physics.Body
 	s.ApplyBody(&b, false, true)
 	if b.Width != 0.005 || b.Height != 0.005 || *b.WaterDrag != 0.9 || *b.Attrs.Friction != 0.3 ||
-		*b.Attrs.AirDrag != 0.1 || b.MaxAutoStep != 1.5625 || b.JumpPower != 0.6 {
+		*b.Attrs.AirDrag != 0.1 || b.MaxAutoStep != 1.5625 || b.Variant != 3 {
 		t.Fatalf("body %+v", b)
 	}
 	s.ApplyBody(&b, true, true)

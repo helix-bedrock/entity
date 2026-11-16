@@ -155,10 +155,10 @@ func BenchmarkTick(b *testing.B) {
 func TestJumpPower(t *testing.T) {
 	b := Body{}
 	if b.jumpPower() != groundJump {
-		t.Fatal("zero jump power is not the default")
+		t.Fatal("variant 0 is not the default")
 	}
-	b.JumpPower = 0.6
-	if b.jumpPower() != 0.6 {
-		t.Error("jump.static power ignored")
+	b.Variant = 2
+	if b.jumpPower() != float32(2)*0.1+0.42 {
+		t.Error("variant not added")
 	}
 }
