@@ -6,7 +6,7 @@ import "math"
 const (
 	clipEps = 1e-06
 	// depenEps is the per-axis depenetration limit of a mob whose
-	// depenetration state allows it (ConfigureDepenetration 0x6D10090).
+	// depenetration state allows it (ConfigureDepenetration).
 	depenEps = 1
 )
 
@@ -212,6 +212,7 @@ func (b *Body) fetchBox() Box {
 
 // The depenetration state bits (DepenetrationComponent +0).
 const (
+	depenAlways = 8    // pushed out whatever the state
 	depenOnce   = 2    // pushed out last tick
 	depenTwice  = 4    // pushed out two ticks running
 	depenToward = 0x10 // the mob moves toward the closest free space
@@ -237,11 +238,8 @@ func (b *Body) moveCollide(w World) {
 	}
 	b.shapes = w.CollisionBoxes(b.shapes[:0], b.fetchBox())
 
-	var e float32
-	if b.depen&(1|depenTwice|depenToward) == 0 {
-		e = depenEps
-	}
-	epsv := Vec3{X: e, Y: e, Z: e}
+	b.dropOneWay()
+	epsv := b.depenLimit()
 	start := b.Box
 	req := b.delta
 	steps := [3]Vec3{{Y: req.Y}, {X: req.X}, {Z: req.Z}}
@@ -254,6 +252,7 @@ func (b *Body) moveCollide(w World) {
 	} else {
 		b.depen &^= depenToward
 	}
+	b.DepenOverride = nil
 	switch {
 	case depth < clipEps:
 		b.depen &= depenKeep
@@ -267,6 +266,34 @@ func (b *Body) moveCollide(w World) {
 		done = b.autoStep(start, req, done, epsv)
 	}
 	b.finalize(req, done)
+}
+
+// dropOneWay is UpdateOnewayCollisionsSystem: a one-way block the box no
+// longer overlaps stops counting.
+func (b *Body) dropOneWay() {
+	kept := b.DepenOneWay[:0]
+	for _, s := range b.DepenOneWay {
+		if overlaps(s, b.Box) {
+			kept = append(kept, s)
+		}
+	}
+	b.DepenOneWay = kept
+}
+
+// depenLimit is ConfigureDepenetration: the per-axis depth past which a
+// shape is ignored. It is 1, or 0 while the mob is inside a one-way block
+// or its state blocks it, unless the always bit is set; the component's
+// minimum and the one-tick override raise it.
+func (b *Body) depenLimit() Vec3 {
+	var e float32 = depenEps
+	if b.depen&depenAlways == 0 && (len(b.DepenOneWay) > 0 || b.depen&(1|depenTwice|depenToward) != 0) {
+		e = 0
+	}
+	v := Vec3{X: max(e, b.DepenMin.X), Y: max(e, b.DepenMin.Y), Z: max(e, b.DepenMin.Z)}
+	if o := b.DepenOverride; o != nil {
+		v = Vec3{X: max(v.X, o.X), Y: max(v.Y, o.Y), Z: max(v.Z, o.Z)}
+	}
+	return v
 }
 
 func (b *Body) moveSubBoxes(v Vec3) {

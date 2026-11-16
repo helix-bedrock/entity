@@ -222,6 +222,14 @@ type Body struct {
 	WalkAnim [2]float32
 
 	// Trace, when set, records the velocity after each step of the movement pipeline.
+	// DepenMin is DepenetrationComponent's per-axis minimum depenetration
+	// limit, and DepenOverride its one-tick override, cleared after the
+	// move. DepenOneWay are the one-way blocks the mob is inside: while
+	// there are any, the mob is not pushed out (limit 0).
+	DepenMin      Vec3
+	DepenOverride *Vec3
+	DepenOneWay   []Box
+
 	Trace *trace.Log
 
 	travel          Travel
