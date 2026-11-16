@@ -12,6 +12,7 @@ import (
 	"math"
 	"sync"
 
+	"github.com/helix-bedrock/entity/behavior"
 	"github.com/helix-bedrock/entity/path"
 )
 
@@ -32,12 +33,6 @@ var caps = [3][2][numPools]int32{
 		{4, 8, 36, 0, 0, 4, 8},
 	},
 }
-
-// ramp is the dimension brightness ramp before its base is added: the
-// brightness of each light level.
-var ramp = [16]float32{0, 0.017543858, 0.037037037, 0.058823526, 0.083333328, 0.11111113,
-	0.14285712, 0.1794872, 0.22222225, 0.27272731, 0.33333334, 0.40740743, 0.50000006,
-	0.61904764, 0.77777773, 1}
 
 // moon is the moon brightness of each moon phase.
 var moon = [8]float32{1, 0.75, 0.5, 0.25, 0, 0.25, 0.5, 0.75}
@@ -280,11 +275,11 @@ func rawBrightness(w World, p path.Pos, darken uint8) int32 {
 
 // brightness is BDS's getBrightness: the ramp value of the raw brightness.
 func brightness(w World, lv *Level, p path.Pos) float32 {
-	base := float32(0)
+	ambient := float32(0)
 	if lv.Dimension == Nether {
-		base = 0.1
+		ambient = behavior.NetherAmbient
 	}
-	return min(max(ramp[rawBrightness(w, p, lv.SkyDarken)]+base, 0), 1)
+	return behavior.BrightnessRamp(uint8(rawBrightness(w, p, lv.SkyDarken)), ambient) //nolint:gosec // 0 to 15
 }
 
 func stormy(lv *Level) bool { return lv.Rain*lv.Thunder > 0.9 }

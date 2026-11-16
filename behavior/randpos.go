@@ -291,9 +291,73 @@ func DefaultWalkBlocks() WalkBlocks {
 	}
 }
 
+// WalkKindOf is the walk target kind of a vanilla mob identifier: the C++
+// class BDS 1.26.60's ActorFactory makes it from, read from each live mob's
+// vtable by the component oracle. Identifiers not listed are plain Mobs.
+func WalkKindOf(id string) WalkKind {
+	switch id {
+	case "minecraft:cow", "minecraft:chicken", "minecraft:pig", "minecraft:sheep", "minecraft:wolf",
+		"minecraft:rabbit", "minecraft:ocelot", "minecraft:cat", "minecraft:llama", "minecraft:trader_llama",
+		"minecraft:polar_bear", "minecraft:panda", "minecraft:bee", "minecraft:goat", "minecraft:camel",
+		"minecraft:sniffer", "minecraft:armadillo", "minecraft:horse", "minecraft:donkey", "minecraft:mule",
+		"minecraft:skeleton_horse", "minecraft:zombie_horse", "minecraft:fox", "minecraft:frog",
+		"minecraft:happy_ghast":
+		return WalkAnimal
+	case "minecraft:zombie", "minecraft:husk", "minecraft:drowned", "minecraft:zombie_villager",
+		"minecraft:zombie_villager_v2", "minecraft:skeleton", "minecraft:stray", "minecraft:wither_skeleton",
+		"minecraft:bogged", "minecraft:parched", "minecraft:spider", "minecraft:cave_spider", "minecraft:creeper",
+		"minecraft:enderman", "minecraft:endermite", "minecraft:witch", "minecraft:blaze", "minecraft:breeze",
+		"minecraft:creaking", "minecraft:zoglin", "minecraft:zombie_pigman", "minecraft:piglin",
+		"minecraft:piglin_brute", "minecraft:evocation_illager", "minecraft:vex", "minecraft:ravager",
+		"minecraft:guardian", "minecraft:elder_guardian", "minecraft:phantom", "minecraft:warden",
+		"minecraft:wither", "minecraft:ender_dragon", "minecraft:frostbite":
+		return WalkMonster
+	case "minecraft:silverfish":
+		return WalkSilverfish
+	case "minecraft:slime", "minecraft:magma_cube", "minecraft:sulfur_cube":
+		return WalkSlime
+	case "minecraft:strider":
+		return WalkStrider
+	case "minecraft:turtle":
+		return WalkTurtle
+	case "minecraft:dolphin":
+		return WalkDolphin
+	case "minecraft:mooshroom":
+		return WalkMooshroom
+	case "minecraft:parrot":
+		return WalkParrot
+	}
+	// The camel husk is a Camel, whose version scores 0 for it.
+	return WalkMob
+}
+
+// WalkWorld is what the walk target scores read: World has it, and so can a
+// caller outside the goals (the spawner).
+type WalkWorld interface {
+	Block(p Pos) Block
+	Brightness(p Pos) float32
+}
+
+// NetherAmbient is the Nether's base ambient light (NetherBrightnessRamp);
+// the other dimensions have none.
+const NetherAmbient = 0.1
+
+// brightnessRamp is DimensionBrightnessRamp's table before the ambient
+// light: the brightness of each raw light level.
+var brightnessRamp = [16]float32{0, 0.017543858, 0.037037037, 0.058823526, 0.083333328, 0.11111113,
+	0.14285712, 0.1794872, 0.22222225, 0.27272731, 0.33333334, 0.40740743, 0.50000006,
+	0.61904764, 0.77777773, 1}
+
+// BrightnessRamp is BlockSource::getBrightness for a raw light level (0 to
+// 15; higher levels count as 15): the ramp value plus the dimension's
+// ambient light, clamped to 0..1 (DimensionBrightnessRamp::buildBrightnessRamp).
+func BrightnessRamp(raw uint8, ambient float32) float32 {
+	return min(max(brightnessRamp[min(raw, 15)]+ambient, 0), 1)
+}
+
 // WalkTarget is Mob::getWalkTargetValue for the class kind at p. Scores
 // over a block read the block below p; scores in a block read p itself.
-func WalkTarget(k WalkKind, b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+func WalkTarget(k WalkKind, b *WalkBlocks, w WalkWorld, p Pos, fireImmune bool) float32 {
 	switch k {
 	case WalkAnimal:
 		return animalWalk(b, w, p, fireImmune)
@@ -333,7 +397,7 @@ func WalkTarget(k WalkKind, b *WalkBlocks, w World, p Pos, fireImmune bool) floa
 
 func belowPos(p Pos) Pos { return Pos{X: p.X, Y: p.Y - 1, Z: p.Z} }
 
-func animalWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+func animalWalk(b *WalkBlocks, w WalkWorld, p Pos, fireImmune bool) float32 {
 	below := w.Block(belowPos(p)).Name
 	if slices.Contains(b.Grass, below) {
 		return b.Prefer
@@ -344,7 +408,7 @@ func animalWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
 	return w.Brightness(p) - 0.5
 }
 
-func monsterWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+func monsterWalk(b *WalkBlocks, w WalkWorld, p Pos, fireImmune bool) float32 {
 	if !fireImmune && slices.Contains(b.Magma, w.Block(belowPos(p)).Name) {
 		return b.Avoid
 	}
@@ -353,7 +417,7 @@ func monsterWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
 
 // turtleWalk scores water by the water above it: the block one up is never
 // looked at, and the count stops TurtleTop blocks up.
-func turtleWalk(b *WalkBlocks, w World, p Pos) float32 {
+func turtleWalk(b *WalkBlocks, w WalkWorld, p Pos) float32 {
 	if w.Block(p).Material != b.TurtleWater {
 		return 0
 	}

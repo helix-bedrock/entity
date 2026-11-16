@@ -3,6 +3,7 @@ package spawn
 import (
 	"math"
 
+	"github.com/helix-bedrock/entity/behavior"
 	"github.com/helix-bedrock/entity/path"
 )
 
@@ -133,7 +134,7 @@ func checkSpawn(w World, lv *Level, r Rand, typ string, m Mob) bool {
 		return w.EntitiesIn(m.Box()) == 0
 	case classMushroomCow:
 		p := feet(m)
-		return w.Block(below(p)).Flags&FlagMycelium != 0 && mobCheck(w, lv, c, m)
+		return w.Block(below(p)).Flags&FlagMycelium != 0 && mobCheck(w, lv, typ, m)
 	case classPhantom:
 		// Phantoms come from insomnia, not from the natural spawner.
 		return false
@@ -141,9 +142,9 @@ func checkSpawn(w World, lv *Level, r Rand, typ string, m Mob) bool {
 		if _, near := w.NearestPlayer(m.Pos(), 5); near {
 			return false
 		}
-		return mobCheck(w, lv, c, m)
+		return mobCheck(w, lv, typ, m)
 	case classEndermite:
-		if !darkEnough(w, lv, c, m) || !mobCheck(w, lv, c, m) {
+		if !darkEnough(w, lv, c, m) || !mobCheck(w, lv, typ, m) {
 			return false
 		}
 		_, near := w.NearestPlayer(m.Pos(), 5)
@@ -152,7 +153,7 @@ func checkSpawn(w World, lv *Level, r Rand, typ string, m Mob) bool {
 	if !darkEnough(w, lv, c, m) {
 		return false
 	}
-	return mobCheck(w, lv, c, m)
+	return mobCheck(w, lv, typ, m)
 }
 
 func isMonster(c class) bool {
@@ -191,7 +192,7 @@ func feet(m Mob) path.Pos {
 }
 
 // mobCheck is Mob::checkSpawnRules.
-func mobCheck(w World, lv *Level, c class, m Mob) bool {
+func mobCheck(w World, lv *Level, typ string, m Mob) bool {
 	p := feet(m)
 	if solidIn(w, m.Box()) && w.EntitiesIn(m.Box()) > 0 {
 		return false
@@ -201,61 +202,26 @@ func mobCheck(w World, lv *Level, c class, m Mob) bool {
 			return false
 		}
 	}
-	return walkTarget(w, lv, c, m, p) >= 0
+	return walkTarget(w, lv, typ, m, p) >= 0
 }
 
-// walkTarget is the class's getWalkTargetValue at p.
-func walkTarget(w World, lv *Level, c class, m Mob, p path.Pos) float32 {
-	switch c {
-	case classMonster, classDarkMonster, classSilverfish, classEndermite:
-		if !m.FireImmune() && w.Block(below(p)).Flags&FlagMagma != 0 {
-			return -0.5
-		}
-		return 0.5 - brightness(w, lv, p)
-	case classAnimal, classMushroomCow:
-		bf := w.Block(below(p)).Flags
-		if c == classMushroomCow && bf&FlagMycelium != 0 || bf&FlagGrass != 0 {
-			return 10
-		}
-		if bf&FlagMagma != 0 {
-			return -0.5
-		}
-		return brightness(w, lv, p) - 0.5
-	case classSlime, classMagmaCube:
-		if !m.FireImmune() && w.Block(below(p)).Flags&FlagMagma != 0 {
-			return -0.5
-		}
-		return 0
-	case classStrider:
-		if w.Block(p).Material == MaterialLava {
-			return 10
-		}
-		return 0
-	case classParrot:
-		if w.Block(p).Material == MaterialAir {
-			return 10
-		}
-		return 0
-	case classTurtle:
-		return turtleWalk(w, p)
-	}
-	return 0
+// walkWorld is the spawner's world as the walk target scores read it.
+type walkWorld struct {
+	w  World
+	lv *Level
 }
 
-func turtleWalk(w World, p path.Pos) float32 {
-	if w.Block(p).Material != MaterialWater {
-		return 0
-	}
-	v := float32(3)
-	for i := int32(2); ; i++ {
-		if w.Block(path.Pos{X: p.X, Y: p.Y + i, Z: p.Z}).Material != MaterialWater {
-			return v
-		}
-		if i > 9 {
-			return v
-		}
-		v++
-	}
+func (w walkWorld) Block(p path.Pos) behavior.Block {
+	b := w.w.Block(p)
+	return behavior.Block{Name: b.Name, Material: path.Material(b.Material)}
+}
+
+func (w walkWorld) Brightness(p path.Pos) float32 { return brightness(w.w, w.lv, p) }
+
+// walkTarget is the mob's getWalkTargetValue at p (behavior.WalkTarget).
+func walkTarget(w World, lv *Level, typ string, m Mob, p path.Pos) float32 {
+	b := behavior.DefaultWalkBlocks()
+	return behavior.WalkTarget(behavior.WalkKindOf(typ), &b, walkWorld{w, lv}, p, m.FireImmune())
 }
 
 // waterCheck is WaterAnimal::checkSpawnRules: the mob is moved down a random
