@@ -11,11 +11,11 @@ import (
 const (
 	rangedLoadedSound = 44 // the crossbow loaded sound
 	rangedBackOff     = 0.5
-	rangedHoldPad     = 0.5 // how far past attack_radius mode 1 stops walking
+	rangedHoldPad     = 0.5 // how far past attack_radius_min mode 1 stops walking
 	rangedMinPower    = 0.1
 	rangedMaxPower    = 1
 	// rangedWalkIn is the in-range movement mode that keeps walking until
-	// the target is within attack_radius + 0.5.
+	// the target is within attack_radius_min + 0.5.
 	rangedWalkIn = 1
 )
 
@@ -59,8 +59,8 @@ type RangedAttackConfig struct {
 	// (attack_radius_min and attack_radius in the old format).
 	AttackRadiusMin float32
 	AttackRadius    float32
-	// XMaxRotation and YMaxHeadRotation are the look control's speeds
-	// (map?: which JSON field feeds which).
+	// XMaxRotation and YMaxHeadRotation are x_max_rotation, the look
+	// control's pitch speed, and y_max_head_rotation, its yaw speed.
 	XMaxRotation     float32
 	YMaxHeadRotation float32
 	RangedFOV        float32
@@ -68,7 +68,7 @@ type RangedAttackConfig struct {
 	SetPersistent    bool
 	Swing            bool
 	// InRangeMovement is the in-range movement mode; 1 keeps walking
-	// until the target is within attack_radius + 0.5.
+	// until the target is within attack_radius_min + 0.5.
 	InRangeMovement int32
 }
 
@@ -213,7 +213,9 @@ func DefaultRangedAttack() RangedAttackConfig {
 	}
 }
 
-// RangedAttack is RangedAttackGoal: the mob keeps its distance, faces the
+// RangedAttack is RangedAttackGoal (BDS 1.26.60 canUse 0x5AF9A90,
+// canContinueToUse 0x5AF9CF0, start 0x5AF9EF0, stop 0x5AF9F60, tick
+// 0x5AFA0A0, setup 0x5ABBC40): the mob keeps its distance, faces the
 // target and shoots in bursts, or charges and fires a crossbow.
 type RangedAttack struct {
 	base
@@ -235,7 +237,7 @@ func NewRangedAttack(w World, m Ranged, c RangedAttackConfig) *RangedAttack {
 		crossbow: c.ChargeShootTrigger > 0, target: NoID}
 }
 
-// CanUse implements goal.Goal (0x5923950).
+// CanUse implements goal.Goal.
 func (g *RangedAttack) CanUse() bool {
 	if g.m.Admiring() || g.m.Nav() == nil {
 		return false
@@ -244,7 +246,7 @@ func (g *RangedAttack) CanUse() bool {
 		return false
 	}
 	t := g.actor(g.m.Target())
-	if t == nil || t.Removed() {
+	if t == nil || !t.Alive() {
 		return false
 	}
 	g.target = t.ID()
@@ -254,7 +256,7 @@ func (g *RangedAttack) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5923BB0): BDS runs canUse even
+// CanContinueToUse implements goal.Goal: BDS runs canUse even
 // while a path is still being followed.
 func (g *RangedAttack) CanContinueToUse() bool {
 	if g.m.Admiring() {
@@ -265,14 +267,14 @@ func (g *RangedAttack) CanContinueToUse() bool {
 	return g.CanUse() || walking
 }
 
-// Start implements goal.Goal (0x5923DB0).
+// Start implements goal.Goal.
 func (g *RangedAttack) Start() {
 	held, charged := g.m.Crossbow()
 	g.wasCharged = held && charged
 	g.m.SetFlag(FlagRangedAttacking, true)
 }
 
-// Stop implements goal.Goal (0x5923E20).
+// Stop implements goal.Goal.
 func (g *RangedAttack) Stop() {
 	g.target = NoID
 	g.seen, g.charge = 0, 0
@@ -294,22 +296,19 @@ func (g *RangedAttack) interval(d2 float32) int32 {
 }
 
 // moverSpeed is the movement speed of the entity that moves the mob: its
-// lowest vehicle when it rides (map?: 0 for a vehicle that is not a mob).
+// lowest vehicle when that is a mob, otherwise the mob's own.
 func (g *RangedAttack) moverSpeed() float32 {
 	r := rootVehicle(g.world, g.m)
-	if r.ID() == g.m.ID() {
-		return g.m.Speed()
-	}
-	if v, ok := r.(Mob); ok && r.IsMob() {
+	if v, ok := r.(Mob); ok && r.ID() != g.m.ID() && r.IsMob() {
 		return v.Speed()
 	}
-	return 0
+	return g.m.Speed()
 }
 
-// Tick implements goal.Goal (0x5923F60).
+// Tick implements goal.Goal.
 func (g *RangedAttack) Tick() {
 	t := g.actor(g.target)
-	if t == nil || t.Removed() {
+	if t == nil || t.Removed() || !t.Alive() {
 		return
 	}
 	p, q := g.m.Pos(), t.Pos()
@@ -322,7 +321,7 @@ func (g *RangedAttack) Tick() {
 		g.seen = 0
 	}
 	g.move(t, d2)
-	g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
+	g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	if g.burst <= 0 {
 		g.load(d2, seen)
 		return
@@ -331,12 +330,11 @@ func (g *RangedAttack) Tick() {
 }
 
 // move backs away from a target inside attack_radius_min, holds still in
-// range, and otherwise walks to the target.
+// range (follow_target only within attack_radius_min + 0.5), and otherwise
+// walks to the target.
 func (g *RangedAttack) move(t Actor, d2 float32) {
 	n, speed := g.m.Nav(), g.moverSpeed()
-	r := g.cfg.AttackRadius
-	switch {
-	case d2 < g.cfg.AttackRadiusMin*g.cfg.AttackRadiusMin:
+	if d2 < g.cfg.AttackRadiusMin*g.cfg.AttackRadiusMin {
 		if n == nil || speed <= 0 {
 			return
 		}
@@ -345,29 +343,45 @@ func (g *RangedAttack) move(t Actor, d2 float32) {
 		a := float32(math.Atan2(float64(p.Z-q.Z), float64(p.X-q.X))) * sinScale
 		// BDS takes x from the sine and z from the cosine.
 		n.MoveTo(Vec3{X: tableSin(uint16(int32(a)))*k + p.X, Y: p.Y, Z: k*tableSin(uint16(int32(a+sinQuarter))) + p.Z}, g.cfg.SpeedMultiplier)
-	case d2 <= r*r && g.seen >= g.cfg.TargetInSightTime:
-		var hold float32
-		if r > 0 {
-			hold = r + rangedHoldPad
-		}
-		if g.cfg.InRangeMovement == rangedWalkIn && d2 > hold*hold {
-			return
-		}
-		if n != nil {
-			n.Stop()
-		}
-		if _, ok := g.m.MoveWanted(); !ok {
-			return
-		}
-		g.m.ClearMoveWanted()
-		if g.m.Vehicle() == NoID {
-			p, q := g.m.Pos(), t.Pos()
-			g.m.SetYaw(float32(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z))) * -degPerRad)
-		}
-	default:
-		if n != nil && speed > 0 {
-			n.MoveToActor(t, g.cfg.SpeedMultiplier)
-		}
+		return
+	}
+	if g.holds(d2) {
+		g.hold(t)
+		return
+	}
+	if n != nil && speed > 0 {
+		n.MoveToActor(t, g.cfg.SpeedMultiplier)
+	}
+}
+
+// holds reports the target in range and seen long enough to stand still.
+func (g *RangedAttack) holds(d2 float32) bool {
+	r := g.cfg.AttackRadius
+	if d2 > r*r || g.seen < g.cfg.TargetInSightTime {
+		return false
+	}
+	if g.cfg.InRangeMovement != rangedWalkIn {
+		return true
+	}
+	var hold float32
+	if lo := g.cfg.AttackRadiusMin; lo > 0 {
+		hold = lo + rangedHoldPad
+	}
+	return d2 <= hold*hold
+}
+
+// hold stops the mob and turns it to the target.
+func (g *RangedAttack) hold(t Actor) {
+	if n := g.m.Nav(); n != nil {
+		n.Stop()
+	}
+	if _, ok := g.m.MoveWanted(); !ok {
+		return
+	}
+	g.m.ClearMoveWanted()
+	if g.m.Vehicle() == NoID {
+		p, q := g.m.Pos(), t.Pos()
+		g.m.SetYaw(float32(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z))) * -degPerRad)
 	}
 }
 
@@ -378,7 +392,7 @@ func (g *RangedAttack) load(d2 float32, seen bool) {
 		g.timer--
 		switch {
 		case c == 1:
-			g.burst = g.cfg.BurstShots
+			g.burst, g.burstTimer = g.cfg.BurstShots, 0
 		case c <= 0:
 			g.timer = g.interval(d2)
 		}
@@ -387,7 +401,7 @@ func (g *RangedAttack) load(d2 float32, seen bool) {
 	if seen {
 		g.charge++
 		if g.charge >= g.cfg.ChargeShootTrigger {
-			g.burst = g.cfg.BurstShots
+			g.burst, g.burstTimer = g.cfg.BurstShots, 0
 			g.charge -= 2 * g.cfg.ChargeShootTrigger
 		}
 	} else {
@@ -403,7 +417,7 @@ func (g *RangedAttack) load(d2 float32, seen bool) {
 	}
 	g.m.SetFlag(FlagCharged, charged)
 	if g.charge == g.cfg.ChargeChargedTrigger {
-		g.m.PlaySoundAt(rangedLoadedSound, g.m.Eyes())
+		g.m.PlaySoundAt(rangedLoadedSound, g.m.AttachPos(attachHead))
 	}
 }
 

@@ -31,7 +31,9 @@ type Equipper interface {
 	DropItem(it Item)
 }
 
-// EquipItem is EquipItemGoal: the mob puts on what it picked up.
+// EquipItem is EquipItemGoal (BDS 1.26.60 canUse 0x5528B40, tick
+// 0x5528C40; canContinueToUse calls canUse): the mob puts on what it
+// picked up.
 type EquipItem struct {
 	base
 	m Equipper
@@ -43,13 +45,13 @@ func NewEquipItem(w World, m Equipper) *EquipItem {
 	return &EquipItem{base: base{mob: m, world: w}, m: m}
 }
 
-// CanUse implements goal.Goal (0x5778CC0).
+// CanUse implements goal.Goal.
 func (g *EquipItem) CanUse() bool {
 	_, ok := g.m.PendingEquip()
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (0x5778DB0).
+// CanContinueToUse implements goal.Goal.
 func (g *EquipItem) CanContinueToUse() bool { return g.CanUse() }
 
 // Start implements goal.Goal.
@@ -58,7 +60,7 @@ func (g *EquipItem) Start() {}
 // Stop implements goal.Goal.
 func (g *EquipItem) Stop() {}
 
-// Tick implements goal.Goal (0x5778DC0): the waiting item goes on, and
+// Tick implements goal.Goal: the waiting item goes on, and
 // what was in its place is dropped or stacked with it.
 func (g *EquipItem) Tick() {
 	m := g.m
