@@ -163,15 +163,18 @@ func (g *Panic) CanContinueToUse() bool {
 
 // Start implements goal.Goal.
 func (g *Panic) Start() {
+	g.mob.SetPanicking(true)
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(g.pos, g.cfg.SpeedMultiplier)
 	}
 }
 
-// Stop implements goal.Goal.
+// Stop implements goal.Goal. BDS also puts the navigation speed back to 1.
 func (g *Panic) Stop() {
+	g.mob.SetPanicking(false)
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
+		n.SetSpeed(1)
 	}
 }
 

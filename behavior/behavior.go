@@ -435,6 +435,10 @@ type Mob interface {
 	// Nav is the navigation component, nil when the mob has none.
 	Nav() Navigator
 	SetFlag(n int, on bool)
+	// SetPanicking sets BDS's IsPanickingFlagComponent, which the panic
+	// goal holds while it runs and the is_panicking filter reads. It is not
+	// an actor flag and is never sent to clients.
+	SetPanicking(on bool)
 	// WalkTargetValue is Mob::getWalkTargetValue (see WalkTarget).
 	WalkTargetValue(p Pos) float32
 	// LookAt points the look control at p; it does nothing while a higher
