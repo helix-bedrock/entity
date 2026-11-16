@@ -15,6 +15,8 @@ const (
 	temptRepathRandom  = 4
 	temptFloatMaxValue = 3.4028235e38
 	floatTemptMinLen   = 0.1 // float_tempt's shortest direction length
+	temptSoundMin      = 3
+	temptSoundMax      = 8
 )
 
 // TemptConfig is the JSON of minecraft:behavior.tempt.
@@ -33,10 +35,13 @@ type TemptConfig struct {
 	OnTemptEnd    string
 }
 
-// DefaultTempt returns BDS 1.26.60's tempt defaults (legacy goal parser
-// 0xBF93840): speed 1, no sound.
+// DefaultTempt returns BDS 1.26.60's tempt defaults (TemptBaseGoal
+// 0x569BE60 and its setup 0x5559F50): speed 1, stop_distance 1.5, no sound
+// and a 3 to 8 second sound interval. The interval matters without a sound
+// too: the goal still draws a random number each time it runs out.
 func DefaultTempt() TemptConfig {
-	return TemptConfig{SpeedMultiplier: 1, Sound: NoSound}
+	return TemptConfig{SpeedMultiplier: 1, StopDistance: temptStop, Sound: NoSound,
+		SoundInterval: Range[float32]{Min: temptSoundMin, Max: temptSoundMax}}
 }
 
 // Tempt is TemptGoal: the mob follows the nearest player holding one of its
@@ -118,7 +123,7 @@ func (g *Tempt) CanContinueToUse() bool {
 		if p == nil {
 			return false
 		}
-		pitch, yaw := p.HeadRotation()
+		pitch, yaw := rotation(p)
 		if dist2(p.Pos(), g.mob.Pos()) >= temptScareDist2 {
 			g.lastPos = p.Pos()
 		} else if dist2(p.Pos(), g.lastPos) > temptScareMove2 ||
@@ -134,10 +139,12 @@ func (g *Tempt) CanContinueToUse() bool {
 func (g *Tempt) Start() {
 	if p := g.actor(g.player); p != nil {
 		g.lastPos = p.Pos()
-		g.lastPitch, g.lastYaw = p.HeadRotation()
+		g.lastPitch, g.lastYaw = rotation(p)
 		g.mob.SetFlag(FlagTempted, true)
+		// BDS fires on_tempt_start with only the mob in the context, so
+		// the player is not the event's other.
 		if g.cfg.OnTemptStart != "" {
-			g.mob.Event(g.cfg.OnTemptStart, g.player)
+			g.mob.Event(g.cfg.OnTemptStart, NoID)
 		}
 	}
 	if n := g.mob.Nav(); n != nil {
@@ -175,9 +182,11 @@ func (g *Tempt) Tick() {
 	if !g.mob.LookBusy() && !p.Removed() {
 		g.mob.LookAt(lookPoint(p), temptLookYaw, g.mob.MaxHeadXRot())
 	}
+	// BDS aims at the middle of the box around the player and its vehicles,
+	// but at the height of the middle of the player's own box.
 	b := riddenBox(g.world, p)
 	c, mp := boxCentre(b), g.mob.Pos()
-	dx, dy, dz := c.X-mp.X, c.Y-mp.Y, c.Z-mp.Z
+	dx, dy, dz := c.X-mp.X, boxCentre(p.Box()).Y-mp.Y, c.Z-mp.Z
 	if !g.cfg.CanTemptVertically {
 		dy = 0
 	}
@@ -221,6 +230,14 @@ func riddenBox(w World, a Actor) Box {
 		b.Max = Vec3{X: max(b.Max.X, vb.Max.X), Y: max(b.Max.Y, vb.Max.Y), Z: max(b.Max.Z, vb.Max.Z)}
 	}
 	return b
+}
+
+// rotation is ActorRotationComponent's pitch and yaw, which the scare check
+// reads. For a player its yaw is the view yaw, which entity's Actor gives as
+// BodyYaw.
+func rotation(a Actor) (pitch, yaw float32) {
+	pitch, _ = a.HeadRotation()
+	return pitch, a.BodyYaw()
 }
 
 func abs32(v float32) float32 {
