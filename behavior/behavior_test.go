@@ -152,25 +152,28 @@ func (m *fakeMob) Pos() Vec3 { return m.pos }
 func (m *fakeMob) Box() Box {
 	return Box{Min: Vec3{X: m.pos.X - 0.3, Y: m.pos.Y, Z: m.pos.Z - 0.3}, Max: Vec3{X: m.pos.X + 0.3, Y: m.pos.Y + 1.8, Z: m.pos.Z + 0.3}}
 }
-func (m *fakeMob) Removed() bool                 { return false }
-func (m *fakeMob) Alive() bool                   { return true }
-func (m *fakeMob) Pickable() bool                { return true }
-func (m *fakeMob) IsMob() bool                   { return true }
-func (m *fakeMob) IsPlayer() bool                { return false }
-func (m *fakeMob) Targetable() bool              { return true }
-func (m *fakeMob) GameMode() int                 { return -1 }
-func (m *fakeMob) Type() string                  { return m.kind }
-func (m *fakeMob) Flag(n int) bool               { return m.flags[n] }
-func (m *fakeMob) SetFlag(n int, on bool)        { m.flags[n] = on }
-func (m *fakeMob) Nav() Navigator                { return m.nav }
-func (m *fakeMob) Vehicle() ID                   { return NoID }
-func (m *fakeMob) InLava() bool                  { return false }
-func (m *fakeMob) InWater() bool                 { return false }
-func (m *fakeMob) Home() (Pos, int32, bool)      { return Pos{}, 0, false }
-func (m *fakeMob) Leash() (Vec3, float32, bool)  { return Vec3{}, 0, false }
-func (m *fakeMob) SetTarget(ID)                  {}
-func (m *fakeMob) Event(name string, _ ID)       { m.events = append(m.events, name) }
-func (m *fakeMob) WalkTargetValue(p Pos) float32 { return WalkTarget(WalkAnimal, m.w, p, false) }
+func (m *fakeMob) Removed() bool                { return false }
+func (m *fakeMob) Alive() bool                  { return true }
+func (m *fakeMob) Pickable() bool               { return true }
+func (m *fakeMob) IsMob() bool                  { return true }
+func (m *fakeMob) IsPlayer() bool               { return false }
+func (m *fakeMob) Targetable() bool             { return true }
+func (m *fakeMob) GameMode() int                { return -1 }
+func (m *fakeMob) Type() string                 { return m.kind }
+func (m *fakeMob) Flag(n int) bool              { return m.flags[n] }
+func (m *fakeMob) SetFlag(n int, on bool)       { m.flags[n] = on }
+func (m *fakeMob) Nav() Navigator               { return m.nav }
+func (m *fakeMob) Vehicle() ID                  { return NoID }
+func (m *fakeMob) InLava() bool                 { return false }
+func (m *fakeMob) InWater() bool                { return false }
+func (m *fakeMob) Home() (Pos, int32, bool)     { return Pos{}, 0, false }
+func (m *fakeMob) Leash() (Vec3, float32, bool) { return Vec3{}, 0, false }
+func (m *fakeMob) SetTarget(ID)                 {}
+func (m *fakeMob) Event(name string, _ ID)      { m.events = append(m.events, name) }
+func (m *fakeMob) WalkTargetValue(p Pos) float32 {
+	b := DefaultWalkBlocks()
+	return WalkTarget(WalkAnimal, &b, m.w, p, false)
+}
 
 func TestRandomTicks(t *testing.T) {
 	r := &seqRandom{floats: []float32{0.5}}

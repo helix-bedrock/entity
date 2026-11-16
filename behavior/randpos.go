@@ -1,5 +1,11 @@
 package behavior
 
+import (
+	"slices"
+
+	"github.com/helix-bedrock/entity/path"
+)
+
 // scoreFloor is the starting best score of the position searches.
 const scoreFloor = -99999
 
@@ -199,37 +205,165 @@ func landPos(w World, m Mob, h, v int32) (Vec3, bool) {
 	return randomPos(w, m, posSearch{h: h, v: v, tries: landTries})
 }
 
-// WalkKind is the kind of Mob::getWalkTargetValue.
+// WalkKind is which C++ class's Mob::getWalkTargetValue (vtable slot 170)
+// a mob has: the score random strolling, panic and the spawner give a
+// position. Checked against BDS 1.26.60 with the component oracle.
 type WalkKind uint8
 
 const (
-	// WalkMob is the base Mob: every position scores 0.
+	// WalkMob is the base Mob (0xBFEF6E0): every position scores 0. The
+	// pillager, vindicator, ghast, axolotl and glow squid override back to
+	// this.
 	WalkMob WalkKind = iota
-	// WalkAnimal prefers grass and light.
+	// WalkAnimal (0xBEAA670) scores 10 over grass, -0.5 over magma unless
+	// fire immune, else brightness - 0.5.
 	WalkAnimal
-	// WalkMonster prefers darkness.
+	// WalkMonster (0xBD40530) scores -0.5 over magma unless fire immune,
+	// else 0.5 - brightness.
 	WalkMonster
+	// WalkSilverfish (0xBD15FA0) scores 10 inside its hideout stones, else
+	// as a monster.
+	WalkSilverfish
+	// WalkSlime (0xBD18FC0, also magma cubes and sulfur cubes) scores -0.5
+	// over magma unless fire immune, else 0.
+	WalkSlime
+	// WalkStrider (0xBD81EC0) scores 10 inside lava, else 0.
+	WalkStrider
+	// WalkTurtle (0xBD82CD0) scores inside water by the water above it.
+	WalkTurtle
+	// WalkDolphin (0xBEAE8D0) scores 10 inside water, else 0.
+	WalkDolphin
+	// WalkMooshroom (0xBEB64F0) scores 10 over mycelium, else as an animal.
+	WalkMooshroom
+	// WalkParrot (0xBEB9980) scores 10 in air or inside a log or wood,
+	// else 0.
+	WalkParrot
 )
 
-// WalkTarget is Mob::getWalkTargetValue for the C++ class kind. Animals
-// score 10 over grass; animals and monsters score -0.5 over magma unless
-// fire immune; otherwise animals score brightness - 0.5 and monsters
-// 0.5 - brightness.
-func WalkTarget(k WalkKind, w World, p Pos, fireImmune bool) float32 {
-	if k == WalkMob {
-		return 0
+// WalkBlocks is the blocks the walk target scores look for, by name. The
+// defaults are BDS's (DefaultWalkBlocks); a server may change them.
+type WalkBlocks struct {
+	// Grass is what animals prefer to stand on.
+	Grass []string
+	// Magma is what mobs that are not fire immune avoid standing on.
+	Magma []string
+	// Mycelium is what mooshrooms prefer to stand on.
+	Mycelium []string
+	// Water is what dolphins prefer to be in.
+	Water []string
+	// Air and Perch are what parrots prefer to be in: air, or the two log
+	// groups BDS keeps (VanillaBlockTypeGroups, also random_fly's).
+	Air, Perch []string
+	// Hideout is what silverfish prefer to be in.
+	Hideout []string
+	// Lava is the material striders prefer to be in, and TurtleWater the
+	// material turtles score.
+	Lava, TurtleWater path.Material
+	// TurtleBase is a turtle's score in water with no water two blocks up,
+	// rising by one per further block of water, TurtleTop blocks at most.
+	TurtleBase float32
+	TurtleTop  int32
+	// Prefer is the score of a preferred block, Avoid of magma.
+	Prefer, Avoid float32
+}
+
+// DefaultWalkBlocks is BDS 1.26.60's blocks and scores; the log groups and
+// the silverfish stones were read from the running server.
+func DefaultWalkBlocks() WalkBlocks {
+	var perch []string
+	for _, wood := range []string{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak", "poplar"} {
+		perch = append(perch, "minecraft:"+wood+"_log", "minecraft:stripped_"+wood+"_log")
 	}
-	below := w.Block(Pos{X: p.X, Y: p.Y - 1, Z: p.Z}).Name
-	if k == WalkAnimal && below == "minecraft:grass_block" {
-		return 10
+	for _, wood := range []string{"oak", "spruce", "birch", "jungle", "acacia", "dark_oak", "mangrove", "cherry", "pale_oak", "poplar"} {
+		perch = append(perch, "minecraft:"+wood+"_wood", "minecraft:stripped_"+wood+"_wood")
 	}
-	if !fireImmune && below == "minecraft:magma" {
-		return -0.5
+	return WalkBlocks{
+		Grass:    []string{"minecraft:grass_block"},
+		Magma:    []string{"minecraft:magma"},
+		Mycelium: []string{"minecraft:mycelium"},
+		Water:    []string{"minecraft:water", "minecraft:flowing_water"},
+		Air:      []string{"minecraft:air"},
+		Perch:    perch,
+		Hideout: []string{"minecraft:stone", "minecraft:granite", "minecraft:polished_granite", "minecraft:diorite",
+			"minecraft:polished_diorite", "minecraft:andesite", "minecraft:polished_andesite"},
+		Lava: path.MaterialLava, TurtleWater: path.MaterialWater,
+		TurtleBase: 3, TurtleTop: 9, Prefer: 10, Avoid: -0.5,
 	}
-	if k == WalkAnimal {
-		return w.Brightness(p) - 0.5
+}
+
+// WalkTarget is Mob::getWalkTargetValue for the class kind at p. Scores
+// over a block read the block below p; scores in a block read p itself.
+func WalkTarget(k WalkKind, b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+	switch k {
+	case WalkAnimal:
+		return animalWalk(b, w, p, fireImmune)
+	case WalkMonster:
+		return monsterWalk(b, w, p, fireImmune)
+	case WalkSilverfish:
+		if slices.Contains(b.Hideout, w.Block(p).Name) {
+			return b.Prefer
+		}
+		return monsterWalk(b, w, p, fireImmune)
+	case WalkSlime:
+		if !fireImmune && slices.Contains(b.Magma, w.Block(belowPos(p)).Name) {
+			return b.Avoid
+		}
+	case WalkStrider:
+		if w.Block(p).Material == b.Lava {
+			return b.Prefer
+		}
+	case WalkTurtle:
+		return turtleWalk(b, w, p)
+	case WalkDolphin:
+		if slices.Contains(b.Water, w.Block(p).Name) {
+			return b.Prefer
+		}
+	case WalkMooshroom:
+		if slices.Contains(b.Mycelium, w.Block(belowPos(p)).Name) {
+			return b.Prefer
+		}
+		return animalWalk(b, w, p, fireImmune)
+	case WalkParrot:
+		if n := w.Block(p).Name; slices.Contains(b.Air, n) || slices.Contains(b.Perch, n) {
+			return b.Prefer
+		}
+	}
+	return 0
+}
+
+func belowPos(p Pos) Pos { return Pos{X: p.X, Y: p.Y - 1, Z: p.Z} }
+
+func animalWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+	below := w.Block(belowPos(p)).Name
+	if slices.Contains(b.Grass, below) {
+		return b.Prefer
+	}
+	if !fireImmune && slices.Contains(b.Magma, below) {
+		return b.Avoid
+	}
+	return w.Brightness(p) - 0.5
+}
+
+func monsterWalk(b *WalkBlocks, w World, p Pos, fireImmune bool) float32 {
+	if !fireImmune && slices.Contains(b.Magma, w.Block(belowPos(p)).Name) {
+		return b.Avoid
 	}
 	return 0.5 - w.Brightness(p)
+}
+
+// turtleWalk scores water by the water above it: the block one up is never
+// looked at, and the count stops TurtleTop blocks up.
+func turtleWalk(b *WalkBlocks, w World, p Pos) float32 {
+	if w.Block(p).Material != b.TurtleWater {
+		return 0
+	}
+	v := b.TurtleBase
+	for i := int32(2); ; i++ {
+		if w.Block(Pos{X: p.X, Y: p.Y + i, Z: p.Z}).Material != b.TurtleWater || i > b.TurtleTop {
+			return v
+		}
+		v++
+	}
 }
 
 func max32(a, b float32) float32 {
