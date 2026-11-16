@@ -190,8 +190,11 @@ type Body struct {
 
 	Dolphin, Squid, SoulSpeed, ImmuneToLavaDrag, PowderSnowWalker bool
 	Vex, DiscardFriction, HasPhysics, CanAlwaysAutoStep           bool
-	// CanFlyAbility is the mayfly movement ability.
+	// CanFlyAbility is the flying movement ability (flying now, not mayfly).
 	CanFlyAbility bool
+	// NoClip is the noclip movement ability: the move then leaves the
+	// collision flags and on-ground state as they were.
+	NoClip bool
 	// SlowFalling, JumpBoost and Levitation are the effects; -1 is none.
 	SlowFalling           bool
 	JumpBoost, Levitation int32

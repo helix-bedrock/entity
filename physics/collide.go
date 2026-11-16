@@ -356,10 +356,13 @@ func (b *Body) finalize(req, done Vec3) {
 		Y: b.Box.Min.Y + b.YOffset,
 		Z: (b.Box.Min.Z + b.Box.Max.Z) * 0.5,
 	}
-	b.HorizontalCollision = [2]bool{abs32(done.X-req.X) > eps, abs32(req.Z-done.Z) > eps}
-	b.VerticalCollision = abs32(req.Y-done.Y) > eps
-	was := b.OnGround
-	b.OnGround = b.VerticalCollision && req.Y < 0 || was && !b.VerticalCollision && req.Y == 0
+	b.done = done
+	if !b.NoClip {
+		b.HorizontalCollision = [2]bool{abs32(done.X-req.X) > eps, abs32(req.Z-done.Z) > eps}
+		b.VerticalCollision = abs32(req.Y-done.Y) > eps
+		was := b.OnGround
+		b.OnGround = b.VerticalCollision && req.Y < 0 || was && !b.VerticalCollision && req.Y == 0
+	}
 	if b.HorizontalCollision[0] {
 		b.Vel.X = 0
 	}
@@ -369,7 +372,6 @@ func (b *Body) finalize(req, done Vec3) {
 	if b.VerticalCollision {
 		b.Vel.Y = 0
 	}
-	b.done = done
 }
 
 // fall is the fall distance update of Actor::checkFallDamage (0xB2DF080).
