@@ -1,14 +1,12 @@
 package behavior
 
-import "math"
-
 // The breed goal's fixed numbers.
 const (
 	breedBox     = 8
 	breedEvery   = 60 // ticks between breeding tries; the goal ends after one
 	breedLookYaw = 10
 	breedBigHalf = 0.5
-	breedBoxGap2 = 0.16
+	breedBoxGap2 = 0.16000001
 	breedGap     = 0.6
 	breedFar2    = 9
 )
@@ -36,32 +34,46 @@ func NewBreed(w World, m Breeder, speed float32) *Breed {
 	return &Breed{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, speed: speed, partner: NoID}
 }
 
-// closeEnough is the breeding reach: boxes within 0.4 for mobs half a
-// block or wider, otherwise a 0.6 gap between their sizes.
+// closeEnough is BDS 1.26.60's breeding reach (inlined in BreedGoal::canUse
+// 0x5518130 and tick 0x5518E70). Each mob is a box of its width and height
+// centred on its position, feet included, with the mob at at. For mobs half
+// a block or bigger (the larger of width and height), each axis takes the
+// point halfway between the two centres, clamps it into each box, and the
+// two clamped points must be within 0.4 blocks. Otherwise the centres must be
+// within 0.6 of the two half sizes.
 func closeEnough(at Vec3, self Box, p Actor) bool {
-	h1 := max32(self.Max.X-self.Min.X, self.Max.Y-self.Min.Y) * 0.5
+	sw, sh := self.Max.X-self.Min.X, self.Max.Y-self.Min.Y
 	pb := p.Box()
-	h2 := max32(pb.Max.X-pb.Min.X, pb.Max.Y-pb.Min.Y) * 0.5
+	pw, ph := pb.Max.X-pb.Min.X, pb.Max.Y-pb.Min.Y
 	pp := p.Pos()
+	h1 := max32(sw, sh) * 0.5
+	h2 := max32(pw, ph) * 0.5
 	if h1 >= breedBigHalf || h2 >= breedBigHalf {
-		hw := (self.Max.X - self.Min.X) * 0.5
-		gx := gapAxis(at.X-hw, at.X+hw, pb.Min.X, pb.Max.X)
-		gy := gapAxis(at.Y, at.Y+(self.Max.Y-self.Min.Y), pb.Min.Y, pb.Max.Y)
-		gz := gapAxis(at.Z-hw, at.Z+hw, pb.Min.Z, pb.Max.Z)
-		return gx*gx+gy*gy+gz*gz <= breedBoxGap2
+		gx := clampGap(pp.X, pw*0.5, at.X, sw*0.5)
+		gy := clampGap(pp.Y, ph*0.5, at.Y, sh*0.5)
+		gz := clampGap(pp.Z, pw*0.5, at.Z, sw*0.5)
+		return gz*gz+(gx*gx+gy*gy) <= breedBoxGap2
 	}
-	d := float32(math.Sqrt(float64(dist2(at, pp))))
+	d := sqrt32(dist2(at, pp))
 	return d-(h1+h2) <= breedGap
 }
 
-func gapAxis(aMin, aMax, bMin, bMax float32) float32 {
-	switch {
-	case aMax < bMin:
-		return bMin - aMax
-	case bMax < aMin:
-		return aMin - bMax
+// clampGap is one axis of the big-mob reach: the midpoint of the two centres
+// clamped into the partner's span minus it clamped into the mob's span. It
+// is not the gap between the spans: a short span inside a long one, off its
+// middle, still gives a gap.
+func clampGap(pc, ph, sc, sh float32) float32 {
+	mid := (pc + sc) * 0.5
+	return clampSpan(mid, pc, ph) - clampSpan(mid, sc, sh)
+}
+
+// clampSpan clamps v into [c-h, c+h] the way BDS's vector code does: the top
+// first, then the bottom.
+func clampSpan(v, c, h float32) float32 {
+	if hi := c + h; hi < v {
+		return hi
 	}
-	return 0
+	return max32(v, c-h)
 }
 
 // CanUse implements goal.Goal.
@@ -106,9 +118,10 @@ func (g *Breed) CanContinueToUse() bool {
 	if dist2(g.mob.Pos(), p.Pos()) <= breedFar2 {
 		return true
 	}
+	// BDS keeps breeding without a navigation component.
 	n := g.mob.Nav()
 	if n == nil {
-		return false
+		return true
 	}
 	if end, ok := n.PathEnd(); ok && end.X == floorInt(p.Pos().X) && end.Z == floorInt(p.Pos().Z) {
 		return true
