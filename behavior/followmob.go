@@ -107,10 +107,11 @@ func (g *FollowMob) keeps(a Actor) bool {
 	return !spectator(g.world, a) && !g.outsideHome(a)
 }
 
-// CanUse implements goal.Goal (0x573FA20).
+// CanUse implements goal.Goal (BDS 1.26.60 0x59F9A20): both rolls are on
+// the thread random.
 func (g *FollowMob) CanUse() bool {
 	m := g.mob
-	if m.Nav() == nil || g.world.Random().NextInt(followMobChance) != 0 {
+	if m.Nav() == nil || g.world.ThreadRandom().NextInt(followMobChance) != 0 {
 		return false
 	}
 	r := float32(g.cfg.SearchRange)
@@ -136,7 +137,7 @@ func (g *FollowMob) CanUse() bool {
 			}
 		}
 	}
-	g.target = kept[g.world.Random().NextInt(int32(len(kept)))].ID()
+	g.target = kept[g.world.ThreadRandom().NextInt(int32(len(kept)))].ID()
 	return true
 }
 

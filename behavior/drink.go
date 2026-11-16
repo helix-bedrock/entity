@@ -118,7 +118,7 @@ func (g *DrinkPotion) CanUse() bool {
 		return false
 	}
 	g.calls = 0
-	r := g.world.IRandom()
+	r := g.world.Random()
 	target := g.actor(g.m.Target())
 	for _, p := range g.cfg.Potions {
 		if r.NextFloat() >= p.Chance || p.Filters != nil && !p.Filters(g.m, target) {

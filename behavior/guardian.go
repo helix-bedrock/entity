@@ -165,7 +165,7 @@ func (g *GuardianAttack) Tick() {
 	if !ok {
 		return
 	}
-	g.m.HurtBy(t, g.cfg.AttackCause, g.world.Random().NextFloat()*(hi-lo)+lo, false)
+	g.m.HurtBy(t, g.cfg.AttackCause, g.world.ThreadRandom().NextFloat()*(hi-lo)+lo, false)
 	magic := g.cfg.MagicDamage
 	if g.m.Difficulty() == difficultyHard {
 		magic += g.cfg.HardModeExtraMagicDamage

@@ -130,13 +130,14 @@ func NewPlaceBlock(w World, m BlockCarrier, c PlaceBlockConfig) *PlaceBlock {
 	return &PlaceBlock{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x575A4B0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x550A2E0): the chance rolls
+// on the thread random.
 func (g *PlaceBlock) CanUse() bool {
 	m, w := g.m, g.world
 	if g.cfg.AffectedByGriefingRule && !w.MobGriefing() {
 		return false
 	}
-	if !chance(w.Random(), g.cfg.Chance) {
+	if !chance(w.ThreadRandom(), g.cfg.Chance) {
 		return false
 	}
 	if len(g.cfg.RandomlyPlaceableBlocks) == 0 {
@@ -148,11 +149,12 @@ func (g *PlaceBlock) CanUse() bool {
 	return g.cfg.CanPlace == nil || g.cfg.CanPlace(m, g.actor(m.Target()))
 }
 
-// Tick implements goal.Goal (0x575A6E0): the spot must be air over a
-// solid block. The weighted list skips the carried item and mayPlace.
+// Tick implements goal.Goal (BDS 1.26.60 0x550A510): the spot must be air
+// over a solid block. The weighted list skips the carried item and
+// mayPlace. Every roll is on the thread random.
 func (g *PlaceBlock) Tick() {
 	m, w := g.m, g.world
-	p := add3(blockOf(m.Pos()), blockOffset(w.Random(), g.cfg.XZRange, g.cfg.YRange))
+	p := add3(blockOf(m.Pos()), blockOffset(w.ThreadRandom(), g.cfg.XZRange, g.cfg.YRange))
 	if w.Block(p).Name != airName {
 		return
 	}
@@ -198,7 +200,7 @@ func (g *PlaceBlock) pick(target Actor, p Pos) (PlacedBlock, bool) {
 	}
 	var r int32
 	if total != 0 {
-		r = g.world.Random().NextInt(total)
+		r = g.world.ThreadRandom().NextInt(total)
 	}
 	for _, i := range g.picks {
 		e := &g.cfg.RandomlyPlaceableBlocks[i]

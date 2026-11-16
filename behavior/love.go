@@ -67,13 +67,14 @@ func NewReceiveLove(w World, m Lover) *ReceiveLove {
 	return &ReceiveLove{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m}
 }
 
-// CanUse implements goal.Goal (0x526E110).
+// CanUse implements goal.Goal (BDS 1.26.60 0x542FE30).
 func (g *ReceiveLove) CanUse() bool { return g.m.Flag(FlagInLove) }
 
-// CanContinueToUse implements goal.Goal (0x526E130).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x542FE50).
 func (g *ReceiveLove) CanContinueToUse() bool { return g.m.Flag(FlagInLove) }
 
-// Tick implements goal.Goal (0x526E150).
+// Tick implements goal.Goal (BDS 1.26.60 0x542FE70): the hearts roll is on
+// the thread random.
 func (g *ReceiveLove) Tick() {
 	m := g.m
 	p := g.actor(m.LovePartner(m.ID()))
@@ -86,7 +87,7 @@ func (g *ReceiveLove) Tick() {
 			n.MoveToActor(p, loveWalkSpeed)
 		}
 	}
-	if g.world.Random().NextInt(loveHeartChance) == 0 {
+	if g.world.ThreadRandom().NextInt(loveHeartChance) == 0 {
 		m.ActorEvent(actorEventLove, 0)
 	}
 }
@@ -112,7 +113,8 @@ func (g *MakeLove) villageOK() bool {
 	return !dweller || wants
 }
 
-// CanUse implements goal.Goal (0x526CDD0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x542EB60): the 1 in 500 roll
+// is on the thread random.
 func (g *MakeLove) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil {
@@ -121,7 +123,7 @@ func (g *MakeLove) CanUse() bool {
 	if m.Flag(FlagInLove) && !m.LoveLeader(m.ID()) || m.Flag(FlagBaby) {
 		return false
 	}
-	if g.world.Random().NextInt(loveChance) != 0 || !g.villageOK() {
+	if g.world.ThreadRandom().NextInt(loveChance) != 0 || !g.villageOK() {
 		return false
 	}
 	p := g.find()
@@ -139,7 +141,7 @@ func (g *MakeLove) CanUse() bool {
 // ready reports a villager that can breed now: willing, or with food.
 func (g *MakeLove) ready(id ID) bool { return g.m.Willing(id) || g.m.HasBreedFood(id) }
 
-// find is 0x526D1C0: a villager already paired with this one, or else the
+// find is BDS 1.26.60 0x542EF40: a villager already paired with this one, or else the
 // nearest free one the mob can walk to. Walking there starts on the way.
 func (g *MakeLove) find() Actor {
 	m := g.m
@@ -179,7 +181,7 @@ func pathEndsUnder(n Navigator, a Actor) bool {
 	return ok && end.X == floorInt(p.X) && end.Z == floorInt(p.Z)
 }
 
-// CanContinueToUse implements goal.Goal (0x526D720).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x542F460).
 func (g *MakeLove) CanContinueToUse() bool {
 	m := g.m
 	if g.timer < 0 || m.Flag(FlagBaby) || !m.Flag(FlagInLove) || !g.villageOK() {
@@ -202,10 +204,10 @@ func (g *MakeLove) CanContinueToUse() bool {
 	return n.MoveToActor(p, lovePathSpeed) && pathEndsUnder(n, p)
 }
 
-// Start implements goal.Goal (0x526D6A0).
+// Start implements goal.Goal (BDS 1.26.60 0x542F3E0).
 func (g *MakeLove) Start() { g.timer = loveTime }
 
-// Stop implements goal.Goal (0x526D6B0): both villagers fall out of love.
+// Stop implements goal.Goal (BDS 1.26.60 0x542F3F0): both villagers fall out of love.
 func (g *MakeLove) Stop() {
 	m := g.m
 	if p := m.LovePartner(m.ID()); g.actor(p) != nil {
@@ -214,7 +216,7 @@ func (g *MakeLove) Stop() {
 	m.SetLovePartner(m.ID(), NoID)
 }
 
-// Tick implements goal.Goal (0x526DAB0).
+// Tick implements goal.Goal (BDS 1.26.60 0x542F7D0).
 func (g *MakeLove) Tick() {
 	m := g.m
 	g.timer--
@@ -233,7 +235,7 @@ func (g *MakeLove) Tick() {
 			}
 		}
 	}
-	if g.world.Random().NextInt(loveHeartChance) == 0 {
+	if g.world.ThreadRandom().NextInt(loveHeartChance) == 0 {
 		m.ActorEvent(actorEventLove, 0)
 	}
 }

@@ -127,16 +127,17 @@ func NewJumpToBlock(w World, m BlockJumper, c JumpToBlockConfig) *JumpToBlock {
 	g := &JumpToBlock{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c,
 		preferred: blockSet(c.PreferredBlocks), forbidden: blockSet(c.ForbiddenBlocks),
 		friction: m.DiscardFriction(), size: m.Box(), state: jumpBlockDone}
-	w.IRandom().NextFloat()
+	w.Random().NextFloat()
 	g.cooldown = g.nextCooldown()
 	return g
 }
 
 // nextCooldown is the tick the next jump may start: a random time in the
-// cooldown range from now.
+// cooldown range from now, on Level::getRandom (BDS 1.26.60 ctor
+// 0x5A06E20, stop 0x5A084F0, tick 0x5A08680).
 func (g *JumpToBlock) nextCooldown() uint64 {
 	r := g.cfg.Cooldown
-	return g.world.CurrentTick() + uint64(int32(((r.Max-r.Min)*g.world.IRandom().NextFloat()+r.Min)*ticksPerSecond))
+	return g.world.CurrentTick() + uint64(int32(((r.Max-r.Min)*g.world.Random().NextFloat()+r.Min)*ticksPerSecond))
 }
 
 // CanBeInterrupted implements goal.Goal: a jump always finishes.
@@ -210,7 +211,7 @@ func (g *JumpToBlock) Start() {
 		g.state = jumpBlockDone
 		return
 	}
-	pref := len(g.cfg.PreferredBlocks) > 0 && g.cfg.PreferredChance > w.IRandom().NextFloat()
+	pref := len(g.cfg.PreferredBlocks) > 0 && g.cfg.PreferredChance > w.Random().NextFloat()
 	if !g.candidates(pref) {
 		g.state = jumpBlockDone
 		return
@@ -299,7 +300,7 @@ func (g *JumpToBlock) pick() bool {
 	for _, c := range g.cands {
 		total += c.weight
 	}
-	r := w.Random().NextInt(total)
+	r := w.ThreadRandom().NextInt(total) // 0x5A08DE0
 	i := -1
 	for k, c := range g.cands {
 		if r -= c.weight; r < 0 {

@@ -63,7 +63,7 @@ func newSquidBase(w World, s Squid) squidBase {
 // nextBool is BDS's Random::nextBool.
 func nextBool(r Random) bool { return r.NextInt(nextBoolRange) >= nextBoolBit }
 
-// swimRange is the squid's depth range (0x7211B00): from 5 to 1.5 blocks
+// swimRange is the squid's depth range (BDS 1.26.60 0x7560870): from 5 to 1.5 blocks
 // under the first non-water block above it, kept above the top solid block.
 func swimRange(w World, p Vec3) (lo, hi float32) {
 	b := blockOf(p)
@@ -82,7 +82,8 @@ func swimRange(w World, p Vec3) (lo, hi float32) {
 	return lo, hi
 }
 
-// flatDir is the squid's random horizontal direction (0x7211330).
+// flatDir is the squid's random horizontal direction (BDS 1.26.60
+// 0x75600A0), on the thread random.
 func flatDir(r Random) Vec3 {
 	f := r.NextFloat()
 	a := (f*pi32 + f*pi32) * sinScale
@@ -91,7 +92,7 @@ func flatDir(r Random) Vec3 {
 	return Vec3{X: x, Y: y, Z: squidFlatSpeed * tableSin(uint16(int32(a)))}
 }
 
-// wallCheck is the squid's wall test (0x7211530): it clips dist blocks
+// wallCheck is the squid's wall test (BDS 1.26.60 0x75602A0): it clips dist blocks
 // along d and, on a hit, along d turned 30 degrees each way, flat. It
 // returns the direction to swim and true only when all three rays hit.
 func wallCheck(w World, p, d Vec3, dist float32) (Vec3, bool) {
@@ -119,7 +120,7 @@ func wallCheck(w World, p, d Vec3, dist float32) (Vec3, bool) {
 	case bHit:
 		return a, false
 	}
-	if nextBool(w.Random()) {
+	if nextBool(w.ThreadRandom()) {
 		return a, false
 	}
 	return b, false
@@ -153,7 +154,8 @@ func (g *SquidIdle) Start() { g.timer = squidIdleRepick }
 // Stop implements goal.Goal.
 func (g *SquidIdle) Stop() {}
 
-// Tick implements goal.Goal (0x5933490).
+// Tick implements goal.Goal (BDS 1.26.60 0x5B09860): the rolls are on the
+// thread random.
 func (g *SquidIdle) Tick() {
 	p := g.sq.Pos()
 	lo, hi := swimRange(g.world, p)
@@ -163,7 +165,7 @@ func (g *SquidIdle) Tick() {
 		return
 	}
 	g.timer = 0
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	x := r.NextFloat() - 0.5
 	r.NextFloat()
 	z := r.NextFloat() - 0.5
@@ -183,7 +185,7 @@ type SquidDive struct{ squidBase }
 // NewSquidDive makes the goal.
 func NewSquidDive(w World, s Squid) *SquidDive { return &SquidDive{squidBase: newSquidBase(w, s)} }
 
-// CanUse implements goal.Goal (0x5932B20).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5B08F00).
 func (g *SquidDive) CanUse() bool {
 	if g.sq.InWater() {
 		return false
@@ -196,9 +198,9 @@ func (g *SquidDive) CanUse() bool {
 // CanContinueToUse implements goal.Goal.
 func (g *SquidDive) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x5932D00).
+// Start implements goal.Goal (BDS 1.26.60 0x5B090E0): thread random.
 func (g *SquidDive) Start() {
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	a := r.NextFloat() - 0.5
 	b := r.NextFloat() - 0.5
 	var d Vec3
@@ -229,8 +231,8 @@ func (g *SquidOutOfWater) CanUse() bool { return !g.sq.InWater() }
 // CanContinueToUse implements goal.Goal.
 func (g *SquidOutOfWater) CanContinueToUse() bool { return !g.sq.InWater() }
 
-// Start implements goal.Goal (0x5933AB0).
-func (g *SquidOutOfWater) Start() { g.sq.SetSwimDir(flatDir(g.world.Random())) }
+// Start implements goal.Goal (BDS 1.26.60 0x5B09E80).
+func (g *SquidOutOfWater) Start() { g.sq.SetSwimDir(flatDir(g.world.ThreadRandom())) }
 
 // Stop implements goal.Goal.
 func (g *SquidOutOfWater) Stop() {}
@@ -254,9 +256,9 @@ func (g *SquidMoveAwayFromGround) CanUse() bool { return g.sq.Collided() }
 // CanContinueToUse implements goal.Goal.
 func (g *SquidMoveAwayFromGround) CanContinueToUse() bool { return g.sq.Collided() }
 
-// Start implements goal.Goal (0x5933980).
+// Start implements goal.Goal (BDS 1.26.60 0x5B09D50).
 func (g *SquidMoveAwayFromGround) Start() {
-	d, _ := wallCheck(g.world, g.sq.Pos(), flatDir(g.world.Random()), squidAwayCheck)
+	d, _ := wallCheck(g.world, g.sq.Pos(), flatDir(g.world.ThreadRandom()), squidAwayCheck)
 	g.sq.SetSwimDir(scale(d, squidAwaySpeed))
 }
 
@@ -276,7 +278,7 @@ type SquidFlee struct {
 // NewSquidFlee makes the goal.
 func NewSquidFlee(w World, s Squid) *SquidFlee { return &SquidFlee{squidBase: newSquidBase(w, s)} }
 
-// CanUse implements goal.Goal (0x5932FB0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5B09390).
 func (g *SquidFlee) CanUse() bool {
 	a := g.actor(g.sq.LastHurtByMob())
 	return a != nil && g.sq.InWater() && dist2(g.sq.Pos(), a.Pos()) < squidFleeRange2
@@ -291,7 +293,7 @@ func (g *SquidFlee) Start() { g.timer = 0 }
 // Stop implements goal.Goal.
 func (g *SquidFlee) Stop() {}
 
-// Tick implements goal.Goal (0x5933130).
+// Tick implements goal.Goal (BDS 1.26.60 0x5B09510).
 func (g *SquidFlee) Tick() {
 	g.timer++
 	a := g.actor(g.sq.LastHurtByMob())

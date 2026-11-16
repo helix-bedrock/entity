@@ -205,7 +205,7 @@ func (g *LayEgg) lay() {
 	m.PlaySoundAt(int(g.cfg.LaySound), m.AttachPos(attachHead))
 	b := PlacedBlock{Name: g.cfg.EggType}
 	if b.Name == turtleEggName {
-		b.State, b.Value = stateEggCount, w.IRandom().NextInt(turtleEggStates)
+		b.State, b.Value = stateEggCount, w.Random().NextInt(turtleEggStates)
 	}
 	w.SetBlock(Pos{X: g.target.X, Y: g.target.Y + 1, Z: g.target.Z}, b, m.ID())
 	m.SetFlag(FlagHasEgg, false)

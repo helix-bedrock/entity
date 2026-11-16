@@ -17,8 +17,8 @@ const (
 	// moveToCooldown is the rest, in seconds, after a path that did not
 	// move. The definition has the field but no JSON name was found.
 	moveToCooldown = 8
-	// moveToFar is the starting best distance of the land search; BDS never
-	// lowers it.
+	// moveToFar is the starting best distance of the block search; each
+	// spot taken lowers it, so only nearer spots replace it.
 	moveToFar  = 99999.99
 	chunkShift = 4
 	chunkMask  = 15
@@ -332,13 +332,13 @@ func NewMoveToLand(w World, m Mob, c MoveToConfig) *MoveToLand {
 	return g
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal (BDS 1.26.60 0x543A5B0).
 func (g *MoveToLand) CanUse() bool { return g.mob.InWater() && g.canStart() && g.find() }
 
 // CanContinueToUse implements goal.Goal.
 func (g *MoveToLand) CanContinueToUse() bool { return g.mob.InWater() && g.keep() }
 
-// valid is the goal's isValidTarget (0x5278840).
+// valid is the goal's isValidTarget (BDS 1.26.60 0x543A620).
 func (g *MoveToLand) valid(p Pos) bool {
 	return g.world.LiquidBlock(p).BlocksMotion && g.world.LiquidBlock(Pos{X: p.X, Y: p.Y + 1, Z: p.Z}).Material == path.MaterialAir
 }
@@ -349,7 +349,7 @@ const (
 	landAimPast   = 2
 )
 
-// moveToBlock is the goal's moveMobToBlock (0x52788E0).
+// moveToBlock is the goal's moveMobToBlock (BDS 1.26.60 0x543A6B0).
 func (g *MoveToLand) moveToBlock() {
 	c := Vec3{X: float32(g.target.X) + landAimCentre, Y: float32(g.target.Y) + 1, Z: float32(g.target.Z) + landAimCentre}
 	d := sub(c, g.mob.Pos())
@@ -362,8 +362,9 @@ func (g *MoveToLand) moveToBlock() {
 // find is the goal's findTargetBlock: BaseMoveToBlockGoal's search.
 func (g *MoveToLand) find() bool { return g.findBlock() }
 
-// findBlock is BaseMoveToBlockGoal's findTargetBlock (0x48C8B20), which
-// tests each spot with the goal's isValidTarget and path check.
+// findBlock is BaseMoveToBlockGoal's findTargetBlock (BDS 1.26.60
+// 0x4A81DA0), which tests each spot with the goal's isValidTarget and,
+// when it is nearer than the best so far, the path check.
 func (g *moveTo) findBlock() bool {
 	m := g.mob
 	mp := blockOf(m.Pos())
@@ -374,7 +375,7 @@ func (g *moveTo) findBlock() bool {
 	if h < 0 || r <= 0 {
 		return false
 	}
-	found := false
+	found, best := false, float32(moveToFar)
 	for k := int32(0); k <= h; k = ringNext(k) {
 		for i := int32(0); i < r; i++ {
 			for x := int32(0); x <= i; x = ringNext(x) {
@@ -388,8 +389,8 @@ func (g *moveTo) findBlock() bool {
 						continue
 					}
 					d := float32(blockDist2(mp, c))
-					if moveToFar > d && g.hooks.reachable(c) {
-						g.target, found = c, true
+					if best > d && g.hooks.reachable(c) {
+						g.target, found, best = c, true, d
 						if d <= g.radius2 {
 							return true
 						}
@@ -401,18 +402,21 @@ func (g *moveTo) findBlock() bool {
 	return found
 }
 
-// findRandom is the search_count branch: random land spots; the last one
+// findRandom is the search_count branch: random land spots; the nearest
 // that passes wins.
 func (g *moveTo) findRandom(mp Pos) bool {
-	found := false
+	found, best := false, float32(moveToFar)
 	for i := int32(0); i < g.cfg.SearchCount; i++ {
 		p, ok := randomPos(g.world, g.mob, posSearch{h: g.cfg.SearchRange, v: g.cfg.SearchHeight, tries: 1, collision: true})
 		if !ok {
 			continue
 		}
 		c := blockOf(Vec3{X: p.X, Y: p.Y - 1, Z: p.Z})
-		if g.hooks.valid(c) && moveToFar > float32(blockDist2(mp, c)) && g.hooks.reachable(c) {
-			g.target, found = c, true
+		if !g.hooks.valid(c) {
+			continue
+		}
+		if d := float32(blockDist2(mp, c)); best > d && g.hooks.reachable(c) {
+			g.target, found, best = c, true, d
 		}
 	}
 	return found

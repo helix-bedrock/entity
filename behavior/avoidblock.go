@@ -38,15 +38,16 @@ type blockSet []string
 func (s blockSet) matches(b Block) bool { return slices.Contains(s, b.Name) }
 
 // pickHit picks the target of a block search: a random hit in search
-// order, or the nearest.
+// order, or the nearest after libc++'s std::sort (avoid_block 0x4A7E040,
+// move_to_block 0x54395E0; both on the thread random).
 func pickHit(w World, hits []blockHit, method int) (Pos, bool) {
 	if len(hits) == 0 {
 		return Pos{}, false
 	}
 	if method == SelectRandom {
-		return hits[w.Random().NextInt(int32(len(hits)))].pos, true
+		return hits[w.ThreadRandom().NextInt(int32(len(hits)))].pos, true
 	}
-	slices.SortStableFunc(hits, byDist)
+	stdSort(hits, nearerHit)
 	return hits[0].pos, true
 }
 
@@ -98,7 +99,8 @@ func (g *AvoidBlock) find() bool {
 	return ok
 }
 
-// CanUse implements goal.Goal (0x48C4A30). BDS makes the path here and
+// CanUse implements goal.Goal (BDS 1.26.60 0x4A7DCA0): the interval rolls
+// on the mob's thread random. BDS makes the path here and
 // follows it in start; the port checks it here and paths again in Start.
 func (g *AvoidBlock) CanUse() bool {
 	w, m := g.world, g.mob
@@ -109,7 +111,7 @@ func (g *AvoidBlock) CanUse() bool {
 	if !g.find() || n == nil {
 		return false
 	}
-	g.nextCheck = w.CurrentTick() + uint64(g.cfg.TickInterval) + uint64(w.Random().NextInt(g.cfg.TickInterval))
+	g.nextCheck = w.CurrentTick() + uint64(g.cfg.TickInterval) + uint64(w.ThreadRandom().NextInt(g.cfg.TickInterval))
 	from := add(vecOf(g.block), Vec3{X: 0.5, Y: 0.5, Z: 0.5})
 	p, ok := awayPos(w, m, avoidBlockH, avoidBlockV, from, false)
 	if !ok {
@@ -150,8 +152,9 @@ func (g *AvoidBlock) Stop() {
 	m.SetFlag(FlagAvoidingBlock, false)
 }
 
-// Tick implements goal.Goal: sprint while inside the search range of the
-// block.
+// Tick implements goal.Goal (BDS 1.26.60 0x4A7E6F0): sprint while inside
+// the search range of the block; the sound interval is on the thread
+// random.
 func (g *AvoidBlock) Tick() {
 	s := g.cfg.WalkSpeed
 	if r := float32(g.cfg.SearchRange * g.cfg.SearchRange); r > dist2(g.mob.Pos(), vecOf(g.block)) {
@@ -160,5 +163,5 @@ func (g *AvoidBlock) Tick() {
 	if n := g.mob.Nav(); n != nil {
 		n.SetSpeed(s)
 	}
-	playSound(g.world, g.mob, g.cfg.Sound, g.cfg.SoundInterval, g.world.CurrentTick(), &g.nextSound)
+	playSoundFrom(g.world.ThreadRandom(), g.mob, g.cfg.Sound, g.cfg.SoundInterval, g.world.CurrentTick(), &g.nextSound)
 }

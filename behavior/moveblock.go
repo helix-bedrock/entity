@@ -60,7 +60,8 @@ func NewMoveToBlock(w World, m Mob, c MoveToBlockConfig) *MoveToBlock {
 		radius2: c.GoalRadius * c.GoalRadius, stay: int32(c.StayDuration * ticksPerSecond)}
 }
 
-// CanUse implements goal.Goal (0x52776F0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5439480): interval and chance
+// roll on the mob's thread random.
 func (g *MoveToBlock) CanUse() bool {
 	if g.cooldown != 0 {
 		g.cooldown--
@@ -73,12 +74,12 @@ func (g *MoveToBlock) CanUse() bool {
 		g.interval--
 		return false
 	}
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	g.interval = g.cfg.TickInterval + r.NextInt(g.cfg.TickInterval)
 	return g.cfg.StartChance >= r.NextFloat() && g.find()
 }
 
-// find is the goal's block search (0x5277850).
+// find is the goal's block search (BDS 1.26.60 0x54395E0).
 func (g *MoveToBlock) find() bool {
 	g.hits = searchBlocks(g.hits[:0], g.world, blockOf(g.mob.Pos()), g.cfg.SearchRange, g.cfg.SearchHeight, blockSet(g.cfg.TargetBlocks))
 	p, ok := pickHit(g.world, g.hits, g.cfg.Method)

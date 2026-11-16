@@ -101,7 +101,7 @@ type HarvestFarmBlock struct {
 	seed, task                              int32
 }
 
-// NewHarvestFarmBlock makes the goal (0x5747FF0).
+// NewHarvestFarmBlock makes the goal.
 func NewHarvestFarmBlock(w World, f Farmer, c HarvestFarmBlockConfig) *HarvestFarmBlock {
 	g := &HarvestFarmBlock{f: f, cfg: c, task: farmTaskNone, seed: farmTaskNone,
 		beforeSearch: int32(c.MaxSecondsBeforeSearch * ticksPerSecond),
@@ -128,13 +128,14 @@ func (g *HarvestFarmBlock) valid(p Pos) bool {
 // find is the base search.
 func (g *HarvestFarmBlock) find() bool { return g.findBlock() }
 
-// CanUse implements goal.Goal (0x57480A0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5A01DD0): both waits roll on
+// the thread random.
 func (g *HarvestFarmBlock) CanUse() bool {
 	if g.wait > 0 {
 		g.wait--
 		return false
 	}
-	g.wait = g.world.Random().NextInt(max(g.beforeSearch, 1))
+	g.wait = g.world.ThreadRandom().NextInt(max(g.beforeSearch, 1))
 	f := g.f
 	if !f.HasContainer() || f.Nav() == nil || !g.world.MobGriefing() {
 		return false
@@ -152,14 +153,15 @@ func (g *HarvestFarmBlock) CanUse() bool {
 			return true
 		}
 	}
-	g.wait = g.world.Random().NextInt(max(g.searchWait, 1))
+	g.wait = g.world.ThreadRandom().NextInt(max(g.searchWait, 1))
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x5748680).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A023B0).
 func (g *HarvestFarmBlock) CanContinueToUse() bool { return g.task >= 0 && g.keep() }
 
-// Tick implements goal.Goal (0x5748720).
+// Tick implements goal.Goal (BDS 1.26.60 0x5A02460): a grown crop is
+// harvested even with no seeds; only the planting needs them.
 func (g *HarvestFarmBlock) Tick() {
 	g.moveTo.Tick()
 	lookAtFarm(g.mob, g.target)
@@ -173,7 +175,7 @@ func (g *HarvestFarmBlock) Tick() {
 		}
 	} else {
 		grown, ok := g.f.Crop(above(g.target))
-		if g.seed < 0 || !ok || !grown || !g.f.HarvestCrop(above(g.target)) {
+		if !ok || !grown || !g.f.HarvestCrop(above(g.target)) || g.seed < 0 {
 			g.task, g.wait = farmTaskNone, g.newTask
 			return
 		}
@@ -326,7 +328,7 @@ func NewRaidGarden(w World, m GardenRaider, c RaidGardenConfig) *RaidGarden {
 	return g
 }
 
-// valid is isValidTarget (0x575C840): the block above is raidable and one
+// valid is isValidTarget (BDS 1.26.60 0x550C930): the block above is raidable and one
 // of the goal's blocks.
 func (g *RaidGarden) valid(p Pos) bool {
 	up := above(p)
@@ -338,7 +340,7 @@ func (g *RaidGarden) find() bool { return g.findBlock() }
 
 func (g *RaidGarden) full() bool { return g.cfg.MaxToEat > 0 && g.eaten >= g.cfg.MaxToEat }
 
-// CanUse implements goal.Goal (0x575C360).
+// CanUse implements goal.Goal (BDS 1.26.60 0x550C440).
 func (g *RaidGarden) CanUse() bool {
 	if !g.world.MobGriefing() {
 		return false
@@ -350,10 +352,10 @@ func (g *RaidGarden) CanUse() bool {
 	return g.canStart() && g.find()
 }
 
-// CanContinueToUse implements goal.Goal (0x575C400).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x550C4E0).
 func (g *RaidGarden) CanContinueToUse() bool { return !g.full() && g.keep() }
 
-// Start implements goal.Goal (0x575C420).
+// Start implements goal.Goal (BDS 1.26.60 0x550C500).
 func (g *RaidGarden) Start() {
 	g.moveTo.Start()
 	g.eat, g.filled = g.cfg.InitialEatDelay, g.cfg.FullDelay
@@ -362,7 +364,7 @@ func (g *RaidGarden) Start() {
 	}
 }
 
-// Tick implements goal.Goal (0x575C4D0).
+// Tick implements goal.Goal (BDS 1.26.60 0x550C5C0).
 func (g *RaidGarden) Tick() {
 	g.moveTo.Tick()
 	lookAtFarm(g.mob, g.target)

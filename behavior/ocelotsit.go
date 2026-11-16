@@ -24,19 +24,19 @@ func NewOcelotSitOnBlock(w World, m Mob, c MoveToConfig) *OcelotSitOnBlock {
 	return g
 }
 
-// CanUse implements goal.Goal (0x5754B20).
+// CanUse implements goal.Goal (BDS 1.26.60 0x55048A0).
 func (g *OcelotSitOnBlock) CanUse() bool {
 	m := g.mob
 	return m.Flag(FlagTamed) && !m.Flag(FlagSitting) && g.canStart() && g.find()
 }
 
-// CanContinueToUse implements goal.Goal (0x48C8800, the base).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x4A81A60, the base).
 func (g *OcelotSitOnBlock) CanContinueToUse() bool { return g.keep() }
 
 // find is the base findTargetBlock.
 func (g *OcelotSitOnBlock) find() bool { return g.findBlock() }
 
-// valid is the goal's isValidTarget (0x5754D80): air above, and a chest no
+// valid is the goal's isValidTarget (BDS 1.26.60 0x5504B10): air above, and a chest no
 // one has open, a lit furnace, or a bed's foot.
 func (g *OcelotSitOnBlock) valid(p Pos) bool {
 	w := g.world
@@ -62,7 +62,7 @@ func (g *OcelotSitOnBlock) reachable(p Pos) bool {
 	return g.moveTo.reachable(p)
 }
 
-// Tick implements goal.Goal (0x5754C10): once there, the cat sits and is
+// Tick implements goal.Goal (BDS 1.26.60 0x55049A0): once there, the cat sits and is
 // put on the block.
 func (g *OcelotSitOnBlock) Tick() {
 	g.moveTo.Tick()

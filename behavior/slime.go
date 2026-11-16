@@ -236,16 +236,16 @@ func NewSlimeAttack(w World, m Mob, c SlimeAttackConfig) *SlimeAttack {
 	return &SlimeAttack{base: base{mob: m, world: w}, cfg: c, cooldown: int32(c.GrowTiredTime * ticksPerSecond)}
 }
 
-// target is the mob's target while it is not being removed.
+// target is the mob's target while it is alive (Actor vt+376 isAlive).
 func (g *SlimeAttack) target() Actor {
 	t := g.actor(g.mob.Target())
-	if t == nil || t.Removed() {
+	if t == nil || !t.Alive() {
 		return nil
 	}
 	return t
 }
 
-// CanUse implements goal.Goal (0x592E1B0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5B045D0).
 func (g *SlimeAttack) CanUse() bool {
 	if g.mob.Nav() == nil {
 		return false
@@ -260,7 +260,7 @@ func (g *SlimeAttack) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x592E300).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B04710).
 func (g *SlimeAttack) CanContinueToUse() bool {
 	if g.target() == nil {
 		return false
@@ -276,7 +276,7 @@ func (g *SlimeAttack) Start() { g.timer = g.cooldown }
 // Stop implements goal.Goal.
 func (g *SlimeAttack) Stop() {}
 
-// Tick implements goal.Goal (0x592E380): a target being removed is still
+// Tick implements goal.Goal (BDS 1.26.60 0x5B04780): a target being removed is still
 // pathed to, but not looked at.
 func (g *SlimeAttack) Tick() {
 	t := g.actor(g.mob.Target())

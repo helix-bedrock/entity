@@ -68,9 +68,10 @@ func (g *Play) Config() PlayConfig { return g.cfg }
 // SetConfig replaces the goal's settings.
 func (g *Play) SetConfig(c PlayConfig) { g.cfg = c }
 
-// CanUse implements goal.Goal (0x550B720).
+// CanUse implements goal.Goal (BDS 1.26.60 0x550B720): the start roll is
+// on the thread random.
 func (g *Play) CanUse() bool {
-	if g.m.Nav() == nil || g.world.Random().NextFloat() > g.cfg.ChanceToStart {
+	if g.m.Nav() == nil || g.world.ThreadRandom().NextFloat() > g.cfg.ChanceToStart {
 		return false
 	}
 	if f := g.findFriend(); f != nil {

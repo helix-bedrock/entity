@@ -175,12 +175,13 @@ func (g *MoveToRandomBlock) Tick() {
 }
 
 // turnAside is how a stuck mob changes direction: up and down flip, a
-// side turns one of two ways by a coin flip from IRandom.
+// side turns one of two ways by a coin flip from Level::getRandom (BDS
+// 1.26.60 tick 0x543C0A0).
 func turnAside(w World, dir uint8) uint8 {
 	if dir <= dirUp {
 		return dir ^ 1
 	}
-	if w.IRandom().NextInt(2) == 1 {
+	if w.Random().NextInt(2) == 1 {
 		return randomBlockTurnA[dir]
 	}
 	return randomBlockTurnB[dir]

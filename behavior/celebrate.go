@@ -137,18 +137,18 @@ func NewCelebrateSurvive(w World, m FireworkLauncher, c CelebrateSurviveConfig) 
 // goal, so it always starts.
 func (g *CelebrateSurvive) CanUse() bool { return true }
 
-// CanContinueToUse implements goal.Goal (0x54FC940).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x56612C0).
 func (g *CelebrateSurvive) CanContinueToUse() bool { return g.world.CurrentTick() < g.end }
 
-// Start implements goal.Goal (0x54FB940).
+// Start implements goal.Goal (BDS 1.26.60 0x56602C0): thread random.
 func (g *CelebrateSurvive) Start() {
 	now := g.world.CurrentTick()
-	g.next = now + uint64(intervalTicks(g.world.Random(), g.cfg.FireworksInterval))
+	g.next = now + uint64(intervalTicks(g.world.ThreadRandom(), g.cfg.FireworksInterval))
 	g.end = now + uint64(int32(ticksPerSecond*g.cfg.Duration))
 	g.mob.SetFlag(FlagCelebrating, true)
 }
 
-// Stop implements goal.Goal (0x54FC970).
+// Stop implements goal.Goal (BDS 1.26.60 0x56612F0).
 func (g *CelebrateSurvive) Stop() {
 	g.mob.SetFlag(FlagCelebrating, false)
 	for _, e := range g.cfg.OnCelebrationEndEvent {
@@ -156,7 +156,7 @@ func (g *CelebrateSurvive) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x54FBAB0): a firework now and then under the
+// Tick implements goal.Goal (BDS 1.26.60 0x5660430): a firework now and then under the
 // open sky.
 func (g *CelebrateSurvive) Tick() {
 	now := g.world.CurrentTick()
@@ -167,7 +167,7 @@ func (g *CelebrateSurvive) Tick() {
 	if !g.world.SkyVisible(blockOf(g.mob.Pos())) {
 		return
 	}
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	colour := r.NextInt(fireworkColours)
 	fade := r.NextInt(fireworkColours)
 	g.m.LaunchFirework(vecOf(blockOf(g.mob.AttachPos(attachBody))), colour, fade)

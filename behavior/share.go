@@ -183,7 +183,7 @@ func (g *ShareItems) Tick() {
 	// BDS measures the mob against itself on the flat here, so only the
 	// height to the target's feet counts.
 	dy := m.Pos().Y - t.Box().Min.Y
-	g.repath = repathTicks(g.world.IRandom(), dy*dy)
+	g.repath = repathTicks(g.world.Random(), dy*dy) // BDS 1.26.60 tick 0x5AFF9E0
 	if n := m.Nav(); n == nil || !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
 		g.repath += itemRepathFailWait
 	}

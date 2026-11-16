@@ -88,7 +88,7 @@ func (g *ChargeHeldItem) Tick() {
 	}
 	var i int32
 	if n := int32(len(g.cfg.Items)); n > 0 {
-		i = g.world.Random().NextInt(n)
+		i = g.world.ThreadRandom().NextInt(n)
 	}
 	if int(i) >= len(g.cfg.Items) {
 		return

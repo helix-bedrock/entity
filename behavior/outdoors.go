@@ -37,7 +37,7 @@ func NewMoveOutdoors(w World, m Mob, c MoveOutdoorsConfig) *MoveOutdoors {
 	return g
 }
 
-// valid is isValidTarget (0x5277140): the block over p is open to the
+// valid is isValidTarget (BDS 1.26.60 0x5438ED0): the block over p is open to the
 // sky.
 func (g *MoveOutdoors) valid(p Pos) bool {
 	return g.world.SkyVisible(Pos{X: p.X, Y: p.Y + 1, Z: p.Z})
@@ -46,23 +46,24 @@ func (g *MoveOutdoors) valid(p Pos) bool {
 // find is the base search.
 func (g *MoveOutdoors) find() bool { return g.findBlock() }
 
-// CanUse implements goal.Goal (0x5277120).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5438EB0).
 func (g *MoveOutdoors) CanUse() bool { return g.canStart() && g.find() }
 
 // CanContinueToUse implements goal.Goal.
 func (g *MoveOutdoors) CanContinueToUse() bool { return g.keep() }
 
 func (g *MoveOutdoors) nextCheck() uint64 {
-	return g.world.CurrentTick() + uint64(g.world.Random().NextInt(outdoorsRecheckSpan)) + outdoorsRecheck
+	return g.world.CurrentTick() + uint64(g.world.ThreadRandom().NextInt(outdoorsRecheckSpan)) + outdoorsRecheck
 }
 
-// Start implements goal.Goal (0x5276FB0).
+// Start implements goal.Goal (BDS 1.26.60 0x5438D20): the recheck rolls on
+// the thread random.
 func (g *MoveOutdoors) Start() {
 	g.recheck = g.nextCheck()
 	g.moveTo.Start()
 }
 
-// Tick implements goal.Goal (0x5277360): a mob at its spot looks for a
+// Tick implements goal.Goal (BDS 1.26.60 0x54390F0): a mob at its spot looks for a
 // new one now and then.
 func (g *MoveOutdoors) Tick() {
 	if g.world.CurrentTick() > g.recheck && g.reached {
