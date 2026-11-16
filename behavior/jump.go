@@ -268,10 +268,11 @@ func sweepHits(w World, box Box, a, b Vec3, boxScale float32) bool {
 }
 
 // pointBehind is TargetRelativeMovementGoalUtils::getRandomPointBehindTarget
-// (0x5343D90): a point at a random distance in [lo, hi) from the target's
-// feet, around the direction opposite its head yaw, spread by a gaussian.
+// (BDS 1.26.60 0xBF2A600): a point at a random distance in [lo, hi) from the
+// target's feet, around the direction opposite its head yaw, spread by a
+// gaussian. Both draws are on the thread random.
 func pointBehind(w World, t Actor, spread, lo, hi float32) Vec3 {
-	r := w.Random()
+	r := w.ThreadRandom()
 	_, yaw := t.HeadRotation()
 	a := yaw + behindYaw + spread*r.NextGaussian()*0.5
 	d := r.NextFloat()*(hi-lo) + lo

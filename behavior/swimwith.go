@@ -81,7 +81,7 @@ func (g *SwimWithEntity) CanUse() bool {
 	if !swimming(m) || m.Nav() == nil {
 		return false
 	}
-	if g.cfg.SuccessRate <= g.world.Random().NextFloat() {
+	if g.cfg.SuccessRate <= g.world.ThreadRandom().NextFloat() {
 		return false
 	}
 	return g.find()
@@ -107,7 +107,7 @@ func (g *SwimWithEntity) find() bool {
 	if len(g.picks) == 0 {
 		return false
 	}
-	t := g.picks[w.Random().NextInt(int32(len(g.picks)))]
+	t := g.picks[w.ThreadRandom().NextInt(int32(len(g.picks)))]
 	g.target = t.ID()
 	return true
 }
@@ -133,7 +133,7 @@ func (g *SwimWithEntity) CanContinueToUse() bool {
 		return false
 	}
 	still := length2(g.m.Motion(t.ID())) <= swimWithStill2
-	if (still || t.Vehicle() == NoID) && !t.Flag(FlagSwimming) && g.cfg.ChanceToStop > g.world.Random().NextFloat() {
+	if (still || t.Vehicle() == NoID) && !t.Flag(FlagSwimming) && g.cfg.ChanceToStop > g.world.ThreadRandom().NextFloat() {
 		return false
 	}
 	if n := m.Nav(); n != nil && !n.Done() {

@@ -207,8 +207,9 @@ func (g *SendEvent) Tick() {
 	if c == nil || t == nil || t.Removed() {
 		return
 	}
-	if c.LookAtTarget {
-		g.m.LookAt(t.Eyes(), g.cfg.LookYaw, g.m.MaxHeadXRot())
+	// BDS 1.26.60 tick: the target's head, while the look control is free.
+	if c.LookAtTarget && !g.m.LookBusy() {
+		g.m.LookAt(t.AttachPos(attachHead), g.cfg.LookYaw, g.m.MaxHeadXRot())
 	}
 	if g.cast--; g.cast == 0 {
 		g.flags = g.cfg.IdleFlags

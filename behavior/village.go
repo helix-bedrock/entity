@@ -322,7 +322,8 @@ func (g *ExploreOutskirts) CanUse() bool {
 	if g.cfg.MinPerimeter > float32(int32(perim)) {
 		return false
 	}
-	x, z := edgePoint(b, g.world.Random().NextInt(int32(perim)))
+	// BDS 1.26.60 0x552A380 draws the edge point on the mob's thread random.
+	x, z := edgePoint(b, g.world.ThreadRandom().NextInt(int32(perim)))
 	p := Vec3{X: x, Y: m.Pos().Y, Z: z}
 	dir := normalize(sub(p, boxCentre(b)))
 	g.target = add(p, scale(dir, g.cfg.ExploreDist))
@@ -401,7 +402,7 @@ func (g *ExploreOutskirts) Stop() {
 func (g *ExploreOutskirts) Tick() {
 	n := g.mob.Nav()
 	idle := n == nil || n.Done()
-	r := g.world.Random()
+	r := g.world.ThreadRandom() // BDS 1.26.60 0x552AB80
 	if !g.travelling {
 		g.waited++
 		if g.waited > g.waitFor && idle {

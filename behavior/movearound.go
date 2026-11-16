@@ -64,7 +64,7 @@ func (g *MoveAroundTarget) destination(t Actor) Vec3 {
 			return c
 		}
 	}
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	if r.NextBool() {
 		return pointBehind(g.world, t, g.cfg.Spread, lo, hi)
 	}

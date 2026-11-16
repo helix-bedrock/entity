@@ -51,11 +51,12 @@ func (g *MoveTowardsTarget) CanUse() bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5503230): the target
+// must still be alive.
 func (g *MoveTowardsTarget) CanContinueToUse() bool {
 	t := g.actor(g.target)
 	n := g.mob.Nav()
-	if t == nil || n == nil || n.Done() || t.Removed() {
+	if t == nil || n == nil || n.Done() || !t.Alive() {
 		return false
 	}
 	return g.cfg.WithinRadius*g.cfg.WithinRadius > dist2(t.Pos(), g.mob.Pos())

@@ -77,7 +77,7 @@ func (g *EatBlock) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
 	}
-	roll := g.world.Random().NextFloat()
+	roll := g.world.ThreadRandom().NextFloat()
 	chance := g.cfg.SuccessChanceValue
 	if g.cfg.SuccessChance != nil {
 		chance = g.cfg.SuccessChance(g.m)

@@ -86,7 +86,7 @@ func (g *PlayDead) CanUse() bool {
 	if g.m.Health() < g.cfg.ForceBelowHealth {
 		return true
 	}
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	if g.cfg.RandomStartChance <= r.NextFloat() {
 		return false
 	}
@@ -207,7 +207,7 @@ func (g *Beg) CanContinueToUse() bool {
 // Start implements goal.Goal (0x48C9CA0).
 func (g *Beg) Start() {
 	g.m.SetFlag(FlagInterested, true)
-	g.timer = randomInt(g.world.Random(), g.cfg.LookTime.Min, g.cfg.LookTime.Max)
+	g.timer = randomInt(g.world.ThreadRandom(), g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
 
 // Stop implements goal.Goal (0x48C9D90).
@@ -222,6 +222,8 @@ func (g *Beg) Tick() {
 	if p == nil || !p.Alive() {
 		return
 	}
-	g.m.LookAt(p.AttachPos(attachHead), lookYaw, g.m.MaxHeadXRot())
+	if !g.m.LookBusy() {
+		g.m.LookAt(p.AttachPos(attachHead), lookYaw, g.m.MaxHeadXRot())
+	}
 	g.timer--
 }

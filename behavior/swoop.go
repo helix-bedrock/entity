@@ -53,7 +53,7 @@ func (g *SwoopAttack) CanUse() bool {
 		return false
 	}
 	d := g.cfg.DelayRange
-	g.delay = int32(g.world.Random().NextFloat()*((d.Max-d.Min)*ticksPerSecond) + d.Min)
+	g.delay = int32(g.world.ThreadRandom().NextFloat()*((d.Max-d.Min)*ticksPerSecond) + d.Min)
 	return true
 }
 

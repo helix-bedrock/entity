@@ -61,7 +61,7 @@ func NewOfferFlower(w World, m FlowerOfferer, c OfferFlowerConfig) *OfferFlower 
 
 // CanUse implements goal.Goal (0xBDC6990).
 func (g *OfferFlower) CanUse() bool {
-	if g.world.Random().NextFloat() > g.cfg.ChanceToStart {
+	if g.world.ThreadRandom().NextFloat() > g.cfg.ChanceToStart {
 		return false
 	}
 	m := g.m

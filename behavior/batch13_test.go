@@ -152,7 +152,7 @@ func TestSleepLiesInTheBedAndGetsUp(t *testing.T) {
 		t.Fatal("kept sleeping after the wake request")
 	}
 	g.Stop()
-	if m.sleeping || m.pos != (Vec3{X: 6.5, Y: 64, Z: 0.5}) || m.Flag(FlagWantsToWake) {
+	if m.sleeping || m.pos != (Vec3{X: 6.5, Y: 64.5, Z: 0.5}) || m.Flag(FlagWantsToWake) {
 		t.Fatalf("after waking: sleeping %v at %v", m.sleeping, m.pos)
 	}
 	if g.CanUse() {

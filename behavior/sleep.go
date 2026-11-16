@@ -107,12 +107,15 @@ func (g *Sleep) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x592DB20): until something
-// wakes the mob (flag 77).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B03F40): until
+// something wakes the mob (flag 77). Once at the bed only the bed is
+// tested, else only the walk.
 func (g *Sleep) CanContinueToUse() bool {
-	ok := g.keepLite()
+	var ok bool
 	if g.reached {
 		ok = g.valid(g.targetBlock())
+	} else {
+		ok = g.keepLite()
 	}
 	g.woke = !ok || g.mob.Flag(FlagWantsToWake)
 	return !g.woke
@@ -121,7 +124,9 @@ func (g *Sleep) CanContinueToUse() bool {
 // Start implements goal.Goal (0x592D6B0).
 func (g *Sleep) Start() { g.startPOI() }
 
-// Stop implements goal.Goal (0x592D740).
+// Stop implements goal.Goal (BDS 1.26.60 0x5B03B60). The mob gets up at
+// the bed's stand-up spot, or one block above where it lay when the bed has
+// none; it is put in the middle of that block, half a block up.
 func (g *Sleep) Stop() {
 	m := g.m
 	if m.Sleeping() {
@@ -129,10 +134,13 @@ func (g *Sleep) Stop() {
 			m.HealOnWake()
 		}
 		at := blockOf(g.spot)
-		if p, ok := m.StandUpSpot(g.bed, g.laidFrom); ok {
-			at = p
+		if _, bed := m.BedDirection(g.bed); bed {
+			at.Y++
+			if p, ok := m.StandUpSpot(g.bed, g.laidFrom); ok {
+				at = p
+			}
 		}
-		m.Teleport(Vec3{X: float32(at.X) + 0.5, Y: float32(at.Y), Z: float32(at.Z) + 0.5})
+		m.Teleport(Vec3{X: float32(at.X) + 0.5, Y: float32(at.Y) + 0.5, Z: float32(at.Z) + 0.5})
 		m.SetVelocity(Vec3{})
 		g.resting = true
 		m.SetSleeping(false)

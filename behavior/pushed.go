@@ -49,7 +49,7 @@ func (g *TargetWhenPushed) Start() {
 	if a == nil || !allFilters(g.cfg.EntityTypes, g.mob, a) {
 		return
 	}
-	if g.cfg.PercentChance != 0 && g.cfg.PercentChance > g.world.Random().NextFloat()*percentScale {
+	if g.cfg.PercentChance != 0 && g.cfg.PercentChance > g.world.ThreadRandom().NextFloat()*percentScale {
 		g.mob.SetTarget(a.ID())
 	}
 }

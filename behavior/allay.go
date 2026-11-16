@@ -126,7 +126,9 @@ func (g *StayNearNoteblock) Tick() {
 		return
 	}
 	c := blockCentre(p)
-	g.m.LookAt(c, g.cfg.LookYaw, g.m.MaxHeadXRot())
+	if !g.m.LookBusy() {
+		g.m.LookAt(c, g.cfg.LookYaw, g.m.MaxHeadXRot())
+	}
 	g.timer--
 	if g.timer+1 > 1 {
 		return

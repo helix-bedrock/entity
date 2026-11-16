@@ -198,7 +198,7 @@ func (g *AdmireItem) Tick() {
 	if g.cfg.Sound != NoSound && !m.Flag(FlagSilent) {
 		m.PlaySoundAt(g.cfg.Sound, m.AttachPos(attachHead))
 	}
-	g.nextSound = now + randomTicks(g.world.Random(), g.cfg.SoundInterval)
+	g.nextSound = now + randomTicks(g.world.ThreadRandom(), g.cfg.SoundInterval)
 }
 
 // Barterer is the part of the mob barter needs on top of Mob: the barter

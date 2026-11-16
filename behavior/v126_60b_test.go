@@ -400,6 +400,8 @@ func (m *allayMob) ThrowItem(it Item, v Vec3, _ bool) bool {
 	return true
 }
 
+func (m *allayMob) LookBusy() bool { return false }
+
 func newAllay(w World, p Vec3) *allayMob {
 	return &allayMob{b2Mob: newB2Mob(w, 1, p, "minecraft:allay"), noteblocks: map[Pos]bool{}}
 }

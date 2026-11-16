@@ -238,13 +238,13 @@ func (g *WorkComposter) find() bool { return false }
 // CanUse implements goal.Goal.
 func (g *WorkComposter) CanUse() bool { return g.canUseWork() }
 
-// Start implements goal.Goal (0x54FD200).
+// Start implements goal.Goal (BDS 1.26.60 0x5661B70).
 func (g *WorkComposter) Start() {
 	g.startWork()
 	g.uses, g.nextUse = 0, 0
 }
 
-// atWork is slot 21 (0x54FD4F0).
+// atWork is slot 21 (BDS 1.26.60 0x5661E90).
 func (g *WorkComposter) atWork() {
 	now := g.world.CurrentTick()
 	if g.nextUse == 0 {
@@ -271,9 +271,10 @@ func (g *WorkComposter) atWork() {
 	g.nextUse = now + g.useTime()
 }
 
-// useTime is the wait to the next use.
+// useTime is the wait to the next use, drawn on the thread random (BDS
+// 1.26.60 0x5661E90).
 func (g *WorkComposter) useTime() uint64 {
-	return uint64(randomInt(g.world.Random(), g.ccfg.UseBlockMin, g.ccfg.UseBlockMax))
+	return uint64(randomInt(g.world.ThreadRandom(), g.ccfg.UseBlockMin, g.ccfg.UseBlockMax))
 }
 
 const maxInt32 = 1<<31 - 1

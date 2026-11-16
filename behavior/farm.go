@@ -232,8 +232,10 @@ func (g *FertilizeFarmBlock) valid(p Pos) bool {
 // find is the base search.
 func (g *FertilizeFarmBlock) find() bool { return g.findBlock() }
 
+// wait draws the next search tick on the thread random (BDS 1.26.60
+// canUse 0x552B360, stop 0x552B770).
 func (g *FertilizeFarmBlock) wait() {
-	g.next = g.world.CurrentTick() + uint64(g.world.Random().NextInt(max(g.searchWait, 1)))
+	g.next = g.world.CurrentTick() + uint64(g.world.ThreadRandom().NextInt(max(g.searchWait, 1)))
 }
 
 // CanUse implements goal.Goal (0x577B4B0).

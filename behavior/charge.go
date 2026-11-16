@@ -38,7 +38,7 @@ func (g *ChargeAttack) CanUse() bool {
 		return false
 	}
 	t := g.actor(g.m.Target())
-	if t == nil || wanted || g.cfg.SuccessRate <= g.world.Random().NextFloat() {
+	if t == nil || wanted || g.cfg.SuccessRate <= g.world.ThreadRandom().NextFloat() {
 		return false
 	}
 	return dist2(g.m.Pos(), t.Pos()) > g.cfg.MinDistance*g.cfg.MinDistance
@@ -51,7 +51,7 @@ func (g *ChargeAttack) CanContinueToUse() bool {
 		return false
 	}
 	t := g.actor(g.m.Target())
-	return t != nil && !t.Removed()
+	return t != nil && t.Alive() // BDS 1.26.60 0x5519920
 }
 
 // Start implements goal.Goal (0x57697B0).
