@@ -233,8 +233,10 @@ func (b *Body) moveCollide(w World) {
 		b.Vel, b.Slowdown = Vec3{}, Vec3{}
 	}
 	if l2 := b.delta.Z*b.delta.Z + (b.delta.X*b.delta.X + b.delta.Y*b.delta.Y); l2 > maxMove*maxMove {
-		k := maxMove / float32(math.Sqrt(float64(l2)))
-		b.delta = scale(b.delta, k)
+		// BDS divides by the length, then multiplies: v * (16/l) can round
+		// differently.
+		l := float32(math.Sqrt(float64(l2)))
+		b.delta = Vec3{X: b.delta.X / l * maxMove, Y: b.delta.Y / l * maxMove, Z: b.delta.Z / l * maxMove}
 	}
 	b.shapes = w.CollisionBoxes(b.shapes[:0], b.fetchBox())
 
