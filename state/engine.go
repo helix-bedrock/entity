@@ -31,6 +31,26 @@ type InventoryConfig struct {
 	AdditionalSlotsPerStrength int32  `json:"additional_slots_per_strength"`
 }
 
+// DefaultInventory returns minecraft:inventory's BDS defaults
+// (ContainerDescription::deserializeData 0x737C8C0, 1.26.60).
+func DefaultInventory() InventoryConfig {
+	return InventoryConfig{ContainerType: "none", Size: 5}
+}
+
+// EquipItemConfig is minecraft:equip_item (EquipItemDefinition, schema
+// 0x6FD3540, 1.26.60): the items equip_item never puts on, and whether it
+// puts on armour at all.
+type EquipItemConfig struct {
+	// ExcludedItems are item descriptors, passed to the engine to match.
+	ExcludedItems []string
+	CanWearArmor  bool `json:"can_wear_armor"`
+}
+
+// DefaultEquipItem returns minecraft:equip_item's BDS defaults.
+func DefaultEquipItem() EquipItemConfig {
+	return EquipItemConfig{CanWearArmor: true}
+}
+
 // TradeTableConfig is minecraft:trade_table.
 type TradeTableConfig struct {
 	Table                string `json:"table"`

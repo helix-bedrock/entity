@@ -134,6 +134,7 @@ func (m *b9Mob) ItemOf(a Actor) (Item, bool) {
 
 // EntitiesOfType keeps item entities for the item type and defers to b7Mob
 // for the rest.
+func (m *b9Mob) ItemMatches(d string, it Item) bool { return d == it.Name }
 func (m *b9Mob) EntitiesOfType(dst []Actor, t int, self ID, b Box) []Actor {
 	if t != actorTypeItem {
 		return m.b7Mob.EntitiesOfType(dst, t, self, b)

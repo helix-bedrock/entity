@@ -36,6 +36,9 @@ type Picker interface {
 	// EntitiesOfType appends the entities of the BDS actor type whose boxes
 	// touch b to dst, excluding self.
 	EntitiesOfType(dst []Actor, actorType int, self ID, b Box) []Actor
+	// ItemMatches reports the stack matching an item descriptor
+	// (ItemDescriptor), the engine's answer as ItemRules.Matches.
+	ItemMatches(descriptor string, it Item) bool
 }
 
 // PickupItemsConfig is the JSON of minecraft:behavior.pickup_items.
@@ -163,7 +166,7 @@ func (g *PickupItems) CanUse() bool {
 		return false
 	}
 	end, path := n.PathTo(t)
-	if contains(g.cfg.ExcludedItems, it.Name) {
+	if g.excluded(it) {
 		return false
 	}
 	q := t.Pos()
@@ -183,6 +186,16 @@ func (g *PickupItems) CanUse() bool {
 	}
 	g.target = t.ID()
 	return true
+}
+
+// excluded reports the stack matching one of excluded_items' descriptors.
+func (g *PickupItems) excluded(it Item) bool {
+	for _, d := range g.cfg.ExcludedItems {
+		if g.m.ItemMatches(d, it) {
+			return true
+		}
+	}
+	return false
 }
 
 // CanContinueToUse implements goal.Goal.

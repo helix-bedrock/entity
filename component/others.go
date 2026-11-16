@@ -42,6 +42,7 @@ const (
 	ShareablesName                = "minecraft:shareables"
 	LootName                      = "minecraft:loot"
 	InventoryName                 = "minecraft:inventory"
+	EquipItemName                 = "minecraft:equip_item"
 	TradeTableName                = "minecraft:trade_table"
 	EconomyTradeTableName         = "minecraft:economy_trade_table"
 	BossName                      = "minecraft:boss"
@@ -514,9 +515,15 @@ func (c *Context) readEngine(s *state.Set, read func(string) (Object, bool)) {
 		s.Loot = &l
 	}
 	if j, ok := read(InventoryName); ok {
-		var i state.InventoryConfig
+		i := state.DefaultInventory()
 		c.Into(j, &i)
 		s.Inventory = &i
+	}
+	if j, ok := read(EquipItemName); ok {
+		e := state.DefaultEquipItem()
+		c.Into(j, &e)
+		e.ExcludedItems = c.Descriptors(j, "excluded_items")
+		s.EquipItem = &e
 	}
 	if j, ok := read(TradeTableName); ok {
 		var t state.TradeTableConfig

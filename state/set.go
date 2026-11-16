@@ -94,6 +94,7 @@ type Set struct {
 	// The components whose work is the engine's (engine.go).
 	Loot                      *LootConfig
 	Inventory                 *InventoryConfig
+	EquipItem                 *EquipItemConfig
 	TradeTable                *TradeTableConfig
 	EconomyTradeTable         *EconomyTradeTableConfig
 	Boss                      *BossConfig

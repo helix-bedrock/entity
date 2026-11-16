@@ -47,6 +47,10 @@ type Item struct {
 	// Aux is the aux (data) value, the potion type for potions.
 	Aux   int16
 	Count int32
+	// Data is the engine's own data for the stack (its enchantments, name and
+	// other user data). entity never reads it; it travels with the stack as
+	// the goals move it, so the engine gets the same item back.
+	Data any
 }
 
 // Empty reports the empty stack: no item, air or a count of 0 (BDS's null
