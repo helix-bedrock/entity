@@ -276,6 +276,9 @@ type RandomLookSit struct {
 	sit   RandomLookSitConfig
 	looks int32
 	next  uint64
+	// initial is the body yaw at start; every later look turns from it,
+	// not from where the body faces then.
+	initial float32
 }
 
 // NewRandomLookSit makes the goal.
@@ -287,7 +290,7 @@ func NewRandomLookSit(w World, m Mob, c RandomLookSitConfig) *RandomLookSit {
 // sitting when continue_sitting_on_reload is set.
 func (g *RandomLookSit) CanUse() bool {
 	m := g.mob
-	if g.cfg.Probability > g.world.IRandom().NextFloat() && !m.InWater() && g.actor(m.Target()) == nil &&
+	if g.cfg.Probability > g.world.Random().NextFloat() && !m.InWater() && g.actor(m.Target()) == nil &&
 		!m.Flag(FlagLeashed) && !m.Flag(FlagSitting) && g.world.CurrentTick() > g.next {
 		return true
 	}
@@ -305,8 +308,9 @@ func (g *RandomLookSit) CanContinueToUse() bool {
 
 // Start implements goal.Goal.
 func (g *RandomLookSit) Start() {
+	g.initial = g.mob.BodyYaw()
 	g.RandomLook.Start()
-	r := g.world.IRandom()
+	r := g.world.Random()
 	g.looks = randomInt(r, g.sit.Looks.Min, g.sit.Looks.Max)
 	g.mob.SetFlag(FlagSitting, true)
 	if g.sit.ContinueSittingReload {
@@ -330,8 +334,8 @@ func (g *RandomLookSit) Tick() {
 		return
 	}
 	g.looks--
-	r := g.world.IRandom()
-	g.yaw = (g.cfg.Angle.Max-g.cfg.Angle.Min)*r.NextFloat() + g.cfg.Angle.Min + g.mob.BodyYaw()
+	r := g.world.Random()
+	g.yaw = (g.cfg.Angle.Max-g.cfg.Angle.Min)*r.NextFloat() + g.cfg.Angle.Min + g.initial
 	g.timer = randomInt(r, g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
 
