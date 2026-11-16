@@ -250,7 +250,8 @@ type FollowParent struct {
 	base
 	speed float32
 	// stopOnEnd is the game toggle that stops navigation when the goal
-	// ends; on in 1.26.52.
+	// ends: a world base game version check, on for current worlds
+	// (FollowParentGoal::FollowParentGoal 0x59FBF50).
 	stopOnEnd bool
 	parent    ID
 	repath    int32
@@ -276,7 +277,9 @@ func (g *FollowParent) CanUse() bool {
 	best := float32(temptFloatMaxValue)
 	var found Actor
 	for _, e := range g.buf {
-		if !e.IsMob() || e.Type() != g.mob.Type() || e.Flag(FlagBaby) || !e.Alive() {
+		// FollowParentGoal::canUse 0x59FC090 also passes over removed
+		// actors, which getEntities can still return this tick.
+		if !e.IsMob() || e.Type() != g.mob.Type() || e.Flag(FlagBaby) || !e.Alive() || e.Removed() {
 			continue
 		}
 		d := dist2(g.mob.Pos(), e.Pos())
