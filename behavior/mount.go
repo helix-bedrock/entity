@@ -12,7 +12,7 @@ const (
 // MountPathingConfig is the JSON of minecraft:behavior.mount_pathing.
 type MountPathingConfig struct {
 	SpeedMultiplier float32 `json:"speed_multiplier"`
-	// TargetDist is target_dist, added to the squared reach.
+	// TargetDist is target_dist; the goal adds its square to the reach.
 	TargetDist  float32 `json:"target_dist"`
 	TrackTarget bool    `json:"track_target"`
 }
@@ -22,8 +22,11 @@ func DefaultMountPathing() MountPathingConfig {
 	return MountPathingConfig{SpeedMultiplier: 1}
 }
 
-// MountPathing is MountPathingGoal: a mount carrying a mob walks toward its
-// rider's target.
+// MountPathing is MountPathingGoal (BDS 1.26.60 canUse 0x5435D30,
+// canContinueToUse 0x5435FD0, start 0x5436280, stop 0x5436310, tick
+// 0x54364D0): a mount carrying a mob walks toward its rider's target. While
+// the rider steers the mount itself (HijackMountNavigationComponent) the
+// goal runs and holds its flags but does nothing.
 type MountPathing struct {
 	base
 	cfg    MountPathingConfig
@@ -36,18 +39,22 @@ func NewMountPathing(w World, m Mob, c MountPathingConfig) *MountPathing {
 	return &MountPathing{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, target: NoID}
 }
 
-// riderTarget is the first rider's target when the rider is a mob that does
-// not steer the mount itself.
-func (g *MountPathing) riderTarget() Actor {
+// rider is the first rider when it is a mob.
+func (g *MountPathing) rider() Actor {
 	r := g.mob.Riders()
 	if len(r) == 0 {
 		return nil
 	}
 	a := g.actor(r[0])
-	if a == nil || !a.IsMob() || a.HijacksMount() {
+	if a == nil || !a.IsMob() {
 		return nil
 	}
-	return g.actor(a.Target())
+	return a
+}
+
+// newRepath draws the ticks to the next repath from the level's Random.
+func (g *MountPathing) newRepath() {
+	g.repath = g.world.Random().NextInt(mountRepath) + mountRepathBase
 }
 
 // CanUse implements goal.Goal.
@@ -56,18 +63,32 @@ func (g *MountPathing) CanUse() bool {
 	if n == nil {
 		return false
 	}
-	t := g.riderTarget()
+	r := g.rider()
+	if r == nil {
+		return false
+	}
+	if r.HijacksMount() {
+		return true
+	}
+	t := g.actor(r.Target())
 	if t == nil {
 		return false
 	}
 	g.target = t.ID()
-	g.repath = g.world.IRandom().NextInt(mountRepath) + mountRepathBase
+	g.newRepath()
 	return n.MoveToActor(t, g.cfg.SpeedMultiplier)
 }
 
 // CanContinueToUse implements goal.Goal.
 func (g *MountPathing) CanContinueToUse() bool {
-	if g.riderTarget() == nil {
+	r := g.rider()
+	if r == nil {
+		return false
+	}
+	if r.HijacksMount() {
+		return true
+	}
+	if g.actor(r.Target()) == nil {
 		return false
 	}
 	t := g.actor(g.target)
@@ -78,7 +99,7 @@ func (g *MountPathing) CanContinueToUse() bool {
 		return true
 	}
 	n := g.mob.Nav()
-	return n != nil && !n.Done()
+	return n == nil || !n.Done()
 }
 
 // Start implements goal.Goal.
@@ -98,17 +119,20 @@ func (g *MountPathing) Stop() {
 
 // Tick implements goal.Goal.
 func (g *MountPathing) Tick() {
-	if g.riderTarget() == nil {
+	r := g.rider()
+	if r == nil {
 		return
 	}
 	t := g.actor(g.target)
-	if t == nil {
+	if t != nil {
+		g.mob.LookAt(lookPoint(t), mountLookMax, mountLookMax)
+	}
+	if r.HijacksMount() {
 		return
 	}
-	g.mob.LookAt(lookPoint(t), mountLookMax, mountLookMax)
 	if !g.cfg.TrackTarget {
 		s, ok := g.mob.(CanSeer)
-		if !ok || !s.CanSee(t) {
+		if !ok || t == nil || !s.CanSee(t) {
 			return
 		}
 	}
@@ -116,17 +140,23 @@ func (g *MountPathing) Tick() {
 	if g.repath+1 > 1 {
 		return
 	}
-	g.repath = g.world.IRandom().NextInt(mountRepath) + mountRepathBase
-	b, tb := g.mob.Box(), t.Box()
-	w := b.Max.X - b.Min.X
-	reach := (w+w)*(w+w) + (tb.Max.X - tb.Min.X) + g.cfg.TargetDist
-	p := g.mob.Pos()
-	c := Vec3{X: (tb.Max.X-tb.Min.X)*0.5 + tb.Min.X, Y: tb.Min.Y, Z: (tb.Max.Z-tb.Min.Z)*0.5 + tb.Min.Z}
-	if reach <= dist2(p, c) {
+	g.newRepath()
+	if t != nil && g.outOfReach(t) {
 		if n := g.mob.Nav(); n != nil {
 			n.MoveToActor(t, g.cfg.SpeedMultiplier)
 		}
 	}
+}
+
+// outOfReach compares the distance to the bottom centre of the target's box
+// with twice the mob's width squared plus the target's width and
+// target_dist squared.
+func (g *MountPathing) outOfReach(t Actor) bool {
+	b, tb := g.mob.Box(), t.Box()
+	w := b.Max.X - b.Min.X
+	reach := (w+w)*(w+w) + (tb.Max.X - tb.Min.X) + g.cfg.TargetDist*g.cfg.TargetDist
+	c := Vec3{X: (tb.Max.X-tb.Min.X)*0.5 + tb.Min.X, Y: tb.Min.Y, Z: (tb.Max.Z-tb.Min.Z)*0.5 + tb.Min.Z}
+	return reach <= dist2(g.mob.Pos(), c)
 }
 
 // RunAroundLikeCrazy is RunAroundLikeCrazyGoal: an untamed horse with a
