@@ -226,6 +226,10 @@ type Body struct {
 	// limit, and DepenOverride its one-tick override, cleared after the
 	// move. DepenOneWay are the one-way blocks the mob is inside: while
 	// there are any, the mob is not pushed out (limit 0).
+	// AutoStepped reports that the last move stepped up. BDS then sends the
+	// mob's position to every player that tick (HasAutoSteppedComponent).
+	AutoStepped bool
+
 	DepenMin      Vec3
 	DepenOverride *Vec3
 	DepenOneWay   []Box

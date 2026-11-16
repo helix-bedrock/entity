@@ -238,6 +238,7 @@ func (b *Body) moveCollide(w World) {
 	}
 	b.shapes = w.CollisionBoxes(b.shapes[:0], b.fetchBox())
 
+	b.AutoStepped = false
 	b.dropOneWay()
 	epsv := b.depenLimit()
 	start := b.Box
@@ -262,7 +263,11 @@ func (b *Body) moveCollide(w World) {
 		b.depen |= depenTwice
 	}
 
-	if b.autoStepWanted(req, done) {
+	wanted := b.autoStepWanted(req, done)
+	// The filter removes CanAlwaysAutoStepFlagComponent each tick; the
+	// buoyancy float system adds it back while the mob floats.
+	b.CanAlwaysAutoStep = false
+	if wanted {
 		done = b.autoStep(start, req, done, epsv)
 	}
 	b.finalize(req, done)
@@ -337,6 +342,7 @@ func (b *Body) autoStep(start Box, req, done, epsv Vec3) Vec3 {
 	}
 	b.Box = box
 	b.moveSubBoxes(Vec3{X: t.X - done.X, Y: t.Y - done.Y, Z: t.Z - done.Z})
+	b.AutoStepped = true
 	return t
 }
 
