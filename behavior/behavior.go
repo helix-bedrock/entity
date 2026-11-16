@@ -471,7 +471,9 @@ type Mob interface {
 	// mob is inside its restriction, when it has one.
 	Dwelling() (centre Pos, inside, ok bool)
 	// Home is the mob's home restriction, when it has one in the mob's
-	// dimension.
+	// dimension. radius is restriction_radius, and 0 when the restriction
+	// type is none: BDS then walks home from any distance
+	// (MoveTowardsHomeRestrictionGoal::canUse 0x543D950).
 	Home() (centre Pos, radius int32, ok bool)
 	// Leash is the leash holder's box centre and the leash's maximum
 	// distance, when the mob is leashed.

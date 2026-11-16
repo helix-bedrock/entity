@@ -128,8 +128,9 @@ func DefaultTeleportToOwner() TeleportToOwnerConfig {
 	return TeleportToOwnerConfig{Cooldown: teleportOwnerCooldown}
 }
 
-// TeleportToOwner is TeleportToOwnerGoal: when its filters pass, a pet
-// jumps to a free spot next to its owner. It runs for one tick.
+// TeleportToOwner is TeleportToOwnerGoal (BDS 1.26.60 canUse 0x569BB00,
+// start 0x569BE10): when its filters pass, a pet jumps to a free spot next
+// to its owner. It runs for one tick.
 type TeleportToOwner struct {
 	base
 	cfg   TeleportToOwnerConfig
@@ -183,8 +184,9 @@ func (g *TeleportToOwner) Stop() {}
 // Tick implements goal.Goal.
 func (g *TeleportToOwner) Tick() {}
 
-// Sit is SitGoal (minecraft:behavior.stay_while_sitting): a sitting mob
-// stops moving and keeps still.
+// Sit is SitGoal (minecraft:behavior.stay_while_sitting; BDS 1.26.60
+// canUse 0x5B00FF0, start 0x5B010B0): a sitting mob stops moving and keeps
+// still.
 type Sit struct{ base }
 
 // NewSit makes the goal.

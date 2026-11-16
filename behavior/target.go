@@ -2,8 +2,7 @@ package behavior
 
 // The target goals' fixed numbers.
 const (
-	maxCandidates  = 256 // BDS looks at no more than this many entities
-	reachRecheck   = 10  // ticks before the must_reach cache is redone
+	reachRecheck   = 10 // ticks before the must_reach cache is redone
 	reachRandom    = 5
 	reachClose2    = 3 // a path end this close (squared, flat) reaches
 	headRangeScale = 0.5
@@ -394,7 +393,9 @@ func (g *NearestAttackable) maxDist() float32 {
 
 // candidates fills g.sorted with the entities in the scan box, nearest
 // first. The box grows by the search height on x and by the largest
-// max_dist on y and z, as BDS builds it.
+// max_dist on y and z, as BDS builds it. BDS asks for actor type Mob
+// (256), not a count; the engine's Entities is all types, which
+// CanAttack then filters.
 func (g *NearestAttackable) candidates() {
 	r := g.maxDist()
 	x := r
@@ -405,17 +406,18 @@ func (g *NearestAttackable) candidates() {
 	b.Min = Vec3{X: b.Min.X - x, Y: b.Min.Y - r, Z: b.Min.Z - r}
 	b.Max = Vec3{X: b.Max.X + x, Y: b.Max.Y + r, Z: b.Max.Z + r}
 	g.cand = g.world.Entities(g.cand[:0], g.m.ID(), b)
-	if len(g.cand) > maxCandidates {
-		g.cand = g.cand[:maxCandidates]
-	}
 	p := g.m.Pos()
 	g.sorted = g.sorted[:0]
 	for _, a := range g.cand {
 		g.sorted = append(g.sorted, near{a: a, d2: dist2(p, a.Pos())})
 	}
 	clear(g.cand)
-	sortNear(g.sorted)
+	// libc++'s std::sort, as BDS sorts the query (0xB3D4280), so equal
+	// distances keep BDS's order.
+	stdSort(g.sorted, nearer)
 }
+
+func nearer(a, b near) bool { return a.d2 < b.d2 }
 
 // passes is the per-candidate test of the search: it can be attacked,
 // matches, can be reached, has health, is off its entry's cooldown and

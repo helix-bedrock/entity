@@ -66,7 +66,7 @@ func (g *workGoal) rainedOff() bool {
 	return !g.cfg.CanWorkInRain && g.w.RainingAt(blockOf(g.aim))
 }
 
-// canUseWork is canUse (0x54FE1C0).
+// canUseWork is canUse (BDS 1.26.60 0x5662B70).
 func (g *workGoal) canUseWork() bool {
 	if g.rest > 0 {
 		g.rest--
@@ -89,7 +89,7 @@ func (g *workGoal) canUseWork() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x54FE680).
+// CanContinueToUse implements goal.Goal (0x5663050).
 func (g *workGoal) CanContinueToUse() bool {
 	if !g.keepLite() {
 		return false
@@ -113,14 +113,15 @@ func (g *workGoal) CanContinueToUse() bool {
 	return !g.w.RainingAt(blockOf(g.aim))
 }
 
-// startWork is start (0x54FD380).
+// startWork is start (0x5661D10). The sound delay is drawn from the
+// thread random.
 func (g *workGoal) startWork() {
 	g.startPOI()
 	g.rest, g.worked, g.soundTime = 0, 0, 0
-	g.soundDelay = randomInt(g.world.Random(), g.cfg.SoundDelayMin, g.cfg.SoundDelayMax)
+	g.soundDelay = randomInt(g.world.ThreadRandom(), g.cfg.SoundDelayMin, g.cfg.SoundDelayMax)
 }
 
-// Stop implements goal.Goal (0x54FE810).
+// Stop implements goal.Goal (0x56631E0).
 func (g *workGoal) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -130,7 +131,7 @@ func (g *workGoal) Stop() {
 	g.stopPOI()
 }
 
-// Tick implements goal.Goal (0x54FE970).
+// Tick implements goal.Goal (0x5663340).
 func (g *workGoal) Tick() {
 	if !g.mob.LookBusy() {
 		g.mob.LookAt(Vec3{X: g.aim.X + 0.5, Y: g.aim.Y + workLookY, Z: g.aim.Z + 0.5}, workLook, workLook)
@@ -171,10 +172,11 @@ func (g *Work) CanUse() bool { return g.canUseWork() }
 // Start implements goal.Goal.
 func (g *Work) Start() { g.startWork() }
 
-// atWork is slot 21 (0x54FECC0): the work sound every sound delay.
+// atWork is slot 21, useWorkstation (0x56636A0): the work sound every
+// sound delay, redrawn from the thread random.
 func (g *Work) atWork() {
 	if g.soundTime > g.soundDelay {
-		g.soundDelay = randomInt(g.world.Random(), g.cfg.SoundDelayMin, g.cfg.SoundDelayMax)
+		g.soundDelay = randomInt(g.world.ThreadRandom(), g.cfg.SoundDelayMin, g.cfg.SoundDelayMax)
 		g.soundTime = 0
 		g.w.PlayWorkSound(g.sound)
 	}
