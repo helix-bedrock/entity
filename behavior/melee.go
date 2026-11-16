@@ -9,6 +9,10 @@ const (
 	meleeRideWidth   = 1.39 // the widest vehicle that widens the reach
 	meleeRidePad     = 0.1
 	meleeBoxReach    = 0.8 // melee_box_attack's default horizontal_reach
+	// meleeFirstCooldown is the attack timer a melee goal starts with: BDS's
+	// base constructor sets it from its default cooldown before
+	// cooldown_time is applied.
+	meleeFirstCooldown = 20
 )
 
 // Attacker is the part of the mob melee_attack needs on top of Targeter.
@@ -89,9 +93,10 @@ type Melee struct {
 	box bool
 }
 
-// NewMelee makes the goal.
+// NewMelee makes the goal. As BDS's constructor does, the first attack
+// waits meleeFirstCooldown ticks.
 func NewMelee(w World, m Attacker, c MeleeConfig) *Melee {
-	return &Melee{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID}
+	return &Melee{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID, cooldown: meleeFirstCooldown}
 }
 
 // NewMeleeBox makes MeleeBoxAttackGoal: melee_attack whose reach is the
@@ -133,9 +138,19 @@ func (g *Melee) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal
+// 0x5432EF0). attack_once after a hit, the random stop (thread random) and
+// a monster target in peaceful clear the mob's target as they stop.
 func (g *Melee) CanContinueToUse() bool {
-	if g.done || g.m.Admiring() {
+	if g.m.Admiring() {
+		return false
+	}
+	if g.done {
+		g.m.SetTarget(NoID)
+		return false
+	}
+	if g.cfg.RandomStopInterval > 0 && g.world.ThreadRandom().NextInt(g.cfg.RandomStopInterval) == 0 {
+		g.m.SetTarget(NoID)
 		return false
 	}
 	t := g.actor(g.m.Target())
@@ -143,22 +158,21 @@ func (g *Melee) CanContinueToUse() bool {
 		return false
 	}
 	if g.world.Peaceful() && t.Monster() {
+		g.m.SetTarget(NoID)
 		return false
 	}
-	if g.cfg.RandomStopInterval > 0 && g.world.Random().NextInt(g.cfg.RandomStopInterval) == 0 {
-		return false
-	}
-	if g.cfg.TrackTarget {
+	if g.m.Vehicle() != NoID || g.cfg.TrackTarget {
 		return true
 	}
 	n := g.m.Nav()
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal.
+// Start implements goal.Goal. BDS sets the repath timer to
+// path_fail_time_increase here (0x5433220).
 func (g *Melee) Start() {
 	g.done = false
-	g.repath = 0
+	g.repath = g.cfg.FailIncrease
 	if t := g.actor(g.target); t != nil {
 		if n := g.m.Nav(); n != nil {
 			n.MoveToActor(t, g.cfg.SpeedMultiplier)
@@ -249,9 +263,10 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 	}
 }
 
-// step is the chase step the melee goals share (0x526F3A0): look at the
-// target, count the repath timer down, and while the target is tracked or
-// seen remember where it is and repath when the timer runs out.
+// step is the chase step the melee goals share (1.26.60 0x5431120): look
+// at the target, count the repath timer down, and while the target is
+// tracked or seen remember where it stands (its feet, the bottom of its
+// box) and repath when the timer runs out.
 func (g *Melee) step(t Actor, inReach bool, d2 float32) {
 	if !g.m.LookBusy() {
 		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
@@ -260,25 +275,40 @@ func (g *Melee) step(t Actor, inReach bool, d2 float32) {
 	if !g.cfg.TrackTarget && !g.m.CanSee(t) {
 		return
 	}
-	g.last = t.Pos()
+	g.last = Vec3{X: t.Pos().X, Y: t.Box().Min.Y, Z: t.Pos().Z}
 	if g.repath <= 0 {
 		g.chase(t, d2, inReach)
 	}
 }
 
-// chase is the repath step of 2.3.
+// keepPath is the repath skip: a path already ending at the remembered
+// position is kept 95 times in 100 (thread random); another path is kept
+// while the target is in reach. No path, or no remembered position, never
+// keeps.
+func (g *Melee) keepPath(n Navigator, inReach bool) bool {
+	if g.last == (Vec3{}) {
+		return false
+	}
+	if n != nil {
+		end, ok := n.PathEnd()
+		if !ok {
+			return false
+		}
+		if end != blockOf(g.last) {
+			return inReach
+		}
+	}
+	return g.world.ThreadRandom().NextFloat() >= meleeReuseChance
+}
+
+// chase is the repath step: the timer is drawn again from path_time (thread
+// random), lengthened by distance and by a failed path.
 func (g *Melee) chase(t Actor, d2 float32, inReach bool) {
 	n := g.m.Nav()
-	if n == nil {
+	if g.keepPath(n, inReach) {
 		return
 	}
-	r := g.world.Random()
-	if end, ok := n.PathEnd(); ok && end == blockOf(t.Pos()) && r.NextFloat() >= meleeReuseChance {
-		return
-	}
-	if inReach {
-		return
-	}
+	r := g.world.ThreadRandom()
 	g.repath = randomInt(r, g.cfg.PathTime.Min, g.cfg.PathTime.Max)
 	switch {
 	case d2 > g.cfg.OuterBoundary*g.cfg.OuterBoundary:
@@ -286,15 +316,15 @@ func (g *Melee) chase(t Actor, d2 float32, inReach bool) {
 	case d2 > g.cfg.InnerBoundary*g.cfg.InnerBoundary:
 		g.repath += g.cfg.InnerIncrease
 	}
-	if !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
+	if n == nil || !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
 		g.repath += g.cfg.FailIncrease
 	}
 }
 
-// boxTick is MeleeBoxAttackGoal's tick (0x5271B30): the reach is a box
-// overlap with the cooldown spent, the path distances are flat to the
-// target's lowest vehicle, and a hit needs a block-free line between the
-// eyes.
+// boxTick is MeleeBoxAttackGoal's tick (1.26.60 0x5433900): the reach is
+// a box overlap with the cooldown spent, the path distance is flat to the
+// target's vehicle (one level, as BDS takes it) or the target, and a hit
+// needs a block-free line between the eyes.
 func (g *Melee) boxTick(t Actor) {
 	b := g.m.Box()
 	r := g.cfg.HorizontalReach
@@ -309,16 +339,14 @@ func (g *Melee) boxTick(t Actor) {
 	}
 	tb := t.Box()
 	inReach := ready && overlaps(reach, tb)
-	p, q := g.m.Pos(), rootVehicle(g.world, t).Pos()
+	v := g.actor(t.Vehicle())
+	if v == nil {
+		v = t
+	}
+	p, q := g.m.Pos(), v.Pos()
 	d2 := (q.X-p.X)*(q.X-p.X) + (q.Z-p.Z)*(q.Z-p.Z)
 	clear := g.world.ClearLine(g.m.Eyes(), t.Eyes())
-	if !g.m.LookBusy() {
-		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
-	}
-	g.repath--
-	if (g.cfg.TrackTarget || g.m.CanSee(t)) && g.repath <= 0 {
-		g.chase(t, d2, inReach)
-	}
+	g.step(t, inReach, d2)
 	if inReach && clear && g.inFOV(t) {
 		g.strike(t)
 	}

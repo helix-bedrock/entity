@@ -253,6 +253,7 @@ func TestStompAttackStandsThenStomps(t *testing.T) {
 	m.target = 2
 	g := NewStompAttack(w, m, DefaultStompAttack())
 	g.target = 2
+	g.cooldown = 0 // start from a spent timer, not the first one of 20
 	g.Tick()
 	// No cooldown yet: it resets to 20, which is above half, so no stand.
 	if m.Flag(FlagStanding) || g.cooldown != 20 {
