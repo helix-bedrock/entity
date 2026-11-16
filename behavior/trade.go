@@ -1,7 +1,7 @@
 package behavior
 
 // The trade numbers that are pure maths.
-const tradeLook = 40
+const tradeLook = 60
 
 // PlayerTrader is the part of the mob trade_with_player needs on top of Mob.
 type PlayerTrader interface {
@@ -73,22 +73,27 @@ func (g *TradeWithPlayer) Tick() {}
 // Mob. The trade table and the items are the engine's.
 type TradeInterested interface {
 	Mob
-	// HasTradeTable reports a trade table (0xB309F20).
+	// HasTradeTable reports a trade table (0xB3D2000).
 	HasTradeTable() bool
 	// HeldItem is the entity's selected item.
 	HeldItem(id ID) Item
 	// CanSeePlayer is the VisibilityCacheComponent's answer about the player,
 	// true without one.
 	CanSeePlayer(id ID) bool
-	// TradeShow is the sell item of the first unlocked trade from index
-	// from on that wants held, and the index after it; ok is false when no
-	// trade wants it.
-	TradeShow(held Item, from int) (show Item, next int, ok bool)
+	// TradeCount is the number of offers in the trade table.
+	TradeCount() int
+	// TradeWants is offer i's sell item when the offer is in stock (uses
+	// below max uses, or no maximum), its tier is at most the mob's trade
+	// tier, and its first buy item matches held; ok is false otherwise.
+	TradeWants(i int, held Item) (sell Item, ok bool)
+	// MatchesItem is BDS's item match: the same item, and the same aux
+	// unless either is a wildcard.
+	MatchesItem(a, b Item) bool
 	// SetCarriedItem shows the item in the mob's hand (Actor vt+616, then
 	// vt+1312 with 0).
 	SetCarriedItem(it Item)
 	// LooksAtMe reports the player looking at the mob's head and seeing it
-	// (the view test of 0x5347900 and 0xB2FB5A0).
+	// (the view test of canContinueToUse and 0xB3C3B50).
 	LooksAtMe(player ID) bool
 }
 
@@ -109,8 +114,10 @@ func DefaultTradeInterest() TradeInterestConfig {
 	return TradeInterestConfig{InterestTime: 45, RemoveItemTime: 1, CarriedItemSwitchTime: 2, Cooldown: 2, LookedAtTime: 22.5}
 }
 
-// TradeInterest is TradeInterestGoal: a villager shows what it would sell
-// for the item a nearby player holds.
+// TradeInterest is TradeInterestGoal (BDS 1.26.60 canUse 0x569DCE0,
+// canContinueToUse 0x569EB20, start 0x569F4E0, stop 0x569F610, tick
+// 0x569F8D0): a villager shows what it would sell for the item a nearby
+// player holds.
 type TradeInterest struct {
 	base
 	m   TradeInterested
@@ -119,10 +126,13 @@ type TradeInterest struct {
 	// ticks.
 	interest, remove, switchT, cool, lookCap int32
 	player                                   ID
-	shown                                    Item
-	index                                    int
-	elapsed, removing, switching, cooled     int32
-	players                                  []Actor
+	// carried is the item shown; onlyTarget is set once a scan found no
+	// other offer to switch to.
+	carried                              Item
+	onlyTarget                           bool
+	index                                int
+	elapsed, removing, switching, cooled int32
+	players                              []Actor
 }
 
 // NewTradeInterest makes the goal (0x5346840).
@@ -134,8 +144,8 @@ func NewTradeInterest(w World, m TradeInterested, c TradeInterestConfig) *TradeI
 		lookCap: int32(c.LookedAtTime * ticksPerSecond), cooled: cool}
 }
 
-// CanUse implements goal.Goal (0x5346A70): the nearest player holding an
-// item a trade wants.
+// CanUse implements goal.Goal: the nearest player holding an item an offer
+// wants, scanning the offers from the first.
 func (g *TradeInterest) CanUse() bool {
 	if g.cooled < g.cool {
 		g.cooled++
@@ -155,18 +165,23 @@ func (g *TradeInterest) CanUse() bool {
 		}
 	}
 	nearestFirst(g.players, p)
+	defer clear(g.players)
 	for _, a := range g.players {
 		held := m.HeldItem(a.ID())
-		if held.Empty() || !m.CanSeePlayer(a.ID()) {
+		if held.Empty() || !m.CanSeePlayer(a.ID()) || a.Removed() {
 			continue
 		}
-		show, next, ok := m.TradeShow(held, 0)
-		if !ok {
-			continue
+		for i, n := 0, m.TradeCount(); i < n; i++ {
+			sell, ok := m.TradeWants(i, held)
+			if !ok {
+				continue
+			}
+			g.player = a.ID()
+			g.carried = sell
+			m.SetCarriedItem(sell)
+			g.switching, g.removing = 0, 0
+			return true
 		}
-		g.player, g.index = a.ID(), next
-		g.show(show)
-		return true
 	}
 	g.cooled = 0
 	return false
@@ -181,20 +196,16 @@ func nearestFirst(as []Actor, p Vec3) {
 	}
 }
 
-func (g *TradeInterest) show(it Item) {
-	g.shown = it
-	g.m.SetCarriedItem(it)
-	g.switching = 0
-}
-
-// CanContinueToUse implements goal.Goal (0x5347900).
+// CanContinueToUse implements goal.Goal. Each call with the player
+// holding something counts toward interest_time once, and once more when
+// it scans the offers.
 func (g *TradeInterest) CanContinueToUse() bool {
 	m := g.m
 	p := g.actor(g.player)
-	if p == nil || p.Removed() || !m.CanSeePlayer(g.player) || g.elapsed > g.interest {
+	if p == nil || p.Removed() || g.elapsed > g.interest {
 		return false
 	}
-	if sqrt32(dist2(m.Pos(), p.Pos())) > g.cfg.WithinRadius {
+	if sqrt32(dist2(m.Pos(), p.Pos())) > g.cfg.WithinRadius || !m.CanSeePlayer(g.player) {
 		return false
 	}
 	held := m.HeldItem(g.player)
@@ -205,22 +216,63 @@ func (g *TradeInterest) CanContinueToUse() bool {
 		return false
 	}
 	g.elapsed++
-	show, next, ok := m.TradeShow(held, g.index)
-	if !ok {
+	looking := m.LooksAtMe(g.player)
+	// BDS matches the shown item, not the last held one, against what the
+	// player holds here.
+	if g.onlyTarget && m.MatchesItem(g.carried, held) {
+		g.switching = 0
+		if looking {
+			g.elapsed = min(g.elapsed, g.lookCap)
+		}
+		return true
+	}
+	g.elapsed++
+	show, same := g.scan(held, looking)
+	if show.Empty() {
+		if !same.Empty() {
+			g.carried = same
+			g.onlyTarget = true
+			return true
+		}
+		g.onlyTarget = false
 		return g.keepRemoving()
 	}
-	if m.LooksAtMe(g.player) {
+	if show != g.carried {
+		g.carried = show
+		m.SetCarriedItem(show)
 		g.switching = 0
-		g.elapsed = min(g.elapsed, g.lookCap)
-	}
-	if g.switching >= g.switchT {
-		g.index = next
-		g.show(show)
-	} else {
-		g.switching++
 	}
 	g.removing = 0
+	g.onlyTarget = false
 	return true
+}
+
+// scan walks the offers once round from the current index for one that
+// buys held. The shown item stays until carried_item_switch_time passes,
+// then the next offer selling something else takes over; same is the
+// shown item when no other offer was found. Looking at the mob holds the
+// current offer.
+func (g *TradeInterest) scan(held Item, looking bool) (show, same Item) {
+	n := g.m.TradeCount()
+	if g.index >= n {
+		g.index = 0
+	}
+	for k := n; k > 0; k-- {
+		if sell, ok := g.m.TradeWants(g.index, held); ok {
+			if looking {
+				g.switching = 0
+				g.elapsed = min(g.elapsed, g.lookCap)
+				return sell, same
+			}
+			if sell != g.carried || g.switching < g.switchT {
+				g.switching++
+				return sell, same
+			}
+			same = g.carried
+		}
+		g.index = (g.index + 1) % n
+	}
+	return Item{}, same
 }
 
 // keepRemoving is the wait before the shown item is put away.
@@ -232,7 +284,7 @@ func (g *TradeInterest) keepRemoving() bool {
 	return false
 }
 
-// Start implements goal.Goal (0x53487D0).
+// Start implements goal.Goal.
 func (g *TradeInterest) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -240,16 +292,18 @@ func (g *TradeInterest) Start() {
 	g.mob.SetFlag(FlagTradeInterest, true)
 }
 
-// Stop implements goal.Goal (0x5348900).
+// Stop implements goal.Goal. The remove timer and the offer index carry
+// over to the next use, as in BDS.
 func (g *TradeInterest) Stop() {
 	g.player = NoID
-	g.shown = Item{}
+	g.carried = Item{}
+	g.onlyTarget = false
 	g.mob.SetFlag(FlagTradeInterest, false)
 	g.m.SetCarriedItem(Item{})
 	g.switching, g.elapsed, g.cooled = 0, 0, 0
 }
 
-// Tick implements goal.Goal (0x5348BC0).
+// Tick implements goal.Goal.
 func (g *TradeInterest) Tick() {
 	p := g.actor(g.player)
 	if p == nil || p.Removed() || g.mob.LookBusy() {

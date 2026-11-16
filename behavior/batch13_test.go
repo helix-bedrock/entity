@@ -105,12 +105,14 @@ func (m *villager) LooksAtMe(ID) bool              { return false }
 func (m *villager) TradingPlayer() ID              { return m.trading }
 func (m *villager) TradeInterrupted() bool         { return false }
 func (m *villager) Home() (Pos, int32, bool)       { return Pos{X: 10, Y: 64}, 0, true }
-func (m *villager) TradeShow(held Item, from int) (Item, int, bool) {
+func (m *villager) TradeCount() int                { return 1 }
+func (m *villager) TradeWants(_ int, held Item) (Item, bool) {
 	if held.Name != "minecraft:wheat" {
-		return Item{}, from, false
+		return Item{}, false
 	}
-	return Item{Name: "minecraft:emerald", Count: 1}, from + 1, true
+	return Item{Name: "minecraft:emerald", Count: 1}, true
 }
+func (m *villager) MatchesItem(a, b Item) bool { return a.Name == b.Name }
 
 func TestMoveToPOIReachesTheBed(t *testing.T) {
 	w := newVWorld(&seqRandom{floats: []float32{0}})
