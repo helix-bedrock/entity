@@ -225,7 +225,7 @@ func (g *Melee) Tick() {
 	}
 	g.cooldown--
 	if !g.m.LookBusy() {
-		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
+		g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	}
 	g.repath--
 	seen := g.m.CanSee(t)
@@ -264,12 +264,13 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 }
 
 // step is the chase step the melee goals share (1.26.60 0x5431120): look
-// at the target, count the repath timer down, and while the target is
+// at the target (the look control's yaw limit is y_max_head_rotation, its
+// pitch limit x_max_rotation), count the repath timer down, and while the target is
 // tracked or seen remember where it stands (its feet, the bottom of its
 // box) and repath when the timer runs out.
 func (g *Melee) step(t Actor, inReach bool, d2 float32) {
 	if !g.m.LookBusy() {
-		g.m.LookAt(lookPoint(t), g.cfg.XMaxRotation, g.cfg.YMaxHeadRotation)
+		g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	}
 	g.repath--
 	if !g.cfg.TrackTarget && !g.m.CanSee(t) {

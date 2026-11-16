@@ -4,6 +4,7 @@ package behavior
 const (
 	villageStride     = 0.75 // the share of the follow range walked per path
 	exploreTries      = 10
+	villageInterval   = 50 // the village goals' ticks between searches (0x5476470)
 	villageSearchNone = -1
 )
 
@@ -46,6 +47,7 @@ func (g *moveToVillage) initVillage(w World, d Dweller, c MoveToVillageConfig, h
 	g.init(w, d, MoveToConfig{SpeedMultiplier: c.SpeedMultiplier, GoalRadius: c.GoalRadius}, flagsMove, h)
 	g.restTime = int32(abs32(c.CooldownTime)) * ticksPerSecond
 	g.useAim = true
+	g.interval = villageInterval
 	g.d, g.picker = d, p
 	g.search = villageSearchNone
 	if c.SearchRange > 0 {
@@ -158,7 +160,7 @@ func pathNear(m Mob, r float32) bool {
 // MoveToVillage is MoveToVillageGoal.
 type MoveToVillage struct{ moveToVillage }
 
-// NewMoveToVillage makes the goal (0x5476470). Its target point is
+// NewMoveToVillage makes the goal (BDS 1.26.60 0x5476470). Its target point is
 // BaseMoveToGoal's: the aim plus the offset one block up.
 func NewMoveToVillage(w World, d Dweller, c MoveToVillageConfig) *MoveToVillage {
 	g := &MoveToVillage{}
@@ -191,30 +193,34 @@ type StrollTowardsVillage struct {
 	reach int32
 }
 
-// NewStrollTowardsVillage makes the goal (0x52B62C0).
+// NewStrollTowardsVillage makes the goal (BDS 1.26.60 0x5695370). Its
+// target point is BaseMoveToGoal's: the aim plus the offset one block up.
 func NewStrollTowardsVillage(w World, d Dweller, c StrollTowardsVillageConfig) *StrollTowardsVillage {
 	g := &StrollTowardsVillage{cfg: c, reach: c.SearchRange}
 	g.initVillage(w, d, c.MoveToVillageConfig, g, g)
+	g.aimOffset = true
 	return g
 }
 
-// CanUse implements goal.Goal (0x533D160).
+// CanUse implements goal.Goal (0x5695420): the start chance rolls on the
+// thread random.
 func (g *StrollTowardsVillage) CanUse() bool {
-	if g.world.Random().NextFloat() > g.cfg.StartChance {
+	if g.world.ThreadRandom().NextFloat() > g.cfg.StartChance {
 		return false
 	}
 	return g.canUseVillage()
 }
 
-// pick is findTarget (0x533D250): search_range blocks from the mob toward
-// a random village point.
+// pick is _selectRandomPosInVillage (0x5695510): search_range blocks from
+// the mob toward a random village point, raised to the ground from that
+// point's height (getAboveTopSolidBlock).
 func (g *StrollTowardsVillage) pick() Vec3 {
 	v := g.moveToVillage.pick()
 	mb := blockOf(g.mob.Pos())
 	d := normalize(Vec3{X: float32(int32(v.X) - mb.X), Y: float32(int32(v.Y) - mb.Y), Z: float32(int32(v.Z) - mb.Z)})
 	at := add(vecOf(mb), scale(d, float32(g.reach)))
 	p := blockOf(at)
-	return Vec3{X: float32(p.X), Y: float32(g.world.HeightMap(p.X, p.Z)), Z: float32(p.Z)}
+	return Vec3{X: float32(p.X), Y: float32(g.world.AboveTopSolidAt(p)), Z: float32(p.Z)}
 }
 
 // MoveThroughVillageConfig is the JSON of
