@@ -82,9 +82,13 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 	for i := int32(0); i < s.tries; i++ {
 		var dx, dz, dy int32
 		if s.h >= 0 {
-			dx = r.NextInt(2*s.h+1) - s.h
-			dz = r.NextInt(2*s.h+1) - s.h
+			dx = r.NextInt(2*s.h + 1)
+			dz = r.NextInt(2*s.h + 1)
 		}
+		// BDS subtracts h even when it drew nothing, so a negative h
+		// offsets by -h.
+		dx -= s.h
+		dz -= s.h
 		if s.v >= 0 {
 			dy = r.NextInt(2*s.v + 1)
 		}
