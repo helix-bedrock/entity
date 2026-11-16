@@ -214,7 +214,7 @@ func newB12Pet(w World, p Vec3) *b12Pet {
 	return &b12Pet{b12Mob: newB12Mob(w, p), accepts: true, riding: NoID}
 }
 
-func (m *b12Pet) OwnerBed() (Pos, bool)          { return m.bed, m.inBed }
+func (m *b12Pet) OwnerBed() (Pos, Pos, bool)     { return m.bed, m.bed, m.inBed }
 func (m *b12Pet) OwnerSleeping() bool            { return m.inBed }
 func (m *b12Pet) ClaimBed(Pos) bool              { m.claimed = true; return true }
 func (m *b12Pet) TellOwner()                     { m.told++ }
@@ -224,6 +224,7 @@ func (m *b12Pet) Velocity() Vec3                 { return m.vel }
 func (m *b12Pet) SetVelocity(v Vec3)             { m.vel = v }
 func (m *b12Pet) Yaw() float32                   { return m.yaw }
 func (m *b12Pet) SetYaw(y float32)               { m.yaw = y }
+func (m *b12Pet) SetHeadYaw(y float32)           { m.yaw = y }
 func (m *b12Pet) BodyYaw() float32               { return m.body }
 func (m *b12Pet) SetBodyYaw(y float32)           { m.body = y }
 func (m *b12Pet) AcceptsRider(ID) bool           { return m.accepts }

@@ -72,7 +72,7 @@ func NewEatMob(w World, m MobEater, c EatMobConfig) *EatMob {
 	return &EatMob{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, prey: NoID, state: eatMobDone}
 }
 
-// CanUse implements goal.Goal (0x5777400). The path BDS makes here is kept
+// CanUse implements goal.Goal (BDS 1.26.60 0x5527270). The path BDS makes here is kept
 // for ten ticks, so a canUse soon after a failed or used path is false.
 func (g *EatMob) CanUse() bool {
 	t := g.actor(g.m.Target())
@@ -91,7 +91,7 @@ func (g *EatMob) CanUse() bool {
 	return g.hasPath
 }
 
-// CanContinueToUse implements goal.Goal (0x5777830).
+// CanContinueToUse implements goal.Goal (0x55276A0).
 func (g *EatMob) CanContinueToUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || !t.Alive() || g.m.Admiring() || g.state == eatMobDone {
@@ -101,7 +101,7 @@ func (g *EatMob) CanContinueToUse() bool {
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal (0x5777A90).
+// Start implements goal.Goal (0x5527900).
 func (g *EatMob) Start() {
 	g.state = eatMobDone
 	t := g.actor(g.m.Target())
@@ -115,7 +115,7 @@ func (g *EatMob) Start() {
 	g.hasPath = false
 }
 
-// Stop implements goal.Goal (0x5777CA0): an eaten prey drops its loot and
+// Stop implements goal.Goal (0x5527B10): an eaten prey drops its loot and
 // is removed.
 func (g *EatMob) Stop() {
 	m := g.m
@@ -130,7 +130,7 @@ func (g *EatMob) Stop() {
 	m.SetFlag(FlagEatingMob, false)
 }
 
-// Tick implements goal.Goal (0x5778570).
+// Tick implements goal.Goal (0x55283F0).
 func (g *EatMob) Tick() {
 	m, w := g.m, g.world
 	_, hasMove := m.MoveWanted()
@@ -157,8 +157,9 @@ func (g *EatMob) Tick() {
 		g.drop = Vec3{X: to.X + eatMobDropLift.X, Y: to.Y + eatMobDropLift.Y, Z: to.Z + eatMobDropLift.Z}
 		var pull Vec3
 		if l >= eatMobMinPull {
-			k := g.cfg.PullInForce / l
-			pull = Vec3{X: d.X * k, Y: d.Y * k, Z: d.Z * k}
+			// Normalized first, then scaled (BDS 1.26.60 tick 0x55283F0).
+			f := g.cfg.PullInForce
+			pull = Vec3{X: d.X / l * f, Y: d.Y / l * f, Z: d.Z / l * f}
 		}
 		m.SetVelocityOf(t.ID(), pull)
 		g.eaten, g.state = true, eatMobEating

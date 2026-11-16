@@ -85,8 +85,11 @@ func NewFloatTempt(w World, m Mob, c TemptConfig) *Tempt {
 }
 
 // CanUse implements goal.Goal.
+//
+// float_tempt runs TemptBaseGoal::canUse (BDS 1.26.60 0x569C0F0), which
+// needs no navigation; only TemptGoal::canUse (0x569CE70) checks for it.
 func (g *Tempt) CanUse() bool {
-	if g.mob.Nav() == nil {
+	if !g.float && g.mob.Nav() == nil {
 		return false
 	}
 	if g.cooldown > 0 {
@@ -147,7 +150,7 @@ func (g *Tempt) Start() {
 			g.mob.Event(g.cfg.OnTemptStart, NoID)
 		}
 	}
-	if n := g.mob.Nav(); n != nil {
+	if n := g.mob.Nav(); n != nil && !g.float {
 		f := n.Flags()
 		g.avoided = f&uint32(nav.FlagAvoidWater) != 0
 		n.SetFlags(f &^ uint32(nav.FlagAvoidWater))
@@ -162,7 +165,9 @@ func (g *Tempt) Stop() {
 	if g.cfg.OnTemptEnd != "" {
 		g.mob.Event(g.cfg.OnTemptEnd, NoID)
 	}
-	if n := g.mob.Nav(); n != nil {
+	// TemptBaseGoal::start/stop (0x569C430, 0x569C5D0) leave the navigation
+	// alone; only TemptGoal's touch it.
+	if n := g.mob.Nav(); n != nil && !g.float {
 		n.Stop()
 		f := n.Flags() &^ uint32(nav.FlagAvoidWater)
 		if g.avoided {

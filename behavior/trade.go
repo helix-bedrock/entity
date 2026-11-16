@@ -43,7 +43,7 @@ func (g *TradeWithPlayer) CanUse() bool {
 	if m.Nav() == nil || g.actor(m.TradingPlayer()) == nil || m.TradeInterrupted() {
 		return false
 	}
-	return g.cfg.Filters == nil || g.cfg.Filters(m, m)
+	return g.cfg.Filters == nil || g.cfg.Filters(m, nil)
 }
 
 // CanContinueToUse implements goal.Goal (BDS 1.26.60 0x569FDA0).

@@ -145,7 +145,7 @@ func NewAdmireItem(w World, m Admirer, c AdmireItemConfig) *AdmireItem {
 	return &AdmireItem{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x48C24F0): not just hurt, and something to
+// CanUse implements goal.Goal (BDS 1.26.60 0x4A7B750): not just hurt, and something to
 // admire.
 func (g *AdmireItem) CanUse() bool {
 	if s, ok := g.m.AdmireCooldown(); ok && g.m.RecentlyHurt(s*ticksPerSecond) {
@@ -154,10 +154,10 @@ func (g *AdmireItem) CanUse() bool {
 	return g.m.Admiring()
 }
 
-// CanContinueToUse implements goal.Goal (0x48C26E0).
+// CanContinueToUse implements goal.Goal (0x4A7B940).
 func (g *AdmireItem) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x48C26F0): the item goes in the offhand.
+// Start implements goal.Goal (0x4A7B950): the item goes in the offhand.
 func (g *AdmireItem) Start() {
 	m := g.m
 	it := m.AdmiredItem()
@@ -172,7 +172,7 @@ func (g *AdmireItem) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x48C2D50).
+// Stop implements goal.Goal (0x4A7BFB0).
 func (g *AdmireItem) Stop() {
 	m := g.m
 	m.SetSlot(SlotOffhand, Item{})
@@ -184,7 +184,7 @@ func (g *AdmireItem) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x48C35C0): admiring ends on time, and the
+// Tick implements goal.Goal (0x4A7C840): admiring ends on time, and the
 // sound repeats.
 func (g *AdmireItem) Tick() {
 	m := g.m
@@ -213,8 +213,9 @@ type Barterer interface {
 	// BarterCooldown is the component's cooldown_after_being_attacked in
 	// seconds (+32).
 	BarterCooldown() int32
-	// BarterLoot rolls the description's barter_table with the level
-	// random; nil without the description.
+	// BarterLoot rolls the description's barter_table with the level's
+	// thread random (Level vt+2680, BarterGoal::tick 0x4A806F0); nil
+	// without the description.
 	BarterLoot() []Item
 	// SpawnItem spawns the stack as an item entity at p moving at vel.
 	SpawnItem(it Item, p, vel Vec3)
@@ -241,6 +242,7 @@ type Barter struct {
 	base
 	m    Barterer
 	near []Actor
+	dist []near
 }
 
 // NewBarter makes the goal. It has no JSON fields and no control flags
@@ -249,7 +251,7 @@ func NewBarter(w World, m Barterer) *Barter {
 	return &Barter{base: base{mob: m, world: w}, m: m}
 }
 
-// CanUse implements goal.Goal (0x48C72B0): an item to barter with and not
+// CanUse implements goal.Goal (BDS 1.26.60 0x4A80510): an item to barter with and not
 // just hurt.
 func (g *Barter) CanUse() bool {
 	if g.m.RecentlyHurt(g.m.BarterCooldown() * ticksPerSecond) {
@@ -259,7 +261,7 @@ func (g *Barter) CanUse() bool {
 	return g.m.BarterPending()
 }
 
-// CanContinueToUse implements goal.Goal (0x48C7480).
+// CanContinueToUse implements goal.Goal (0x4A806E0).
 func (g *Barter) CanContinueToUse() bool { return g.CanUse() }
 
 // Start implements goal.Goal.
@@ -268,7 +270,7 @@ func (g *Barter) Start() {}
 // Stop implements goal.Goal.
 func (g *Barter) Stop() {}
 
-// Tick implements goal.Goal (0x48C7490).
+// Tick implements goal.Goal (0x4A806F0).
 func (g *Barter) Tick() {
 	m := g.m
 	if items := m.BarterLoot(); items != nil {
@@ -282,22 +284,26 @@ func (g *Barter) Tick() {
 	m.ClearBarter()
 }
 
-// throw is the loot's velocity: toward the nearest player on the flat, or
-// a random flat push.
+// throw is the loot's velocity: toward the nearest player, or a random flat
+// push. The nearest is the first of BDS's sorted nearby query (BDS 1.26.60
+// 0xB3D4280, type player), so ties end in libc++ std::sort's order.
 func (g *Barter) throw() Vec3 {
 	m := g.m
 	b := m.Box()
 	r := Vec3{X: barterReach, Y: barterReach, Z: barterReach}
 	g.near = m.EntitiesOfType(g.near[:0], actorTypePlayer, m.ID(), sortedBox(sub(b.Min, r), add(b.Max, r)))
 	p := m.Pos()
-	var best Actor
-	var bestD2 float32
+	g.dist = g.dist[:0]
 	for _, a := range g.near {
-		if d2 := dist2(p, a.Pos()); best == nil || d2 < bestD2 {
-			best, bestD2 = a, d2
-		}
+		g.dist = append(g.dist, near{a: a, d2: dist2(p, a.Pos())})
+	}
+	sortNear(g.dist)
+	var best Actor
+	if len(g.dist) > 0 {
+		best = g.dist[0].a
 	}
 	clear(g.near)
+	clear(g.dist)
 	if best == nil {
 		t := g.world.ThreadRandom()
 		x := t.NextFloat()*barterSpread - barterSpread/2

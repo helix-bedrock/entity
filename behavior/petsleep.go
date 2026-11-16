@@ -25,9 +25,11 @@ const (
 // Mob.
 type PetSleeper interface {
 	Mob
-	// OwnerBed is the bed block the sleeping owner lies in; ok is false
-	// when the owner is not a player asleep in a bed.
-	OwnerBed() (bed Pos, ok bool)
+	// OwnerBed is the bed block the sleeping owner player lies in and that
+	// bed's other half (BlockType getSecondPart, vt+608); ok is false when
+	// the owner is not a player asleep in a bed or the other half is not a
+	// bed block.
+	OwnerBed() (bed, other Pos, ok bool)
 	// OwnerSleeping reports the owner player asleep (Actor vt+336).
 	OwnerSleeping() bool
 	// ClaimBed gives the bed's block entity the pet; false when another pet
@@ -46,6 +48,8 @@ type PetSleeper interface {
 	// Yaw is ActorRotationComponent's yaw; SetYaw sets it.
 	Yaw() float32
 	SetYaw(yaw float32)
+	// SetHeadYaw sets the head rotation component's yaw (hash 0xBABE7211).
+	SetHeadYaw(yaw float32)
 	// SetBodyYaw sets the body rotation (MobBodyRotationComponent).
 	SetBodyYaw(yaw float32)
 }
@@ -80,11 +84,11 @@ func NewPetSleepWithOwner(w World, m PetSleeper, c PetSleepWithOwnerConfig) *Pet
 	return &PetSleepWithOwner{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5755C90). BDS fails when the pet is
+// CanUse implements goal.Goal (BDS 1.26.60 0x5505930). BDS fails when the pet is
 // closer than search_range, checked in the assembly.
 func (g *PetSleepWithOwner) CanUse() bool {
 	m := g.m
-	bed, ok := m.OwnerBed()
+	bed, other, ok := m.OwnerBed()
 	if !ok || !m.Flag(FlagTamed) || m.Flag(FlagSitting) || m.Nav() == nil {
 		return false
 	}
@@ -103,16 +107,18 @@ func (g *PetSleepWithOwner) CanUse() bool {
 	if !m.ClaimBed(bed) {
 		return false
 	}
-	g.target = Vec3{X: float32(bed.X) + 0.5, Y: float32(bed.Y) + 0.5, Z: float32(bed.Z) + 0.5}
+	// The pet walks to the bed's other half, not the one the owner's bed
+	// position names (BDS 1.26.60 canUse 0x5505930).
+	g.target = Vec3{X: float32(other.X) + 0.5, Y: float32(other.Y) + 0.5, Z: float32(other.Z) + 0.5}
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5755F90).
+// CanContinueToUse implements goal.Goal (0x5505C30).
 func (g *PetSleepWithOwner) CanContinueToUse() bool {
 	return g.actor(g.m.Owner()) != nil && !g.m.Flag(FlagSitting) && g.m.OwnerSleeping()
 }
 
-// Start implements goal.Goal: the walk state's start (0x57563D0).
+// Start implements goal.Goal: IdleState::start (0x5506070), which moves to WalkState.
 func (g *PetSleepWithOwner) Start() {
 	m := g.m
 	if n := m.Nav(); n != nil && n.MoveTo(g.target, g.cfg.SpeedMultiplier) {
@@ -124,7 +130,7 @@ func (g *PetSleepWithOwner) Start() {
 }
 
 // Stop implements goal.Goal: every state stops the navigation and goes
-// back to walking (0x5756090); the sleeping one first gets up.
+// back to idle (0x5505D30); the sleeping one first gets up.
 func (g *PetSleepWithOwner) Stop() {
 	m := g.m
 	if g.state == petSleepSleeping {
@@ -149,7 +155,7 @@ func (g *PetSleepWithOwner) Tick() {
 	}
 }
 
-// slowAtEnd is 0x5756210: half speed once the mob stands on the path's
+// slowAtEnd is 0x5505EB0: half speed once the mob stands on the path's
 // last node.
 func (g *PetSleepWithOwner) slowAtEnd() {
 	n := g.m.Nav()
@@ -169,7 +175,7 @@ func (g *PetSleepWithOwner) gap2() float32 {
 	return dz*dz + (dx*dx + dy*dy)
 }
 
-// hopTick is 0x5756730: for the first three quarters the pet slows down
+// hopTick is RotateState::tick (0x55063D0): for the first three quarters the pet slows down
 // and turns to the bed, then it waits and lies down.
 func (g *PetSleepWithOwner) hopTick() {
 	m := g.m
@@ -191,6 +197,9 @@ func (g *PetSleepWithOwner) hopTick() {
 	m.SetVelocity(Vec3{X: v.X * petSleepDamp, Y: v.Y * petSleepDamp, Z: v.Z * petSleepDamp})
 	p := m.Pos()
 	face := float32(math.Atan2(float64(g.target.Z-p.Z), float64(g.target.X-p.X)))*degPerRad - 90
-	m.SetYaw(approachDegrees(m.Yaw(), face, petSleepTurn))
+	// The rotate state turns the head and body rotation components, not
+	// ActorRotationComponent (BDS 1.26.60 RotateState::tick 0x55063D0).
+	_, head := m.HeadRotation()
+	m.SetHeadYaw(approachDegrees(head, face, petSleepTurn))
 	m.SetBodyYaw(approachDegrees(m.BodyYaw(), face, petSleepTurn))
 }

@@ -72,7 +72,7 @@ func (g *EatBlock) replacement(p Pos) (string, bool) {
 	return "", false
 }
 
-// CanUse implements goal.Goal (0x5775CA0): the chance is drawn first.
+// CanUse implements goal.Goal (BDS 1.26.60 0x5525EF0): the chance is drawn first.
 func (g *EatBlock) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
@@ -92,10 +92,10 @@ func (g *EatBlock) CanUse() bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (0x5776340).
+// CanContinueToUse implements goal.Goal (0x5526450).
 func (g *EatBlock) CanContinueToUse() bool { return g.timer > 0 }
 
-// Start implements goal.Goal (0x5776200).
+// Start implements goal.Goal (0x5526310).
 func (g *EatBlock) Start() {
 	g.timer = int32(g.cfg.TimeUntilEat * ticksPerSecond)
 	g.m.ActorEvent(actorEventEatGrass, 0)
@@ -104,10 +104,10 @@ func (g *EatBlock) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x5776330).
+// Stop implements goal.Goal (0x5526440).
 func (g *EatBlock) Stop() { g.timer = 0 }
 
-// Tick implements goal.Goal (0x5776350): when the timer runs out the block
+// Tick implements goal.Goal (0x5526460): when the timer runs out the block
 // in the mob, or else the one under its feet, is eaten. The block only
 // changes with mobGriefing, but the mob counts as having eaten either way.
 func (g *EatBlock) Tick() {
@@ -117,6 +117,10 @@ func (g *EatBlock) Tick() {
 	}
 	m, w := g.m, g.world
 	p := blockOf(m.Pos())
+	// The dust is drawn at the mob's own block height even when the block
+	// under it is the one eaten (BDS 1.26.60 tick 0x5526460 keeps the
+	// first y for the level event).
+	dustY := float32(p.Y) + 0.5
 	rep, ok := g.replacement(p)
 	if !ok {
 		p.Y--
@@ -125,11 +129,11 @@ func (g *EatBlock) Tick() {
 		}
 	}
 	if w.MobGriefing() {
-		w.LevelEvent(eventDestroyDust, Vec3{X: float32(p.X) + 0.5, Y: float32(p.Y) + 0.5, Z: float32(p.Z) + 0.5}, w.Block(p).Name)
+		w.LevelEvent(eventDestroyDust, Vec3{X: float32(p.X) + 0.5, Y: dustY, Z: float32(p.Z) + 0.5}, w.Block(p).Name)
 		w.SetBlock(p, PlacedBlock{Name: rep}, m.ID())
 	}
 	m.EatGameEvent(m.AttachPos(attachMouth))
 	for _, e := range g.cfg.OnEat {
-		m.Event(e, m.ID())
+		m.Event(e, m.Target())
 	}
 }

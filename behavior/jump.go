@@ -42,6 +42,8 @@ type Jumper interface {
 	// LastHurtTime is the tick the mob was last hurt
 	// (Actor::getLastHurtTimestamp).
 	LastHurtTime() uint64
+	// StandingOn is Actor::getBlockPosCurrentlyStandingOn.
+	StandingOn() Pos
 }
 
 // JumpAroundTargetConfig is the JSON of minecraft:behavior.jump_around_target.
@@ -107,7 +109,7 @@ func NewJumpAroundTarget(w World, m Jumper, c JumpAroundTargetConfig) *JumpAroun
 // CanBeInterrupted implements goal.Goal: a jump always finishes.
 func (g *JumpAroundTarget) CanBeInterrupted() bool { return false }
 
-// CanUse implements goal.Goal (0x574BF20).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5A05C40).
 func (g *JumpAroundTarget) CanUse() bool {
 	if g.world.CurrentTick() < g.cooldown {
 		return false
@@ -124,8 +126,10 @@ func (g *JumpAroundTarget) CanUse() bool {
 	if d <= g.cfg.ValidDistance.Min || g.cfg.ValidDistance.Max <= d {
 		return false
 	}
+	// The start block is the one stood on (BDS 1.26.60 canUse 0x5A05C40,
+	// 0xB394740); the air above counts from the feet block.
 	at := blockOf(p)
-	if g.world.Block(at).NoJumpStart {
+	if g.world.Block(g.m.StandingOn()).NoJumpStart {
 		return false
 	}
 	for i := int32(0); i < g.cfg.VerticalSpace; i++ {
@@ -282,10 +286,10 @@ func pointBehind(w World, t Actor, spread, lo, hi float32) Vec3 {
 	return Vec3{X: f.X - s*d, Y: f.Y, Z: f.Z - c*d}
 }
 
-// CanContinueToUse implements goal.Goal (0x574C980).
+// CanContinueToUse implements goal.Goal (0x5A06690).
 func (g *JumpAroundTarget) CanContinueToUse() bool { return g.state != jumpDone }
 
-// Start implements goal.Goal (0x574C990). BDS faces the landing spot
+// Start implements goal.Goal (0x5A066A0). BDS faces the landing spot
 // with a yaw of +atan2, not the -atan2 every other goal uses.
 func (g *JumpAroundTarget) Start() {
 	g.started = g.world.CurrentTick()
@@ -297,7 +301,7 @@ func (g *JumpAroundTarget) Start() {
 	g.m.SetYaw(yaw)
 }
 
-// Stop implements goal.Goal (0x574CF10).
+// Stop implements goal.Goal (0x5A06C20).
 func (g *JumpAroundTarget) Stop() {
 	g.m.SetFlag(FlagJumpGoal, false)
 	now := g.world.CurrentTick()
@@ -321,7 +325,7 @@ func sortedBox(a, b Vec3) Box {
 	}
 }
 
-// Tick implements goal.Goal (0x574CB00).
+// Tick implements goal.Goal (0x5A06810).
 func (g *JumpAroundTarget) Tick() {
 	now := g.world.CurrentTick()
 	ready := g.state == jumpPreparing && now-g.started >= g.cfg.PrepareJump

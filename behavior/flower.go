@@ -52,6 +52,7 @@ type OfferFlower struct {
 	target ID
 	end    uint64
 	near   []Actor
+	sorted []near
 }
 
 // NewOfferFlower makes the goal (0xBDC68E0).
@@ -65,38 +66,42 @@ func (g *OfferFlower) CanUse() bool {
 		return false
 	}
 	m := g.m
-	if g.cfg.Filters != nil && !g.cfg.Filters(m, m) {
+	// BDS tests the filters with no other entity in the context.
+	if g.cfg.Filters != nil && !g.cfg.Filters(m, nil) {
 		return false
 	}
-	p, a := m.Pos(), g.cfg.SearchArea
-	g.near = g.world.Entities(g.near[:0], m.ID(), Box{Min: sub(p, a), Max: add(p, a)})
+	// The candidates come nearest first from the sorted nearby query
+	// (BDS 1.26.60 canUse 0xBF9B4F0, 0xB3D4280 with the search area).
+	g.near, g.sorted = sortedNearBox(g.world, m, g.cfg.SearchArea, g.near, g.sorted)
+	found := false
 	for _, c := range g.near {
 		if c.IsMob() && m.HasGoal(c.ID(), g.cfg.TakeGoal) {
-			g.target = c.ID()
-			return true
+			g.target, found = c.ID(), true
+			break
 		}
 	}
-	return false
+	clear(g.near)
+	return found
 }
 
-// CanContinueToUse implements goal.Goal (0xBDC6C80).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0xBF9B7E0).
 func (g *OfferFlower) CanContinueToUse() bool {
 	return g.actor(g.target) != nil && g.world.CurrentTick() < g.end
 }
 
-// Start implements goal.Goal (0xBDC6DD0).
+// Start implements goal.Goal (0xBF9B940).
 func (g *OfferFlower) Start() {
 	g.end = g.world.CurrentTick() + uint64(int32(g.cfg.MaxOfferFlowerDuration*ticksPerSecond))
 	g.m.OfferFlower()
 }
 
-// Stop implements goal.Goal (0xBDC6E10).
+// Stop implements goal.Goal (0xBF9B980).
 func (g *OfferFlower) Stop() {
 	g.m.StopOfferingFlower(g.mob.ID(), g.cfg.StopEvent)
 	g.target = NoID
 }
 
-// Tick implements goal.Goal (0xBDC6F10).
+// Tick implements goal.Goal (0xBF9BA80).
 func (g *OfferFlower) Tick() {
 	if t := g.actor(g.target); t != nil {
 		lookAtActor(g.mob, t, g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
@@ -152,7 +157,7 @@ func NewTakeFlower(w World, m FlowerOfferer, c TakeFlowerConfig) *TakeFlower {
 // CanUse implements goal.Goal (BDS 1.26.60 0x569A470).
 func (g *TakeFlower) CanUse() bool {
 	m := g.m
-	if m.Nav() == nil || g.cfg.Filters != nil && !g.cfg.Filters(m, m) {
+	if m.Nav() == nil || g.cfg.Filters != nil && !g.cfg.Filters(m, nil) {
 		return false
 	}
 	b, a := m.Box(), g.cfg.SearchArea

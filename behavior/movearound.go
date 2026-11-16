@@ -33,15 +33,15 @@ func NewMoveAroundTarget(w World, m Mob, c MoveAroundTargetConfig) *MoveAroundTa
 	return &MoveAroundTarget{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5274DC0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5436B20).
 func (g *MoveAroundTarget) CanUse() bool {
 	return g.mob.Nav() != nil && (g.cfg.Filters == nil || g.cfg.Filters(g.mob, nil))
 }
 
-// CanContinueToUse implements goal.Goal (0x5274EB0).
+// CanContinueToUse implements goal.Goal (0x5436C10).
 func (g *MoveAroundTarget) CanContinueToUse() bool { return !g.done }
 
-// Start implements goal.Goal (0x5274EC0).
+// Start implements goal.Goal (0x5436C20).
 func (g *MoveAroundTarget) Start() {
 	t := g.actor(g.mob.Target())
 	n := g.mob.Nav()
@@ -74,7 +74,7 @@ func (g *MoveAroundTarget) destination(t Actor) Vec3 {
 	return add(p, scale(normalize(d), k))
 }
 
-// Stop implements goal.Goal (0x5275340).
+// Stop implements goal.Goal (0x54370A0).
 func (g *MoveAroundTarget) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -82,7 +82,7 @@ func (g *MoveAroundTarget) Stop() {
 	g.done = false
 }
 
-// Tick implements goal.Goal (0x5275450).
+// Tick implements goal.Goal (0x54371B0).
 func (g *MoveAroundTarget) Tick() {
 	n := g.mob.Nav()
 	g.done = n == nil || n.Done()

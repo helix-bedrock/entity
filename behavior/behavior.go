@@ -693,6 +693,16 @@ func (r *Range[T]) UnmarshalJSON(b []byte) error {
 	return fmt.Errorf("range: no range_min/range_max or min/max")
 }
 
+// actorYaw is the actor's ActorRotationComponent yaw: Yaw when the actor
+// has one, else its head yaw (players, whose two match).
+func actorYaw(a Actor) float32 {
+	if y, ok := a.(interface{ Yaw() float32 }); ok {
+		return y.Yaw()
+	}
+	_, yaw := a.HeadRotation()
+	return yaw
+}
+
 // randomTicks is a random time from the range in seconds, in ticks, the way
 // the sound timers draw it.
 func randomTicks(r Random, s Range[float32]) uint64 {

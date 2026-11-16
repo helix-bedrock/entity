@@ -80,9 +80,14 @@ type near struct {
 // sortedNear is BDS's nearby query (BDS 1.26.60 0xB3D4280): the entities in the box
 // grown by d, nearest first. It reuses dst and buf.
 func sortedNear(w World, m Mob, d float32, dst []Actor, buf []near) ([]Actor, []near) {
+	return sortedNearBox(w, m, Vec3{X: d, Y: d, Z: d}, dst, buf)
+}
+
+// sortedNearBox is sortedNear with the box grown by d on each axis.
+func sortedNearBox(w World, m Mob, d Vec3, dst []Actor, buf []near) ([]Actor, []near) {
 	b := m.Box()
-	b.Min = Vec3{X: b.Min.X - d, Y: b.Min.Y - d, Z: b.Min.Z - d}
-	b.Max = Vec3{X: b.Max.X + d, Y: b.Max.Y + d, Z: b.Max.Z + d}
+	b.Min = Vec3{X: b.Min.X - d.X, Y: b.Min.Y - d.Y, Z: b.Min.Z - d.Z}
+	b.Max = Vec3{X: b.Max.X + d.X, Y: b.Max.Y + d.Y, Z: b.Max.Z + d.Z}
 	dst = w.Entities(dst[:0], m.ID(), b)
 	p := m.Pos()
 	buf = buf[:0]

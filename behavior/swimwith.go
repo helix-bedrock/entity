@@ -29,6 +29,9 @@ type SwimCompanion interface {
 	// Motion is another entity's position change over the last tick
 	// (StateVectorComponent posDelta).
 	Motion(id ID) Vec3
+	// LastMove is another entity's previous position minus its position
+	// (StateVectorComponent posPrev - pos), which the stop test reads.
+	LastMove(id ID) Vec3
 }
 
 // SwimWithEntityConfig is the JSON of minecraft:behavior.swim_with_entity.
@@ -75,7 +78,7 @@ func NewSwimWithEntity(w World, m SwimCompanion, c SwimWithEntityConfig) *SwimWi
 		interval: int32(c.StateCheckInterval * ticksPerSecond), target: NoID}
 }
 
-// CanUse implements goal.Goal (0x533FC00).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5697F20).
 func (g *SwimWithEntity) CanUse() bool {
 	m := g.m
 	if !swimming(m) || m.Nav() == nil {
@@ -87,7 +90,7 @@ func (g *SwimWithEntity) CanUse() bool {
 	return g.find()
 }
 
-// find is 0x533FDC0: a random swimming or boating entity nearby.
+// find is 0x56980E0: a random swimming or boating entity nearby.
 func (g *SwimWithEntity) find() bool {
 	m, w := g.m, g.world
 	r := g.cfg.SearchRange
@@ -121,7 +124,7 @@ func anyFilter(fs []Filter, self Mob, other Actor) bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (0x53402E0): a target that is
+// CanContinueToUse implements goal.Goal (0x5698560): a target that is
 // neither moving in a boat nor swimming is dropped by chance.
 func (g *SwimWithEntity) CanContinueToUse() bool {
 	m := g.m
@@ -132,7 +135,10 @@ func (g *SwimWithEntity) CanContinueToUse() bool {
 	if t == nil || !t.Alive() {
 		return false
 	}
-	still := length2(g.m.Motion(t.ID())) <= swimWithStill2
+	// BDS 1.26.60 canContinueToUse 0x5698560 tests posPrev - pos, not
+	// posDelta.
+	mv := g.m.LastMove(t.ID())
+	still := mv.Z*mv.Z+(mv.X*mv.X+mv.Y*mv.Y) <= swimWithStill2
 	if (still || t.Vehicle() == NoID) && !t.Flag(FlagSwimming) && g.cfg.ChanceToStop > g.world.ThreadRandom().NextFloat() {
 		return false
 	}
@@ -142,13 +148,13 @@ func (g *SwimWithEntity) CanContinueToUse() bool {
 	return dist2(m.Pos(), t.Pos()) > g.cfg.StopDistance*g.cfg.StopDistance
 }
 
-// Start implements goal.Goal (0x53405F0).
+// Start implements goal.Goal (0x5698870).
 func (g *SwimWithEntity) Start() { g.timer, g.state = 0, swimWithCatchingUp }
 
-// Stop implements goal.Goal (0x5340610).
+// Stop implements goal.Goal (0x5698890).
 func (g *SwimWithEntity) Stop() { g.target = NoID }
 
-// Tick implements goal.Goal (0x5340650): every state_check_interval the mob
+// Tick implements goal.Goal (0x56988D0): every state_check_interval the mob
 // aims beside the target, ahead of it by its heading.
 func (g *SwimWithEntity) Tick() {
 	m := g.m

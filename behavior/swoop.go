@@ -42,7 +42,7 @@ func NewSwoopAttack(w World, m Swooper, c SwoopAttackConfig) *SwoopAttack {
 	return &SwoopAttack{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5340F80): a swoop now and then, the delay
+// CanUse implements goal.Goal (BDS 1.26.60 0x5699220): a swoop now and then, the delay
 // counted down only while there is a target.
 func (g *SwoopAttack) CanUse() bool {
 	if _, ok := g.m.MoveControl(); !ok || g.actor(g.m.Target()) == nil {
@@ -57,18 +57,18 @@ func (g *SwoopAttack) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x53410E0).
+// CanContinueToUse implements goal.Goal (0x5699380).
 func (g *SwoopAttack) CanContinueToUse() bool {
 	return g.actor(g.m.Target()) != nil && !g.hit && !g.m.HorizontalCollision() && !g.m.WasHurt()
 }
 
-// Start implements goal.Goal (0x5340D10).
+// Start implements goal.Goal (0x5698FB0).
 func (g *SwoopAttack) Start() {
 	g.hit = false
 	g.m.PlaySoundAt(swoopSound, g.m.AttachPos(attachBody))
 }
 
-// Stop implements goal.Goal (0x5340DB0).
+// Stop implements goal.Goal (0x5699050).
 func (g *SwoopAttack) Stop() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -77,7 +77,7 @@ func (g *SwoopAttack) Stop() {
 	g.m.ClearMoveWanted()
 }
 
-// Tick implements goal.Goal (0x53411F0).
+// Tick implements goal.Goal (0x56994A0).
 func (g *SwoopAttack) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil || t.Removed() {

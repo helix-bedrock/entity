@@ -134,7 +134,7 @@ func (g *RandomSearchAndDig) find() (Pos, bool) {
 	return Pos{}, false
 }
 
-// CanUse implements goal.Goal (0x5761460): the path must end within
+// CanUse implements goal.Goal (BDS 1.26.60 0x5511510): the path must end within
 // goal_radius of the spot.
 func (g *RandomSearchAndDig) CanUse() bool {
 	if g.world.CurrentTick() < g.coolEnd {
@@ -169,7 +169,7 @@ func (g *RandomSearchAndDig) forward() Vec3 {
 	return Vec3{X: -cb * tableSin(uint16(int32(a))), Y: tableSin(uint16(int32(b))), Z: -cb * tableSin(uint16(int32(a+sinQuarter)))}
 }
 
-// CanContinueToUse implements goal.Goal (0x5761720): digging stops once
+// CanContinueToUse implements goal.Goal (0x55117D0): digging stops once
 // the block in front is gone.
 func (g *RandomSearchAndDig) CanContinueToUse() bool {
 	if g.state == digDigging {
@@ -187,11 +187,14 @@ func (g *RandomSearchAndDig) CanContinueToUse() bool {
 	return g.valid(g.pos) && !g.m.InWater()
 }
 
-// Start implements goal.Goal (0x5761B80).
+// Start implements goal.Goal (0x5511C20).
 func (g *RandomSearchAndDig) Start() {
 	m := g.m
 	if n := m.Nav(); n != nil {
 		if n.MoveTo(Vec3{X: float32(g.pos.X), Y: float32(g.pos.Y), Z: float32(g.pos.Z)}, g.cfg.SpeedMultiplier) {
+			// BDS also sets the navigation's tick timeout to 140
+			// (NavigationComponent mTickTimeout); entity's navigation
+			// has no tick timeout yet.
 			n.SetLastNodeReach(digLastNodeReach)
 		}
 	}
@@ -199,7 +202,7 @@ func (g *RandomSearchAndDig) Start() {
 	g.fire(g.cfg.OnSearchingStart)
 }
 
-// Stop implements goal.Goal (0x5762CC0). A dig that turned up nothing
+// Stop implements goal.Goal (0x5512DC0). A dig that turned up nothing
 // counts as failed digging even when it never started.
 func (g *RandomSearchAndDig) Stop() {
 	m := g.m
@@ -221,7 +224,7 @@ func (g *RandomSearchAndDig) Stop() {
 	g.coolEnd = g.world.CurrentTick() + g.cooldown
 }
 
-// Tick implements goal.Goal (0x5761DF0).
+// Tick implements goal.Goal (0x5511E90).
 func (g *RandomSearchAndDig) Tick() {
 	switch g.state {
 	case digSearching:

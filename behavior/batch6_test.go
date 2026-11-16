@@ -77,6 +77,7 @@ func (m *b6Mob) SetDiscardFriction(on bool)        { m.friction = on }
 func (m *b6Mob) SetBox(b Box)                      { m.box = &b }
 func (m *b6Mob) EffectAmplifier(int) (int32, bool) { return 0, false }
 func (m *b6Mob) LastHurtTime() uint64              { return m.lastHurt }
+func (m *b6Mob) StandingOn() Pos                   { p := blockOf(m.Pos()); p.Y--; return p }
 func (m *b6Mob) Knockback(_ Actor, k Knockback)    { m.knocks = append(m.knocks, k) }
 func (m *b6Mob) InBoat(Actor) bool                 { return m.boat }
 func (m *b6Mob) WasInWater(a Actor) bool           { return m.wet[a.ID()] }

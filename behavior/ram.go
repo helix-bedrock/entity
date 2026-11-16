@@ -141,7 +141,7 @@ func (g *RamAttack) parts() bool {
 	return g.m.Nav() != nil && ok && g.m.HasLookControl()
 }
 
-// CanUse implements goal.Goal (0x575D610).
+// CanUse implements goal.Goal (BDS 1.26.60 0x550D6E0).
 func (g *RamAttack) CanUse() bool {
 	if g.cooldown > g.world.CurrentTick() || g.actor(g.m.Target()) == nil {
 		return false
@@ -149,10 +149,10 @@ func (g *RamAttack) CanUse() bool {
 	return g.parts()
 }
 
-// CanContinueToUse implements goal.Goal (0x575D830).
+// CanContinueToUse implements goal.Goal (0x550D900).
 func (g *RamAttack) CanContinueToUse() bool { return g.parts() && g.state != ramDone }
 
-// Start implements goal.Goal (0x575DA00).
+// Start implements goal.Goal (0x550DAD0).
 func (g *RamAttack) Start() {
 	g.state = ramDone
 	if g.cfg.OnStart != "" {
@@ -169,7 +169,7 @@ func (g *RamAttack) Start() {
 	g.pathEnd = g.world.CurrentTick() + ramPathTime
 }
 
-// Stop implements goal.Goal (0x575E570).
+// Stop implements goal.Goal (0x550E780).
 func (g *RamAttack) Stop() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -183,7 +183,7 @@ func (g *RamAttack) Stop() {
 	g.rollCooldown()
 }
 
-// initiate is _initiateRamAttack (0x575DB20): find the run-up spots in
+// initiate is _initiateRamAttack (0x550DBF0): find the run-up spots in
 // line with the target and walk to the nearest. Like BDS it drops the
 // mob's target; the goal keeps its own.
 func (g *RamAttack) initiate() bool {
@@ -269,17 +269,14 @@ func (g *RamAttack) pathable(x, y, z float32) bool {
 	return true
 }
 
-// sortSpots orders the spots nearest first; like BDS's sort of four it
-// keeps equal distances in their order.
+// sortSpots orders the spots nearest first with libc++'s std::sort, as
+// BDS does (BDS 1.26.60 _initiateRamAttack 0x550DBF0, sort 0x5515310 on
+// the distance at +12).
 func (g *RamAttack) sortSpots() {
-	for i := 1; i < len(g.spots); i++ {
-		for j := i; j > 0 && g.spots[j-1].dist > g.spots[j].dist; j-- {
-			g.spots[j-1], g.spots[j] = g.spots[j], g.spots[j-1]
-		}
-	}
+	stdSort(g.spots[:], func(a, b ramSpot) bool { return a.dist < b.dist })
 }
 
-// Tick implements goal.Goal (0x575E750).
+// Tick implements goal.Goal (0x550E960).
 func (g *RamAttack) Tick() {
 	t := g.actor(g.target)
 	turn, ok := g.m.MoveControl()
@@ -410,7 +407,7 @@ func (g *RamAttack) impact() {
 }
 
 // blockAhead is the block past the target along the ram's main axis
-// (0x575F390).
+// (0x550F580).
 func (g *RamAttack) blockAhead() Vec3 {
 	p := g.m.Pos()
 	x, z := g.dest.X, g.dest.Z
@@ -429,7 +426,7 @@ func (g *RamAttack) blockAhead() Vec3 {
 	return Vec3{X: x, Y: g.dest.Y, Z: z}
 }
 
-// knock is _tryKnockbackTarget (0x575F470): the first mob in the box the
+// knock is _tryKnockbackTarget (0x550F660): the first mob in the box the
 // ram sweeps is hit and knocked along the ram.
 func (g *RamAttack) knock() {
 	if g.hit {

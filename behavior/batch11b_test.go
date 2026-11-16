@@ -39,6 +39,7 @@ func (m *b11bMob) LootChest(Box) (Pos, bool)    { return Pos{}, false }
 func (m *b11bMob) FollowRange() float32         { return 16 }
 func (m *b11bMob) ResetTreasureTimer()          { m.resets++ }
 func (m *b11bMob) Motion(id ID) Vec3            { return m.motion[id] }
+func (m *b11bMob) LastMove(id ID) Vec3          { return m.motion[id] }
 func (m *b11bMob) Rotation() (float32, float32) { return 0, 0 }
 func (m *b11bMob) SpawnLoot(string, Vec3) bool  { m.loot++; return true }
 func (m *b11bMob) DefaultDigBlock(b Block) bool { return m.defaultOK }
