@@ -110,6 +110,7 @@ func (m *b9Mob) BarterDone()                               { m.barterDone++ }
 func (m *b9Mob) CanPickUpLoot() bool                       { return m.loot2 }
 func (m *b9Mob) HasShareables() bool                       { return true }
 func (m *b9Mob) CanStoreHand() bool                        { return false }
+func (m *b9Mob) EquipPending() bool                        { return false }
 func (m *b9Mob) CanSee(Actor) bool                         { return m.see }
 func (m *b9Mob) PickUp(a Actor, _ PickupFlags)             { m.pickedUp = append(m.pickedUp, a.ID()) }
 func (m *b9Mob) Shareable() bool                           { return m.share }

@@ -16,13 +16,17 @@ type Picker interface {
 	// Admiring is AdmireItemComponent's admiring flag; false without the
 	// component.
 	Admiring() bool
-	// PickupWanted is the candidate test for one item entity (0x57577A0):
-	// not removed, its pickup delay over, wanted by the shareables, and with
-	// AnyItem the hand's stacking rules. Items implements it.
+	// PickupWanted is the candidate test for one item entity (1.26.60
+	// 0x55074E0): not removed, its pickup delay over, wanted by the
+	// shareables, and with SameItems the hand's stacking rules. Items
+	// implements it.
 	PickupWanted(item Actor, f PickupFlags) bool
 	// ItemOf is the stack an item entity holds; ok is false for other
 	// entities.
 	ItemOf(a Actor) (Item, bool)
+	// EquipPending reports equip_item holding a stack it has not put on
+	// yet (EquipItemComponent +152); false without the component.
+	EquipPending() bool
 	// CanSee is the visibility cache test; false without the component.
 	CanSee(a Actor) bool
 	// PickUp takes the item entity the way the goal's tick does once there:
@@ -58,8 +62,10 @@ func DefaultPickupItems() PickupItemsConfig {
 	return PickupItemsConfig{SpeedMultiplier: 1, MaxDist: 1, SearchHeight: 1, GoalRadius: 0.5, ToHandOrEquipment: true}
 }
 
-// PickupItems is PickupItemsGoal: the mob walks to an item on the ground
-// and takes it.
+// PickupItems is PickupItemsGoal (BDS 1.26.60 canUse 0x5506C20,
+// canContinueToUse 0x5507CC0, start 0x5508090, stop 0x5508280, tick
+// 0x5508440, the candidate filter 0x55074E0): the mob walks to an item on
+// the ground and takes it.
 type PickupItems struct {
 	base
 	m      Picker
@@ -80,14 +86,15 @@ func NewPickupItems(w World, m Picker, c PickupItemsConfig) *PickupItems {
 	return &PickupItems{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, r2: c.GoalRadius * c.GoalRadius, target: NoID}
 }
 
-// allowed is the start of canUse and canContinue: the chance roll, the
-// shareables or a place for the hand, not just hurt and not admiring.
+// allowed is the start of canUse and canContinue: the chance roll, then
+// with pickup_same_items_as_in_hand room in the inventory for the hand,
+// otherwise the shareables.
 func (g *PickupItems) allowed() bool {
 	m := g.m
 	if g.cfg.BasedOnChance && !m.CanPickUpLoot() {
 		return false
 	}
-	if g.cfg.AnyItem {
+	if g.cfg.SameItemsAsInHand {
 		if !m.CanStoreHand() {
 			return false
 		}
@@ -129,11 +136,12 @@ func (g *PickupItems) search() {
 	clear(g.buf)
 }
 
-// CanUse implements goal.Goal (0x5756F70).
+// CanUse implements goal.Goal. A stack equip_item has not put on yet
+// blocks it.
 func (g *PickupItems) CanUse() bool {
 	m := g.m
 	n := m.Nav()
-	if !g.allowed() || n == nil || !g.world.MobGriefing() || !g.calm() {
+	if !g.allowed() || n == nil || m.EquipPending() || !g.world.MobGriefing() || !g.calm() {
 		return false
 	}
 	if len(g.queue) == 0 {
@@ -177,7 +185,7 @@ func (g *PickupItems) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5757F50).
+// CanContinueToUse implements goal.Goal.
 func (g *PickupItems) CanContinueToUse() bool {
 	if !g.allowed() || !g.calm() {
 		return false
@@ -190,7 +198,8 @@ func (g *PickupItems) CanContinueToUse() bool {
 	return n == nil || !n.Done()
 }
 
-// Start implements goal.Goal (0x57583B0).
+// Start implements goal.Goal. BDS follows the path canUse made; this
+// paths to the item again, which ends at the same node.
 func (g *PickupItems) Start() {
 	if n, t := g.m.Nav(), g.actor(g.target); n != nil && t != nil {
 		n.MoveToActor(t, g.cfg.SpeedMultiplier)
@@ -201,7 +210,7 @@ func (g *PickupItems) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x57585A0).
+// Stop implements goal.Goal.
 func (g *PickupItems) Stop() {
 	if g.cfg.OnEnd != "" {
 		g.m.Event(g.cfg.OnEnd, NoID)
@@ -213,7 +222,9 @@ func (g *PickupItems) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x5758760): follow the item, then take it.
+// Tick implements goal.Goal: follow the item, then take it. Both repath
+// triggers (track_target's timer, or a seen item and the timer) also need
+// the item to have moved goal_radius from where the last path went.
 func (g *PickupItems) Tick() {
 	t := g.actor(g.target)
 	if t == nil || !t.Alive() {
@@ -226,15 +237,15 @@ func (g *PickupItems) Tick() {
 	d2 := dist2(m.Pos(), q)
 	old := g.timer
 	g.timer--
-	repath := false
+	due := false
 	if g.cfg.TrackTarget {
-		repath = old <= 1 && g.r2 <= dist2(t.Pos(), g.last)
+		due = old <= 1
 	} else {
-		repath = m.CanSee(t) && g.timer <= 0
+		due = m.CanSee(t) && g.timer <= 0
 	}
-	if repath {
+	if due && g.r2 <= dist2(t.Pos(), g.last) {
 		g.last = t.Pos()
-		g.timer = repathTicks(g.world.IRandom(), d2)
+		g.timer = repathTicks(g.world.Random(), d2)
 		if n := m.Nav(); n == nil || !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
 			g.timer += itemRepathFailWait
 		}

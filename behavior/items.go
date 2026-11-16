@@ -129,16 +129,21 @@ func (i *Items) CanStoreHand() bool {
 	return i.Inventory != nil && !h.Empty() && i.Inventory.CanAdd(h)
 }
 
-// PickupWanted is pickup_items' test of one item entity (0x57577A0).
+// EquipPending reports equip_item holding a stack to put on.
+func (i *Items) EquipPending() bool { return i.Equip != nil && i.Equip.Pending }
+
+// PickupWanted is pickup_items' test of one item entity (1.26.60
+// 0x55074E0): the shareables test gets can_pickup_any_item, and
+// pickup_same_items_as_in_hand adds the hand's stacking rules.
 func (i *Items) PickupWanted(a Actor, f PickupFlags) bool {
 	it, ok := i.Body.ItemOf(a)
 	if !ok || a.Removed() || i.Body.PickupDelay(a) > 0 {
 		return false
 	}
-	if i.Shareables != nil && !i.WantsPickup(it, f.SameItems, f.ToHand) {
+	if i.Shareables != nil && !i.WantsPickup(it, f.AnyItem, f.ToHand) {
 		return false
 	}
-	if !f.AnyItem {
+	if !f.SameItems {
 		return true
 	}
 	r := i.Rules
@@ -198,7 +203,7 @@ func (i *Items) PickUp(a Actor, f PickupFlags) {
 		} else {
 			i.addFrom(a, it, n)
 		}
-	case f.AnyItem:
+	case f.SameItems:
 		i.addFrom(a, it, n)
 	default:
 		if h := i.hand(it); !h.Empty() && r.Stacks(h, it) {

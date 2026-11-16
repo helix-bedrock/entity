@@ -231,9 +231,9 @@ func (i *Items) handRoom(it, hand Item, maxAmount int32, singular bool) bool {
 }
 
 // WantsPickup is the shareables test of an item on the ground (0x6D94AC0).
-// sameItems and toHand are pickup_items' pickup_same_items_as_in_hand and
-// can_pickup_to_hand_or_equipment.
-func (i *Items) WantsPickup(it Item, sameItems, toHand bool) bool {
+// anyItem and toHand are pickup_items' can_pickup_any_item and
+// can_pickup_to_hand_or_equipment (1.26.60 passes them to 0x715C200).
+func (i *Items) WantsPickup(it Item, anyItem, toHand bool) bool {
 	s, r := i.Shareables, i.Rules
 	if s == nil {
 		return false
@@ -244,7 +244,7 @@ func (i *Items) WantsPickup(it Item, sameItems, toHand bool) bool {
 	if e != nil {
 		maxAmount, consume = e.MaxAmount, e.ConsumeItem
 	}
-	if !i.Body.CanPickUpItem(one) || !sameItems && e == nil && !s.AllItems {
+	if !i.Body.CanPickUpItem(one) || !anyItem && e == nil && !s.AllItems {
 		return false
 	}
 	store := i.Inventory != nil && i.storeRoute(one, toHand)
@@ -288,16 +288,16 @@ func (i *Items) WantsPickup(it Item, sameItems, toHand bool) bool {
 	}
 	switch {
 	case worn:
-		return i.better(i.Body.Armor(slot), one, sameItems)
+		return i.better(i.Body.Armor(slot), one, anyItem)
 	case store:
 		for k := range i.Inventory.Size() {
-			if i.better(i.Inventory.Slot(k), one, sameItems) {
+			if i.better(i.Inventory.Slot(k), one, anyItem) {
 				return true
 			}
 		}
 		return false
 	}
-	return i.better(i.hand(it), one, sameItems)
+	return i.better(i.hand(it), one, anyItem)
 }
 
 // pickupCount is how many of the item entity's stack the mob takes
