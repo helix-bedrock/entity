@@ -43,28 +43,29 @@ type Celebrate struct {
 	jumpIn, soundIn, ran int32
 }
 
-// NewCelebrate makes the goal (0x5764710).
+// NewCelebrate makes the goal. The timers draw from the thread random.
 func NewCelebrate(w World, m Celebrator, c CelebrateConfig) *Celebrate {
 	return &Celebrate{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x575CA00): only without a live target.
+// CanUse implements goal.Goal (BDS 1.26.60 0x550CAF0): only without a live
+// target.
 func (g *Celebrate) CanUse() bool {
 	return g.m.HasJumpControl() && g.actor(g.mob.Target()) == nil
 }
 
-// CanContinueToUse implements goal.Goal (0x575D0E0).
+// CanContinueToUse implements goal.Goal (0x550D1D0).
 func (g *Celebrate) CanContinueToUse() bool { return g.ran < int32(g.cfg.Duration*ticksPerSecond) }
 
-// Start implements goal.Goal (0x575CAE0).
+// Start implements goal.Goal (0x550CBD0).
 func (g *Celebrate) Start() {
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	g.soundIn = intervalTicks(r, g.cfg.SoundInterval)
 	g.jumpIn = intervalTicks(r, g.cfg.JumpInterval)
 	g.mob.SetFlag(FlagCelebrating, true)
 }
 
-// Stop implements goal.Goal (0x575D100).
+// Stop implements goal.Goal (0x550D1F0).
 func (g *Celebrate) Stop() {
 	g.mob.SetFlag(FlagCelebrating, false)
 	for _, e := range g.cfg.OnCelebrationEndEvent {
@@ -72,9 +73,9 @@ func (g *Celebrate) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x575CD00).
+// Tick implements goal.Goal (0x550CDF0).
 func (g *Celebrate) Tick() {
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	sound := g.soundIn
 	g.jumpIn--
 	g.soundIn--

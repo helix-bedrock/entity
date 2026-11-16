@@ -2,7 +2,6 @@ package behavior
 
 import (
 	"cmp"
-	"slices"
 
 	"github.com/helix-bedrock/entity/goal"
 	"github.com/helix-bedrock/entity/path"
@@ -93,7 +92,9 @@ func (g *moveTo) init(w World, m Mob, c MoveToConfig, flags goal.Flags, h moveTo
 		interval: moveToInterval, hooks: h, offset: Vec3{Y: 1}, repath: moveToRepath, restTime: moveToCooldown * ticksPerSecond, maxStay: moveToMaxStay}
 }
 
-// canStart is the base canUse (0x48C86F0) without findTargetBlock.
+// canStart is the base canUse (BDS 1.26.60 0x4A81950) without
+// findTargetBlock. The interval and the chance both draw from the thread
+// random.
 func (g *moveTo) canStart() bool {
 	if g.cooldown != 0 {
 		g.cooldown--
@@ -106,11 +107,12 @@ func (g *moveTo) canStart() bool {
 		g.nextStart--
 		return false
 	}
-	g.nextStart = g.interval + g.world.Random().NextInt(g.interval)
-	return moveToChance >= g.world.Random().NextFloat()
+	t := g.world.ThreadRandom()
+	g.nextStart = g.interval + t.NextInt(g.interval)
+	return moveToChance >= t.NextFloat()
 }
 
-// keep is the base canContinue (0x48C8800).
+// keep is BaseMoveToBlockGoal's canContinue (0x4A81A60).
 func (g *moveTo) keep() bool {
 	if n := g.mob.Nav(); n != nil {
 		if end, ok := n.PathEnd(); ok && dist2(vecOf(end), g.targetPos()) > g.radius2 {
@@ -120,7 +122,7 @@ func (g *moveTo) keep() bool {
 	return g.keepLite()
 }
 
-// keepLite is the base canContinue without the path end check (0x48C8A40).
+// keepLite is BaseMoveToGoal's canContinue (0x4A81CB0): no path end check.
 func (g *moveTo) keepLite() bool {
 	if g.cooldown != 0 || g.stay > g.maxStay || g.tries > moveToGiveUp {
 		return false
@@ -184,7 +186,7 @@ func (g *moveTo) Stop() {
 	g.tries = 0
 }
 
-// Tick implements goal.Goal (0x48C9340).
+// Tick implements goal.Goal (0x4A825F0).
 func (g *moveTo) Tick() {
 	t := g.targetPos()
 	p, b := g.mob.Pos(), g.mob.Box()
@@ -204,7 +206,7 @@ func (g *moveTo) Tick() {
 	}
 }
 
-// stuck is the path check after a repath (0x721A5E0): the path starts
+// stuck is the path check after a repath (0x75147C0): the path starts
 // where the last one did.
 func (g *moveTo) stuck() bool {
 	n := g.mob.Nav()
@@ -242,7 +244,9 @@ var (
 	DefaultMoveToLiquid = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo(), Material: materialAny}
 )
 
-// MoveToLiquid is MoveToLiquidGoal, which move_to_water and move_to_lava
+// MoveToLiquid is MoveToLiquidGoal (BDS 1.26.60 canUse 0x543A860,
+// canContinueToUse 0x543A970; start 0x4A82450, stop 0x4A824E0 and tick are
+// BaseMoveToGoal's), which move_to_water and move_to_lava
 // also use: a mob out of the liquid walks to the nearest spot where it can
 // stand in it with air above.
 type MoveToLiquid struct {
@@ -272,7 +276,7 @@ func (g *MoveToLiquid) CanUse() bool { return g.outside() && g.canStart() && g.f
 // CanContinueToUse implements goal.Goal.
 func (g *MoveToLiquid) CanContinueToUse() bool { return g.outside() && g.keep() }
 
-// valid is the goal's isValidTarget (0x5278CA0): the liquid one up over the
+// valid is the goal's isValidTarget (0x543AA70): the liquid one up over the
 // mob's width, with air above it.
 func (g *MoveToLiquid) valid(p Pos) bool {
 	b := g.mob.Box()
@@ -291,16 +295,17 @@ func (g *MoveToLiquid) valid(p Pos) bool {
 	return true
 }
 
-// matches is the search predicate (0x527CD80).
+// matches is the search predicate (0x543ECC0).
 func (g *MoveToLiquid) matches(b Block) bool {
 	return g.material == materialAny || b.Material == g.material
 }
 
-// find is the goal's findTargetBlock (0x5278E00): the nearest block of the
-// liquid that is valid and reachable.
+// find is the goal's findTargetBlock (0x543ABD0): the nearest block of the
+// liquid that is valid and reachable. Hits at the same distance stay in
+// the order libc++'s std::sort leaves them.
 func (g *MoveToLiquid) find() bool {
 	g.hits = searchBlocks(g.hits[:0], g.world, blockOf(g.mob.Pos()), g.cfg.SearchRange, g.cfg.SearchHeight, g)
-	slices.SortStableFunc(g.hits, byDist)
+	stdSort(g.hits, nearerHit)
 	for _, h := range g.hits {
 		if g.valid(h.pos) && g.reachable(h.pos) {
 			g.target = h.pos
@@ -312,6 +317,9 @@ func (g *MoveToLiquid) find() bool {
 
 // byDist orders search hits nearest first.
 func byDist(a, b blockHit) int { return cmp.Compare(a.dist, b.dist) }
+
+// nearerHit is byDist as a less function.
+func nearerHit(a, b blockHit) bool { return a.dist < b.dist }
 
 // MoveToLand is MoveToLandGoal: a mob in water walks to solid ground with
 // air above.

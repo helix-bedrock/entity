@@ -14,6 +14,7 @@ func newVWorld(r *seqRandom) *vWorld {
 }
 
 func (w *vWorld) HeightMap(_, _ int32) int32  { return 64 }
+func (w *vWorld) AboveTopSolidAt(Pos) int32   { return 64 }
 func (w *vWorld) SkyVisible(Pos) bool         { return w.sky }
 func (w *vWorld) MobGriefing() bool           { return true }
 func (w *vWorld) Players(dst []Actor) []Actor { return append(dst, w.players...) }

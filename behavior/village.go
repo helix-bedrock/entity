@@ -55,7 +55,7 @@ func (g *moveToVillage) initVillage(w World, d Dweller, c MoveToVillageConfig, h
 
 func (g *moveToVillage) village() (Box, bool) { return g.d.Village(g.search) }
 
-// canUseVillage is canUse (0x527AAB0).
+// canUseVillage is canUse (BDS 1.26.60 0x543C8E0).
 func (g *moveToVillage) canUseVillage() bool {
 	if !g.canStart() {
 		return false
@@ -64,7 +64,7 @@ func (g *moveToVillage) canUseVillage() bool {
 	return ok && !inBounds(b, g.mob.Pos())
 }
 
-// valid is isValidTarget (0x527B710): the target is in the village.
+// valid is isValidTarget (0x543D560): the target is in the village.
 func (g *moveToVillage) valid(p Pos) bool {
 	b, ok := g.village()
 	return ok && inBounds(b, vecOf(p))
@@ -76,36 +76,38 @@ func (g *moveToVillage) reachable(p Pos) bool { return g.moveTo.reachable(p) }
 // find is unused: start picks the target.
 func (g *moveToVillage) find() bool { return false }
 
-// pick is findTarget (0x527B170): a random point of the village on the
-// ground.
+// pick is _selectRandomPosInVillage (0x543CFC0): a random point of the
+// village, x then z then y from the thread random, raised to the ground
+// from that y.
 func (g *moveToVillage) pick() Vec3 {
 	b, ok := g.village()
 	if !ok {
 		return Vec3{}
 	}
-	r := g.world.Random()
+	r := g.world.ThreadRandom()
 	x := randomInt(r, int32(b.Min.X), int32(b.Max.X))
 	z := randomInt(r, int32(b.Min.Z), int32(b.Max.Z))
-	randomInt(r, int32(b.Min.Y), int32(b.Max.Y))
-	return Vec3{X: float32(x), Y: float32(g.world.HeightMap(x, z)), Z: float32(z)}
+	y := randomInt(r, int32(b.Min.Y), int32(b.Max.Y))
+	return Vec3{X: float32(x), Y: float32(g.world.AboveTopSolidAt(Pos{X: x, Y: y, Z: z})), Z: float32(z)}
 }
 
-// moveToBlock is moveMobToBlock (0x527AEE0): one stride of the follow
-// range toward the target, on the ground.
+// moveToBlock is moveMobToBlock (0x543CD30): one stride of the follow
+// range toward the target, raised to the ground from the stride's end.
 func (g *moveToVillage) moveToBlock() {
 	p := g.mob.Pos()
 	d := scale(normalize(sub(g.aim, p)), g.mob.FollowRange()*villageStride)
 	at := add(p, d)
-	at.Y = float32(g.world.HeightMap(floorInt(at.X), floorInt(at.Z)))
+	at.Y = float32(g.world.AboveTopSolidAt(blockOf(at)))
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(at, g.cfg.SpeedMultiplier)
 	}
 }
 
-// Start implements goal.Goal (0x527AA80).
+// Start implements goal.Goal (0x543C8B0).
 func (g *moveToVillage) Start() { g.aim = g.picker.pick() }
 
-// CanContinueToUse implements goal.Goal (0x527B550).
+// CanContinueToUse implements goal.Goal (0x543D3A0). The near test is
+// against the floored target point, offset included.
 func (g *moveToVillage) CanContinueToUse() bool {
 	if !g.keepLite() {
 		return false
@@ -114,7 +116,7 @@ func (g *moveToVillage) CanContinueToUse() bool {
 	if !ok {
 		return false
 	}
-	t := g.targetBlock()
+	t := blockOf(g.targetPos())
 	c := Vec3{X: float32(t.X) + 0.5, Y: float32(t.Y) + 0.5, Z: float32(t.Z) + 0.5}
 	if g.radius2+g.radius2 > dist2(c, g.mob.Pos()) {
 		return g.entered && !inBounds(b, g.mob.Pos())
@@ -122,7 +124,7 @@ func (g *moveToVillage) CanContinueToUse() bool {
 	return true
 }
 
-// Tick implements goal.Goal (0x527ADF0).
+// Tick implements goal.Goal (0x543CC40).
 func (g *moveToVillage) Tick() {
 	g.moveTo.Tick()
 	if pathNear(g.mob, g.radius2) {
@@ -135,7 +137,7 @@ func (g *moveToVillage) Tick() {
 	}
 }
 
-// pathNear is 0x721A450: the path is done, or its end is within r of the
+// pathNear is 0x7514630: the path is done, or its end is within r of the
 // mob.
 func pathNear(m Mob, r float32) bool {
 	n := m.Nav()
@@ -156,10 +158,12 @@ func pathNear(m Mob, r float32) bool {
 // MoveToVillage is MoveToVillageGoal.
 type MoveToVillage struct{ moveToVillage }
 
-// NewMoveToVillage makes the goal (0x52B45D0).
+// NewMoveToVillage makes the goal (0x5476470). Its target point is
+// BaseMoveToGoal's: the aim plus the offset one block up.
 func NewMoveToVillage(w World, d Dweller, c MoveToVillageConfig) *MoveToVillage {
 	g := &MoveToVillage{}
 	g.initVillage(w, d, c, g, g)
+	g.aimOffset = true
 	return g
 }
 
