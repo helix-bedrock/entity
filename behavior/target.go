@@ -10,6 +10,9 @@ const (
 	minArmourSeen  = 0.1
 	flagSneaking   = 1
 	flagInvisible  = 5
+	// flagHiddenWhenInvisible is the actor flag BDS checks, with the
+	// invisibility itself, before invisibility shortens the range.
+	flagHiddenWhenInvisible = 89
 )
 
 // reach is the cached must_reach answer.
@@ -25,7 +28,13 @@ const (
 type EntityType struct {
 	Filters Filter
 	MaxDist float32 `json:"max_dist"`
-	MustSee bool    `json:"must_see"`
+	// MaxHeight is max_height, the entry's height limit; below 0 there is
+	// none.
+	MaxHeight float32 `json:"max_height"`
+	MustSee   bool    `json:"must_see"`
+	// Reevaluate is reevaluate_description: while a target matched by this
+	// entry is kept, the entries are checked again every tick.
+	Reevaluate bool `json:"reevaluate_description"`
 	// MustSeeForget is must_see_forget_duration in ticks.
 	MustSeeForget int32
 	// Cooldown is the ticks before the same entry may pick again.
@@ -173,47 +182,66 @@ func (t *target) keepCheck(a Actor) bool {
 	return !(a.IsPlayer() && a.Invulnerable())
 }
 
-// rangeScale is the sneak, invisibility and mob head scale of an entry's
-// range.
-func rangeScale(m Mob, a Actor, v visibility) float32 {
+// SeesInvisible is a mob with CanSeeInvisibleFlagComponent: invisibility
+// does not shorten its target ranges.
+type SeesInvisible interface {
+	CanSeeInvisible() bool
+}
+
+// visibilityScale is the sneak and invisibility scale of an entry's range
+// and height.
+func visibilityScale(m Mob, a Actor, v visibility) float32 {
 	s := float32(1)
 	if a.Flag(flagSneaking) {
 		s = v.sneak
 	}
-	if a.Flag(flagInvisible) {
-		s *= max32(minArmourSeen, a.ArmourCoverage()) * v.invisible
-	}
-	if a.IsPlayer() && a.WearsHeadOf(m.Type()) {
-		s *= headRangeScale
+	if a.Flag(flagHiddenWhenInvisible) && a.Flag(flagInvisible) {
+		if si, ok := m.(SeesInvisible); !ok || !si.CanSeeInvisible() {
+			s *= max32(minArmourSeen, a.ArmourCoverage()) * v.invisible
+		}
 	}
 	return s
 }
 
-// inRange is the distance check of 1.3 F.
-func inRange(m Mob, a Actor, e *EntityType, v visibility, searchHeight float32) bool {
-	s := rangeScale(m, a, v)
-	r := e.MaxDist * s
-	if dist2(m.Pos(), a.Pos()) > r*r {
+// inRange is the entry range check (1.26.60 0xBF31000): the distance within
+// maxDist and the height difference within maxHeight, both scaled by
+// sneaking and invisibility; a player wearing the mob's head halves the
+// distance only. A negative limit is no limit.
+func inRange(m Mob, a Actor, maxDist, maxHeight float32, v visibility) bool {
+	s := visibilityScale(m, a, v)
+	r := maxDist
+	if a.IsPlayer() && a.WearsHeadOf(m.Type()) {
+		r *= headRangeScale
+	}
+	if r >= 0 && (r*s)*(r*s) < dist2(m.Pos(), a.Pos()) {
 		return false
 	}
-	return searchHeight < 0 || abs32(a.Pos().Y-m.Pos().Y) <= searchHeight*s
+	return maxHeight < 0 || maxHeight*s >= abs32(a.Pos().Y-m.Pos().Y)
 }
 
 // NearestAttackableConfig is the JSON of
 // minecraft:behavior.nearest_attackable_target.
 type NearestAttackableConfig struct {
 	EntityTypes []EntityType
-	// ScanInterval and RandomInterval are scan_interval and
-	// attack_interval in ticks.
+	// ScanInterval is scan_interval in ticks. RandomInterval is the larger
+	// end of attack_interval in ticks (BDS reads it in seconds); above 0 it
+	// replaces the scan with one chance in RandomInterval each tick.
 	ScanInterval, RandomInterval int32
-	// Probability is the acquisition chance; 1 always looks.
-	Probability        float32
-	WithinRadius       float32 `json:"within_radius"`
+	// Probability is target_acquisition_probability; 1 always looks.
+	Probability float32
+	// WithinRadius is within_radius. BDS keeps it as the goal's default
+	// follow distance; nearest_attackable_target does not use it.
+	WithinRadius float32 `json:"within_radius"`
+	// TargetSearchHeight is target_search_height: the scan box grows by it
+	// on x (BDS's order), or by the largest max_dist when below 0.
 	TargetSearchHeight float32 `json:"target_search_height"`
 	MustSee            bool    `json:"must_see"`
 	MustReach          bool    `json:"must_reach"`
 	// MustSeeForget is must_see_forget_duration in ticks.
-	MustSeeForget   int32
+	MustSeeForget int32
+	// PersistTime is persist_time in ticks: how long the target is kept
+	// after it stops matching every entry.
+	PersistTime     int32
 	SetPersistent   bool `json:"set_persistent"`
 	ReselectTargets bool `json:"reselect_targets"`
 	AttackOwner     bool `json:"attack_owner"`
@@ -225,7 +253,7 @@ type NearestAttackableConfig struct {
 // DefaultNearestAttackable returns the goal's BDS defaults.
 func DefaultNearestAttackable() NearestAttackableConfig {
 	return NearestAttackableConfig{
-		ScanInterval: 10, Probability: 1, WithinRadius: -1, TargetSearchHeight: -1, MustSeeForget: 60,
+		ScanInterval: 10, Probability: 1, WithinRadius: 16, TargetSearchHeight: -1, MustSeeForget: 60,
 		SneakMultiplier: 0.8, InvisibleMultiplier: 0.7,
 	}
 }
@@ -234,15 +262,30 @@ func (g *NearestAttackable) vis() visibility {
 	return visibility{sneak: g.cfg.SneakMultiplier, invisible: g.cfg.InvisibleMultiplier}
 }
 
-// NearestAttackable is NearestAttackableTargetGoal: it picks the nearest
-// entity that passes every check as the mob's target.
+// NearestAttackable is NearestAttackableTargetGoal (BDS 1.26.60 canUse
+// 0xBF2FFE0, canContinueToUse 0xBF30920, start 0xBF2FAD0, _findTarget
+// 0xBF313F0, the entry match 0xBF31DC0; stop is TargetGoal's, empty): it
+// picks the nearest entity that passes every check as the mob's target.
 type NearestAttackable struct {
 	target
-	cfg      NearestAttackableConfig
+	cfg NearestAttackableConfig
+	// entry is the entity_types entry of the last search's pick, -1 for
+	// none.
 	entry    int
 	cooldown []uint64
 	cand     []Actor
 	sorted   []near
+	// globalMustSee and globalForget are the goal's must_see and
+	// must_see_forget_duration; target.mustSee and target.forget hold the
+	// ones of the entry the last match took.
+	globalMustSee bool
+	globalForget  int32
+	// failing and failTicks are TargetGoal's filter failure: the current
+	// target stopped matching and is kept for persist_time.
+	failing   bool
+	failTicks int32
+	// reevaluate is set by an entry with reevaluate_description.
+	reevaluate bool
 	// prioritized makes the search pick by entry priority
 	// (NearestPrioritizedAttackableTargetGoal).
 	prioritized bool
@@ -252,12 +295,13 @@ type NearestAttackable struct {
 func NewNearestAttackable(w World, m Targeter, c NearestAttackableConfig) *NearestAttackable {
 	return &NearestAttackable{
 		target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m, attackOwner: c.AttackOwner,
-			mustReach: c.MustReach, mustSee: c.MustSee, forget: c.MustSeeForget},
+			mustReach: c.MustReach},
 		cfg: c, entry: -1, cooldown: make([]uint64, len(c.EntityTypes)),
+		globalMustSee: c.MustSee, globalForget: c.MustSeeForget,
 	}
 }
 
-// maxDist is the largest max_dist of the entries.
+// maxDist is the largest max_dist of the entries, at least 0.
 func (g *NearestAttackable) maxDist() float32 {
 	var d float32
 	for i := range g.cfg.EntityTypes {
@@ -266,40 +310,79 @@ func (g *NearestAttackable) maxDist() float32 {
 	return d
 }
 
-// match returns the matching entry with the largest max_dist, or -1.
-func (g *NearestAttackable) match(a Actor) int {
-	best := -1
+// match is the entry match: the entry index taken (-1 for none) and
+// whether the candidate passes. An entry with must_see sets the goal's
+// must_see from itself; otherwise mustSee (the goal's own) is checked.
+func (g *NearestAttackable) match(a Actor, mustSee bool) (int, bool) {
+	current := a.ID() == g.m.Target() && g.unseen < g.forget
+	best, taken := g.matchEntries(a, current)
+	if len(g.cfg.EntityTypes) != 0 && best < 0 {
+		if a.ID() == g.m.Target() {
+			g.failing = true
+			return -1, g.failTicks < g.cfg.PersistTime
+		}
+		return -1, false
+	}
+	if best >= 0 {
+		g.failing, g.failTicks = false, 0
+		if taken {
+			return best, true
+		}
+	}
+	if mustSee && !current && !g.m.CanSee(a) {
+		return best, false
+	}
+	g.mustSee, g.forget = mustSee, g.globalForget
+	return best, true
+}
+
+// matchEntries walks the entries: the one with the largest max_dist wins,
+// except that while reevaluating the first entry without
+// reevaluate_description does. taken reports a winner with must_see.
+func (g *NearestAttackable) matchEntries(a Actor, current bool) (best int, taken bool) {
+	best = -1
+	var bestDist float32
 	d2 := dist2(g.m.Pos(), a.Pos())
 	for i := range g.cfg.EntityTypes {
 		e := &g.cfg.EntityTypes[i]
-		if d2 > e.MaxDist*e.MaxDist {
+		if !(d2 < e.MaxDist*e.MaxDist) {
 			continue
 		}
-		if e.MustSee && !(a.ID() == g.m.Target() && g.unseen < e.MustSeeForget) && !g.m.CanSee(a) {
+		if !current && e.MustSee && !g.m.CanSee(a) {
 			continue
 		}
 		if e.Filters != nil && !e.Filters(g.m, a) {
 			continue
 		}
-		if best < 0 || e.MaxDist > g.cfg.EntityTypes[best].MaxDist {
-			best = i
+		switch {
+		case g.reevaluate && !e.Reevaluate:
+			g.reevaluate = false
+		case e.MaxDist > bestDist:
+			g.reevaluate = e.Reevaluate
+		default:
+			continue
+		}
+		best, bestDist = i, e.MaxDist
+		if e.MustSee {
+			g.mustSee, g.forget, taken = true, e.MustSeeForget, true
 		}
 	}
-	return best
+	return best, taken
 }
 
-// search runs the scan of 1.2 and 1.3 and returns the winner.
-func (g *NearestAttackable) search() (Actor, int) {
+// candidates fills g.sorted with the entities in the scan box, nearest
+// first. The box grows by the search height on x and by the largest
+// max_dist on y and z, as BDS builds it.
+func (g *NearestAttackable) candidates() {
 	r := g.maxDist()
-	y := r
-	if g.cfg.WithinRadius >= 0 {
-		y = g.cfg.WithinRadius
+	x := r
+	if g.cfg.TargetSearchHeight >= 0 {
+		x = g.cfg.TargetSearchHeight
 	}
 	b := g.m.Box()
-	b.Min = Vec3{X: b.Min.X - r, Y: b.Min.Y - y, Z: b.Min.Z - r}
-	b.Max = Vec3{X: b.Max.X + r, Y: b.Max.Y + y, Z: b.Max.Z + r}
+	b.Min = Vec3{X: b.Min.X - x, Y: b.Min.Y - r, Z: b.Min.Z - r}
+	b.Max = Vec3{X: b.Max.X + x, Y: b.Max.Y + r, Z: b.Max.Z + r}
 	g.cand = g.world.Entities(g.cand[:0], g.m.ID(), b)
-	defer clear(g.cand)
 	if len(g.cand) > maxCandidates {
 		g.cand = g.cand[:maxCandidates]
 	}
@@ -308,57 +391,89 @@ func (g *NearestAttackable) search() (Actor, int) {
 	for _, a := range g.cand {
 		g.sorted = append(g.sorted, near{a: a, d2: dist2(p, a.Pos())})
 	}
+	clear(g.cand)
 	sortNear(g.sorted)
+}
+
+// passes is the per-candidate test of the search: it can be attacked,
+// matches, can be reached, has health, is off its entry's cooldown and
+// within its entry's range. It returns the entry.
+func (g *NearestAttackable) passes(a Actor, now uint64) (int, bool) {
+	if !g.canAttack(a) {
+		return -1, false
+	}
+	i, ok := g.match(a, g.globalMustSee)
+	if !ok || g.mustReach && !g.canReach(a) || !a.HasHealth() {
+		return -1, false
+	}
+	if i >= 0 {
+		e := &g.cfg.EntityTypes[i]
+		if e.Cooldown > 0 && now < g.cooldown[i] {
+			return -1, false
+		}
+		if !inRange(g.m, a, e.MaxDist, e.MaxHeight, g.vis()) {
+			return -1, false
+		}
+	}
+	return i, true
+}
+
+// search is _findTarget: the first candidate, nearest first, that passes.
+// The prioritized goal takes the lowest priority instead of the first.
+func (g *NearestAttackable) search() (Actor, int) {
+	g.candidates()
 	defer clear(g.sorted)
 	now := g.world.CurrentTick()
 	var best Actor
 	pick := -1
 	for _, c := range g.sorted {
-		a := c.a
-		if !g.canAttack(a) {
-			continue
-		}
-		i := g.match(a)
-		if i < 0 {
-			continue
-		}
-		if g.mustReach && !g.canReach(a) {
-			continue
-		}
-		if !a.HasHealth() || now < g.cooldown[i] {
-			continue
-		}
-		if !inRange(g.m, a, &g.cfg.EntityTypes[i], g.vis(), g.cfg.TargetSearchHeight) {
+		i, ok := g.passes(c.a, now)
+		if !ok {
 			continue
 		}
 		if !g.prioritized {
-			return a, i
+			if i >= 0 && g.cfg.SetPersistent {
+				g.m.SetPersistent()
+			}
+			return c.a, i
 		}
-		if pick < 0 || g.cfg.EntityTypes[i].Priority < g.cfg.EntityTypes[pick].Priority {
-			best, pick = a, i
+		if best == nil || i >= 0 && (pick < 0 || g.cfg.EntityTypes[i].Priority < g.cfg.EntityTypes[pick].Priority) {
+			best, pick = c.a, i
 		}
+	}
+	if best != nil && g.cfg.SetPersistent && best.IsPlayer() {
+		// The prioritized search only makes the mob persistent for players.
+		g.m.SetPersistent()
 	}
 	return best, pick
 }
 
-func (g *NearestAttackable) pick(a Actor, i int) {
-	// The prioritized search only makes the mob persistent for players.
-	if g.cfg.SetPersistent && (!g.prioritized || a.IsPlayer()) {
-		g.m.SetPersistent()
+// find is the acquisition roll and the search: it keeps the pick for start
+// and starts its entry's cooldown.
+func (g *NearestAttackable) find() bool {
+	if g.cfg.Probability < 1 && g.world.Random().NextFloat() >= g.cfg.Probability {
+		return false
 	}
-	g.candidate = a.ID()
-	g.entry, g.unseen = i, 0
-	g.cooldown[i] = g.world.CurrentTick() + uint64(max(g.cfg.EntityTypes[i].Cooldown, 0))
+	a, i := g.search()
+	g.candidate, g.entry = NoID, i
+	if a != nil {
+		g.candidate = a.ID()
+	}
+	if i >= 0 {
+		g.cooldown[i] = g.world.CurrentTick() + uint64(max(g.cfg.EntityTypes[i].Cooldown, 0))
+	}
+	return a != nil
 }
 
-// due is the scan timing of canUse: one chance in attack_interval, or every
-// scan_interval ticks.
-func (g *NearestAttackable) due() bool {
+// scanDue is the scan timing: with attack_interval one chance in it each
+// tick (the thread random), else every scan_interval ticks by the mob's
+// unique ID.
+func (g *NearestAttackable) scanDue() bool {
 	if g.cfg.RandomInterval > 0 {
-		return g.world.Random().NextInt(g.cfg.RandomInterval) == 0
+		return g.world.ThreadRandom().NextInt(g.cfg.RandomInterval) == 0
 	}
 	s := uint64(max(g.cfg.ScanInterval, 1))
-	return (g.m.RuntimeID()+g.world.CurrentTick())%s == 0
+	return (uint64(g.m.ID())+g.world.CurrentTick())%s == 0
 }
 
 // CanUse implements goal.Goal.
@@ -366,20 +481,12 @@ func (g *NearestAttackable) CanUse() bool {
 	if g.m.Admiring() {
 		return g.no("admiring an item")
 	}
-	if len(g.cfg.EntityTypes) == 0 {
-		return g.no("no entity_types")
-	}
-	if !g.due() {
+	if !g.scanDue() {
 		return g.no("not a scan tick")
 	}
-	if g.cfg.Probability < 1 && g.world.Random().NextFloat() >= g.cfg.Probability {
-		return g.no("probability roll failed")
-	}
-	a, i := g.search()
-	if a == nil {
+	if !g.find() {
 		return g.no("no candidate in range that passes the filters")
 	}
-	g.pick(a, i)
 	return true
 }
 
@@ -392,33 +499,59 @@ func (g *NearestAttackable) CanContinueToUse() bool {
 	if !g.keep(a) {
 		return false
 	}
-	if g.entry >= 0 && !inRange(g.m, a, &g.cfg.EntityTypes[g.entry], g.vis(), g.cfg.TargetSearchHeight) {
-		// 0xBF30920: out of the entry's range clears the target here.
+	if g.reevaluate {
+		if _, ok := g.match(a, g.mustSee); !ok {
+			g.m.SetTarget(NoID)
+			return false
+		}
+	}
+	if !g.pickInRange() {
 		g.m.SetTarget(NoID)
 		return false
 	}
-	if g.cfg.ReselectTargets {
-		if b, i := g.search(); b != nil && b.ID() != a.ID() {
-			g.pick(b, i)
-			g.m.SetTarget(b.ID())
-		}
+	if !g.cfg.ReselectTargets {
+		return true
+	}
+	if g.find() {
+		g.m.SetTarget(g.candidate)
+		return true
+	}
+	if !g.mustSee || g.unseen > g.forget {
+		g.m.SetTarget(NoID)
+		return false
 	}
 	return true
 }
 
-// Start implements goal.Goal: the mob takes the target canUse picked (1.26.60 0xBF2FAD0).
+// pickInRange checks the last pick against its entry's range, when there
+// is one.
+func (g *NearestAttackable) pickInRange() bool {
+	if g.candidate == NoID || g.entry < 0 {
+		return true
+	}
+	e := &g.cfg.EntityTypes[g.entry]
+	c := g.actor(g.candidate)
+	return c != nil && inRange(g.m, c, e.MaxDist, e.MaxHeight, g.vis())
+}
+
+// Start implements goal.Goal: the mob takes the target the search picked.
 func (g *NearestAttackable) Start() {
 	if a := g.actor(g.candidate); a != nil {
 		g.m.SetTarget(a.ID())
 	}
 }
 
-// Stop implements goal.Goal. BDS's stop is empty (0xBF321A0): the target stays, so a
-// goal of better priority taking over keeps the target the mob had.
-func (g *NearestAttackable) Stop() { g.entry = -1 }
+// Stop implements goal.Goal. BDS's stop is empty (0xBF321A0): the target
+// stays, so a goal of better priority taking over keeps the target.
+func (g *NearestAttackable) Stop() {}
 
-// Tick implements goal.Goal.
-func (g *NearestAttackable) Tick() {}
+// Tick implements goal.Goal: TargetGoal's tick counts the ticks the target
+// has failed its filters.
+func (g *NearestAttackable) Tick() {
+	if g.failing {
+		g.failTicks++
+	}
+}
 
 // HurtByConfig is the JSON of minecraft:behavior.hurt_by_target.
 type HurtByConfig struct {

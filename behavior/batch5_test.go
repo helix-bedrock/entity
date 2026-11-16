@@ -366,6 +366,7 @@ func TestNearestPrioritizedPicksLowestPriority(t *testing.T) {
 	far := newB5Mob(w, 3, Vec3{X: 5}, "minecraft:player")
 	w.entities = []Actor{m, near, far}
 	c := DefaultNearestAttackable()
+	c.ScanInterval = 1 // the scan runs on (unique ID + tick) % scan_interval
 	c.EntityTypes = []EntityType{
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:zombie" }, MaxDist: 16, Priority: 1},
 		{Filters: func(_ Mob, o Actor) bool { return o.Type() == "minecraft:player" }, MaxDist: 16, Priority: 0},
@@ -387,6 +388,7 @@ func TestDefendTrusted(t *testing.T) {
 	w.entities = []Actor{fox, friend, wolf}
 	c := DefaultDefendTrusted()
 	c.OnDefendStart, c.AggroSound = "defend", 7
+	c.ScanInterval = 1
 	g := NewDefendTrusted(w, fox, c)
 	if g.CanUse() {
 		t.Fatal("started without a TrustComponent")

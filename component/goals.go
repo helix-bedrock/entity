@@ -102,11 +102,12 @@ func readNearest(c *Context, j Object, cfg *behavior.NearestAttackableConfig) {
 	cfg.EntityTypes = c.EntityTypes(j, "entity_types")
 	cfg.ScanInterval = c.Int(j, "scan_interval", cfg.ScanInterval)
 	if lo, hi, ok := rangeOf(j["attack_interval"]); ok && j.Has("attack_interval") {
-		// A number, or the {"min", "max"} form of files written back out of
-		// BDS; the goal keeps one interval, so the larger end is used.
-		cfg.RandomInterval = int32(max(lo, hi))
+		// A number or a {"min", "max"} range in seconds; BDS keeps it in
+		// ticks (x20, truncated) and its scan uses the larger end.
+		cfg.RandomInterval = int32(float32(max(lo, hi)) * ticksPerSecond)
 	}
-	cfg.Probability = c.Float(j, "persist_time", cfg.Probability)
+	cfg.Probability = c.Float(j, "target_acquisition_probability", cfg.Probability)
+	cfg.PersistTime = c.Ticks(j, "persist_time", cfg.PersistTime)
 	cfg.MustSeeForget = c.Ticks(j, "must_see_forget_duration", cfg.MustSeeForget)
 	cfg.SneakMultiplier = c.Float(j, "target_sneak_visibility_multiplier", cfg.SneakMultiplier)
 	cfg.InvisibleMultiplier = c.Float(j, "target_invisible_multiplier", cfg.InvisibleMultiplier)

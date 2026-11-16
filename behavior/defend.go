@@ -48,7 +48,7 @@ func NewDefendTrusted(w World, t Truster, c DefendTrustedConfig) *DefendTrusted 
 
 // CanUse implements goal.Goal (0xBDD4F40).
 func (g *DefendTrusted) CanUse() bool {
-	if g.t.Trusted() == nil || !g.due() || g.actor(g.t.Target()) != nil {
+	if g.t.Trusted() == nil || !g.scanDue() || g.actor(g.t.Target()) != nil {
 		return false
 	}
 	g.candidate = g.attacker()
@@ -139,11 +139,7 @@ func (g *DefendVillage) valid(a Actor) bool {
 	if !g.canAttack(a) {
 		return false
 	}
-	if len(g.cfg.EntityTypes) != 0 {
-		if g.match(a) < 0 {
-			return false
-		}
-	} else if g.mustSee && !(a.ID() == g.v.Target() && g.unseen < g.forget) && !g.v.CanSee(a) {
+	if _, ok := g.match(a, g.globalMustSee); !ok {
 		return false
 	}
 	return !g.mustReach || g.canReach(a)

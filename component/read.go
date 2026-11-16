@@ -424,7 +424,7 @@ func (c *Context) FilterList(j Object, k string) []behavior.Filter {
 }
 
 // EntityTypes reads an entity_types member for the target goals (1.26.60
-// 0xBFA5B60): max_dist 16; priority; cooldown in whole seconds;
+// 0xBFA5B60): max_dist 16; max_height -1; reevaluate_description; priority; cooldown in whole seconds;
 // must_see_forget_duration in whole seconds, default 3, read only when
 // must_see is written. Without must_see the 3 is kept as ticks, as BDS does.
 func (c *Context) EntityTypes(j Object, k string) []behavior.EntityType {
@@ -435,6 +435,8 @@ func (c *Context) EntityTypes(j Object, k string) []behavior.EntityType {
 	for _, e := range objects(j[k]) {
 		t := behavior.EntityType{
 			MaxDist:       c.Float(e, "max_dist", entityMaxDist),
+			MaxHeight:     c.Float(e, "max_height", -1),
+			Reevaluate:    c.Bool(e, "reevaluate_description", false),
 			Priority:      c.Int(e, "priority", 0),
 			Cooldown:      c.Int(e, "cooldown", 0) * ticksPerSecond,
 			MustSeeForget: mustSeeForgetDefault,
