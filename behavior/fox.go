@@ -169,7 +169,7 @@ func (g *FindCover) open(p Pos) bool {
 	return p.Y >= w.MaxHeight() || p.Y >= w.MinHeight() && p.Y >= w.HeightMap(p.X, p.Z)
 }
 
-// CanUse implements goal.Goal (0xBDFB6F0).
+// CanUse implements goal.Goal (BDS 1.26.60 0xBF912B0).
 func (g *FindCover) CanUse() bool {
 	m := g.mob
 	if g.world.CurrentTick() < g.ready {
@@ -186,7 +186,7 @@ func (g *FindCover) CanUse() bool {
 	return ok
 }
 
-// find is 0xBDFB930: up to 10 random spots, the first covered one the mob
+// find is 0xBF914F0: up to 10 random spots, the first covered one the mob
 // would rather walk to than not.
 func (g *FindCover) find() (Vec3, bool) {
 	r := g.world.IRandom()
@@ -204,20 +204,20 @@ func (g *FindCover) find() (Vec3, bool) {
 	return Vec3{}, false
 }
 
-// CanContinueToUse implements goal.Goal (0xBDFBB50).
+// CanContinueToUse implements goal.Goal (0xBF91710).
 func (g *FindCover) CanContinueToUse() bool {
 	n := g.mob.Nav()
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal (0xBDFBC50).
+// Start implements goal.Goal (0xBF91810).
 func (g *FindCover) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(g.at, g.cfg.SpeedMultiplier)
 	}
 }
 
-// Stop implements goal.Goal (0xBDFBD60).
+// Stop implements goal.Goal (0xBF91920).
 func (g *FindCover) Stop() { g.ready = g.world.CurrentTick() + uint64(int64(g.cfg.Cooldown)) }
 
 // Tick implements goal.Goal.

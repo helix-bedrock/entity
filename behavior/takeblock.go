@@ -52,24 +52,27 @@ func NewTakeBlock(w World, m BlockCarrier, c TakeBlockConfig) *TakeBlock {
 	return &TakeBlock{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x53415A0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5699850).
 func (g *TakeBlock) CanUse() bool {
 	m, w := g.m, g.world
 	if !m.Slot(SlotMainhand).Empty() || g.cfg.AffectedByGriefingRule && !w.MobGriefing() {
 		return false
 	}
-	if !chance(w.Random(), g.cfg.Chance) {
+	// Level getThreadRandom (BDS 1.26.60 canUse 0x5699850).
+	if !chance(w.ThreadRandom(), g.cfg.Chance) {
 		return false
 	}
 	return g.cfg.CanTake == nil || g.cfg.CanTake(m, g.actor(m.Target()))
 }
 
-// Tick implements goal.Goal (0x5341790).
+// Tick implements goal.Goal (0x5699A30).
 func (g *TakeBlock) Tick() {
 	m, w := g.m, g.world
-	p := add3(blockOf(m.Pos()), blockOffset(w.Random(), g.cfg.XZRange, g.cfg.YRange))
+	// The offsets roll on Level getThreadRandom, and an empty blocks list
+	// takes any block that is not air (BDS 1.26.60 tick 0x5699A30).
+	p := add3(blockOf(m.Pos()), blockOffset(w.ThreadRandom(), g.cfg.XZRange, g.cfg.YRange))
 	b := w.Block(p)
-	if b.Name == airName || !slices.Contains(g.cfg.Blocks, b.Name) {
+	if b.Name == airName || len(g.cfg.Blocks) > 0 && !slices.Contains(g.cfg.Blocks, b.Name) {
 		return
 	}
 	if g.cfg.RequiresLineOfSight && !m.CanSeeBlock(p) {

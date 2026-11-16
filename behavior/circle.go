@@ -49,7 +49,7 @@ func NewCircleAroundAnchor(w World, m Circler, c CircleAroundAnchorConfig) *Circ
 	return &CircleAroundAnchor{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, dir: 1}
 }
 
-// CanUse implements goal.Goal (0x576A610).
+// CanUse implements goal.Goal (BDS 1.26.60 0x551A8F0).
 func (g *CircleAroundAnchor) CanUse() bool {
 	_, ok := g.m.MoveControl()
 	return ok
@@ -67,7 +67,7 @@ func lerp(rnd Random, r Range[float32]) float32 {
 	return v
 }
 
-// Start implements goal.Goal (0x5769D50).
+// Start implements goal.Goal (BDS 1.26.60 0x551A030).
 func (g *CircleAroundAnchor) Start() {
 	r := g.world.Random()
 	g.radius = (g.cfg.RadiusRange.Max-g.cfg.RadiusRange.Min)*r.NextFloat() + g.cfg.RadiusRange.Min
@@ -108,7 +108,7 @@ func (g *CircleAroundAnchor) aboveGround() {
 	g.anchor = Vec3{X: float32(c.X), Y: float32(y), Z: float32(c.Z)}
 }
 
-// next is _selectNext: step the angle around the anchor and fly to the
+// next is _selectNext (0x551A470): step the angle around the anchor and fly to the
 // next point of the circle.
 func (g *CircleAroundAnchor) next() {
 	g.angle += g.dir * g.cfg.AngleChange * radPerDeg
@@ -125,7 +125,7 @@ func (g *CircleAroundAnchor) next() {
 	g.m.SetMoveWanted(p, g.cfg.SpeedMultiplier)
 }
 
-// Stop implements goal.Goal (0x576A440).
+// Stop implements goal.Goal (0x551A720).
 func (g *CircleAroundAnchor) Stop() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -134,7 +134,7 @@ func (g *CircleAroundAnchor) Stop() {
 	g.m.ClearMoveWanted()
 }
 
-// Tick implements goal.Goal (0x576A6C0).
+// Tick implements goal.Goal (0x551A9A0).
 func (g *CircleAroundAnchor) Tick() {
 	r := g.world.Random()
 	if t := g.actor(g.m.Target()); t != nil {

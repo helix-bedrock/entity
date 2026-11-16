@@ -72,10 +72,10 @@ func NewFindUnderwaterTreasure(w World, m TreasureHunter, c FindUnderwaterTreasu
 	return &FindUnderwaterTreasure{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x573B9A0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x59F59F0).
 func (g *FindUnderwaterTreasure) CanUse() bool { return g.m.Flag(FlagTreasure) && g.m.Nav() != nil }
 
-// CanContinueToUse implements goal.Goal (0x573BA80).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x59F5AD0).
 func (g *FindUnderwaterTreasure) CanContinueToUse() bool {
 	return g.CanUse() && g.target != (Pos{})
 }
@@ -83,7 +83,7 @@ func (g *FindUnderwaterTreasure) CanContinueToUse() bool {
 // CanBeInterrupted implements goal.Goal: the trip cannot be cut short.
 func (g *FindUnderwaterTreasure) CanBeInterrupted() bool { return false }
 
-// Start implements goal.Goal (0x573BAC0).
+// Start implements goal.Goal (0x59F5B10).
 func (g *FindUnderwaterTreasure) Start() {
 	m := g.m
 	from := blockOf(m.Pos())
@@ -119,14 +119,14 @@ func (g *FindUnderwaterTreasure) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x573C3B0).
+// Stop implements goal.Goal (0x59F6420).
 func (g *FindUnderwaterTreasure) Stop() {
 	g.target = Pos{}
 	g.m.ResetTreasureTimer()
 	g.m.SetFlag(FlagTreasure, false)
 }
 
-// Tick implements goal.Goal (0x573C580): every ten ticks the dolphin checks
+// Tick implements goal.Goal (0x59F65F0): every ten ticks the dolphin checks
 // whether it is stuck, then swims on or gives up.
 func (g *FindUnderwaterTreasure) Tick() {
 	m := g.m
