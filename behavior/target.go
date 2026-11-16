@@ -77,6 +77,22 @@ type target struct {
 	reached     reach
 	// candidate is the entity canUse picked for start to target.
 	candidate ID
+	// types are the entity_types entries the match walks.
+	types []EntityType
+	// globalMustSee and globalForget are the goal's must_see and
+	// must_see_forget_duration; mustSee and forget hold the ones of the
+	// entry the last match took.
+	globalMustSee bool
+	globalForget  int32
+	// persist is persist_time in ticks; failing and failTicks are the
+	// filter failure: the current target stopped matching every entry and
+	// is kept for persist ticks.
+	persist   int32
+	failing   bool
+	failTicks int32
+	// reevaluate is set by an entry with reevaluate_description: the kept
+	// target is matched again every tick.
+	reevaluate bool
 }
 
 // IsTargetGoal implements goal.Goal.
@@ -157,6 +173,12 @@ func (t *target) keep(a Actor) bool {
 		t.m.SetTarget(NoID)
 		return false
 	}
+	if t.reevaluate {
+		if _, ok := t.match(a, t.mustSee); !ok {
+			t.m.SetTarget(NoID)
+			return false
+		}
+	}
 	return true
 }
 
@@ -183,6 +205,74 @@ func (t *target) keepCheck(a Actor) bool {
 		}
 	}
 	return !(a.IsPlayer() && a.Invulnerable())
+}
+
+// match is TargetGoal's entry match (1.26.60 0xBF31DC0): the entry index taken (-1 for none) and
+// whether the candidate passes. An entry with must_see sets the goal's
+// must_see from itself; otherwise mustSee (the goal's own) is checked.
+func (g *target) match(a Actor, mustSee bool) (int, bool) {
+	current := a.ID() == g.m.Target() && g.unseen < g.forget
+	best, taken := g.matchEntries(a, current)
+	if len(g.types) != 0 && best < 0 {
+		if a.ID() == g.m.Target() {
+			g.failing = true
+			return -1, g.failTicks < g.persist
+		}
+		return -1, false
+	}
+	if best >= 0 {
+		g.failing, g.failTicks = false, 0
+		if taken {
+			return best, true
+		}
+	}
+	if mustSee && !current && !g.m.CanSee(a) {
+		return best, false
+	}
+	g.mustSee, g.forget = mustSee, g.globalForget
+	return best, true
+}
+
+// matchEntries walks the entries: the one with the largest max_dist wins,
+// except that while reevaluating the first entry without
+// reevaluate_description does. taken reports a winner with must_see.
+func (g *target) matchEntries(a Actor, current bool) (best int, taken bool) {
+	best = -1
+	var bestDist float32
+	d2 := dist2(g.m.Pos(), a.Pos())
+	for i := range g.types {
+		e := &g.types[i]
+		if !(d2 < e.MaxDist*e.MaxDist) {
+			continue
+		}
+		if !current && e.MustSee && !g.m.CanSee(a) {
+			continue
+		}
+		if e.Filters != nil && !e.Filters(g.m, a) {
+			continue
+		}
+		switch {
+		case g.reevaluate && !e.Reevaluate:
+			g.reevaluate = false
+		case e.MaxDist > bestDist:
+			g.reevaluate = e.Reevaluate
+		default:
+			continue
+		}
+		best, bestDist = i, e.MaxDist
+		if e.MustSee {
+			g.mustSee, g.forget, taken = true, e.MustSeeForget, true
+		}
+	}
+	return best, taken
+}
+
+// failTick is TargetGoal's tick: it counts the ticks the target has
+// failed its entries.
+func (g *target) failTick() {
+	if g.failing {
+		g.failTicks++
+	}
 }
 
 // SeesInvisible is a mob with CanSeeInvisibleFlagComponent: invisibility
@@ -278,17 +368,6 @@ type NearestAttackable struct {
 	cooldown []uint64
 	cand     []Actor
 	sorted   []near
-	// globalMustSee and globalForget are the goal's must_see and
-	// must_see_forget_duration; target.mustSee and target.forget hold the
-	// ones of the entry the last match took.
-	globalMustSee bool
-	globalForget  int32
-	// failing and failTicks are TargetGoal's filter failure: the current
-	// target stopped matching and is kept for persist_time.
-	failing   bool
-	failTicks int32
-	// reevaluate is set by an entry with reevaluate_description.
-	reevaluate bool
 	// prioritized makes the search pick by entry priority
 	// (NearestPrioritizedAttackableTargetGoal).
 	prioritized bool
@@ -298,9 +377,9 @@ type NearestAttackable struct {
 func NewNearestAttackable(w World, m Targeter, c NearestAttackableConfig) *NearestAttackable {
 	return &NearestAttackable{
 		target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m, attackOwner: c.AttackOwner,
-			mustReach: c.MustReach},
+			mustReach: c.MustReach, types: c.EntityTypes, globalMustSee: c.MustSee, globalForget: c.MustSeeForget,
+			persist: c.PersistTime},
 		cfg: c, entry: -1, cooldown: make([]uint64, len(c.EntityTypes)),
-		globalMustSee: c.MustSee, globalForget: c.MustSeeForget,
 	}
 }
 
@@ -311,66 +390,6 @@ func (g *NearestAttackable) maxDist() float32 {
 		d = max32(d, g.cfg.EntityTypes[i].MaxDist)
 	}
 	return d
-}
-
-// match is the entry match: the entry index taken (-1 for none) and
-// whether the candidate passes. An entry with must_see sets the goal's
-// must_see from itself; otherwise mustSee (the goal's own) is checked.
-func (g *NearestAttackable) match(a Actor, mustSee bool) (int, bool) {
-	current := a.ID() == g.m.Target() && g.unseen < g.forget
-	best, taken := g.matchEntries(a, current)
-	if len(g.cfg.EntityTypes) != 0 && best < 0 {
-		if a.ID() == g.m.Target() {
-			g.failing = true
-			return -1, g.failTicks < g.cfg.PersistTime
-		}
-		return -1, false
-	}
-	if best >= 0 {
-		g.failing, g.failTicks = false, 0
-		if taken {
-			return best, true
-		}
-	}
-	if mustSee && !current && !g.m.CanSee(a) {
-		return best, false
-	}
-	g.mustSee, g.forget = mustSee, g.globalForget
-	return best, true
-}
-
-// matchEntries walks the entries: the one with the largest max_dist wins,
-// except that while reevaluating the first entry without
-// reevaluate_description does. taken reports a winner with must_see.
-func (g *NearestAttackable) matchEntries(a Actor, current bool) (best int, taken bool) {
-	best = -1
-	var bestDist float32
-	d2 := dist2(g.m.Pos(), a.Pos())
-	for i := range g.cfg.EntityTypes {
-		e := &g.cfg.EntityTypes[i]
-		if !(d2 < e.MaxDist*e.MaxDist) {
-			continue
-		}
-		if !current && e.MustSee && !g.m.CanSee(a) {
-			continue
-		}
-		if e.Filters != nil && !e.Filters(g.m, a) {
-			continue
-		}
-		switch {
-		case g.reevaluate && !e.Reevaluate:
-			g.reevaluate = false
-		case e.MaxDist > bestDist:
-			g.reevaluate = e.Reevaluate
-		default:
-			continue
-		}
-		best, bestDist = i, e.MaxDist
-		if e.MustSee {
-			g.mustSee, g.forget, taken = true, e.MustSeeForget, true
-		}
-	}
-	return best, taken
 }
 
 // candidates fills g.sorted with the entities in the scan box, nearest
@@ -502,12 +521,6 @@ func (g *NearestAttackable) CanContinueToUse() bool {
 	if !g.keep(a) {
 		return false
 	}
-	if g.reevaluate {
-		if _, ok := g.match(a, g.mustSee); !ok {
-			g.m.SetTarget(NoID)
-			return false
-		}
-	}
 	if !g.pickInRange() {
 		g.m.SetTarget(NoID)
 		return false
@@ -550,11 +563,7 @@ func (g *NearestAttackable) Stop() {}
 
 // Tick implements goal.Goal: TargetGoal's tick counts the ticks the target
 // has failed its filters.
-func (g *NearestAttackable) Tick() {
-	if g.failing {
-		g.failTicks++
-	}
-}
+func (g *NearestAttackable) Tick() { g.failTick() }
 
 // HurtByConfig is the JSON of minecraft:behavior.hurt_by_target.
 type HurtByConfig struct {
@@ -562,21 +571,31 @@ type HurtByConfig struct {
 	HurtOwner   bool `json:"hurt_owner"`
 	MustReach   bool
 	MustSee     bool
+	// MustSeeForget and PersistTime are must_see_forget_duration and
+	// persist_time in ticks.
+	MustSeeForget, PersistTime int32
 }
 
-// HurtBy is HurtByTargetGoal: the mob targets what last hurt it.
-// alert_same_type is not built: no vanilla entity uses it.
+// DefaultHurtBy returns the goal's BDS defaults.
+func DefaultHurtBy() HurtByConfig { return HurtByConfig{MustSeeForget: 60} }
+
+// HurtBy is HurtByTargetGoal (BDS 1.26.60 canUse 0xBF2FD30, start
+// 0xBF2FE60; canContinueToUse, stop and tick are TargetGoal's): the mob
+// targets the mob that last hurt it. alert_same_type is not built: no
+// vanilla entity uses it.
 type HurtBy struct {
 	target
-	types []EntityType
 }
 
 // NewHurtBy makes the goal.
 func NewHurtBy(w World, m Targeter, c HurtByConfig) *HurtBy {
 	return &HurtBy{target: target{base: base{mob: m, world: w, flags: flagsMove}, m: m,
-		attackOwner: c.HurtOwner, mustReach: c.MustReach, mustSee: c.MustSee, forget: DefaultNearestAttackable().MustSeeForget}, types: c.EntityTypes}
+		attackOwner: c.HurtOwner, mustReach: c.MustReach, types: c.EntityTypes, globalMustSee: c.MustSee,
+		globalForget: c.MustSeeForget, persist: c.PersistTime}}
 }
 
+// attacker is the mob that last hurt this one; when it is gone the record
+// is cleared.
 func (g *HurtBy) attacker() Actor {
 	id, _ := g.m.LastHurtBy()
 	a := g.actor(id)
@@ -584,18 +603,6 @@ func (g *HurtBy) attacker() Actor {
 		g.m.ClearLastHurtBy()
 	}
 	return a
-}
-
-func (g *HurtBy) matches(a Actor) bool {
-	if len(g.types) == 0 {
-		return true
-	}
-	for i := range g.types {
-		if f := g.types[i].Filters; f == nil || f(g.m, a) {
-			return true
-		}
-	}
-	return false
 }
 
 // CanUse implements goal.Goal.
@@ -607,8 +614,8 @@ func (g *HurtBy) CanUse() bool {
 	if !g.canAttack(a) {
 		return false
 	}
-	if !g.matches(a) {
-		return g.no("attacker fails entity_types")
+	if _, ok := g.match(a, g.globalMustSee); !ok {
+		return g.no("attacker fails entity_types or must_see")
 	}
 	if g.mustReach && !g.canReach(a) {
 		return g.no("cannot reach attacker (must_reach)")
@@ -623,7 +630,6 @@ func (g *HurtBy) CanContinueToUse() bool { return g.keep(g.actor(g.m.Target())) 
 func (g *HurtBy) Start() {
 	if a := g.attacker(); a != nil {
 		g.m.SetTarget(a.ID())
-		g.unseen = 0
 	}
 }
 
@@ -633,4 +639,4 @@ func (g *HurtBy) Start() {
 func (g *HurtBy) Stop() {}
 
 // Tick implements goal.Goal.
-func (g *HurtBy) Tick() {}
+func (g *HurtBy) Tick() { g.failTick() }

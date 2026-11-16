@@ -469,10 +469,12 @@ func vanillaGoals() map[string]GoalFactory {
 		}, behavior.NewSwimWithEntity),
 
 		// Targets.
-		"hurt_by_target": configured(func() behavior.HurtByConfig { return behavior.HurtByConfig{} }, func(c *Context, j Object, cfg *behavior.HurtByConfig) {
+		"hurt_by_target": configured(behavior.DefaultHurtBy, func(c *Context, j Object, cfg *behavior.HurtByConfig) {
 			cfg.EntityTypes = c.EntityTypes(j, "entity_types")
 			cfg.MustReach = c.Bool(j, "must_reach", cfg.MustReach)
 			cfg.MustSee = c.Bool(j, "must_see", cfg.MustSee)
+			cfg.MustSeeForget = c.Ticks(j, "must_see_forget_duration", cfg.MustSeeForget)
+			cfg.PersistTime = c.Ticks(j, "persist_time", cfg.PersistTime)
 		}, behavior.NewHurtBy),
 		"owner_hurt_by_target":                  simple(behavior.NewOwnerHurtBy),
 		"owner_hurt_target":                     simple(behavior.NewOwnerHurt),
