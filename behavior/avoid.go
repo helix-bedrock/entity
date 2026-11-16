@@ -37,8 +37,9 @@ func DefaultAvoidType() AvoidType {
 	return AvoidType{WalkSpeed: 1, SprintSpeed: 1}
 }
 
-// Avoider is optional on the mob: the strength and mark variant the avoid
-// goal reads. A mob without it has no strength and mark variant 1.
+// Avoider is optional on mobs and entities: the strength and mark variant
+// the avoid goal reads. The strength is the threat's (a llama's for a
+// wolf); an entity without it has no strength and mark variant 1.
 type Avoider interface {
 	// Strength is the strength component's value, ok false without one.
 	Strength() (v int32, ok bool)
@@ -50,8 +51,10 @@ type CanSeer interface {
 	CanSee(a Actor) bool
 }
 
-// Avoid is AvoidMobTypeGoal: the mob runs from the first entity that
-// matches one of its entries.
+// Avoid is AvoidMobTypeGoal (BDS 1.26.60 canUse 0x4A7F1F0, canContinueToUse
+// 0x4A7F740, start 0x4A7F940, stop 0x4A7FBD0, tick 0x4A7FE20, the search
+// 0x4A7EC80, the flee 0x4A7F210): the mob runs from the nearest entity that
+// matches its first matching entry.
 type Avoid struct {
 	base
 	cfg         AvoidConfig
@@ -62,6 +65,7 @@ type Avoid struct {
 	pos         Vec3
 	nextSound   uint64
 	buf         []Actor
+	sorted      []near
 }
 
 // NewAvoid makes the goal.
@@ -76,41 +80,57 @@ func markVariant(a any) int32 {
 	return 1
 }
 
-// find is the entity search: entries in order, and in each the first
-// entity in BDS's getEntities order that passes, not the nearest.
+// find is the entity search: entries in order, and in each the nearest
+// entity that passes.
 func (g *Avoid) find(r float32) Actor {
-	for i := range g.cfg.Types {
-		t := &g.cfg.Types[i]
-		b := g.mob.Box()
-		b.Min = Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}
-		b.Max = Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}
-		g.buf = g.world.Entities(g.buf[:0], g.mob.ID(), b)
-		for _, e := range g.buf {
-			if e.Removed() || !e.IsMob() {
-				continue
-			}
-			if m := e.GameMode(); m == GameModeCreative || m == GameModeDefault && g.world.DefaultGameMode() == GameModeCreative {
-				continue
-			}
-			if !e.Pickable() || !e.Targetable() {
-				continue
-			}
-			if t.Filters != nil && !t.Filters(g.mob, e) {
-				continue
-			}
-			if t.CheckOutnumbered && markVariant(g.mob) >= markVariant(e) {
-				continue
-			}
-			g.walk, g.sprintSpeed = t.WalkSpeed, t.SprintSpeed
-			clear(g.buf)
-			return e
-		}
+	b := g.mob.Box()
+	b.Min = Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}
+	b.Max = Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}
+	g.buf = g.world.Entities(g.buf[:0], g.mob.ID(), b)
+	p := g.mob.Pos()
+	g.sorted = g.sorted[:0]
+	for _, e := range g.buf {
+		g.sorted = append(g.sorted, near{a: e, d2: dist2(p, e.Pos())})
 	}
 	clear(g.buf)
+	sortNear(g.sorted)
+	defer clear(g.sorted)
+	for i := range g.cfg.Types {
+		t := &g.cfg.Types[i]
+		for _, c := range g.sorted {
+			if g.avoids(t, c.a) {
+				g.walk, g.sprintSpeed = t.WalkSpeed, t.SprintSpeed
+				return c.a
+			}
+		}
+	}
 	return nil
 }
 
-// flee picks the flee position from e and makes the path to it.
+// avoids is the per-entity test of the search: alive in the world with
+// health, not in creative, pickable, a mob, not invisible, the entry's
+// filters, and check_if_outnumbered.
+func (g *Avoid) avoids(t *AvoidType, e Actor) bool {
+	if e.Removed() || !e.HasHealth() {
+		return false
+	}
+	if m := e.GameMode(); m == GameModeCreative || m == GameModeDefault && g.world.DefaultGameMode() == GameModeCreative {
+		return false
+	}
+	if !e.Pickable() || !e.IsMob() || e.Flag(flagInvisible) {
+		return false
+	}
+	if t.Filters != nil && !t.Filters(g.mob, e) {
+		return false
+	}
+	if a, ok := g.mob.(Avoider); ok && t.CheckOutnumbered && a.MarkVariant() >= markVariant(e) {
+		return false
+	}
+	return true
+}
+
+// flee picks the flee position from e and makes the path to it, without
+// following it: start does that.
 func (g *Avoid) flee(e Actor) bool {
 	if e == nil || e.Removed() {
 		return g.no("nothing to avoid near")
@@ -139,31 +159,49 @@ func (g *Avoid) flee(e Actor) bool {
 	if dist2(from, g.mob.Pos()) > dist2(from, p) {
 		return g.no("flee position nearer the threat")
 	}
-	if s, ok := g.mob.(Avoider); ok && g.cfg.ProbabilityPerStrength < 1 {
-		if v, has := s.Strength(); has && v > 0 {
-			k := int32(0)
-			if g.cfg.ProbabilityPerStrength > 0 {
-				k = int32(1 / g.cfg.ProbabilityPerStrength)
-			}
-			if v < g.world.IRandom().NextInt(k) {
-				return false
-			}
-		}
+	if !g.strongEnough(e) {
+		return false
 	}
-	return n == nil || n.MoveTo(p, g.walk)
+	if n == nil {
+		return true
+	}
+	_, ok = n.PathToPoint(p)
+	return ok
+}
+
+// strongEnough is the strength roll: below probability_per_strength 1 a
+// threat with strength scares the mob only when its strength reaches a
+// roll of the level's Random below 1/probability.
+func (g *Avoid) strongEnough(e Actor) bool {
+	s, ok := e.(Avoider)
+	if !ok || g.cfg.ProbabilityPerStrength >= 1 {
+		return true
+	}
+	v, has := s.Strength()
+	if !has || v <= 0 {
+		return true
+	}
+	k := int32(0)
+	if g.cfg.ProbabilityPerStrength > 0 {
+		k = int32(1 / g.cfg.ProbabilityPerStrength)
+	}
+	return v >= g.world.Random().NextInt(k)
 }
 
 // CanUse implements goal.Goal.
 func (g *Avoid) CanUse() bool { return g.flee(g.find(g.cfg.MaxDist)) }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal. With the path done BDS runs the
+// flee again, which makes a new path but does not follow it, so the mob
+// stays put while the threat is within max_flee and a flee is possible.
 func (g *Avoid) CanContinueToUse() bool {
 	e := g.find(g.cfg.MaxFlee)
 	if e == nil {
 		return false
 	}
-	if n := g.mob.Nav(); n != nil {
-		return !n.Done()
+	n := g.mob.Nav()
+	if n == nil || !n.Done() {
+		return true
 	}
 	return g.flee(e)
 }
@@ -204,5 +242,5 @@ func (g *Avoid) Tick() {
 	if n := g.mob.Nav(); n != nil {
 		n.SetSpeed(s)
 	}
-	playSound(g.world, g.mob, g.cfg.Sound, g.cfg.SoundInterval, g.world.CurrentTick(), &g.nextSound)
+	playSoundFrom(g.world.ThreadRandom(), g.mob, g.cfg.Sound, g.cfg.SoundInterval, g.world.CurrentTick(), &g.nextSound)
 }

@@ -155,6 +155,7 @@ func (m *fakeMob) Box() Box {
 func (m *fakeMob) Removed() bool                { return false }
 func (m *fakeMob) Alive() bool                  { return true }
 func (m *fakeMob) Pickable() bool               { return true }
+func (m *fakeMob) HasHealth() bool              { return true }
 func (m *fakeMob) Interacts() bool              { return true }
 func (m *fakeMob) IsMob() bool                  { return true }
 func (m *fakeMob) IsPlayer() bool               { return false }

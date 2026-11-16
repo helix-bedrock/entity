@@ -196,13 +196,18 @@ func (g *Panic) Tick() {
 
 // playSound is the sound timer the panic, tempt and avoid goals share.
 func playSound(w World, m Mob, sound int, interval Range[float32], now uint64, next *uint64) {
+	playSoundFrom(w.Random(), m, sound, interval, now, next)
+}
+
+// playSoundFrom is playSound drawing the next interval from r.
+func playSoundFrom(r Random, m Mob, sound int, interval Range[float32], now uint64, next *uint64) {
 	if *next >= now {
 		return
 	}
 	if sound != NoSound && !m.Flag(FlagSilent) {
 		m.PlaySound(sound)
 	}
-	*next = now + randomTicks(w.Random(), interval)
+	*next = now + randomTicks(r, interval)
 }
 
 func contains[T comparable](s []T, v T) bool {
