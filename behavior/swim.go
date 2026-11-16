@@ -85,8 +85,10 @@ func DefaultRandomSwim() RandomSwimConfig {
 	return RandomSwimConfig{StrollConfig: DefaultStroll(), AvoidSurface: true}
 }
 
-// RandomSwim is RandomSwimmingGoal: random_stroll for swimmers, aiming at a
-// random depth below the surface that is not too steep to reach.
+// RandomSwim is RandomSwimmingGoal (BDS 1.26.60 canUse 0x55135B0,
+// canContinueToUse 0x5513600, the position 0x5513740; start, stop and tick
+// are random_stroll's): random_stroll for swimmers, aiming at a random depth
+// below the surface that is not too steep to reach.
 type RandomSwim struct {
 	Stroll
 	avoidSurface bool
@@ -113,8 +115,11 @@ func (g *RandomSwim) CanContinueToUse() bool {
 	return !g.done
 }
 
-// position is the goal's findPosition (0x5763620): a random spot, moved to
-// a random height between the floor and just under the surface.
+// position is the goal's _setWantedPosition: a random spot, moved to a
+// random height between the floor and just under the surface. The floor is
+// searched from the spot's own height down, the surface by the block's own
+// material (a waterlogged block ends it), and the height roll draws from
+// the thread random.
 func (g *RandomSwim) position() (Vec3, bool) {
 	m, w := g.mob, g.world
 	if !m.OverWater() {
@@ -129,10 +134,10 @@ func (g *RandomSwim) position() (Vec3, bool) {
 			at = p
 		}
 		x, z := floorInt(at.X), floorInt(at.Z)
-		floor := float32(w.AboveTopSolid(x, z))
+		floor := float32(w.AboveTopSolidAt(Pos{X: x, Y: floorInt(at.Y), Z: z}))
 		top := floor
 		if limit := float32(w.MaxHeight()); limit > floor {
-			for w.LiquidMaterial(Pos{X: x, Y: int32(top), Z: z}) == path.MaterialWater {
+			for w.Block(Pos{X: x, Y: int32(top), Z: z}).Material == path.MaterialWater {
 				if top++; limit <= top {
 					break
 				}
@@ -147,7 +152,7 @@ func (g *RandomSwim) position() (Vec3, bool) {
 		if low <= floor {
 			low = floor + swimFloorPad
 		}
-		at.Y = (max32(min(high, y+float32(g.cfg.YDist)), low)-low)*w.Random().NextFloat() + low
+		at.Y = (max32(min(high, y+float32(g.cfg.YDist)), low)-low)*w.ThreadRandom().NextFloat() + low
 		if low <= high {
 			break
 		}

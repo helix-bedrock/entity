@@ -27,7 +27,10 @@ func DefaultFleeSun() FleeSunConfig {
 	return FleeSunConfig{SpeedMultiplier: 1}
 }
 
-// FleeSun is FleeSunGoal: a mob burning in daylight runs into the shade.
+// FleeSun is FleeSunGoal (BDS 1.26.60 canUse 0xBF919C0, FindCoverGoal's
+// canUse 0xBF912B0, the search 0xBF914F0, canContinueToUse 0xBF91710, start
+// 0xBF91810, stop 0xBF91920; tick is BaseGoal's): a mob burning in daylight
+// runs into the shade.
 type FleeSun struct {
 	base
 	cfg  FleeSunConfig
@@ -57,10 +60,10 @@ func (g *FleeSun) CanUse() bool {
 	return ok
 }
 
-// shade is the spot search (0xBDFB930): a random nearby block under cover
-// that the mob scores below 0.
+// shade is the spot search: a random nearby block under cover that the mob
+// scores below 0, drawn from the level random.
 func (g *FleeSun) shade() (Vec3, bool) {
-	r := g.world.IRandom()
+	r := g.world.Random()
 	m := g.mob
 	for i := 0; i < shadeTries; i++ {
 		p, b := m.Pos(), m.Box()

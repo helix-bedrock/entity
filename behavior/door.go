@@ -410,8 +410,9 @@ func (g *RestrictOpenDoor) Stop() {
 	}
 }
 
-// PlayerRideTamed is PlayerVehicleTamedGoal: a tamed mob with a rider does
-// nothing else.
+// PlayerRideTamed is PlayerVehicleTamedGoal (BDS 1.26.60 canUse 0x550C2A0,
+// canContinueToUse 0x550C2E0; start and tick are empty, stop is BaseGoal's):
+// a tamed mob with a rider does nothing else.
 type PlayerRideTamed struct{ base }
 
 // NewPlayerRideTamed makes the goal.
@@ -419,10 +420,10 @@ func NewPlayerRideTamed(w World, m Mob) *PlayerRideTamed {
 	return &PlayerRideTamed{base: base{mob: m, world: w}}
 }
 
-// CanUse implements goal.Goal (0x575C1C0).
+// CanUse implements goal.Goal.
 func (g *PlayerRideTamed) CanUse() bool { return len(g.mob.Riders()) > 0 && g.mob.Flag(FlagTamed) }
 
-// CanContinueToUse implements goal.Goal (0x575C200).
+// CanContinueToUse implements goal.Goal.
 func (g *PlayerRideTamed) CanContinueToUse() bool { return g.CanUse() }
 
 // The base Goal methods DoorInteract keeps (1.26.60 vtable: stop is a no-op).
@@ -435,7 +436,7 @@ func (g *DoorInteract) Stop() {}
 // Tick implements goal.Goal.
 func (g *RestrictOpenDoor) Tick() {}
 
-// The base Goal methods PlayerRideTamed keeps (start, stop and tick are not overridden; the vtable was not re-read).
+// PlayerRideTamed's start and tick do nothing (1.26.60 vtable).
 
 // Start implements goal.Goal.
 func (g *PlayerRideTamed) Start() {}

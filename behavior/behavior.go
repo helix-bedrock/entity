@@ -269,6 +269,10 @@ type World interface {
 	// AboveTopSolid is BlockSource::getAboveTopSolidBlock: the height just
 	// above the highest solid block of the column.
 	AboveTopSolid(x, z int32) int32
+	// AboveTopSolidAt is getAboveTopSolidBlock's BlockPos form: the same
+	// search, starting at p.Y (or the column's top when that is lower), so
+	// an overhang above p is skipped.
+	AboveTopSolidAt(p Pos) int32
 	// MaxHeight is the dimension's build height limit.
 	MaxHeight() int32
 	// SkyVisible reports that p is at or above the height map, so it is
@@ -511,7 +515,7 @@ type Mob interface {
 	// SetHijackable adds or removes CanBeHijackedByPassengerComponent: while
 	// it is on, the rider's navigation moves this mount.
 	SetHijackable(on bool)
-	// OverWater is Actor::isInWaterOrOverWater (0xB2D4000): in water, or
+	// OverWater is Actor::isInWaterOrOverWater (1.26.60 0xB39C3B0): in water, or
 	// the first non-air block below the mob is water.
 	OverWater() bool
 	// NoActionTime is the ticks since the mob last did something

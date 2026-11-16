@@ -15,6 +15,7 @@ type dragonWorld struct {
 
 func (w dragonWorld) Players(dst []Actor) []Actor    { return append(dst, w.players...) }
 func (dragonWorld) AboveTopSolid(int32, int32) int32 { return 64 }
+func (dragonWorld) AboveTopSolidAt(Pos) int32        { return 64 }
 func (dragonWorld) MinHeight() int32                 { return -64 }
 func (dragonWorld) ClearLine(Vec3, Vec3) bool        { return true }
 

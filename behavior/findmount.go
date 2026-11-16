@@ -20,7 +20,7 @@ type MountSeeker interface {
 	Sleeping(id ID) bool
 	// Wet is another entity's WasInWaterFlagComponent.
 	Wet(id ID) bool
-	// CanRide is 0xB2FC930: the mob can ride the mount now.
+	// CanRide is 0xB3C4ED0: the mob can ride the mount now.
 	CanRide(mount ID) bool
 	// StartRiding mounts the entity (Actor vt+224).
 	StartRiding(mount ID)
@@ -54,8 +54,10 @@ func DefaultFindMount() FindMountConfig {
 	return FindMountConfig{MountDistance: -1, MaxFailedAttempts: 20}
 }
 
-// FindMount is FindMountGoal: the mob looks for the nearest mob that takes
-// it as a rider, walks there and gets on.
+// FindMount is FindMountGoal (BDS 1.26.60 canUse 0x59F4BE0,
+// canContinueToUse 0x59F4FB0, start 0x59F5060, stop 0x59F5380, tick
+// 0x59F5500): the mob looks for the nearest mob that takes it as a rider,
+// walks there and gets on.
 type FindMount struct {
 	base
 	m       MountSeeker
@@ -73,7 +75,9 @@ func NewFindMount(w World, m MountSeeker, c FindMountConfig) *FindMount {
 	return &FindMount{base: base{mob: m, world: w, flags: flagsMove}, m: m, cfg: c, mount: NoID}
 }
 
-// CanUse implements goal.Goal (0x573AB10).
+// CanUse implements goal.Goal. With target_needed BDS checks the mob's own
+// vehicle again, not the target's. A search that finds nothing keeps the
+// mount an earlier search found, until stop clears it.
 func (g *FindMount) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil || m.Vehicle() != NoID {
@@ -81,7 +85,7 @@ func (g *FindMount) CanUse() bool {
 	}
 	if g.cfg.TargetNeeded {
 		t := g.actor(m.Target())
-		if t == nil || t.Removed() || t.Vehicle() != NoID {
+		if t == nil || t.Removed() {
 			return false
 		}
 	}
@@ -91,10 +95,9 @@ func (g *FindMount) CanUse() bool {
 	}
 	r := g.cfg.WithinRadius
 	b := m.Box()
-	area := Box{Min: Vec3{X: b.Min.X - r, Y: b.Min.Y - r, Z: b.Min.Z - r}, Max: Vec3{X: b.Max.X + r, Y: b.Max.Y + r, Z: b.Max.Z + r}}
-	g.near = m.EntitiesOfType(g.near[:0], actorTypeMob, m.ID(), area)
+	pad := Vec3{X: r, Y: r, Z: r}
+	g.near = m.EntitiesOfType(g.near[:0], actorTypeMob, m.ID(), sortedBox(sub(b.Min, pad), add(b.Max, pad)))
 	best := float32(-1)
-	g.mount = NoID
 	for _, c := range g.near {
 		if c.ID() == m.ID() || !c.Alive() || !m.AcceptsRider(c.ID()) || m.Sleeping(c.ID()) {
 			continue
@@ -108,14 +111,15 @@ func (g *FindMount) CanUse() bool {
 		}
 		best, g.mount = d, c.ID()
 	}
-	if g.mount == NoID {
+	clear(g.near)
+	if g.actor(g.mount) == nil {
 		g.delay = 0
 		return false
 	}
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x573AEE0).
+// CanContinueToUse implements goal.Goal.
 func (g *FindMount) CanContinueToUse() bool {
 	m := g.m
 	t := g.actor(g.mount)
@@ -138,7 +142,7 @@ func (g *FindMount) reach2(t Actor) float32 {
 
 func boxWidth(b Box) float32 { return b.Max.X - b.Min.X }
 
-// Start implements goal.Goal (0x573AF90): a far mount needs a complete
+// Start implements goal.Goal: a far mount needs a complete
 // path, or the goal ends at once and backs off.
 func (g *FindMount) Start() {
 	t := g.actor(g.mount)
@@ -155,7 +159,7 @@ func (g *FindMount) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x573B2B0).
+// Stop implements goal.Goal.
 func (g *FindMount) Stop() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -167,7 +171,7 @@ func (g *FindMount) Stop() {
 	g.mount = NoID
 }
 
-// Tick implements goal.Goal (0x573B430).
+// Tick implements goal.Goal. The repath wait draws from the level random.
 func (g *FindMount) Tick() {
 	m := g.m
 	t := g.actor(g.mount)
@@ -186,7 +190,7 @@ func (g *FindMount) Tick() {
 	if g.repath > 0 {
 		return
 	}
-	g.repath = g.world.IRandom().NextInt(findMountRepathSpan) + findMountRepathMin
+	g.repath = g.world.Random().NextInt(findMountRepathSpan) + findMountRepathMin
 	if g.hasPath {
 		m.LookAt(lookPoint(t), findMountLook, findMountLook)
 		m.FollowPath(findMountSpeed)

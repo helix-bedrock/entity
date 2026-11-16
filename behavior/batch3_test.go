@@ -6,6 +6,7 @@ import "testing"
 type b3World struct{ *blockWorld }
 
 func (w *b3World) AboveTopSolid(int32, int32) int32 { return 64 }
+func (w *b3World) AboveTopSolidAt(Pos) int32        { return 64 }
 func (w *b3World) Passable(p Pos, _ ID) bool        { return !w.Block(p).BlocksMotion }
 
 func newB3World(r *seqRandom) *b3World { return &b3World{blockWorld: newBlockWorld(r)} }
