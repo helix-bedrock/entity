@@ -126,6 +126,8 @@ const (
 // A nil entry is missing.
 type Attributes struct {
 	Movement, Underwater, Lava, Friction, AirDrag *float32
+	// Restitution is the mob's own bounciness off what it hits.
+	Restitution *float32
 }
 
 // NavTravel is the navigation type's own travel step.
@@ -242,6 +244,10 @@ type Body struct {
 	// AutoStepped reports that the last move stepped up. BDS then sends the
 	// mob's position to every player that tick (HasAutoSteppedComponent).
 	AutoStepped bool
+	// Bounced reports that the mob bounced off the block at BouncePos this
+	// tick. BDS then plays the bounce sound and sends a bounce game event.
+	Bounced   bool
+	BouncePos path.Pos
 
 	DepenMin      Vec3
 	DepenOverride *Vec3

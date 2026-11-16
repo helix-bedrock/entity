@@ -1,6 +1,10 @@
 package physics
 
-import "math"
+import (
+	"math"
+
+	"github.com/helix-bedrock/entity/path"
+)
 
 // The collision epsilons: BDS keeps a separation under clipEps as touching.
 const (
@@ -276,7 +280,7 @@ func (b *Body) moveCollide(w World) {
 	if wanted {
 		done = b.autoStep(start, req, done, epsv)
 	}
-	b.finalize(req, done)
+	b.finalize(w, req, done)
 }
 
 // dropOneWay is UpdateOnewayCollisionsSystem: a one-way block the box no
@@ -354,7 +358,7 @@ func (b *Body) autoStep(start Box, req, done, epsv Vec3) Vec3 {
 
 // finalize is FinalizeMoveSystem (0x756EC90) and the velocity resets
 // (0x7449830, 0x744A4B0) that follow it.
-func (b *Body) finalize(req, done Vec3) {
+func (b *Body) finalize(w World, req, done Vec3) {
 	b.Pos = Vec3{
 		X: (b.Box.Min.X + b.Box.Max.X) * 0.5,
 		Y: b.Box.Min.Y + b.YOffset,
@@ -367,6 +371,8 @@ func (b *Body) finalize(req, done Vec3) {
 		was := b.OnGround
 		b.OnGround = b.VerticalCollision && req.Y < 0 || was && !b.VerticalCollision && req.Y == 0
 	}
+	rest, bounce := b.entityRestitution()
+	rest, bounce = b.blockRestitution(w, rest, bounce)
 	// ResetHorizontalVelocitySystem skips a mob whose shapes came from
 	// near an unloaded chunk.
 	if b.HorizontalCollision[0] && !b.nearUnloaded {
@@ -378,6 +384,117 @@ func (b *Body) finalize(req, done Vec3) {
 	if b.VerticalCollision {
 		b.Vel.Y = 0
 	}
+	if bounce {
+		// ApplyRestitutionSystem adds the bounce after the resets.
+		b.Vel = Vec3{X: b.Vel.X + rest.X, Y: b.Vel.Y + rest.Y, Z: b.Vel.Z + rest.Z}
+	}
+}
+
+// minBounceFall is the slowest fall that bounces: BDS compares
+// |vel.y| >= 0.08000012.
+const minBounceFall = 0.08000012
+
+// entityRestitution is ComputeEntityRestitutionSystem: a mob with its own
+// restitution attribute bounces back off each side it hit, by that much,
+// unless it sneaks or its shapes came from near an unloaded chunk.
+func (b *Body) entityRestitution() (Vec3, bool) {
+	var r float32
+	if b.Attrs.Restitution != nil {
+		r = *b.Attrs.Restitution
+	}
+	if abs32(r) <= eps || b.nearUnloaded {
+		return Vec3{}, false
+	}
+	var v Vec3
+	if b.HorizontalCollision[0] {
+		v.X = -b.Vel.X * r
+	}
+	if b.HorizontalCollision[1] {
+		v.Z = -b.Vel.Z * r
+	}
+	if b.VerticalCollision && (b.Vel.Y >= 0 || abs32(b.Vel.Y) >= minBounceFall) {
+		v.Y = -b.Vel.Y * r
+	}
+	if abs32(v.X) < eps && abs32(v.Z) < eps && abs32(v.Y) < eps || b.Flags.Has(FlagSneaking) {
+		return Vec3{}, false
+	}
+	return v, true
+}
+
+// blockRestitution is ComputeBlockRestitutionSystem: a mob that lands
+// falling fast enough, not sneaking, bounces off the block it landed on.
+// A restitution of -1 (no bounce) cancels an upward bounce.
+func (b *Body) blockRestitution(w World, rest Vec3, has bool) (Vec3, bool) {
+	b.Bounced = false
+	if !b.VerticalCollision || b.Flags.Has(FlagSneaking) || b.Vel.Y >= 0 || abs32(b.Vel.Y) < minBounceFall {
+		return rest, has
+	}
+	i, ok := b.landedShape()
+	if !ok {
+		return rest, has
+	}
+	s := b.shapes[i]
+	p := path.Pos{X: floorInt(s.Min.X), Y: floorInt(s.Min.Y), Z: floorInt(s.Min.Z)}
+	r := w.Block(p).Restitution
+	if abs32(r) <= eps {
+		return rest, has
+	}
+	if r == -1 && rest.Y > 0 {
+		rest.Y = 0
+		if abs32(rest.X) < eps && abs32(rest.Z) < eps {
+			return Vec3{}, false
+		}
+		return rest, true
+	}
+	y := r * -b.Vel.Y
+	if !has {
+		rest = Vec3{}
+	}
+	rest.Y = max(y, rest.Y)
+	if y > 0 {
+		b.Bounced, b.BouncePos = true, p
+	}
+	return rest, true
+}
+
+// landedShape picks the shape the mob landed on, as BDS's collision shapes
+// do: of the shapes whose centre is at or below the point 0.2 under the
+// feet, the one whose centre is nearest below it, ties going to the one
+// nearest the point. The shape must not be empty.
+func (b *Body) landedShape() (int, bool) {
+	p := Vec3{
+		X: (b.Box.Max.X-b.Box.Min.X)*0.5 + b.Box.Min.X,
+		Y: b.Box.Min.Y - 0.2,
+		Z: (b.Box.Max.Z-b.Box.Min.Z)*0.5 + b.Box.Min.Z,
+	}
+	best, found := 0, false
+	var bestD float32 = math.MaxFloat32
+	for i, s := range b.shapes {
+		d := p.Y - ((s.Max.Y-s.Min.Y)*0.5 + s.Min.Y)
+		if d < 0 {
+			continue
+		}
+		switch {
+		case bestD > d:
+			best, found, bestD = i, true, d
+		case found && d == bestD && centreDist(b.shapes[best], p) > centreDist(s, p):
+			best = i
+		}
+	}
+	if !found {
+		return 0, false
+	}
+	s := b.shapes[best]
+	return best, s.Min.X < s.Max.X && s.Min.Y < s.Max.Y && s.Min.Z < s.Max.Z
+}
+
+// centreDist is the squared distance from p to the centre of s, summed as
+// BDS sums it.
+func centreDist(s Box, p Vec3) float32 {
+	x := (s.Max.X-s.Min.X)*0.5 + s.Min.X - p.X
+	y := (s.Max.Y-s.Min.Y)*0.5 + s.Min.Y - p.Y
+	z := (s.Max.Z-s.Min.Z)*0.5 + s.Min.Z - p.Z
+	return z*z + (x*x + y*y)
 }
 
 // fall is the fall distance update of Actor::checkFallDamage (0xB2DF080).
