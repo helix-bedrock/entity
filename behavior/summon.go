@@ -278,7 +278,7 @@ func (g *SummonEntity) Tick() {
 	if c == nil || t == nil {
 		return
 	}
-	g.m.LookAt(lookPoint(t), g.cfg.LookYaw, g.cfg.LookPitch)
+	lookAtActor(g.m, t, g.cfg.LookYaw, g.cfg.LookPitch)
 	if g.cast--; g.cast == 0 {
 		g.flags = g.cfg.IdleFlags
 		g.m.SetFlag(FlagCasting, false)

@@ -71,6 +71,7 @@ func (m *b5Mob) PlaySound(s int)                     { m.played = append(m.playe
 func (m *b5Mob) LookAt(p Vec3, _, _ float32)         { m.look, m.looked = p, m.looked+1 }
 func (m *b5Mob) HasLookControl() bool                { return true }
 func (m *b5Mob) AmbientSound()                       { m.ambient++ }
+func (m *b5Mob) LastHurtByPlayer() ID                { return NoID }
 func (m *b5Mob) SwellDir() int32                     { return m.swell }
 func (m *b5Mob) SetSwellDir(d int32)                 { m.swell = d }
 func (m *b5Mob) PushedBy() (ID, bool)                { return m.pushedBy, m.pushed }

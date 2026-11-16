@@ -36,12 +36,12 @@ func (g *LayDown) CanUse() bool {
 	if g.mob.InWater() {
 		return false
 	}
-	return g.cfg.Interval == 0 || g.world.Random().NextInt(g.cfg.Interval) == 0
+	return g.cfg.Interval == 0 || g.world.ThreadRandom().NextInt(g.cfg.Interval) == 0
 }
 
 // CanContinueToUse implements goal.Goal (0x5750650).
 func (g *LayDown) CanContinueToUse() bool {
-	return g.cfg.RandomStopInterval != 0 && g.world.Random().NextInt(g.cfg.RandomStopInterval) != 0
+	return g.cfg.RandomStopInterval != 0 && g.world.ThreadRandom().NextInt(g.cfg.RandomStopInterval) != 0
 }
 
 // Start implements goal.Goal.
@@ -225,7 +225,7 @@ func (g *Sneeze) Tick() {
 	if len(g.cfg.EntityTypes) != 0 {
 		g.startle()
 	}
-	if g.cfg.DropItemChance > 0 && g.cfg.DropItemChance >= g.world.Random().NextFloat() && g.cfg.LootTable != "" {
+	if g.cfg.DropItemChance > 0 && g.cfg.DropItemChance >= g.world.ThreadRandom().NextFloat() && g.cfg.LootTable != "" {
 		m.DropLoot(g.cfg.LootTable)
 	}
 }

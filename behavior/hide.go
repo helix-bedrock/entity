@@ -20,6 +20,9 @@ type Hider interface {
 	// Raid reports a raid on the dweller's village (+648) and whether it
 	// has started (raid +4 == 0).
 	Raid() (exists, running bool)
+	// HasVillage reports that the DwellerComponent's village is still
+	// there (its weak pointer, 0x723E6C0).
+	HasVillage() bool
 	// CanReach reports a path to p (nav vt+40).
 	CanReach(p Vec3) bool
 }
@@ -91,7 +94,7 @@ func (g *Hide) CanUse() bool {
 		}
 		return g.canUse()
 	}
-	if !g.m.IsDweller() {
+	if !g.m.IsDweller() || !g.m.HasVillage() {
 		return false
 	}
 	if _, running := g.m.Raid(); running {
@@ -103,13 +106,13 @@ func (g *Hide) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x57497C0): a hiding mob stays
-// while the raid lasts.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A03540): a hiding
+// mob with a village stays exactly while the village has a raid; only
+// without a village does the walk decide.
 func (g *Hide) CanContinueToUse() bool {
-	if hiding, _, ok := g.m.Hide(); ok && hiding && g.m.IsDweller() {
-		if exists, _ := g.m.Raid(); exists {
-			return true
-		}
+	if hiding, _, ok := g.m.Hide(); ok && hiding && g.m.IsDweller() && g.m.HasVillage() {
+		exists, _ := g.m.Raid()
+		return exists
 	}
 	return g.keepLite()
 }

@@ -46,6 +46,7 @@ func newB11Mob(w World, p Vec3, kind string) *b11Mob {
 
 func (m *b11Mob) LastHurtByPlayer() ID             { return m.playerHit }
 func (m *b11Mob) RollCounter() (int32, bool)       { return m.counter, m.hasCount }
+func (m *b11Mob) Yaw() float32                     { _, y := m.HeadRotation(); return y }
 func (m *b11Mob) MayPlace(string, Pos) bool        { return true }
 func (m *b11Mob) ProbePath(Vec3) (PathProbe, bool) { return m.probe, m.probeOK }
 func (m *b11Mob) Collided() bool                   { return m.collided }

@@ -99,7 +99,7 @@ func (g *OfferFlower) Stop() {
 // Tick implements goal.Goal (0xBDC6F10).
 func (g *OfferFlower) Tick() {
 	if t := g.actor(g.target); t != nil {
-		g.mob.LookAt(lookPoint(t), g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
+		lookAtActor(g.mob, t, g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
 	}
 }
 
@@ -207,7 +207,7 @@ func (g *TakeFlower) Tick() {
 	if t == nil {
 		return
 	}
-	g.mob.LookAt(lookPoint(t), g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
+	lookAtActor(g.mob, t, g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
 	if !g.walking {
 		ticks, ok := g.m.OfferFlowerTicks(g.target)
 		if !ok || ticks != g.takeAt {

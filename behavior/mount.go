@@ -125,7 +125,7 @@ func (g *MountPathing) Tick() {
 	}
 	t := g.actor(g.target)
 	if t != nil {
-		g.mob.LookAt(lookPoint(t), mountLookMax, mountLookMax)
+		lookAtActor(g.mob, t, mountLookMax, mountLookMax)
 	}
 	if r.HijacksMount() {
 		return

@@ -628,6 +628,16 @@ func boxCentre(b Box) Vec3 {
 	return Vec3{X: (b.Max.X-b.Min.X)*0.5 + b.Min.X, Y: (b.Max.Y-b.Min.Y)*0.5 + b.Min.Y, Z: (b.Max.Z-b.Min.Z)*0.5 + b.Min.Z}
 }
 
+// lookAtActor is the look control's look at an entity (BDS 1.26.60
+// 0x741FC40): nothing happens while another look is set this tick or the
+// entity is removed.
+func lookAtActor(m Mob, a Actor, yaw, pitch float32) {
+	if a == nil || a.Removed() || m.LookBusy() {
+		return
+	}
+	m.LookAt(lookPoint(a), yaw, pitch)
+}
+
 // lookPoint is where goals aim the look control at an entity: the eyes of
 // a mob, the box centre height of anything else.
 func lookPoint(a Actor) Vec3 {

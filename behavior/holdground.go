@@ -13,6 +13,9 @@ type Holder interface {
 	HasLookControl() bool
 	// AmbientSound plays the mob's ambient sound (Mob::playAmbientSound).
 	AmbientSound()
+	// LastHurtByPlayer is the player that last hurt the mob, NoID for
+	// none.
+	LastHurtByPlayer() ID
 }
 
 // HoldGroundConfig is the JSON of minecraft:behavior.hold_ground.
@@ -47,15 +50,14 @@ func NewHoldGround(w World, h Holder, c HoldGroundConfig) *HoldGround {
 		min2: c.MinRadius * c.MinRadius, target: NoID}
 }
 
-// fighting reports that a is the mob's last attacker or the mob it last
-// hurt; both IDs are cleared when their entity is gone.
+// fighting reports that a is the mob or the player that last hurt the mob
+// (BDS 1.26.60 mLastHurtByMobId and mLastHurtByPlayerId).
 func (g *HoldGround) fighting(a Actor) bool {
 	if by := g.actor(g.h.LastHurtByMob()); by != nil && by.ID() == a.ID() {
 		return true
 	}
-	id, _ := g.h.LastHurtMob()
-	hurt := g.actor(id)
-	return hurt != nil && hurt.ID() == a.ID()
+	p := g.actor(g.h.LastHurtByPlayer())
+	return p != nil && p.ID() == a.ID()
 }
 
 // CanUse implements goal.Goal (0x574A270).
@@ -68,10 +70,10 @@ func (g *HoldGround) CanUse() bool {
 	return t != nil && !t.Removed()
 }
 
-// CanContinueToUse implements goal.Goal (0x574A500).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A04280).
 func (g *HoldGround) CanContinueToUse() bool {
 	t := g.actor(g.target)
-	if t == nil || t.Removed() {
+	if t == nil || !t.Alive() {
 		return false
 	}
 	if m := t.GameMode(); m == GameModeCreative || m == GameModeDefault && g.world.DefaultGameMode() == GameModeCreative {
@@ -136,13 +138,16 @@ func (g *HoldGround) Stop() {
 	clear(g.near)
 }
 
-// Tick implements goal.Goal (0x574ADF0).
+// Tick implements goal.Goal (BDS 1.26.60 0x5A04B10): the mob looks at the
+// target's head attach point while the look control is free.
 func (g *HoldGround) Tick() {
 	t := g.actor(g.target)
 	if t == nil || !g.h.HasLookControl() {
 		return
 	}
-	g.h.LookAt(t.Eyes(), holdLookYaw, g.h.MaxHeadXRot())
+	if !g.h.LookBusy() {
+		g.h.LookAt(t.AttachPos(attachHead), holdLookYaw, g.h.MaxHeadXRot())
+	}
 	if g.world.IRandom().NextInt(holdAmbientOneIn) == 0 {
 		g.h.AmbientSound()
 	}

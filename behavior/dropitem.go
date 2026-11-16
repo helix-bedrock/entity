@@ -197,11 +197,11 @@ func (g *DropItemFor) Tick() {
 	}
 	if !g.dropped && (g.reached || pathDone) {
 		g.dropped = true
-		if c := g.cfg.DropItemChance; c > 0 && c >= g.world.Random().NextFloat() && g.cfg.LootTable != "" {
+		if c := g.cfg.DropItemChance; c > 0 && c >= g.world.ThreadRandom().NextFloat() && g.cfg.LootTable != "" {
 			g.m.DropGift(g.cfg.LootTable, g.pickupDelay, t.ID())
 		}
 	}
-	g.mob.LookAt(t.Eyes(), g.cfg.MaxHeadLookAtHeight, g.mob.MaxHeadXRot())
+	lookAtActor(g.mob, t, g.cfg.MaxHeadLookAtHeight, g.mob.MaxHeadXRot())
 }
 
 // valid is the goal's isValidTarget: a solid block (Block::isSolid) with

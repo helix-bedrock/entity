@@ -113,7 +113,8 @@ func (g *SonicBoom) playSound(s int) {
 	}
 }
 
-// Start implements goal.Goal (0xBDCD2C0).
+// Start implements goal.Goal (BDS 1.26.60 0xBFA1C50): the look is only
+// set while the look control is free.
 func (g *SonicBoom) Start() {
 	m := g.m
 	t := g.actor(m.Target())
@@ -127,7 +128,9 @@ func (g *SonicBoom) Start() {
 	now := g.world.CurrentTick()
 	g.attack = timer{at: now + uint64(uint16(g.cfg.DurationUntilAttackSound)), set: true}
 	g.end = timer{at: now + uint64(uint16(g.cfg.Duration)), set: true}
-	m.LookAt(t.AttachPos(attachHead), wardenLookYaw, m.MaxHeadXRot())
+	if !m.LookBusy() {
+		m.LookAt(t.AttachPos(attachHead), wardenLookYaw, m.MaxHeadXRot())
+	}
 	g.playSound(g.cfg.ChargeSound)
 }
 

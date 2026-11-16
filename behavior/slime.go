@@ -284,7 +284,7 @@ func (g *SlimeAttack) Tick() {
 		return
 	}
 	if !t.Removed() {
-		g.mob.LookAt(lookPoint(t), g.cfg.YMaxRotation, g.cfg.XMaxRotation)
+		lookAtActor(g.mob, t, g.cfg.YMaxRotation, g.cfg.XMaxRotation)
 	}
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(t.Pos(), g.cfg.SpeedMultiplier)

@@ -119,7 +119,7 @@ func (g *FireAtTarget) Tick() {
 		p, q := g.m.Pos(), t.Pos()
 		faceYaw(g.m, g.m, float32(math.Atan2(float64(q.X-p.X), float64(q.Z-p.Z)))*-degPerRad, turn)
 	}
-	g.m.LookAt(lookPoint(t), g.cfg.MaxHeadRotationY, g.cfg.MaxHeadRotationX)
+	lookAtActor(g.m, t, g.cfg.MaxHeadRotationY, g.cfg.MaxHeadRotationX)
 	if g.fired || g.world.CurrentTick() < g.shoot {
 		return
 	}

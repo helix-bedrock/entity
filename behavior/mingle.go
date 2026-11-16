@@ -154,7 +154,8 @@ func (g *Mingle) Stop() {
 	g.stopPOI()
 }
 
-// Tick implements goal.Goal (0x5272A50).
+// Tick implements goal.Goal (BDS 1.26.60 0x5434840): the chat sound plays
+// at the head attach point.
 func (g *Mingle) Tick() {
 	g.tickPOI()
 	id := g.mob.ID()
@@ -201,7 +202,7 @@ func (g *Mingle) Tick() {
 		g.left--
 		g.lookAt(s.Partner)
 		if g.soundIn > 0 && g.left%g.soundIn == 0 {
-			g.mob.PlaySoundAt(g.cfg.Sound, g.mob.Eyes())
+			g.mob.PlaySoundAt(g.cfg.Sound, g.mob.AttachPos(attachHead))
 			g.soundIn = g.cfg.SoundMin + g.world.IRandom().NextInt(g.cfg.SoundSpan)
 		}
 	}
@@ -260,6 +261,6 @@ func (g *Mingle) stopNav() {
 // lookAt is 0x5273920.
 func (g *Mingle) lookAt(id ID) {
 	if p := g.actor(id); p != nil && !p.Removed() {
-		g.mob.LookAt(lookPoint(p), mingleLook, mingleLook)
+		lookAtActor(g.mob, p, mingleLook, mingleLook)
 	}
 }

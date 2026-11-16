@@ -81,7 +81,7 @@ func (g *ReceiveLove) Tick() {
 	if p == nil || !p.IsMob() {
 		return
 	}
-	m.LookAt(lookPoint(p), loveLookYaw, loveLookPitch)
+	lookAtActor(m, p, loveLookYaw, loveLookPitch)
 	if dist2(m.Pos(), p.Pos()) > loveFollow2 {
 		if n := m.Nav(); n != nil {
 			n.MoveToActor(p, loveWalkSpeed)
@@ -224,7 +224,7 @@ func (g *MakeLove) Tick() {
 	if p == nil || !p.IsMob() {
 		return
 	}
-	m.LookAt(lookPoint(p), loveLookYaw, loveLookPitch)
+	lookAtActor(m, p, loveLookYaw, loveLookPitch)
 	if g.timer == 0 && p.Flag(FlagInLove) && dist2(m.Pos(), p.Pos()) <= loveNear2 {
 		if m.SpawnBaby(p.ID()) {
 			for _, id := range [...]ID{m.ID(), p.ID()} {

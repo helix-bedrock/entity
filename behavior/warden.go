@@ -1,7 +1,5 @@
 package behavior
 
-import "sort"
-
 // The warden goals' actor flags, by BDS's actor flag number.
 const (
 	FlagCroaking  = 101
@@ -86,8 +84,9 @@ func (f *suspectFinder) nearest(m Warden, r float32) Actor {
 	return nil
 }
 
-// nearestOf is 0xBDCCD20 on top of 0xB30BE90: entities sorted by squared
-// distance from the mob, then the invalid suspects dropped.
+// nearestOf is BDS 1.26.60 0xBFA16C0 on top of 0xB3D4280: entities sorted
+// by squared distance from the mob (libc++ std::sort), then the invalid
+// suspects dropped.
 func (f *suspectFinder) nearestOf(m Warden, actorType int, r float32) Actor {
 	b := m.Box()
 	box := sortedBox(sub(b.Min, Vec3{X: r, Y: r, Z: r}), add(b.Max, Vec3{X: r, Y: r, Z: r}))
@@ -97,7 +96,7 @@ func (f *suspectFinder) nearestOf(m Warden, actorType int, r float32) Actor {
 	for _, a := range f.near {
 		f.found = append(f.found, sniffTarget{a: a, d2: dist2(p, a.Pos())})
 	}
-	sort.SliceStable(f.found, func(i, j int) bool { return f.found[i].d2 < f.found[j].d2 })
+	stdSort(f.found, func(x, y sniffTarget) bool { return x.d2 < y.d2 })
 	for _, t := range f.found {
 		if m.ValidSuspect(t.a) {
 			return t.a
@@ -344,9 +343,10 @@ func (g *Roar) Stop() {
 	g.m.AddAnger(a, AngerBoost, false)
 }
 
-// Tick implements goal.Goal (0xBDCAD70).
+// Tick implements goal.Goal (BDS 1.26.60 0xBF9F930): the look is only set
+// while the look control is free.
 func (g *Roar) Tick() {
-	if a := g.actor(g.at); a != nil {
+	if a := g.actor(g.at); a != nil && !g.m.LookBusy() {
 		g.m.LookAt(a.AttachPos(attachHead), wardenLookYaw, g.m.MaxHeadXRot())
 	}
 }
@@ -414,7 +414,7 @@ func (g *Sniff) Stop() {
 		}
 	}
 	g.m.SetFlag(FlagSniffing, false)
-	g.ready = g.world.CurrentTick() + uint64(uint16(randomTicks(g.world.Random(), g.cfg.Cooldown)))
+	g.ready = g.world.CurrentTick() + uint64(uint16(randomTicks(g.world.ThreadRandom(), g.cfg.Cooldown)))
 }
 
 // Tick implements goal.Goal.

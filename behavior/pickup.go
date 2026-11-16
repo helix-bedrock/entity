@@ -231,7 +231,7 @@ func (g *PickupItems) Tick() {
 		return
 	}
 	m := g.m
-	m.LookAt(lookPoint(t), itemLookMax, itemLookMax)
+	lookAtActor(m, t, itemLookMax, itemLookMax)
 	q := t.Pos()
 	q.Y = t.Box().Min.Y
 	d2 := dist2(m.Pos(), q)

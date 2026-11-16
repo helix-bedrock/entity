@@ -192,7 +192,7 @@ func (g *FindMount) Tick() {
 	}
 	g.repath = g.world.Random().NextInt(findMountRepathSpan) + findMountRepathMin
 	if g.hasPath {
-		m.LookAt(lookPoint(t), findMountLook, findMountLook)
+		lookAtActor(m, t, findMountLook, findMountLook)
 		m.FollowPath(findMountSpeed)
 		g.hasPath = false
 	}

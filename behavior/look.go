@@ -77,7 +77,7 @@ type near struct {
 	d2 float32
 }
 
-// sortedNear is BDS's nearby query (0xB30BE90): the entities in the box
+// sortedNear is BDS's nearby query (BDS 1.26.60 0xB3D4280): the entities in the box
 // grown by d, nearest first. It reuses dst and buf.
 func sortedNear(w World, m Mob, d float32, dst []Actor, buf []near) ([]Actor, []near) {
 	b := m.Box()
@@ -97,17 +97,11 @@ func sortedNear(w World, m Mob, d float32, dst []Actor, buf []near) ([]Actor, []
 	return dst, buf
 }
 
-// sortNear sorts nearest first.
+// sortNear sorts nearest first with libc++'s std::sort, as BDS's sorted
+// nearby query does (BDS 1.26.60 0xB3D4280, sort 0xB40A630), so entities
+// at the same distance end in BDS's order.
 func sortNear(s []near) {
-	slices.SortStableFunc(s, func(x, y near) int {
-		switch {
-		case x.d2 < y.d2:
-			return -1
-		case x.d2 > y.d2:
-			return 1
-		}
-		return 0
-	})
+	stdSort(s, func(x, y near) bool { return x.d2 < y.d2 })
 }
 
 // wrap180 folds an angle into [0, 180] the way the view test does.

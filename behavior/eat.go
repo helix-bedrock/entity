@@ -217,13 +217,17 @@ func (g *Snacking) CanUse() bool {
 	return g.next <= g.world.CurrentTick() && !m.Flag(FlagBaby) && !m.Flag(FlagSitting) && !m.InWater() && m.Nav() != nil && g.find()
 }
 
-// CanContinueToUse implements goal.Goal (0x5931AD0).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B07ED0): on the
+// way to food the target must still be alive with a path to it, and the
+// water and stop chance tests run as well.
 func (g *Snacking) CanContinueToUse() bool {
 	m := g.m
 	if m.Slot(SlotMainhand).Empty() {
 		t := g.actor(g.target)
 		n := m.Nav()
-		return t != nil && !t.Removed() && n != nil && n.Held()
+		if t == nil || !t.Alive() || n == nil || !n.Held() {
+			return false
+		}
 	}
 	return !m.InWater() && float32(g.stop) <= g.world.IRandom().NextFloat()
 }
@@ -306,11 +310,13 @@ func (g *Snacking) Tick() {
 // walk is the tick on the way to food: once near, one of it is picked up.
 func (g *Snacking) walk() {
 	t := g.actor(g.target)
-	if t == nil || t.Removed() {
+	if t == nil || !t.Alive() {
 		return
 	}
 	m := g.m
-	m.LookAt(lookPoint(t), itemLookMax, itemLookMax)
+	if !m.LookBusy() {
+		m.LookAt(lookPoint(t), itemLookMax, itemLookMax)
+	}
 	p, q := m.Pos(), t.Pos()
 	q.Y = t.Box().Min.Y
 	if dist2(p, q) > snackPickup2 {

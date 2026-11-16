@@ -321,7 +321,7 @@ func (g *RangedAttack) Tick() {
 		g.seen = 0
 	}
 	g.move(t, d2)
-	g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
+	lookAtActor(g.m, t, g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	if g.burst <= 0 {
 		g.load(d2, seen)
 		return
