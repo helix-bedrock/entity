@@ -98,6 +98,16 @@ type World interface {
 	ContainsLiquid(b Box) bool
 }
 
+// UnloadedWorld is a World that also reports whether its last
+// CollisionBoxes call reached into a chunk that is not loaded. A mob whose
+// shapes came from near an unloaded chunk keeps its horizontal speed when
+// blocked, as in BDS (CollisionShapes' near-unloaded flag). Worlds that do
+// not implement it never are.
+type UnloadedWorld interface {
+	World
+	NearUnloadedChunk() bool
+}
+
 // Travel is the way a mob moves this tick, as BDS's TravelTypeSensingSystem
 // picks it.
 type Travel uint8
@@ -245,6 +255,7 @@ type Body struct {
 	speed, friction float32
 	autoClimb       bool
 	depen           uint8
+	nearUnloaded    bool
 	gravity         float32
 	slowFall        bool
 	delta, done     Vec3

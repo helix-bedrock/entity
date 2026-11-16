@@ -239,6 +239,10 @@ func (b *Body) moveCollide(w World) {
 		b.delta = Vec3{X: b.delta.X / l * maxMove, Y: b.delta.Y / l * maxMove, Z: b.delta.Z / l * maxMove}
 	}
 	b.shapes = w.CollisionBoxes(b.shapes[:0], b.fetchBox())
+	b.nearUnloaded = false
+	if u, ok := w.(UnloadedWorld); ok {
+		b.nearUnloaded = u.NearUnloadedChunk()
+	}
 
 	b.AutoStepped = false
 	b.dropOneWay()
@@ -363,10 +367,12 @@ func (b *Body) finalize(req, done Vec3) {
 		was := b.OnGround
 		b.OnGround = b.VerticalCollision && req.Y < 0 || was && !b.VerticalCollision && req.Y == 0
 	}
-	if b.HorizontalCollision[0] {
+	// ResetHorizontalVelocitySystem skips a mob whose shapes came from
+	// near an unloaded chunk.
+	if b.HorizontalCollision[0] && !b.nearUnloaded {
 		b.Vel.X = 0
 	}
-	if b.HorizontalCollision[1] {
+	if b.HorizontalCollision[1] && !b.nearUnloaded {
 		b.Vel.Z = 0
 	}
 	if b.VerticalCollision {
