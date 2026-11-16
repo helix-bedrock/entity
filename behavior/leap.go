@@ -24,7 +24,9 @@ func DefaultLeap() LeapConfig {
 	return LeapConfig{MustBeOnGround: true}
 }
 
-// Leap is LeapAtTargetGoal: the mob jumps at a target 2 to 4 blocks away.
+// Leap is LeapAtTargetGoal (BDS 1.26.60 canUse 0x54272F0, canContinueToUse
+// 0x5427640, start 0x5427700): the mob jumps at a target 2 to 4 blocks away.
+// The 1 in 5 roll draws from the thread random.
 type Leap struct {
 	base
 	cfg    LeapConfig
@@ -52,7 +54,7 @@ func (g *Leap) CanUse() bool {
 	if g.cfg.MustBeOnGround && !g.mob.OnGround() {
 		return g.no("not on the ground")
 	}
-	if g.world.Random().NextInt(leapChance) != 0 {
+	if g.world.ThreadRandom().NextInt(leapChance) != 0 {
 		return g.no("random 1 in 5 failed")
 	}
 	g.target = t.ID()

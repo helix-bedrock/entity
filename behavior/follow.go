@@ -40,7 +40,9 @@ func DefaultFollowOwner() FollowOwnerConfig {
 	}
 }
 
-// FollowOwner is FollowOwnerGoal: a pet walks after its owner and
+// FollowOwner is FollowOwnerGoal (BDS 1.26.60 canUse 0x59FAAE0, reach test
+// 0x59FAE40, canContinueToUse 0x59FB000, start 0x59FB220, stop 0x59FB330,
+// tick 0x59FB490, teleport 0x59FB8C0): a pet walks after its owner and
 // teleports to it when it falls far behind.
 type FollowOwner struct {
 	base
@@ -56,14 +58,15 @@ func NewFollowOwner(w World, m Mob, c FollowOwnerConfig) *FollowOwner {
 	return &FollowOwner{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, owner: NoID}
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal. BDS looks the owner up as a player, so an
+// owner that is not one is never followed.
 func (g *FollowOwner) CanUse() bool {
 	n := g.mob.Nav()
 	if n == nil {
 		return false
 	}
 	o := g.actor(g.mob.Owner())
-	if o == nil || spectator(g.world, o) || g.mob.Flag(FlagSitting) {
+	if o == nil || !o.IsPlayer() || spectator(g.world, o) || g.mob.Flag(FlagSitting) {
 		return false
 	}
 	if o.Dimension() != g.mob.Dimension() {
@@ -175,8 +178,8 @@ func (g *FollowOwner) teleport(o Actor) {
 	}
 }
 
-// spotFinder is BDS's teleport spot search (0xBDD0B10), with the buffers it
-// reuses.
+// spotFinder is BDS's teleport spot search (1.26.60 0xBF2AA10), with the
+// buffers it reuses. The shuffle and jitter draw from the thread random.
 type spotFinder struct {
 	spots []Vec3
 	buf   []Actor
@@ -212,7 +215,7 @@ func (g *spotFinder) find(w World, m Mob, o Actor, ring int32, random bool) (Vec
 	if len(g.spots) == 0 {
 		return Vec3{}, false
 	}
-	rnd := w.Random()
+	rnd := w.ThreadRandom()
 	for i := 1; i < len(g.spots); i++ {
 		if j := int(rnd.NextInt(int32(i + 1))); j != i {
 			g.spots[i], g.spots[j] = g.spots[j], g.spots[i]
