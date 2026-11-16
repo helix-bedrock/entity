@@ -39,9 +39,7 @@ func (b *Body) afterMove(w World) {
 	case TravelWater:
 		b.waterDrag()
 	case TravelLava:
-		if !b.Nav.CanWalkInLava {
-			b.Vel = scale(b.Vel, 0.5)
-		}
+		b.lavaDrag()
 	}
 	levitating := b.Levitation >= 0
 	if levitating {
@@ -82,6 +80,14 @@ func (b *Body) waterDrag() {
 	b.Vel.X *= h
 	b.Vel.Y *= waterDrag
 	b.Vel.Z *= h
+}
+
+// lavaDrag is MobMovementDrag's lava drag: lava halves the velocity of a mob
+// that does not walk on it.
+func (b *Body) lavaDrag() {
+	if !b.Nav.CanWalkInLava {
+		b.Vel = scale(b.Vel, 0.5)
+	}
 }
 
 // gravityStep is the gravity systems (0x7261270): the travel type picks an

@@ -52,8 +52,8 @@ func parseAfter(r []byte) afterCase {
 	return c
 }
 
-// body builds a ground mob's Body from the case's inputs.
-func (c *afterCase) body() *Body {
+// body builds a mob's Body from the case's inputs.
+func (c *afterCase) body(travel Travel) *Body {
 	b := &Body{Vel: c.vel, FallDistance: c.fall, SlowFalling: c.slowFalling == 2, VerticalFriction: c.vertFriction}
 	b.Flags = c.flags
 	if c.frHas {
@@ -64,7 +64,7 @@ func (c *afterCase) body() *Body {
 		v := c.adMod
 		b.Attrs.AirDrag = &v
 	}
-	b.travel = TravelGround
+	b.travel = travel
 	b.friction = c.travelFr
 	return b
 }
@@ -72,8 +72,13 @@ func (c *afterCase) body() *Body {
 // TestOracleAfter compares the ground after-move systems (gravity choice,
 // apply gravity, vertical drag, friction) with BDS 1.26.60's, each from the
 // same inputs, bit for bit.
-func TestOracleAfter(t *testing.T) {
-	recs := oracleRecords(t, "ORACLE_AFTER", "after", 96)
+func TestOracleAfter(t *testing.T) { checkAfter(t, "ORACLE_AFTER", "after", TravelGround) }
+
+// TestOracleAir is the same for the air versions of those systems.
+func TestOracleAir(t *testing.T) { checkAfter(t, "ORACLE_AIR", "air", TravelAir) }
+
+func checkAfter(t *testing.T, env, job string, travel Travel) {
+	recs := oracleRecords(t, env, job, 96)
 	bad := map[string]int{}
 	report := func(step string, i int, c *afterCase, format string, args ...any) {
 		if bad[step] < 5 {
@@ -84,7 +89,7 @@ func TestOracleAfter(t *testing.T) {
 	for i, r := range recs {
 		c := parseAfter(r)
 
-		b := c.body()
+		b := c.body(travel)
 		var wantG float32 = afterSentinel
 		var wantReset uint8 = 2
 		if b.airGravity() {
@@ -98,7 +103,7 @@ func TestOracleAfter(t *testing.T) {
 		}
 
 		if c.ran {
-			b = c.body()
+			b = c.body(travel)
 			b.gravity, b.slowFall = c.applyG, c.applyReset
 			b.applyGravity()
 			if !sameBits(b.Vel.Y, c.applyVelY) || !sameBits(b.FallDistance, c.applyFall) {
@@ -106,13 +111,13 @@ func TestOracleAfter(t *testing.T) {
 			}
 		}
 
-		b = c.body()
+		b = c.body(travel)
 		b.verticalDrag()
 		if !sameBits(b.Vel.Y, c.dragVelY) {
 			report("drag", i, &c, "bds %v, ours %v", c.dragVelY, b.Vel.Y)
 		}
 
-		b = c.body()
+		b = c.body(travel)
 		b.applyFriction()
 		if !sameVec(b.Vel, c.frictionVel) {
 			report("friction", i, &c, "bds %v, ours %v", c.frictionVel, b.Vel)
