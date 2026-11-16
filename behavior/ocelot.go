@@ -49,12 +49,12 @@ func NewOcelotAttack(w World, m Prowler, c OcelotAttackConfig) *OcelotAttack {
 	return &OcelotAttack{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5754100).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5503E80).
 func (g *OcelotAttack) CanUse() bool {
 	return g.m.Nav() != nil && g.actor(g.m.Target()) != nil
 }
 
-// CanContinueToUse implements goal.Goal (0x57541E0).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5503F60).
 func (g *OcelotAttack) CanContinueToUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || !t.Alive() {
@@ -73,7 +73,7 @@ func (g *OcelotAttack) CanContinueToUse() bool {
 // Start implements goal.Goal.
 func (g *OcelotAttack) Start() {}
 
-// Stop implements goal.Goal (0x57543A0).
+// Stop implements goal.Goal (BDS 1.26.60 0x5504120).
 func (g *OcelotAttack) Stop() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -82,7 +82,7 @@ func (g *OcelotAttack) Stop() {
 	g.m.SetSprinting(false)
 }
 
-// Tick implements goal.Goal (0x57544C0).
+// Tick implements goal.Goal (BDS 1.26.60 0x5504240).
 func (g *OcelotAttack) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil {

@@ -141,20 +141,22 @@ func (g *FollowMob) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x59FA020): the
+// target must be alive.
 func (g *FollowMob) CanContinueToUse() bool {
 	t := g.actor(g.target)
 	n := g.mob.Nav()
-	if t == nil || t.Removed() || n == nil || n.Done() {
+	if t == nil || !t.Alive() || n == nil || n.Done() {
 		return false
 	}
 	return dist2(g.mob.Pos(), t.Pos()) > g.cfg.StopDistance*g.cfg.StopDistance
 }
 
-// Start implements goal.Goal.
+// Start implements goal.Goal (BDS 1.26.60 0x59FA210).
 func (g *FollowMob) Start() { g.timer = 0 }
 
-// Stop implements goal.Goal.
+// Stop implements goal.Goal (BDS 1.26.60 0x59FA220; the goal's abort
+// switch at +193 is always on).
 func (g *FollowMob) Stop() {
 	g.target = NoID
 	if n := g.mob.Nav(); n != nil {
@@ -162,10 +164,11 @@ func (g *FollowMob) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x5740370).
+// Tick implements goal.Goal (BDS 1.26.60 0x59FA370): nothing happens
+// while the target is leashed or dead.
 func (g *FollowMob) Tick() {
 	t := g.actor(g.target)
-	if t == nil || t.Flag(FlagLeashed) || t.Removed() {
+	if t == nil || t.Flag(FlagLeashed) || !t.Alive() {
 		return
 	}
 	m := g.mob

@@ -43,6 +43,9 @@ type AquaticCharger interface {
 	MovementAttribute() float32
 	// HorizontalCollision is HorizontalCollisionFlagComponent.
 	HorizontalCollision() bool
+	// Yaw is the yaw of ActorRotationComponent, the one the swim steering
+	// turns.
+	Yaw() float32
 }
 
 // AquaticChargeAttackConfig is the JSON of
@@ -90,7 +93,7 @@ func NewAquaticChargeAttack(w World, m AquaticCharger, c AquaticChargeAttackConf
 	return &AquaticChargeAttack{base: base{mob: m, world: w, flags: flagsMove}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x48C3910).
+// CanUse implements goal.Goal (BDS 1.26.60 0x4A7CB90).
 func (g *AquaticChargeAttack) CanUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || g.m.InBoat(t) {
@@ -99,7 +102,7 @@ func (g *AquaticChargeAttack) CanUse() bool {
 	return g.m.WasInWater(g.m)
 }
 
-// CanContinueToUse implements goal.Goal (0x48C3AF0).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x4A7CD70).
 func (g *AquaticChargeAttack) CanContinueToUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || !t.Alive() {
@@ -113,7 +116,7 @@ func (g *AquaticChargeAttack) CanContinueToUse() bool {
 	return d*d >= dist2(t.Pos(), g.m.Pos())
 }
 
-// Start implements goal.Goal (0x48C3C70).
+// Start implements goal.Goal (BDS 1.26.60 0x4A7CF00).
 func (g *AquaticChargeAttack) Start() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -132,14 +135,15 @@ func (g *AquaticChargeAttack) aim(t Actor) {
 
 func (g *AquaticChargeAttack) clearWander() { g.wander, g.last, g.stuck = Vec3{}, Vec3{}, 0 }
 
-// Stop implements goal.Goal (0x48C3E00).
+// Stop implements goal.Goal (BDS 1.26.60 0x4A7D090).
 func (g *AquaticChargeAttack) Stop() {
 	g.m.Event(chargeStopEvent, NoID)
 	g.hit, g.missed = false, false
 	g.clearWander()
 }
 
-// Tick implements goal.Goal (0x48C3ED0).
+// Tick implements goal.Goal (BDS 1.26.60 0x4A7D160; reach 0x4A7D8C0,
+// knock 0x4A7D9C0).
 func (g *AquaticChargeAttack) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -235,7 +239,7 @@ func (g *AquaticChargeAttack) knock(t Actor) {
 		Extra: knockbackExtra, DirX: -dir.X, DirZ: -dir.Z})
 }
 
-// end finishes a charge (0x48C4420): hit or missed, a random cooldown, and
+// end finishes a charge (BDS 1.26.60 0x4A7D6B0): hit or missed, a random cooldown, and
 // one step of swimming about.
 func (g *AquaticChargeAttack) end(hit bool) {
 	if hit {
@@ -260,7 +264,7 @@ func (g *AquaticChargeAttack) wanderRange() int32 {
 	return wanderLowRange
 }
 
-// wanderStep is one tick of swimming about (0x720B590): steer at the
+// wanderStep is one tick of swimming about (BDS 1.26.60 0x7519F00): steer at the
 // wander spot and pick a new one when it is reached or the mob is stuck.
 func (g *AquaticChargeAttack) wanderStep(attr float32) {
 	if !g.m.WasInWater(g.m) {
@@ -290,8 +294,9 @@ func (g *AquaticChargeAttack) wanderStep(attr float32) {
 	g.pickWander()
 }
 
-// pickWander is the swim spot picker (0x720AB90): up to five land helper
-// spots under the water surface, else one straight ahead.
+// pickWander is the swim spot picker (BDS 1.26.60 0x75194E0): up to five
+// land helper spots under the water surface, else one straight ahead along
+// the rotation yaw. The depth roll is on the thread random.
 func (g *AquaticChargeAttack) pickWander() {
 	if !g.m.WasInWater(g.m) {
 		return
@@ -308,8 +313,7 @@ func (g *AquaticChargeAttack) pickWander() {
 		}
 	}
 	p := g.m.Pos()
-	_, yaw := g.m.HeadRotation()
-	r := float64(yaw * radPerDeg)
+	r := float64(g.m.Yaw() * radPerDeg)
 	half := 0.5 * float32(n)
 	x, z := p.X-float32(math.Sin(r))*half, float32(math.Cos(r))*half+p.Z
 	if y, ok := g.wanderDepth(x, z, n); ok {
@@ -339,7 +343,7 @@ func (g *AquaticChargeAttack) wanderDepth(x, z float32, n int32) (float32, bool)
 	if lo <= ground {
 		lo = ground + wanderFloorPad
 	}
-	f := g.world.Random().NextFloat()
+	f := g.world.ThreadRandom().NextFloat()
 	if lo > surface {
 		return 0, false
 	}
@@ -365,9 +369,9 @@ func (g *AquaticChargeAttack) setWander(w Vec3) {
 	}
 }
 
-// steer is the swim steering step (0x720B920): turn towards dir by at most
-// limit degrees and take vel as the motion when it differs.
-func steer(m Mob, dir, vel Vec3, limit float32) {
+// steer is the swim steering step (BDS 1.26.60 0x751A290): turn towards
+// dir by at most limit degrees and take vel as the motion when it differs.
+func steer(m AquaticCharger, dir, vel Vec3, limit float32) {
 	if length2(dir) > steerEpsilon {
 		turnYaw(m, float32(math.Atan2(float64(-dir.X), float64(dir.Z)))*degPerRad, limit)
 	}
@@ -376,10 +380,11 @@ func steer(m Mob, dir, vel Vec3, limit float32) {
 	}
 }
 
-// turnYaw turns the mob's rotation towards yaw by at most limit degrees;
-// BDS only writes it when it changes.
-func turnYaw(m Mob, yaw, limit float32) {
-	_, cur := m.HeadRotation()
+// turnYaw turns the mob's ActorRotationComponent yaw towards yaw by at
+// most limit degrees; BDS reads and writes that same yaw, and only writes
+// it when it changes.
+func turnYaw(m AquaticCharger, yaw, limit float32) {
+	cur := m.Yaw()
 	if v := approachDegrees(cur, yaw, limit); v != cur {
 		m.SetYaw(v)
 	}

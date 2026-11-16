@@ -79,8 +79,8 @@ func NewShareItems(w World, m Sharer, c ShareItemsConfig) *ShareItems {
 	return &ShareItems{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, r2: c.GoalRadius * c.GoalRadius}
 }
 
-// CanUse implements goal.Goal (0x59270F0): an offer and a nearby mob that
-// wants it.
+// CanUse implements goal.Goal (BDS 1.26.60 0x5AFD2B0): an offer and a
+// nearby mob that wants it.
 func (g *ShareItems) CanUse() bool {
 	m := g.m
 	if !m.Shareable() || m.Nav() == nil {
@@ -110,17 +110,19 @@ func (g *ShareItems) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x5928EB0).
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5AFF230): the
+// target must still be alive.
 func (g *ShareItems) CanContinueToUse() bool {
 	if !g.m.Shareable() || g.timer < shareGiveUp {
 		return false
 	}
 	t := g.actor(g.m.Target())
-	return t != nil && !t.Removed() && dist2(t.Pos(), g.m.Pos()) <= shareKeep2
+	return t != nil && t.Alive() && dist2(t.Pos(), g.m.Pos()) <= shareKeep2
 }
 
-// Start implements goal.Goal (0x5929040): the item is held out and the
-// walk begins.
+// Start implements goal.Goal (BDS 1.26.60 0x5AFF3B0): the item is held
+// out and the walk begins; the repath wait is only set when a path was
+// made.
 func (g *ShareItems) Start() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -128,13 +130,13 @@ func (g *ShareItems) Start() {
 	}
 	g.m.SetSlot(SlotMainhand, g.item)
 	g.timer = shareThrowWait
-	if n := g.m.Nav(); n != nil {
-		n.MoveToActor(t, g.cfg.SpeedMultiplier)
+	if n := g.m.Nav(); n != nil && n.MoveToActor(t, g.cfg.SpeedMultiplier) {
+		g.repath = itemRepathFirst
 	}
-	g.repath = itemRepathFirst
 }
 
-// Stop implements goal.Goal (0x59292F0): an unthrown item goes back.
+// Stop implements goal.Goal (BDS 1.26.60 0x5AFF660): an unthrown item goes
+// back.
 func (g *ShareItems) Stop() {
 	if !g.item.Empty() {
 		g.m.StoreItem(g.item)
@@ -147,7 +149,10 @@ func (g *ShareItems) Stop() {
 	g.timer = 0
 }
 
-// Tick implements goal.Goal (0x5929670).
+// Tick implements goal.Goal (BDS 1.26.60 0x5AFF9E0). BDS measures the
+// throw distance from the target to itself, so with a goal_radius above 0
+// the item is thrown once the countdown runs out, however far away the
+// target is.
 func (g *ShareItems) Tick() {
 	m := g.m
 	t := g.actor(m.Target())
@@ -158,7 +163,7 @@ func (g *ShareItems) Tick() {
 		m.LookAt(lookPoint(t), itemLookMax, itemLookMax)
 	}
 	g.repath--
-	if g.item.Empty() || dist2(t.Pos(), m.Pos()) < g.r2 {
+	if g.item.Empty() || dist2(t.Pos(), t.Pos()) < g.r2 {
 		old := g.timer
 		g.timer--
 		switch {

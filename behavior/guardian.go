@@ -101,7 +101,8 @@ func (g *GuardianAttack) CanContinueToUse() bool {
 	return g.m.Flag(FlagElder) || dist2(g.m.Pos(), t.Pos()) > g.cfg.MinDistance*g.cfg.MinDistance
 }
 
-// Start implements goal.Goal.
+// Start implements goal.Goal: the look request is skipped while the look
+// control already has one this tick.
 func (g *GuardianAttack) Start() {
 	g.timer = -g.cfg.SoundDelay
 	if n := g.m.Nav(); n != nil {
@@ -110,7 +111,7 @@ func (g *GuardianAttack) Start() {
 		n.SetFlags(f &^ uint32(nav.FlagCanSink))
 		n.Stop()
 	}
-	if t := g.actor(g.m.Target()); t != nil && !t.Removed() {
+	if t := g.actor(g.m.Target()); t != nil && !g.m.LookBusy() && !t.Removed() {
 		g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	}
 }
@@ -137,7 +138,7 @@ func (g *GuardianAttack) Tick() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
 	}
-	if !t.Removed() {
+	if !g.m.LookBusy() && !t.Removed() {
 		g.m.LookAt(lookPoint(t), g.cfg.YMaxHeadRotation, g.cfg.XMaxRotation)
 	}
 	if t.IsPlayer() && spectator(g.world, t) {

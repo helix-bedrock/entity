@@ -75,7 +75,7 @@ func (g *MoveToRandomBlock) standable() bool {
 	return true
 }
 
-// CanUse implements goal.Goal (0x5279C70).
+// CanUse implements goal.Goal (BDS 1.26.60 0x543BA50).
 func (g *MoveToRandomBlock) CanUse() bool {
 	if g.mob.Nav() == nil {
 		return false
@@ -96,8 +96,8 @@ func (g *MoveToRandomBlock) CanUse() bool {
 	return g.standable()
 }
 
-// CanContinueToUse implements goal.Goal: canUse runs again first, cooldown
-// and all.
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x543BEF0): canUse
+// runs again first, cooldown and all.
 func (g *MoveToRandomBlock) CanContinueToUse() bool {
 	if !g.CanUse() || g.target == (Vec3{}) || g.cooldown > 0 {
 		return false
@@ -105,7 +105,7 @@ func (g *MoveToRandomBlock) CanContinueToUse() bool {
 	return g.standable()
 }
 
-// Start implements goal.Goal.
+// Start implements goal.Goal (BDS 1.26.60 0x543BD80).
 func (g *MoveToRandomBlock) Start() {
 	if n := g.mob.Nav(); n != nil && g.target != (Vec3{}) && !n.Done() {
 		n.Stop()
@@ -114,7 +114,7 @@ func (g *MoveToRandomBlock) Start() {
 	g.last = g.mob.Pos()
 }
 
-// Stop implements goal.Goal.
+// Stop implements goal.Goal (BDS 1.26.60 0x543C6A0).
 func (g *MoveToRandomBlock) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -122,7 +122,7 @@ func (g *MoveToRandomBlock) Stop() {
 	g.target = Vec3{}
 }
 
-// Tick implements goal.Goal (0x527A290).
+// Tick implements goal.Goal (BDS 1.26.60 0x543C0A0).
 func (g *MoveToRandomBlock) Tick() {
 	if g.target == (Vec3{}) {
 		return

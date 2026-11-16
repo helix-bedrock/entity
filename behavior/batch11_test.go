@@ -36,6 +36,9 @@ type b11Mob struct {
 	node      func(p Pos) path.NodeType
 }
 
+// StandingOn is the block under the mob's feet.
+func (m *b11Mob) StandingOn() Pos { p := blockOf(m.Pos()); p.Y--; return p }
+
 func newB11Mob(w World, p Vec3, kind string) *b11Mob {
 	return &b11Mob{b9Mob: newB9Mob(w, 1, p, kind), playerHit: NoID, probeOK: true,
 		probe: PathProbe{Status: path.StatusComplete}}
@@ -219,7 +222,7 @@ func TestJumpToBlockPicksTurnsAndJumps(t *testing.T) {
 	if g.state != jumpBlockDone || m.flags[FlagJumpGoal] {
 		t.Fatal("landing did not end the jump")
 	}
-	w.blocks[Pos{Y: 64}] = Block{Name: honeyBlockName}
+	w.blocks[Pos{Y: 63}] = Block{Name: honeyBlockName}
 	w.tick = 1000
 	if g.CanUse() {
 		t.Fatal("jumped off honey")

@@ -23,8 +23,8 @@ type FollowTargetLeaderConfig struct {
 	MaxSearches int32
 	// SearchBox is how far around the mob's box a leader is looked for.
 	SearchBox Vec3
-	// StepFactor scales the movement speed into the length of each step
-	// toward the leader.
+	// StepFactor scales the follow_range attribute into the length of each
+	// step toward the leader.
 	StepFactor float32
 }
 
@@ -65,7 +65,8 @@ func (g *FollowTargetLeader) passes(a Actor) bool {
 	return g.cfg.LeaderFilters == nil || g.cfg.LeaderFilters(g.m, a)
 }
 
-// CanUse implements goal.Goal (0x59FC9E0).
+// CanUse implements goal.Goal (BDS 1.26.60 0x59FC9E0; search filter
+// 0x59FCF30).
 func (g *FollowTargetLeader) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
@@ -149,8 +150,8 @@ func (g *FollowTargetLeader) Tick() {
 	n.MoveTo(g.to, g.cfg.SpeedMultiplier)
 }
 
-// step is 0x59FD090: one step toward the leader, movement speed times
-// StepFactor long and rounded down per axis, on top of the highest solid
+// step is BDS 1.26.60 0x59FD090: one step toward the leader, the
+// follow_range attribute times StepFactor long and rounded down per axis, on top of the highest solid
 // block there. Out of range it keeps the old spot.
 func (g *FollowTargetLeader) step() {
 	l := g.actor(g.leader)
@@ -168,7 +169,7 @@ func (g *FollowTargetLeader) step() {
 	if n >= minDirLen {
 		ux, uz = dx/n, dz/n
 	}
-	k := g.m.Speed() * g.cfg.StepFactor
+	k := g.m.FollowRange() * g.cfg.StepFactor
 	x := float32(floorInt(k*ux)) + p.X
 	z := float32(floorInt(k*uz)) + p.Z
 	g.to = Vec3{X: x, Y: float32(g.world.AboveTopSolid(floorInt(x), floorInt(z))), Z: z}

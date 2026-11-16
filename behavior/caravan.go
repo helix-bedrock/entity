@@ -33,10 +33,11 @@ type FollowCaravanConfig struct {
 	MinLeaderDist2 float32
 	// CatchUpDist2 is the squared distance to the mob in front past which
 	// the mob speeds up; CatchUpFactor is the speed-up, at most
-	// MaxSpeedFactor times speed_multiplier, held CatchUpTicks ticks.
+	// MaxSpeedFactor times speed_multiplier, held CatchUpTicks ticks. BDS
+	// works both factors out in double precision.
 	CatchUpDist2   float32
-	CatchUpFactor  float32
-	MaxSpeedFactor float32
+	CatchUpFactor  float64
+	MaxSpeedFactor float64
 	CatchUpTicks   int32
 	// FollowDist is how close the mob walks to the one in front.
 	FollowDist float32
@@ -182,8 +183,8 @@ func (g *FollowCaravan) CanContinueToUse() bool {
 		return false
 	}
 	if dist2(g.m.Pos(), head.Pos()) > g.cfg.CatchUpDist2 {
-		if g.speed <= g.cfg.SpeedMultiplier*g.cfg.MaxSpeedFactor {
-			g.speed *= g.cfg.CatchUpFactor
+		if float64(g.speed) <= float64(g.cfg.SpeedMultiplier)*g.cfg.MaxSpeedFactor {
+			g.speed = float32(float64(g.speed) * g.cfg.CatchUpFactor)
 			g.timer = g.cfg.CatchUpTicks
 			return true
 		}

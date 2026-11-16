@@ -88,10 +88,10 @@ func NewLayEgg(w World, m EggLayer, c LayEggConfig) *LayEgg {
 	return g
 }
 
-// CanUse implements goal.Goal (0x525F340).
+// CanUse implements goal.Goal (BDS 1.26.60 0x5426610).
 func (g *LayEgg) CanUse() bool { return g.m.Flag(FlagHasEgg) && g.canStart() && g.find() }
 
-// CanContinueToUse implements goal.Goal (0x525F380): while laying only the
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5426650): while laying only the
 // nest itself counts.
 func (g *LayEgg) CanContinueToUse() bool {
 	if !g.m.Flag(FlagHasEgg) {
@@ -114,12 +114,12 @@ func (g *LayEgg) aboveOK(p Pos) bool {
 	return false
 }
 
-// valid is the goal's isValidTarget (0x525FD20).
+// valid is the goal's isValidTarget (BDS 1.26.60 0x5427020).
 func (g *LayEgg) valid(p Pos) bool {
 	return g.aboveOK(p) && g.targets.matches(g.world.Block(p))
 }
 
-// find is the goal's findTargetBlock (0x525EC00): the nearest nest in
+// find is the goal's findTargetBlock (BDS 1.26.60 0x5425F10): the nearest nest in
 // search order that the egg fits on and a path reaches. A spot only wins
 // when it is more than a block nearer than the target already held, which
 // BDS does not clear first.
@@ -151,7 +151,7 @@ func (g *LayEgg) find() bool {
 	return found
 }
 
-// moveToBlock is the goal's moveMobToBlock (0x525FDF0): onto the nest, with
+// moveToBlock is the goal's moveMobToBlock (BDS 1.26.60 0x54270F0): onto the nest, with
 // a tight reach when the path ends there.
 func (g *LayEgg) moveToBlock() {
 	n := g.m.Nav()
@@ -165,13 +165,13 @@ func (g *LayEgg) moveToBlock() {
 	}
 }
 
-// Start implements goal.Goal (0x525F490).
+// Start implements goal.Goal (BDS 1.26.60 0x5426760).
 func (g *LayEgg) Start() {
 	g.moveTo.Start()
 	g.counter = 0
 }
 
-// Tick implements goal.Goal (0x525F520).
+// Tick implements goal.Goal (BDS 1.26.60 0x5426800).
 func (g *LayEgg) Tick() {
 	g.moveTo.Tick()
 	if !g.reached {
@@ -185,7 +185,9 @@ func (g *LayEgg) Tick() {
 		g.lay()
 	}
 	on := vecOf(Pos{X: g.target.X, Y: g.target.Y + 1, Z: g.target.Z})
-	m.LookAt(on, layEggLook, m.MaxHeadXRot())
+	if !m.LookBusy() {
+		m.LookAt(on, layEggLook, m.MaxHeadXRot())
+	}
 	if !m.Flag(FlagLayingEgg) {
 		g.counter = 0
 		return

@@ -34,19 +34,19 @@ type PlayerControlled interface {
 	// its base (start's AttributeInstance +124 = +112).
 	ResetMovement()
 	// RideFriction is the friction of the block at p: BDS uses 0.6 for one
-	// block (qword 0xF5EAEC0, taken to be air) and the block's own friction
+	// block (BDS 1.26.60 qword 0xFEE92F0, taken to be air) and the block's own friction
 	// (BlockType +176) for the others.
 	RideFriction(p Pos) float32
 	// MaxAutoStep is the MaxAutoStepComponent height; ok is false without
 	// it.
 	MaxAutoStep() (h float32, ok bool)
-	// WalkThrough is 0x7219C00: the block at p is one the mob passes (a
+	// WalkThrough is BDS 1.26.60 0x7513DE0: the block at p is one the mob passes (a
 	// block with the type bit +264 and two door-like states).
 	WalkThrough(p Pos) bool
 	// Jump asks for a jump this tick (the component 0x2F50F705 flag).
 	Jump()
 	// MoveRelativeSpeed is the move speed for the mob's travel type
-	// (0xBE81390 of 0xBE810B0).
+	// (BDS 1.26.60 0xBFE04C0 of the travel type 0xBFE01E0).
 	MoveRelativeSpeed() float32
 }
 
@@ -76,7 +76,7 @@ func NewControlledByPlayer(w World, m PlayerControlled, c ControlledByPlayerConf
 	return &ControlledByPlayer{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x576AF90): a player rides the mob and one
+// CanUse implements goal.Goal (BDS 1.26.60 0x551B270): a player rides the mob and one
 // player rider holds a control item.
 func (g *ControlledByPlayer) CanUse() bool {
 	m := g.m
@@ -115,16 +115,16 @@ func (g *ControlledByPlayer) CanUse() bool {
 // CanContinueToUse implements goal.Goal: BDS asks canUse again.
 func (g *ControlledByPlayer) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x576AEF0).
+// Start implements goal.Goal (BDS 1.26.60 0x551B1D0).
 func (g *ControlledByPlayer) Start() {
 	g.m.ResetMovement()
 	g.m.SetSpeed(g.m.Speed())
 }
 
-// Stop implements goal.Goal (0x576AF70).
+// Stop implements goal.Goal (BDS 1.26.60 0x551B250).
 func (g *ControlledByPlayer) Stop() { g.m.SetSprinting(false) }
 
-// Tick implements goal.Goal (0x576B4B0): the mob turns part of the way to
+// Tick implements goal.Goal (BDS 1.26.60 0x551B700): the mob turns part of the way to
 // the rider's yaw, jumps a step in its way and moves forward.
 func (g *ControlledByPlayer) Tick() {
 	m := g.m
