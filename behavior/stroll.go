@@ -56,7 +56,8 @@ func (g *Stroll) CanUse() bool {
 	if g.mob.Vehicle() != NoID {
 		return g.no("riding")
 	}
-	if g.cfg.Interval != 0 && g.world.IRandom().NextInt(g.cfg.Interval) != 0 {
+	// The interval roll draws from Level::getRandom (RandomStrollGoal::canUse 0xBF9D8B0).
+	if g.cfg.Interval != 0 && g.world.Random().NextInt(g.cfg.Interval) != 0 {
 		return g.no("random interval failed")
 	}
 	p, ok := g.finder.position()

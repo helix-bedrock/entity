@@ -94,7 +94,11 @@ func (w *arenaWorld) Brightness(p Pos) float32 {
 	return 1
 }
 
-func (w *arenaWorld) Random() Random { return w.rnd }
+// The search must draw from the thread random; the other sources are
+// streams of their own, so a search drawing from one of them differs.
+func (w *arenaWorld) ThreadRandom() Random { return w.rnd }
+func (w *arenaWorld) Random() Random       { return newMT(1) }
+func (w *arenaWorld) IRandom() Random      { return newMT(2) }
 
 // arenaMob is the cow as one case set it up.
 type arenaMob struct {

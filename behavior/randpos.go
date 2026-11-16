@@ -70,7 +70,8 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 	if s.tries <= 0 {
 		return Vec3{}, false
 	}
-	r := w.Random()
+	// BDS's wrappers draw from Level::getThreadRandom.
+	r := w.ThreadRandom()
 	res := restrict(m, s.h)
 	flier, swimmer := s.air || m.Flag(FlagCanFly), m.Flag(FlagCanSwim)
 	mp := m.Pos()
