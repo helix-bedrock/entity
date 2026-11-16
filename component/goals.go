@@ -86,10 +86,8 @@ func particleColor(c *Context, j Object, k string, def int32) int32 {
 
 func readMelee(c *Context, j Object, cfg *behavior.MeleeConfig) {
 	cfg.Cooldown = c.Ticks(j, "cooldown_time", cfg.Cooldown)
-	cfg.AttackTypes = c.Descriptors(j, "attack_types")
-	if cfg.AttackTypes == nil {
-		cfg.AttackTypes = c.Descriptors(j, "attack_type")
-	}
+	cfg.AttackTypes = behavior.ActorCategories(c.String(j, "attack_types", ""))
+	cfg.CanSpreadOnFire = c.Bool(j, "can_spread_on_fire", cfg.CanSpreadOnFire)
 	cfg.OnAttack = c.Trigger(j, "on_attack")
 	cfg.OnKill = c.Trigger(j, "on_kill")
 	cfg.PathTime = c.RangeInt(j, "min_path_time", cfg.PathTime)

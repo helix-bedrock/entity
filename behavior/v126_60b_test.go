@@ -488,7 +488,8 @@ func (p *playerMob) IsPlayer() bool { return true }
 // pathNav is a fakeNav that always finds a path to an entity.
 type pathNav struct{ *fakeNav }
 
-func (n pathNav) PathTo(a Actor) (Pos, bool) { return blockOf(a.Pos()), true }
+func (n pathNav) PathTo(a Actor) (Pos, bool)      { return blockOf(a.Pos()), true }
+func (n pathNav) PathToStatus(Actor) (bool, bool) { return true, true }
 
 // pathAllay is an allayMob with pathNav.
 type pathAllay struct{ *allayMob }

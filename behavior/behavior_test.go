@@ -116,18 +116,19 @@ func (n *fakeNav) MoveTo(p Vec3, s float32) bool {
 func (n *fakeNav) MoveToActor(a Actor, s float32) bool {
 	return n.MoveTo(a.Pos(), s)
 }
-func (n *fakeNav) PathTo(Actor) (Pos, bool) { return Pos{}, false }
-func (n *fakeNav) CanPathTo(Vec3) bool      { return true }
-func (n *fakeNav) PathEnd() (Pos, bool)     { return blockOf(n.to), n.moves != 0 }
-func (n *fakeNav) Done() bool               { return n.done }
-func (n *fakeNav) Stop()                    { n.done = true }
-func (n *fakeNav) Flags() uint32            { return 0 }
-func (n *fakeNav) SetFlags(uint32)          {}
-func (n *fakeNav) SetSpeed(s float32)       { n.speed = s }
-func (n *fakeNav) Held() bool               { return n.moves != 0 }
-func (n *fakeNav) PathStart() (Pos, bool)   { return Pos{}, n.moves != 0 }
-func (n *fakeNav) SetEndOffset(Vec3)        {}
-func (n *fakeNav) SetLastNodeReach(float32) {}
+func (n *fakeNav) PathTo(Actor) (Pos, bool)        { return Pos{}, false }
+func (n *fakeNav) PathToStatus(Actor) (bool, bool) { return false, false }
+func (n *fakeNav) CanPathTo(Vec3) bool             { return true }
+func (n *fakeNav) PathEnd() (Pos, bool)            { return blockOf(n.to), n.moves != 0 }
+func (n *fakeNav) Done() bool                      { return n.done }
+func (n *fakeNav) Stop()                           { n.done = true }
+func (n *fakeNav) Flags() uint32                   { return 0 }
+func (n *fakeNav) SetFlags(uint32)                 {}
+func (n *fakeNav) SetSpeed(s float32)              { n.speed = s }
+func (n *fakeNav) Held() bool                      { return n.moves != 0 }
+func (n *fakeNav) PathStart() (Pos, bool)          { return Pos{}, n.moves != 0 }
+func (n *fakeNav) SetEndOffset(Vec3)               {}
+func (n *fakeNav) SetLastNodeReach(float32)        {}
 func (n *fakeNav) PathToPoint(p Vec3) (Pos, bool) {
 	return blockOf(p), true
 }

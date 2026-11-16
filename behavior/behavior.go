@@ -407,6 +407,10 @@ type Navigator interface {
 	// PathTo makes a path to the entity without following it and returns
 	// its last node.
 	PathTo(a Actor) (end Pos, ok bool)
+	// PathToStatus makes a path to the entity without following it; ok is
+	// false when no path was made, complete reports that it reaches the
+	// entity (the path's complete status).
+	PathToStatus(a Actor) (ok, complete bool)
 	// CanPathTo reports that a path to p can be made.
 	CanPathTo(p Vec3) bool
 	// PathEnd returns the last node of the path being followed.

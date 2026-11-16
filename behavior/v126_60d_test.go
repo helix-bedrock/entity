@@ -11,8 +11,11 @@ type knightMob struct {
 	stops    int
 }
 
-func (m *knightMob) Nav() Navigator { return pathNav{m.nav} }
-func (m *knightMob) Swing()         {}
+func (m *knightMob) Nav() Navigator   { return pathNav{m.nav} }
+func (m *knightMob) Swing()           {}
+func (m *knightMob) HasAttack() bool  { return true }
+func (m *knightMob) Ignite(ID, int32) {}
+func (m *knightMob) Slot(int) Item    { return Item{} }
 func (m *knightMob) Attack(a Actor, then AttackResult) {
 	if then != nil {
 		then.AttackResult(a.ID(), true, false)

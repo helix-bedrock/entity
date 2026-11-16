@@ -55,6 +55,10 @@ func (m *b5Mob) Invulnerable() bool      { return false }
 func (m *b5Mob) HasHealth() bool         { return true }
 func (m *b5Mob) BodyYaw() float32        { return m.body }
 func (m *b5Mob) Swing()                  { m.swings++ }
+func (m *b5Mob) HasAttack() bool         { return true }
+func (m *b5Mob) Ignite(ID, int32)        {}
+func (m *b5Mob) Difficulty() int         { return 2 }
+func (m *b5Mob) Slot(int) Item           { return Item{} }
 func (m *b5Mob) Attack(a Actor, then AttackResult) {
 	m.hits = append(m.hits, a.ID())
 	if then != nil {

@@ -18,6 +18,16 @@ const (
 // Attacker is the part of the mob melee_attack needs on top of Targeter.
 type Attacker interface {
 	Targeter
+	// HasAttack reports the minecraft:attack component (the actor
+	// definition's attack description); melee goals do not start without it.
+	HasAttack() bool
+	// Slot is the item in a hand slot; SlotMainhand is Mob::getCarriedItem.
+	Slot(slot int) Item
+	// Difficulty is the level's difficulty, 0 (peaceful) to 3 (hard).
+	Difficulty() int
+	// Ignite sets the entity with the ID on fire for at least seconds
+	// (Actor::setOnFire). It is called only from AttackResult.
+	Ignite(id ID, seconds int32)
 	// Swing swings the mob's arm.
 	Swing()
 	// Attack hits the target and, when then is not nil, tells then whether it hit and
@@ -54,10 +64,20 @@ type MeleeConfig struct {
 	// HorizontalReach is melee_box_attack's reach: how far the mob's box
 	// is widened, on x and z only, to touch the target's box.
 	HorizontalReach float32 `json:"horizontal_reach"`
-	// AttackTypes, when set, limits the goal to targets of these types.
-	AttackTypes []string
-	OnAttack    string
-	OnKill      string
+	// AttackTypes is attack_types as an actor category mask
+	// (ActorCategories); when it is not 0 the target must be in every
+	// category of it.
+	AttackTypes uint32
+	// CanSpreadOnFire is can_spread_on_fire: a hit with an empty hand sets
+	// the target alight while the mob burns.
+	CanSpreadOnFire bool
+	OnAttack        string
+	OnKill          string
+	// FireChance is the chance by difficulty (peaceful to hard) that a
+	// burning mob's hit spreads its fire; the target burns for twice its
+	// whole part in seconds. Above hard the chance is FireChanceAbove.
+	FireChance      [4]float32
+	FireChanceAbove float32
 }
 
 // DefaultMelee returns the goal's BDS defaults (MeleeAttackGoal's constructor).
@@ -66,6 +86,7 @@ func DefaultMelee() MeleeConfig {
 		SpeedMultiplier: 1, ReachMultiplier: 2, MeleeFOV: 90, Cooldown: 20,
 		PathTime: Range[int32]{4, 11}, InnerBoundary: 16, OuterBoundary: 32,
 		InnerIncrease: 5, OuterIncrease: 10, FailIncrease: 15, XMaxRotation: 30, YMaxHeadRotation: 30,
+		FireChance: [4]float32{0, 0.42, 1.14, 1.92}, FireChanceAbove: -0.3,
 	}
 }
 
@@ -108,34 +129,63 @@ func NewMeleeBox(w World, m Attacker, c MeleeConfig) *Melee {
 	return g
 }
 
-// CanUse implements goal.Goal.
+// CanUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal 0x54325B0).
+// A mob that rides passes without a path. A sun-avoiding navigation skips a
+// target standing in the sun while the mob is out of it (0x5432A70).
+// set_persistent is never set on this goal in 1.26.60 (0x5604EF0), and
+// hijack_mount_navigation is not built: no vanilla mob uses it.
 func (g *Melee) CanUse() bool {
 	if g.m.Admiring() {
 		return g.no("admiring an item")
 	}
 	n := g.m.Nav()
-	t := g.actor(g.m.Target())
 	if n == nil {
 		return g.no("no navigation")
 	}
+	if !g.m.HasAttack() {
+		return g.no("no attack component")
+	}
+	t := g.actor(g.m.Target())
 	if t == nil || !t.Alive() {
 		return g.no("no living target")
 	}
-	if len(g.cfg.AttackTypes) != 0 && !contains(g.cfg.AttackTypes, t.Type()) {
+	if g.cfg.AttackTypes != 0 && ^ActorCategoriesOf(t)&g.cfg.AttackTypes != 0 {
 		return g.no("target not in attack_types")
 	}
 	g.target = t.ID()
 	if g.m.Vehicle() != NoID {
 		return true
 	}
-	end, ok := n.PathTo(t)
+	if n.Flags()&navAvoidSun != 0 && g.sunBlocked(t) {
+		return g.no("target in the sun")
+	}
+	ok, complete := n.PathToStatus(t)
 	if !ok {
 		return g.no("no path to target")
 	}
-	if g.cfg.RequireCompletePath && end != blockOf(t.Pos()) {
+	if g.cfg.RequireCompletePath && !complete {
 		return g.no("path does not reach target (require_complete_path)")
 	}
 	return true
+}
+
+// sunBlocked is 0x5432A70: the mob is out of the sun and the target, not
+// removed, is in it.
+func (g *Melee) sunBlocked(t Actor) bool {
+	return !t.Removed() && !sunlit(g.world, g.m.Pos()) && sunlit(g.world, t.Pos())
+}
+
+// sunlit is the sun test of 0x5432A70 at an entity's feet: daytime, and the
+// block at or above the build limit or at or above the height map.
+func sunlit(w World, p Vec3) bool {
+	if !w.IsDay() {
+		return false
+	}
+	b := blockOf(p)
+	if b.Y >= w.MaxHeight() {
+		return true
+	}
+	return b.Y >= w.MinHeight() && b.Y >= w.HeightMap(b.X, b.Z)
 }
 
 // CanContinueToUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal
@@ -168,15 +218,20 @@ func (g *Melee) CanContinueToUse() bool {
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal. BDS sets the repath timer to
-// path_fail_time_increase here (0x5433220).
+// Start implements goal.Goal. BDS follows the path canUse made, none for a
+// riding mob, and sets the repath timer to path_fail_time_increase
+// (0x5433220).
 func (g *Melee) Start() {
 	g.done = false
 	g.repath = g.cfg.FailIncrease
-	if t := g.actor(g.target); t != nil {
-		if n := g.m.Nav(); n != nil {
-			n.MoveToActor(t, g.cfg.SpeedMultiplier)
-		}
+	n := g.m.Nav()
+	if n == nil {
+		return
+	}
+	if t := g.actor(g.target); t != nil && g.m.Vehicle() == NoID {
+		n.MoveToActor(t, g.cfg.SpeedMultiplier)
+	} else {
+		n.Stop()
 	}
 }
 
@@ -252,6 +307,7 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 	if !hit {
 		return
 	}
+	g.spreadFire(target)
 	if g.cfg.OnAttack != "" {
 		g.m.Event(g.cfg.OnAttack, target)
 	}
@@ -260,6 +316,22 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 	}
 	if g.cfg.AttackOnce {
 		g.done = true
+	}
+}
+
+// spreadFire is can_spread_on_fire (BDS 1.26.60 _attemptAttackTarget
+// 0x5431880): a burning mob with an empty hand sets the target alight by a
+// difficulty chance drawn on the level's IRandom.
+func (g *Melee) spreadFire(target ID) {
+	if !g.cfg.CanSpreadOnFire || !g.m.OnFire() {
+		return
+	}
+	c := g.cfg.FireChanceAbove
+	if d := g.m.Difficulty(); d >= 0 && d < len(g.cfg.FireChance) {
+		c = g.cfg.FireChance[d]
+	}
+	if c > g.world.IRandom().NextFloat() && g.m.Slot(SlotMainhand).Empty() {
+		g.m.Ignite(target, 2*int32(c))
 	}
 }
 
