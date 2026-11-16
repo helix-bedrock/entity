@@ -128,12 +128,15 @@ func (t *target) canReach(a Actor) bool {
 	return t.reached == reachYes
 }
 
+// reachable is TargetGoal's path test (1.26.60 0xBF32400): without
+// navigation it fails before the recheck time is drawn, from the thread
+// random.
 func (t *target) reachable(a Actor) bool {
-	t.reachTimer = t.world.Random().NextInt(reachRandom) + reachRecheck
 	n := t.m.Nav()
 	if n == nil {
 		return false
 	}
+	t.reachTimer = t.world.ThreadRandom().NextInt(reachRandom) + reachRecheck
 	end, ok := n.PathTo(a)
 	if !ok {
 		return false
