@@ -483,6 +483,12 @@ type Mob interface {
 	FloatJump()
 	// DismountPassengers throws the riders off.
 	DismountPassengers()
+	// WeakenNextJump makes the mob's next liquid jump the weaker one
+	// (MobJumpComponent's jump velocity reduction).
+	WeakenNextJump()
+	// ClientPredictedVehicle reports that a rider's client predicts this
+	// mob's movement (VehicleInputIntentComponent's client predicted flag).
+	ClientPredictedVehicle() bool
 	// HeardVibration reports the tick of the last vibration the mob heard,
 	// when it heard one.
 	HeardVibration() (tick uint64, ok bool)

@@ -14,7 +14,9 @@ func DefaultFloat() FloatConfig {
 	return FloatConfig{ChancePerTickToFloat: 0.8}
 }
 
-// Float is FloatGoal: a mob in water or lava jumps to stay afloat.
+// Float is FloatGoal (BDS 1.26.60 canUse 0x59F7610, start 0x59F77C0, tick
+// 0x59F77D0; canContinueToUse is BaseGoal's, which asks canUse): a mob in
+// water or lava jumps to stay afloat.
 type Float struct {
 	base
 	cfg       FloatConfig
@@ -41,15 +43,18 @@ func (g *Float) CanUse() bool {
 func (g *Float) CanContinueToUse() bool { return g.CanUse() }
 
 // Start implements goal.Goal.
-func (g *Float) Start() {}
+func (g *Float) Start() { g.underTime = 0 }
 
 // Stop implements goal.Goal.
 func (g *Float) Stop() {}
 
-// Tick implements goal.Goal.
+// Tick implements goal.Goal. The chance is drawn from the level's IRandom.
+// With riders the mob does not jump while a rider's client predicts it or
+// when it sinks with passengers. After DismountTicks with riders and its
+// head under water it throws them off and its next liquid jump is weaker.
 func (g *Float) Tick() {
 	riders := len(g.mob.Riders()) != 0
-	if g.world.ThreadRandom().NextFloat() < g.cfg.ChancePerTickToFloat && (!riders || !g.cfg.SinkWithPassengers) {
+	if g.world.IRandom().NextFloat() < g.cfg.ChancePerTickToFloat && g.mayJump(riders) {
 		g.mob.FloatJump()
 	}
 	if !riders || !g.mob.UnderWater() {
@@ -61,5 +66,14 @@ func (g *Float) Tick() {
 		return
 	}
 	g.mob.DismountPassengers()
+	g.mob.WeakenNextJump()
 	g.underTime = 0
+}
+
+// mayJump is the rider check before the float jump.
+func (g *Float) mayJump(riders bool) bool {
+	if !riders {
+		return true
+	}
+	return !g.mob.ClientPredictedVehicle() && !g.cfg.SinkWithPassengers
 }
