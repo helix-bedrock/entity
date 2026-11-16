@@ -309,7 +309,7 @@ func vanillaGoals() map[string]GoalFactory {
 		"swim_wander": configured(behavior.DefaultSwimWander, func(c *Context, j Object, cfg *behavior.SwimWanderConfig) {
 			cfg.WanderTime = c.Ticks(j, "wander_time", cfg.WanderTime)
 		}, behavior.NewSwimWander),
-		"look_at_player":         configured(behavior.DefaultLookAt, readLookAt, behavior.NewLookAt),
+		"look_at_player":         configured(behavior.DefaultLookAt, readLookAt, behavior.NewLookAtPlayer),
 		"look_at_entity":         configured(behavior.DefaultLookAt, readLookAt, behavior.NewLookAt),
 		"look_at_target":         configured(behavior.DefaultLookAtTarget, readLookAt, behavior.NewLookAtTarget),
 		"look_at_trading_player": configured(behavior.DefaultLookAt, readLookAt, behavior.NewLookAtTrading),

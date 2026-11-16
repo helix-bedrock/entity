@@ -163,6 +163,9 @@ type Actor interface {
 	Removed() bool
 	// Pickable is Actor::isPickable; false for entities goals must skip.
 	Pickable() bool
+	// Interacts is Actor::canInteractWithOtherEntitiesInGame: true for
+	// every entity but a spectator player, dead or not.
+	Interacts() bool
 	// IsMob reports that the entity is a mob (player or AI mob).
 	IsMob() bool
 	// IsPlayer reports that the entity is a player.

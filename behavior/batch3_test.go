@@ -20,6 +20,7 @@ type b3Mob struct {
 func (m *b3Mob) MoveWanted() (bool, bool) { return false, true }
 func (m *b3Mob) TradingPlayer() ID        { return m.trader }
 func (m *b3Mob) MaxHeadXRot() float32     { return 40 }
+func (m *b3Mob) Eyes() Vec3               { return m.Pos() }
 func (m *b3Mob) HasFamily(f string) bool {
 	for _, x := range m.families {
 		if x == f {

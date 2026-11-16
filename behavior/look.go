@@ -8,7 +8,7 @@ import (
 // The look goals' fixed numbers.
 const (
 	lookYaw        = 10
-	fullView       = 359 // an angle_of_view above this skips the view test
+	fullView       = 359 // a half angle of view above this skips the view test
 	degPerRad      = 57.295776
 	radPerDeg      = 0.017453292
 	sinScale       = 10430.378
@@ -42,17 +42,34 @@ func DefaultLookAt() LookAtConfig {
 // in its view.
 type LookAt struct {
 	base
-	cfg    LookAtConfig
-	target ID
-	timer  int32
-	buf    []Actor
-	sorted []near
+	cfg LookAtConfig
+	// vertical and horizontal are the half angles of view: BDS halves the
+	// JSON's angle_of_view_* when it builds the goal.
+	vertical, horizontal int32
+	target               ID
+	timer                int32
+	buf                  []Actor
+	sorted               []near
 }
 
 // NewLookAt makes the goal.
 func NewLookAt(w World, m Mob, c LookAtConfig) *LookAt {
-	return &LookAt{base: base{mob: m, world: w, flags: flagsLook}, cfg: c, target: NoID}
+	return &LookAt{
+		base: base{mob: m, world: w, flags: flagsLook}, cfg: c, target: NoID,
+		vertical: c.AngleVertical / 2, horizontal: c.AngleHorizontal / 2,
+	}
 }
+
+// NewLookAtPlayer makes look_at_player: LookAtActorGoal whose only filter
+// is BDS's fixed is_family player test; its JSON has no filters.
+func NewLookAtPlayer(w World, m Mob, c LookAtConfig) *LookAt {
+	c.Filters = isPlayerFamily
+	return NewLookAt(w, m, c)
+}
+
+// isPlayerFamily is the is_family player filter test with the candidate as
+// subject.
+func isPlayerFamily(_ Mob, other Actor) bool { return hasFamily(other, "player") }
 
 // near is one entity of a sorted nearby query.
 type near struct {
@@ -102,7 +119,9 @@ func wrap180(a float32) float32 {
 	return abs32(v - 180)
 }
 
-// inView is the angle_of_view test from the mob's eyes to the entity's.
+// inView is the angle of view test from the mob's eyes to the entity's,
+// measured from the mob's head yaw; horizontal and vertical are half
+// angles.
 func inView(m Mob, a Actor, horizontal, vertical int32) bool {
 	if horizontal > fullView && vertical > fullView {
 		return true
@@ -110,7 +129,8 @@ func inView(m Mob, a Actor, horizontal, vertical int32) bool {
 	e, t := m.Eyes(), a.Eyes()
 	dx, dy, dz := t.X-e.X, t.Y-e.Y, t.Z-e.Z
 	flat := float32(math.Sqrt(float64(dx*dx + dz*dz)))
-	yaw := float32(math.Atan2(float64(dz), float64(dx)))*degPerRad - 90 - m.BodyYaw()
+	_, head := m.HeadRotation()
+	yaw := float32(math.Atan2(float64(dz), float64(dx)))*degPerRad - 90 - head
 	pitch := float32(math.Atan2(float64(dy), float64(flat))) * degPerRad
 	return float32(horizontal) >= wrap180(yaw+180) && float32(vertical) >= wrap180(180-pitch)
 }
@@ -120,19 +140,19 @@ func rides(a Actor, b ID) bool { return slices.Contains(a.Riders(), b) }
 
 // CanUse implements goal.Goal.
 func (g *LookAt) CanUse() bool {
-	if g.world.IRandom().NextFloat() >= g.cfg.Probability {
+	if g.world.Random().NextFloat() >= g.cfg.Probability {
 		return false
 	}
 	g.buf, g.sorted = sortedNear(g.world, g.mob, g.cfg.LookDistance, g.buf, g.sorted)
 	defer clear(g.buf)
 	for _, a := range g.buf {
-		if a == nil || a.Removed() || !a.Pickable() {
+		if a == nil || a.Removed() || !a.Interacts() {
 			continue
 		}
 		if g.cfg.Filters != nil && !g.cfg.Filters(g.mob, a) {
 			continue
 		}
-		if !inView(g.mob, a, g.cfg.AngleHorizontal, g.cfg.AngleVertical) {
+		if !inView(g.mob, a, g.horizontal, g.vertical) {
 			continue
 		}
 		if rides(g.mob, a.ID()) || rides(a, g.mob.ID()) {
@@ -148,18 +168,18 @@ func (g *LookAt) CanUse() bool {
 // CanContinueToUse implements goal.Goal.
 func (g *LookAt) CanContinueToUse() bool {
 	t := g.actor(g.target)
-	if t == nil || !t.Alive() || !t.Pickable() {
+	if t == nil || !t.Alive() || !t.Interacts() {
 		return false
 	}
 	if dist2(g.mob.Pos(), t.Pos()) > g.cfg.LookDistance*g.cfg.LookDistance {
 		return false
 	}
-	return inView(g.mob, t, g.cfg.AngleHorizontal, g.cfg.AngleVertical) && g.timer > 0
+	return inView(g.mob, t, g.horizontal, g.vertical) && g.timer > 0
 }
 
 // Start implements goal.Goal.
 func (g *LookAt) Start() {
-	g.timer = randomInt(g.world.IRandom(), g.cfg.LookTime.Min, g.cfg.LookTime.Max)
+	g.timer = randomInt(g.world.Random(), g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
 
 // Stop implements goal.Goal.
@@ -202,14 +222,14 @@ func NewRandomLook(w World, m Mob, c RandomLookConfig) *RandomLook {
 }
 
 // CanUse implements goal.Goal.
-func (g *RandomLook) CanUse() bool { return g.cfg.Probability > g.world.IRandom().NextFloat() }
+func (g *RandomLook) CanUse() bool { return g.cfg.Probability > g.world.Random().NextFloat() }
 
 // CanContinueToUse implements goal.Goal.
 func (g *RandomLook) CanContinueToUse() bool { return g.timer >= 0 }
 
 // Start implements goal.Goal.
 func (g *RandomLook) Start() {
-	r := g.world.IRandom()
+	r := g.world.Random()
 	g.yaw = (g.cfg.Angle.Max-g.cfg.Angle.Min)*r.NextFloat() + g.cfg.Angle.Min + g.mob.BodyYaw()
 	g.timer = randomInt(r, g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }

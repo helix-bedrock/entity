@@ -1,6 +1,9 @@
 package behavior
 
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // The follow_mob numbers.
 const (
@@ -16,14 +19,24 @@ const (
 var followMobSkip = [...]string{"player", "squid", "dolphin", "pufferfish", "salmon", "tropicalfish", "cod", "glow_squid", "tadpole"}
 
 // Families is optional on an actor: its type family test (is_family). An
-// actor without it has no families.
+// actor with neither it nor FamilyList has no families.
 type Families interface {
 	HasFamily(name string) bool
 }
 
+// FamilyList is optional on an actor: its type_family list.
+type FamilyList interface {
+	Families() []string
+}
+
 func hasFamily(a Actor, name string) bool {
-	f, ok := a.(Families)
-	return ok && f.HasFamily(name)
+	if f, ok := a.(Families); ok {
+		return f.HasFamily(name)
+	}
+	if f, ok := a.(FamilyList); ok {
+		return slices.Contains(f.Families(), name)
+	}
+	return false
 }
 
 // FollowMobConfig is the JSON of minecraft:behavior.follow_mob.
