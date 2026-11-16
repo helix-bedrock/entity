@@ -42,10 +42,13 @@ func NewBreed(w World, m Breeder, speed float32) *Breed {
 // two clamped points must be within 0.4 blocks. Otherwise the centres must be
 // within 0.6 of the two half sizes.
 func closeEnough(at Vec3, self Box, p Actor) bool {
-	sw, sh := self.Max.X-self.Min.X, self.Max.Y-self.Min.Y
 	pb := p.Box()
-	pw, ph := pb.Max.X-pb.Min.X, pb.Max.Y-pb.Min.Y
-	pp := p.Pos()
+	return breedReach(at, self.Max.X-self.Min.X, self.Max.Y-self.Min.Y, p.Pos(), pb.Max.X-pb.Min.X, pb.Max.Y-pb.Min.Y)
+}
+
+// breedReach is closeEnough on plain numbers: the mob at at with width sw and
+// height sh, the partner at pp with width pw and height ph.
+func breedReach(at Vec3, sw, sh float32, pp Vec3, pw, ph float32) bool {
 	h1 := max32(sw, sh) * 0.5
 	h2 := max32(pw, ph) * 0.5
 	if h1 >= breedBigHalf || h2 >= breedBigHalf {
