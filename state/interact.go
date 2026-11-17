@@ -104,9 +104,11 @@ type GiveTrigger struct {
 type GiveableConfig struct{ Triggers []GiveTrigger }
 
 // Giveable is minecraft:giveable: a player gives the mob an item into its
-// inventory (1.21.3 GiveableComponent::getInteraction 0x1405B1E50,
-// GiveableDefinition::initialize 0x1405B47B0). The captured give action
-// was not read; Give starts the cooldown and fires on_give.
+// inventory (BDS 1.26.60 getInteraction 0x7265080, callback 0x734AF40): the
+// first trigger whose cooldown is over and whose items match, when the mob's
+// container has room. BDS's callback adds one of the item (no aux, no user
+// data) to the container, uses up the player's item, fires on_give and starts
+// the cooldown; Give fires and starts it, the engine moves the item.
 type Giveable struct {
 	cfg  GiveableConfig
 	next []uint64

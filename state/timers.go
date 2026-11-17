@@ -344,14 +344,22 @@ func (c HeartbeatConfig) Tick(m Mob) {
 type BribeableConfig struct {
 	Cooldown int32
 	Items    []string
+	// BribeTime is how long a bribe lasts (BDS 1.26.60's bribe callback
+	// 0x7404580 sets 200 ticks), Flag the actor flag it sets (58, which the
+	// treasure hunt reads and clears).
+	BribeTime int32
+	Flag      int
 }
 
 // DefaultBribeable is the BDS default.
-func DefaultBribeable() BribeableConfig { return BribeableConfig{Cooldown: 2 * ticksPerSecond} }
+func DefaultBribeable() BribeableConfig {
+	return BribeableConfig{Cooldown: 2 * ticksPerSecond, BribeTime: 200, Flag: behavior.FlagTreasure}
+}
 
-// Bribeable is the running component. What a bribe does
-// (BribeableComponent::_bribe 0x140559610) and the interaction were not
-// read: they are the engine's; it calls Bribed.
+// Bribeable is the running component (BDS 1.26.60: getInteraction
+// 0x7375240, item check 0x7375140, callback 0x7404580, BribeableSystem::tick
+// 0x5B87310). The engine runs the interaction: Bribe checks and bribes, and
+// the engine shows the mob eating the item (Actor::feed) and uses it up.
 type Bribeable struct {
 	cfg      BribeableConfig
 	time     int32
@@ -367,15 +375,42 @@ func (b *Bribeable) Config() BribeableConfig { return b.cfg }
 // SetConfig replaces the settings.
 func (b *Bribeable) SetConfig(c BribeableConfig) { b.cfg = c }
 
-// CanBribe reports that the cooldown is over.
-func (b *Bribeable) CanBribe() bool { return b.cooldown <= 0 }
+// CanBribe reports that the bribe time and the cooldown are both over
+// (0x7375140).
+func (b *Bribeable) CanBribe() bool { return b.time <= 0 && b.cooldown <= 0 }
 
-// Bribed starts the cooldown.
+// Takes reports that the held item is one of bribe_items and the mob can be
+// bribed now: the interaction is offered.
+func (b *Bribeable) Takes(h Hand) bool {
+	if h == nil || !b.CanBribe() {
+		return false
+	}
+	for _, it := range b.cfg.Items {
+		if h.Matches(it) {
+			return true
+		}
+	}
+	return false
+}
+
+// Bribe is the callback's part on the mob: a mob not yet bribed gets the
+// bribe time and the flag. A bribed one only eats the item.
+func (b *Bribeable) Bribe(m Mob) {
+	if m.Flag(b.cfg.Flag) {
+		return
+	}
+	b.time = b.cfg.BribeTime
+	m.SetFlag(b.cfg.Flag, true)
+}
+
+// Bribed starts the cooldown, as BDS's client does when a bribe runs out
+// (0x7375040, client only; the server never starts it).
 func (b *Bribeable) Bribed() { b.cooldown = b.cfg.Cooldown }
 
-// Tick is _tickBribeableComponent (1.21.3 0x14015C1A0): the bribe time
-// counts down (also while BDS's client bribe check holds, which is the
-// engine's and not ported), and the cooldown clears it.
+// Tick is BribeableSystem::tick on the server (1.26.60 0x5B87310): the
+// bribe time counts down, and a running cooldown clears it. The flag stays
+// until the treasure hunt clears it; the client's reset (0x7375040) is not
+// run on a server.
 func (b *Bribeable) Tick() {
 	if b.time > 0 {
 		b.time--
