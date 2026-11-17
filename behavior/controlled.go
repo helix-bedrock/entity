@@ -21,6 +21,9 @@ type PlayerControlled interface {
 	// ControlItems are the item_controllable component's control_items; ok
 	// is false without the component.
 	ControlItems() (items []string, ok bool)
+	// ItemMatches reports the stack matching an item descriptor, as the
+	// engine reads it (BDS's item names and their aliases).
+	ItemMatches(descriptor string, it Item) bool
 	// HeldItem is the player's selected item (Actor vt+624).
 	HeldItem(id ID) Item
 	// Yaw is ActorRotationComponent's yaw; YawOf is another entity's.
@@ -103,8 +106,8 @@ func (g *ControlledByPlayer) CanUse() bool {
 		if it.Empty() {
 			continue
 		}
-		for _, name := range items {
-			if name == it.Name {
+		for _, d := range items {
+			if m.ItemMatches(d, it) {
 				return true
 			}
 		}

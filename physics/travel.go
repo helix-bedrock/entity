@@ -114,20 +114,29 @@ func (b *Body) groundFriction(w World) float32 {
 // setSpeed is the travel speed systems: GroundTravelType, MobAirSpeed,
 // WaterTravel (0x7309950) and LavaTravel (0x74C3BC0).
 func (b *Body) setSpeed(w World) {
+	b.speed = b.RelativeSpeed(w)
+}
+
+// RelativeSpeed is the move speed for the travel type the body sensed on its last tick
+// (BDS 1.26.60 0xBFE04C0 of the travel type 0xBFE01E0): on the ground the movement speed
+// scaled by the block's friction, in the air the air speed, and the water and lava speeds.
+// controlled_by_player moves the mob by it.
+func (b *Body) RelativeSpeed(w World) float32 {
 	switch b.travel {
 	case TravelGround:
 		k := airFriction / b.groundFriction(w)
-		b.speed = b.MovementSpeed * (k * k * k)
+		return b.MovementSpeed * (k * k * k)
 	case TravelAir:
-		b.speed = b.AirSpeed
+		return b.AirSpeed
 	case TravelWater:
-		b.speed = b.waterSpeed()
+		return b.waterSpeed()
 	case TravelLava:
-		b.speed = 0
 		if b.Attrs.Lava != nil {
-			b.speed = *b.Attrs.Lava
+			return *b.Attrs.Lava
 		}
+		return 0
 	}
+	return b.speed
 }
 
 func (b *Body) depthStrider() float32 {

@@ -35,6 +35,7 @@ func (m *b12Rider) ControlItems() ([]string, bool) {
 	return []string{"minecraft:carrot_on_a_stick"}, true
 }
 func (m *b12Rider) HeldItem(ID) Item                    { return m.held }
+func (m *b12Rider) ItemMatches(d string, it Item) bool  { return d == it.Name }
 func (m *b12Rider) Yaw() float32                        { return m.yaw }
 func (m *b12Rider) YawOf(id ID) float32                 { return m.yaws[id] }
 func (m *b12Rider) SetYaw(y float32)                    { m.yaw = y }
