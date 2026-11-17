@@ -218,8 +218,8 @@ type RailMovementConfig struct {
 func DefaultRailMovement() RailMovementConfig { return RailMovementConfig{MaxSpeed: 0.4} }
 
 // ApplyBody copies the physics-style components the set has into a
-// physics body before its tick; the body keeps pointers into the set's
-// configs. jumpPrevented and wasdControlled pick the
+// physics body before its tick (bounciness is the body's own restitution);
+// the body keeps pointers into the set's configs. jumpPrevented and wasdControlled pick the
 // variable max auto step.
 func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 	if s == nil || b == nil {
@@ -228,7 +228,9 @@ func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 	if s.CollisionBox != nil {
 		b.Width, b.Height = s.CollisionBox.Size()
 	}
-	// The body points at the set's own values, so a tick allocates nothing.
+	// The body points at the set's own values, so a tick allocates nothing. A component
+	// the mob no longer has leaves its value unset.
+	b.WaterDrag, b.Attrs.Friction, b.Attrs.AirDrag, b.Attrs.Restitution = nil, nil, nil, nil
 	if s.WaterMovement != nil {
 		b.WaterDrag = &s.WaterMovement.DragFactor
 	}
@@ -237,6 +239,9 @@ func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 	}
 	if s.AirDragModifier != nil {
 		b.Attrs.AirDrag = &s.AirDragModifier.Value
+	}
+	if s.Bounciness != nil {
+		b.Attrs.Restitution = &s.Bounciness.Value
 	}
 	if s.VariableMaxAutoStep != nil {
 		b.MaxAutoStep = s.VariableMaxAutoStep.Step(jumpPrevented, wasdControlled)
@@ -247,7 +252,5 @@ func (s *Set) ApplyBody(b *physics.Body, jumpPrevented, wasdControlled bool) {
 		}
 	}
 	b.PowderSnowWalker = b.PowderSnowWalker || s.CanStandOnPowderSnow
-	if s.Buoyant != nil && s.Buoyant.AutoStep() {
-		b.CanAlwaysAutoStep = true
-	}
+	b.CanAlwaysAutoStep = s.Buoyant != nil && s.Buoyant.AutoStep()
 }

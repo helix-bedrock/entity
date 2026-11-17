@@ -1,6 +1,10 @@
 package physics
 
-import "github.com/helix-bedrock/entity/path"
+import (
+	"math"
+
+	"github.com/helix-bedrock/entity/path"
+)
 
 // The jump constants.
 const (
@@ -12,6 +16,10 @@ const (
 	lowJumpFactor     = 0.6
 	variantJump       = 0.1
 	jumpDelay         = 10
+	// sprintJump is the forward push of a sprinting mob's ground jump.
+	sprintJump = 0.2
+	// degToTable turns degrees into an index of BDS's 65536-entry sine table.
+	degToTable = 0.017453292 * 10430.378
 )
 
 // jumpBoost is the jump boost effect's extra jump.
@@ -67,14 +75,30 @@ func (b *Body) mobJump(w World) {
 	}
 }
 
-// jumpFromGround is the non-player jump: weaker off a low-jump block at the
-// feet or, when the feet are on a block boundary, just below.
+// jumpFromGround is the non-player jump of BDS 1.26.60's JumpFromGroundSystem: weaker off
+// a low-jump block at the feet or, when the feet are on a block boundary, just below.
+// A magma cube's jump (0x77E4CA0) sets the speed and grows with its size; every other
+// mob's (0x77E48A0) keeps a faster rise and, while it sprints, pushes it 0.2 forward.
 func (b *Body) jumpFromGround(w World) {
 	var factor float32 = 1
 	if _, low := b.LowJumpBlock(w); low {
 		factor = lowJumpFactor
 	}
-	b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
+	if b.LavaSlime {
+		b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
+		return
+	}
+	b.Vel.Y = max(factor*(groundJump+b.jumpBoost()), b.Vel.Y)
+	if b.Flags.Has(FlagSprinting) {
+		a := b.Yaw * degToTable
+		b.Vel.X -= tableSin(a) * sprintJump
+		b.Vel.Z += tableSin(a+16384) * sprintJump
+	}
+}
+
+// tableSin is the sine of BDS's 65536-entry table (mce::Math) at index a.
+func tableSin(a float32) float32 {
+	return float32(math.Sin(float64(uint16(int32(a))) * math.Pi * 2 / 65536))
 }
 
 // JumpMultiplier is Mob::getJumpMultiplier (BDS 1.26.60 0xBFE4A90): 0.6 on the
@@ -108,8 +132,8 @@ func (b *Body) LowJumpBlock(w World) (path.Pos, bool) {
 	return path.Pos{}, false
 }
 
-// jumpPower is the ground jump speed: 0.42 plus 0.1 per variant step, read
-// from the variant actor data. BDS's ground jump never reads
+// jumpPower is a magma cube's ground jump speed: 0.42 plus 0.1 per variant step
+// (its size), read from the variant actor data. BDS's ground jump never reads
 // minecraft:jump.static's jump_power.
 func (b *Body) jumpPower() float32 {
 	return float32(b.Variant)*variantJump + groundJump

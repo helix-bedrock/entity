@@ -196,9 +196,12 @@ type Body struct {
 	// MaxAutoStep is the highest step the mob walks up.
 	MaxAutoStep float32
 	// Variant is the mob's variant actor data (minecraft:variant): each step
-	// adds 0.1 to the ground jump.
+	// adds 0.1 to a magma cube's ground jump.
 	Variant int32
-	Nav     Nav
+	// LavaSlime marks a magma cube (BDS's LavaSlimeFlagComponent), whose ground
+	// jump has its own rule.
+	LavaSlime bool
+	Nav       Nav
 
 	Dolphin, Squid, SoulSpeed, ImmuneToLavaDrag, PowderSnowWalker bool
 	Vex, DiscardFriction, HasPhysics, CanAlwaysAutoStep           bool
