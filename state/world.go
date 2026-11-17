@@ -8,7 +8,8 @@ import (
 )
 
 // TeleportConfig is minecraft:teleport. Defaults are 1.21.3's
-// TeleportDescription constructor (0x14061D2C0); times are in ticks here.
+// TeleportDescription constructor (0x14061D2C0), not re-read for 1.26.60;
+// times are in ticks here.
 type TeleportConfig struct {
 	RandomTeleports              bool
 	MinRandomTime, MaxRandomTime int32
@@ -37,8 +38,10 @@ func DefaultTeleport() TeleportConfig {
 	}
 }
 
-// Teleport is the running component (1.21.3 _tickTeleportComponent
-// 0x140B1B760, randomTeleport 0x14063CE00, teleportTowards 0x140643160).
+// Teleport is the running component, as BDS 1.26.60's TeleportSystem
+// (per mob 0x7697A50), randomTeleport (0x7171BE0) and teleportTowards
+// (0x7171EC0). The enderman's own hurt teleports (EnderMan::_hurt
+// 0xBD3DFE0, hurtEffects 0xBD3DE70) call Random.
 type Teleport struct {
 	cfg   TeleportConfig
 	timer int32

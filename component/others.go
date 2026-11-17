@@ -223,6 +223,11 @@ func (c *Context) readWorld(s, prev *state.Set, read func(string) (Object, bool)
 			s.Teleport = state.NewTeleport(c.TeleportConfig(j))
 		}
 	}
+	if j, ok := read(LookedAtName); ok {
+		if s.LookedAt = prev.LookedAt; s.LookedAt == nil || !same(LookedAtName) {
+			s.LookedAt = state.NewLookedAt(c.LookedAtConfig(j))
+		}
+	}
 	if j, ok := read(TrailName); ok {
 		t := state.DefaultTrail()
 		t.Block = c.String(j, "block_type", t.Block)
@@ -323,6 +328,71 @@ func (c *Context) difficulty(j Object, k string) int32 {
 		return 0
 	}
 	return int32(c.enum(j, k, difficulties(), 0))
+}
+
+// LookedAtConfig reads minecraft:looked_at as BDS's parser (sub_6FDD2B0):
+// an unknown set_target or line_of_sight_obstruction_type keeps the
+// default, as BDS logs it and keeps its own.
+func (c *Context) LookedAtConfig(j Object) state.LookedAtConfig {
+	l := state.DefaultLookedAt()
+	l.SearchRadius = c.Float(j, "search_radius", l.SearchRadius)
+	switch c.String(j, "set_target", "") {
+	case "never":
+		l.SetTarget = state.LookedAtNever
+	case "once_and_stop_scanning":
+		l.SetTarget = state.LookedAtOnceAndStop
+	case "once_and_keep_scanning":
+		l.SetTarget = state.LookedAtOnceAndKeepScanning
+	}
+	switch c.String(j, "line_of_sight_obstruction_type", "") {
+	case "outline":
+		l.LineOfSight = state.LineOfSightOutline
+	case "collision":
+		l.LineOfSight = state.LineOfSightCollision
+	case "collision_for_camera":
+		l.LineOfSight = state.LineOfSightCollisionForCamera
+	}
+	l.FindPlayersOnly = c.Bool(j, "find_players_only", l.FindPlayersOnly)
+	l.Cooldown = c.Range(j, "looked_at_cooldown", l.Cooldown)
+	l.FieldOfView = c.Float(j, "field_of_view", l.FieldOfView)
+	l.ScaleFOVByDistance = c.Bool(j, "scale_fov_by_distance", l.ScaleFOVByDistance)
+	l.MinLookedAtDuration = c.Float(j, "min_looked_at_duration", l.MinLookedAtDuration)
+	l.Filters = c.filter(j, "filters")
+	l.LookedAt = c.FullTrigger(j, "looked_at_event")
+	l.NotLookedAt = c.FullTrigger(j, "not_looked_at_event")
+	if j.Has("look_at_locations") {
+		l.LookAtLocations = nil
+		for _, o := range objects(j["look_at_locations"]) {
+			loc := state.LookAtLocation{Location: actorLocation(c.String(o, "location", "head"))}
+			loc.VerticalOffset = c.Float(o, "vertical_offset", 0)
+			l.LookAtLocations = append(l.LookAtLocations, loc)
+		}
+	}
+	return l
+}
+
+// actorLocation is a BDS ActorLocation by its JSON name; unknown names are
+// the head.
+func actorLocation(name string) int {
+	switch name {
+	case "feet":
+		return 0
+	case "body":
+		return 1
+	case "weapon":
+		return 2
+	case "drop_attach":
+		return 4
+	case "explosion":
+		return 5
+	case "eyes":
+		return 6
+	case "breathing":
+		return 7
+	case "mouth":
+		return 8
+	}
+	return state.AttachHead
 }
 
 // TeleportConfig reads minecraft:teleport.
@@ -649,20 +719,6 @@ func (c *Context) readEngine(s *state.Set, read func(string) (Object, bool)) {
 		g := state.DefaultGameEventMovementTracking()
 		c.Into(j, &g)
 		s.GameEventMovementTracking = &g
-	}
-	if j, ok := read(LookedAtName); ok {
-		l := state.LookedAtConfig{
-			SearchRadius: c.Float(j, "search_radius", 0), SetTarget: c.String(j, "set_target", ""),
-			FindPlayersOnly: c.Bool(j, "find_players_only", false), Cooldown: c.Range(j, "looked_at_cooldown", behavior.Range[float32]{}),
-			FieldOfView: c.Float(j, "field_of_view", 0), ScaleFOVByDistance: c.Bool(j, "scale_fov_by_distance", false),
-			LineOfSightObstruction: c.String(j, "line_of_sight_obstruction_type", ""),
-			MinLookedAtDuration:    c.Float(j, "min_looked_at_duration", 0), Filters: c.filter(j, "filters"),
-			LookedAt: c.FullTrigger(j, "looked_at_event"), NotLookedAt: c.FullTrigger(j, "not_looked_at_event"),
-		}
-		for _, o := range objects(j["look_at_locations"]) {
-			l.LookAtLocations = append(l.LookAtLocations, string(o.Raw()))
-		}
-		s.LookedAt = &l
 	}
 }
 

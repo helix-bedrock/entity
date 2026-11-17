@@ -73,6 +73,7 @@ type Set struct {
 	CelebrateHunt       *CelebrateHunt
 	Explode             *Explode
 	Teleport            *Teleport
+	LookedAt            *LookedAt
 	Trail               *TrailConfig
 	GroupSize           *GroupSize
 	Home                *Home
@@ -116,7 +117,6 @@ type Set struct {
 	Dweller                   *DwellerConfig
 	Flocking                  *FlockingConfig
 	GameEventMovementTracking *GameEventMovementTrackingConfig
-	LookedAt                  *LookedAtConfig
 	// Raw are the Passthrough components, as written.
 	Raw RawComponents
 }
@@ -226,6 +226,9 @@ func (s *Set) tickOthers(env *Env, in TickInput) {
 	}
 	if s.Teleport != nil {
 		s.Teleport.Tick(env, in.Actions)
+	}
+	if s.LookedAt != nil {
+		s.LookedAt.Tick(env)
 	}
 	if s.Trail != nil {
 		Trail(env, s.Trail, in.Actions)

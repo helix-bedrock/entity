@@ -299,23 +299,6 @@ func DefaultGameEventMovementTracking() GameEventMovementTrackingConfig {
 	return GameEventMovementTrackingConfig{EmitMove: true, EmitSwim: true, EmitFlap: true}
 }
 
-// LookedAtConfig is minecraft:looked_at (the creaking). Its 1.26.60
-// parser (sub_6FDD2B0) was not decompiled and its system not found: the
-// members are read as written and the engine runs it.
-type LookedAtConfig struct {
-	SearchRadius           float32
-	SetTarget              string
-	FindPlayersOnly        bool
-	Cooldown               behavior.Range[float32]
-	FieldOfView            float32
-	ScaleFOVByDistance     bool
-	LineOfSightObstruction string
-	LookAtLocations        []string
-	MinLookedAtDuration    float32
-	Filters                *definition.Filter
-	LookedAt, NotLookedAt  *definition.Trigger
-}
-
 // Passthrough are the components entity hands to the engine as written:
 // projectiles, the NPC dialogue, network bandwidth, the player's own
 // values and exhaustion. None of them belongs to a mob's AI.

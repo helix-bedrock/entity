@@ -251,6 +251,22 @@ func (g *RandomLook) Tick() {
 // tableSin is entry i of BDS's 65536-entry sine table.
 func tableSin(i uint16) float32 { return float32(math.Sin(float64(i) * math.Pi * 2 / 65536)) }
 
+// TableCos is mce::Math::cos: the cosine of an angle in radians through
+// BDS's sine table.
+func TableCos(rad float32) float32 { return tableSin(uint16(int32(rad*sinScale + sinQuarter))) }
+
+// ViewVector is Actor::getViewVector for a pitch and yaw in degrees,
+// through BDS's sine table.
+func ViewVector(pitch, yaw float32) Vec3 {
+	a := (yaw*-radPerDeg - math.Pi) * sinScale
+	pc := -tableSin(uint16(int32(pitch*-radPerDeg*sinScale + sinQuarter)))
+	return Vec3{
+		X: tableSin(uint16(int32(a))) * pc,
+		Y: tableSin(uint16(int32(pitch * -radPerDeg * sinScale))),
+		Z: tableSin(uint16(int32(a+sinQuarter))) * pc,
+	}
+}
+
 // RandomLookSitConfig is the JSON of
 // minecraft:behavior.random_look_around_and_sit.
 type RandomLookSitConfig struct {
