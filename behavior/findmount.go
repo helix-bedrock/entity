@@ -16,10 +16,10 @@ type MountSeeker interface {
 	// AcceptsRider is the mount's canAddPassenger for the mob (Actor
 	// vt+744).
 	AcceptsRider(mount ID) bool
-	// Sleeping is Actor vt+336 for another entity.
-	Sleeping(id ID) bool
-	// Wet is another entity's WasInWaterFlagComponent.
-	Wet(id ID) bool
+	// ActorSleeping is Actor vt+336 for another entity.
+	ActorSleeping(id ID) bool
+	// ActorWet is another entity's WasInWaterFlagComponent.
+	ActorWet(id ID) bool
 	// CanRide is 0xB3C4ED0: the mob can ride the mount now.
 	CanRide(mount ID) bool
 	// StartRiding mounts the entity (Actor vt+224).
@@ -99,10 +99,10 @@ func (g *FindMount) CanUse() bool {
 	g.near = m.EntitiesOfType(g.near[:0], actorTypeMob, m.ID(), sortedBox(sub(b.Min, pad), add(b.Max, pad)))
 	best := float32(-1)
 	for _, c := range g.near {
-		if c.ID() == m.ID() || !c.Alive() || !m.AcceptsRider(c.ID()) || m.Sleeping(c.ID()) {
+		if c.ID() == m.ID() || !c.Alive() || !m.AcceptsRider(c.ID()) || m.ActorSleeping(c.ID()) {
 			continue
 		}
-		if g.cfg.AvoidWater && m.Wet(c.ID()) {
+		if g.cfg.AvoidWater && m.ActorWet(c.ID()) {
 			continue
 		}
 		d := dist2(c.Pos(), m.Pos())

@@ -228,8 +228,8 @@ func (m *b12Pet) SetHeadYaw(y float32)           { m.yaw = y }
 func (m *b12Pet) BodyYaw() float32               { return m.body }
 func (m *b12Pet) SetBodyYaw(y float32)           { m.body = y }
 func (m *b12Pet) AcceptsRider(ID) bool           { return m.accepts }
-func (m *b12Pet) Sleeping(ID) bool               { return false }
-func (m *b12Pet) Wet(ID) bool                    { return false }
+func (m *b12Pet) ActorSleeping(ID) bool          { return false }
+func (m *b12Pet) ActorWet(ID) bool               { return false }
 func (m *b12Pet) CanRide(ID) bool                { return true }
 func (m *b12Pet) StartRiding(id ID)              { m.riding = id }
 func (m *b12Pet) GiveUpRiding()                  { m.gaveUp++ }
