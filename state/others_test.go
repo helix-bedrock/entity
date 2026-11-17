@@ -450,10 +450,11 @@ func TestAngerLevel(t *testing.T) {
 	if top, _ := a.Top(); top != 2 {
 		t.Errorf("top %d", top)
 	}
+	// The first tick sets the next decrement one interval on, as BDS's init does.
 	a.Tick(env)
 	w.tick += 20
 	a.Tick(env)
-	if a.AngerAt(2) != 148 || a.Anger() != 148 {
+	if a.AngerAt(2) != 149 || a.Anger() != 149 {
 		t.Errorf("after decrements %d %d", a.AngerAt(2), a.Anger())
 	}
 }

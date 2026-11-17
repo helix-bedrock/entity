@@ -32,7 +32,8 @@ const (
 type Warden interface {
 	Mob
 	// Suspects appends the anger_level suspects to dst in the component's
-	// map order (by unique ID); none without the component.
+	// set order (angry first, then players, then by anger); none without
+	// the component.
 	Suspects(dst []ID) []ID
 	// ValidSuspect is the anger_level suspect test (alive, not removed,
 	// the nuisance filter and the like); true without the component.

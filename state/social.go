@@ -1,7 +1,7 @@
 package state
 
 import (
-	"sort"
+	"slices"
 
 	"github.com/helix-bedrock/entity/behavior"
 	"github.com/helix-bedrock/entity/definition"
@@ -255,21 +255,27 @@ type AngerLevelConfig struct {
 	Sounds                                   []AngerSound
 }
 
-type nuisance struct {
-	id       behavior.ID
-	anger    int32
-	priority bool
+// Nuisance is one entity the mob is angry at, as BDS 1.26.60 saves it
+// under "Nuisances" (save 0x735D5D0, load 0x7384410).
+type Nuisance struct {
+	ID    behavior.ID
+	Anger int32
+	// Priority is BDS's "Priority" byte: set for entities that are not
+	// players, which sort after players.
+	Priority bool
 }
 
-// AngerLevel is the warden's anger (1.21.3 AngerLevelComponent::tick
-// 0x14056FBA0, tryIncreaseAngerAt 0x140570D10). The lambda that adds the
-// anger and _getListeningSoundEvent were not read: anger is capped at
-// max_anger and the first sound whose condition holds plays.
+// AngerLevel is the warden's anger, AngerLevelComponent of BDS 1.26.60:
+// its suspects are a std::multiset kept in BDS's order (insert 0x7402320):
+// angry ones first, then players, then by anger, later inserts after
+// equal ones.
 type AngerLevel struct {
-	cfg       AngerLevelConfig
-	next      uint64
+	cfg  AngerLevelConfig
+	next uint64
+	// top is the component's +36: the highest anger at the last decrement,
+	// raised by any increase above it.
 	top       int32
-	nuisances []nuisance
+	nuisances []Nuisance
 }
 
 // NewAngerLevel makes the component.
@@ -281,113 +287,199 @@ func (a *AngerLevel) Config() AngerLevelConfig { return a.cfg }
 // SetConfig replaces the settings.
 func (a *AngerLevel) SetConfig(c AngerLevelConfig) { a.cfg = c }
 
-// Anger is the anger at the most annoying nuisance seen at the last
-// decrement.
+// Anger is the component's highest anger (+36).
 func (a *AngerLevel) Anger() int32 { return a.top }
+
+// AngerFor is 0x735E9E0: the anger at the mob's target when it is a
+// suspect, else the highest anger.
+func (a *AngerLevel) AngerFor(target behavior.ID) int32 {
+	if i := a.find(target); target != behavior.NoID && i >= 0 {
+		return a.nuisances[i].Anger
+	}
+	return a.top
+}
 
 // AngerAt is the anger at one entity.
 func (a *AngerLevel) AngerAt(id behavior.ID) int32 {
-	for _, n := range a.nuisances {
-		if n.id == id {
-			return n.anger
-		}
+	if i := a.find(id); i >= 0 {
+		return a.nuisances[i].Anger
 	}
 	return 0
 }
 
-// Top is the most annoying nuisance: angry ones first, then the
-// prioritised (players), then by anger.
+// Top is the first suspect in the set's order.
 func (a *AngerLevel) Top() (behavior.ID, bool) {
 	if len(a.nuisances) == 0 {
 		return behavior.NoID, false
 	}
-	return a.nuisances[0].id, true
+	return a.nuisances[0].ID, true
 }
 
-func (a *AngerLevel) canBeNuisance(env *Env, o behavior.Actor) bool {
-	return o != nil && o.Alive() && o.ID() != env.Self.ID() && (a.cfg.Nuisance == nil || a.cfg.Nuisance.Eval(env.tester(env.Self, o)))
+// Suspects appends the suspects' IDs in the set's order.
+func (a *AngerLevel) Suspects(dst []behavior.ID) []behavior.ID {
+	for _, n := range a.nuisances {
+		dst = append(dst, n.ID)
+	}
+	return dst
 }
 
-// Tick takes one anger off every nuisance each interval, forgets the
-// ones at zero or no longer a nuisance, and resorts them.
+// Calm is 0x735E8C0: the entity is not a suspect or its anger is below
+// angry_threshold.
+func (a *AngerLevel) Calm(id behavior.ID) bool {
+	i := a.find(id)
+	return i < 0 || a.nuisances[i].Anger < a.cfg.AngryThreshold
+}
+
+// Nuisances returns the suspects in the set's order, for saving.
+func (a *AngerLevel) Nuisances() []Nuisance { return a.nuisances }
+
+// Load adds saved suspects as BDS's load does, each inserted into the set.
+func (a *AngerLevel) Load(ns []Nuisance) {
+	for _, n := range ns {
+		a.insert(n)
+	}
+}
+
+func (a *AngerLevel) find(id behavior.ID) int {
+	for i := range a.nuisances {
+		if a.nuisances[i].ID == id {
+			return i
+		}
+	}
+	return -1
+}
+
+// before is the set's comparator (0x7402320): k sorts before n.
+func (a *AngerLevel) before(k, n Nuisance) bool {
+	t := a.cfg.AngryThreshold
+	if k.Anger >= t {
+		return n.Anger < t || !k.Priority && n.Priority || k.Priority == n.Priority && k.Anger > n.Anger
+	}
+	return n.Anger < t && (!k.Priority && n.Priority || k.Priority == n.Priority && k.Anger > n.Anger)
+}
+
+// insert puts n after every suspect it does not sort before (the
+// multiset's insert).
+func (a *AngerLevel) insert(n Nuisance) {
+	i := 0
+	for i < len(a.nuisances) && !a.before(n, a.nuisances[i]) {
+		i++
+	}
+	a.nuisances = slices.Insert(a.nuisances, i, n)
+}
+
+// Valid is the suspect test (0x735E4F0): alive, the nuisance filter, and a
+// player only when not invulnerable and in survival or adventure.
+func (a *AngerLevel) Valid(env *Env, o behavior.Actor) bool {
+	if o == nil || !o.Alive() {
+		return false
+	}
+	if a.cfg.Nuisance != nil && !a.cfg.Nuisance.Eval(env.tester(env.Self, o)) {
+		return false
+	}
+	if !o.IsPlayer() {
+		return true
+	}
+	if o.Invulnerable() {
+		return false
+	}
+	mode := o.GameMode()
+	if mode == behavior.GameModeDefault {
+		mode = env.World.DefaultGameMode()
+	}
+	return mode == -1 || mode == behavior.GameModeSurvival || mode == behavior.GameModeAdventure
+}
+
+// Tick is AngerLevelSystem::tick (0x6F61670, per entity 0x6F929B0): the
+// decrements due since the last one, then remove_targets_below_angry_threshold.
+// The first tick stands for the component's init, which sets the next
+// decrement one interval on (0xC3D7D60).
 func (a *AngerLevel) Tick(env *Env) {
 	now := env.World.CurrentTick()
 	step := uint64(max(a.cfg.DecrementInterval, 1))
-	if a.next == 0 || a.next+step < now {
-		a.next = now
+	if a.next == 0 {
+		a.next = now + step
 	}
 	for now >= a.next {
-		top := int32(0)
-		kept := a.nuisances[:0]
-		for _, n := range a.nuisances {
-			n.anger--
-			if o := env.World.Actor(n.id); o != nil {
-				if !a.canBeNuisance(env, o) {
-					continue
-				}
-				top = max(top, n.anger)
-			}
-			if n.anger >= 0 {
-				kept = append(kept, n)
-			}
-		}
-		a.nuisances = kept
-		a.sort()
-		a.top = top
+		a.decrement(env)
 		a.next += step
 	}
-}
-
-func (a *AngerLevel) sort() {
-	t := a.cfg.AngryThreshold
-	sort.SliceStable(a.nuisances, func(i, j int) bool {
-		x, y := a.nuisances[i], a.nuisances[j]
-		if (x.anger >= t) != (y.anger >= t) {
-			return x.anger >= t
-		}
-		if x.priority != y.priority {
-			return x.priority
-		}
-		return x.anger > y.anger
-	})
-}
-
-// Increase adds anger at o when it can be a nuisance, plays the
-// listening sound when asked, and makes a mob whose target is not a
-// player drop it for a player that just turned it angry.
-func (a *AngerLevel) Increase(env *Env, o behavior.Actor, amount int32, sound bool) {
-	if !a.canBeNuisance(env, o) {
+	if !a.cfg.RemoveTargetsBelowThreshold {
 		return
 	}
-	i := -1
-	for k := range a.nuisances {
-		if a.nuisances[k].id == o.ID() {
-			i = k
+	m := env.Self
+	if t := m.Target(); t != behavior.NoID && env.World.Actor(t) != nil && a.Calm(t) {
+		m.SetTarget(behavior.NoID)
+	}
+}
+
+// decrement is 0x735EB30: one anger off every suspect; suspects that
+// exist but are no longer valid go, missing ones stay until their anger
+// runs out; the highest anger of the valid ones is kept.
+func (a *AngerLevel) decrement(env *Env) {
+	old := a.nuisances
+	a.nuisances = make([]Nuisance, 0, len(old))
+	top := int32(0)
+	for _, n := range old {
+		if o := env.World.Actor(n.ID); o != nil {
+			if !a.Valid(env, o) {
+				continue
+			}
+			top = max(top, n.Anger-1)
+		}
+		if n.Anger > 0 {
+			n.Anger--
+			a.insert(n)
 		}
 	}
-	if i < 0 {
-		a.nuisances = append(a.nuisances, nuisance{id: o.ID(), priority: o.IsPlayer()})
-		i = len(a.nuisances) - 1
+	a.top = top
+}
+
+// Increase is 0x735DC60: anger at a valid o goes up by amount, held
+// between 0 and max_anger (a suspect at 0 is dropped), playing the first
+// on_increase_sound whose condition holds at the head when asked; a mob
+// whose target is not a player drops it for a player now angry enough.
+func (a *AngerLevel) Increase(env *Env, o behavior.Actor, amount int32, sound bool) {
+	if !a.Valid(env, o) {
+		return
 	}
-	n := &a.nuisances[i]
-	n.anger = min(n.anger+amount, a.cfg.MaxAnger)
-	anger := n.anger
-	a.sort()
+	n := Nuisance{ID: o.ID(), Priority: !o.IsPlayer()}
+	old := int32(0)
+	if i := a.find(o.ID()); i >= 0 {
+		n, old = a.nuisances[i], a.nuisances[i].Anger
+	}
+	v := max(old+amount, 0)
+	if old+amount > a.cfg.MaxAnger {
+		v = a.cfg.MaxAnger
+	}
+	a.top = max(a.top, v)
+	if v != old {
+		if i := a.find(o.ID()); i >= 0 {
+			a.nuisances = slices.Delete(a.nuisances, i, i+1)
+		}
+		if v > 0 {
+			n.Anger = v
+			a.insert(n)
+		}
+	}
 	m := env.Self
 	if sound {
-		for _, s := range a.cfg.Sounds {
-			if s.Condition == nil || s.Condition(m) > 0 {
-				m.PlaySound(s.Sound)
-				break
-			}
-		}
+		a.playSound(m)
 	}
 	if !o.IsPlayer() {
 		return
 	}
-	if t := m.Target(); t != behavior.NoID {
-		if cur := env.World.Actor(t); cur != nil && !cur.IsPlayer() && anger >= a.cfg.AngryThreshold {
-			m.SetTarget(behavior.NoID)
+	if t := env.World.Actor(m.Target()); t != nil && !t.IsPlayer() && !a.Calm(o.ID()) {
+		m.SetTarget(behavior.NoID)
+	}
+}
+
+// playSound plays the first sound whose condition is above 0.
+func (a *AngerLevel) playSound(m Mob) {
+	for _, s := range a.cfg.Sounds {
+		if s.Condition == nil || s.Condition(m) > 0 {
+			m.PlaySoundAt(s.Sound, m.AttachPos(AttachHead))
+			return
 		}
 	}
 }

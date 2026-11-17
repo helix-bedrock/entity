@@ -78,7 +78,11 @@ type Birth struct {
 	BlendAttributes bool
 	// LoveCause is the player who fed the parents, NoID for none.
 	LoveCause behavior.ID
-	event     *definition.Trigger
+	// Trusted are the players who fed the mob and its partner (NoID where it was not a
+	// player), whom a baby with minecraft:trust trusts (1.26.60 0x7371850 into
+	// createBornActor 0xBFF2400).
+	Trusted [2]behavior.ID
+	event   *definition.Trigger
 }
 
 // Breedable is minecraft:breedable (1.21.3 BreedableComponent:
@@ -234,9 +238,9 @@ func (b *Breedable) Mate(env *Env, partner behavior.Actor, pb *Breedable, dst []
 	return dst
 }
 
-// endLove resets both parents and returns the love cause: the mob's
-// player, else the partner's.
-func (b *Breedable) endLove(env *Env, partner behavior.Actor, pb *Breedable) behavior.ID {
+// endLove resets both parents and returns the love causes that are players:
+// the mob's (else the partner's) and the partner's.
+func (b *Breedable) endLove(env *Env, partner behavior.Actor, pb *Breedable) (own, other behavior.ID) {
 	b.ResetLove(env.Self)
 	if pb != nil {
 		pb.love = 0
@@ -245,18 +249,29 @@ func (b *Breedable) endLove(env *Env, partner behavior.Actor, pb *Breedable) beh
 			pm.SetFlag(behavior.FlagInLove, false)
 		}
 	}
-	cause := b.loveCause
-	if p := env.World.Actor(cause); p == nil || !p.IsPlayer() {
-		cause = behavior.NoID
-		if pb != nil {
-			cause = pb.loveCause
+	return b.loveCauses(env, pb)
+}
+
+// loveCauses are the mob's and the partner's love causes that are players, NoID for
+// others; the first falls back to the partner's, as 0x7371850 does.
+func (b *Breedable) loveCauses(env *Env, pb *Breedable) (own, partner behavior.ID) {
+	own, partner = behavior.NoID, behavior.NoID
+	if p := env.World.Actor(b.loveCause); p != nil && p.IsPlayer() {
+		own = b.loveCause
+	}
+	if pb != nil {
+		if p := env.World.Actor(pb.loveCause); p != nil && p.IsPlayer() {
+			partner = pb.loveCause
 		}
 	}
-	return cause
+	if own == behavior.NoID {
+		own = partner
+	}
+	return own, partner
 }
 
 func (b *Breedable) mateOnce(env *Env, partner behavior.Actor, pb *Breedable) (Birth, bool) {
-	cause := b.endLove(env, partner, pb)
+	cause, other := b.endLove(env, partner, pb)
 	t := b.breedType(partner.Type())
 	if t == nil || t.Baby == "" {
 		return Birth{}, false
@@ -264,7 +279,7 @@ func (b *Breedable) mateOnce(env *Env, partner behavior.Actor, pb *Breedable) (B
 	m := env.Self
 	birth := Birth{
 		Baby: t.Baby, Partner: partner.ID(), Owner: behavior.NoID,
-		BlendAttributes: b.cfg.BlendAttributes, LoveCause: cause, event: t.Event,
+		BlendAttributes: b.cfg.BlendAttributes, LoveCause: cause, Trusted: [2]behavior.ID{cause, other}, event: t.Event,
 	}
 	if b.cfg.InheritTamed && m.Flag(behavior.FlagTamed) {
 		birth.Tame = true

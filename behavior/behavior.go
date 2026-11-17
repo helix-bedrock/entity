@@ -115,7 +115,9 @@ const (
 
 // The game modes the goals compare against.
 const (
+	GameModeSurvival  = 0
 	GameModeCreative  = 1
+	GameModeAdventure = 2
 	GameModeDefault   = 5
 	GameModeSpectator = 6
 )
