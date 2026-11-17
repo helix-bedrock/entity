@@ -54,7 +54,7 @@ func (m *b8Mob) Carried(a Actor) (string, bool) {
 }
 func (m *b8Mob) MakeJump(a Actor)                         { m.jumped = append(m.jumped, a.ID()) }
 func (m *b8Mob) LevelEventData(id int32, _ Vec3, _ int32) { m.levelEv = append(m.levelEv, id) }
-func (m *b8Mob) DropLoot(t string)                        { m.dropped = append(m.dropped, t) }
+func (m *b8Mob) DropOwnLoot(t string)                     { m.dropped = append(m.dropped, t) }
 func (m *b8Mob) Teleport(p Vec3)                          { m.teleport = append(m.teleport, p); m.pos = p }
 
 func TestLayDownStartsAndStopsByChance(t *testing.T) {

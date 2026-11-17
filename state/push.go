@@ -156,6 +156,10 @@ type PushWorld interface {
 	// velocity stands in.
 	Velocity(a behavior.Actor) behavior.Vec3
 	SetVelocity(a behavior.Actor, v behavior.Vec3)
+	// PushedBy gives a the PushedByComponent naming by, as BDS's push
+	// (0x7516F70) does for the pushed side only, before the push lands. The
+	// component is removed from every entity once a tick.
+	PushedBy(a, by behavior.Actor)
 	// Push adds v to the actor's motion, pushed by by. The engine also
 	// sends a pushed player its motion and breaks a painting or leash knot
 	// pushed at all, as BDS's push apply (0x7518430) does.
@@ -260,6 +264,7 @@ func (p *PushableByEntity) push(env *Env, w PushWorld, a, b behavior.Actor, self
 		return
 	}
 	va, vb := p.vectors(w, pre, a, b, dx, dz, dist)
+	w.PushedBy(a, b)
 	w.Push(a, b, va)
 	if !selfOnly {
 		if q := w.PushableByEntity(b); q != nil && q.Preset(env, b, a).Mode != PushNone {

@@ -130,8 +130,8 @@ type Sneezer interface {
 	// LevelEventData broadcasts the level event at p with a number as its
 	// data (Level vtable +1688).
 	LevelEventData(id int32, p Vec3, data int32)
-	// DropLoot rolls the loot table and drops what it gives at the mob.
-	DropLoot(table string)
+	// DropOwnLoot rolls the loot table and drops what it gives at the mob.
+	DropOwnLoot(table string)
 }
 
 // SneezeConfig is the JSON of minecraft:behavior.sneeze. Cooldown is
@@ -226,7 +226,7 @@ func (g *Sneeze) Tick() {
 		g.startle()
 	}
 	if g.cfg.DropItemChance > 0 && g.cfg.DropItemChance >= g.world.ThreadRandom().NextFloat() && g.cfg.LootTable != "" {
-		m.DropLoot(g.cfg.LootTable)
+		m.DropOwnLoot(g.cfg.LootTable)
 	}
 }
 

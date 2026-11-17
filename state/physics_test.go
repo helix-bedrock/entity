@@ -64,6 +64,8 @@ func (w *pushWorld) PullIn(a, b behavior.Actor) {
 func (w *pushWorld) PlaySound(_ behavior.Actor, e int, _ behavior.Vec3) {
 	w.sounds = append(w.sounds, e)
 }
+func (w *pushWorld) PushedBy(_, _ behavior.Actor) {}
+
 func (w *pushWorld) Push(a, _ behavior.Actor, v behavior.Vec3) {
 	p := w.pushes[a.ID()]
 	w.pushes[a.ID()] = behavior.Vec3{X: p.X + v.X, Y: p.Y + v.Y, Z: p.Z + v.Z}
