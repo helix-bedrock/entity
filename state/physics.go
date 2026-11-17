@@ -14,6 +14,7 @@ const (
 	FlagSneaking                      = 1
 	FlagCanClimb                      = 19
 	FlagLeashed                       = 30
+	FlagWASDControlled                = 44
 	FlagCanPowerJump                  = 45
 	FlagHasCollision                  = 48
 	FlagHasGravity                    = 49
@@ -34,9 +35,13 @@ const (
 // was not read from BDS's component code.
 func PhysicsFlagComponents() map[string]int {
 	return map[string]int{
-		"minecraft:can_climb":                         FlagCanClimb,
-		"minecraft:can_fly":                           behavior.FlagCanFly,
-		"minecraft:can_power_jump":                    FlagCanPowerJump,
+		"minecraft:can_climb":      FlagCanClimb,
+		"minecraft:can_fly":        behavior.FlagCanFly,
+		"minecraft:can_power_jump": FlagCanPowerJump,
+		// minecraft:input_ground_controlled: flag 44 on add, off on remove (BDS 1.26.60
+		// WASDControlledDefinition 0xC101DA0, 0xC101EA0). The rider's client steers only a
+		// mob with it.
+		"minecraft:input_ground_controlled":           FlagWASDControlled,
 		"minecraft:is_collidable":                     FlagCollidable,
 		"minecraft:body_rotation_blocked":             FlagBodyRotationBlocked,
 		"minecraft:rotation_axis_aligned":             FlagBodyRotationAxisAligned,
