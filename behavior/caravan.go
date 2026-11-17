@@ -1,17 +1,26 @@
 package behavior
 
-// Caravanner is a mob that can walk in a caravan (a line of mobs each
-// following the one in front, as trader llamas do). Other caravan members
-// are reached through the World and must implement it too.
-type Caravanner interface {
-	Mob
-	// InCaravan reports that the mob follows another one in a caravan.
+// CaravanMember is a mob as other caravan members see it, reached through
+// the World (an engine may hand out a read-only view of the mob there).
+type CaravanMember interface {
+	Actor
+	// InCaravan reports that the mob follows another one in a caravan
+	// (Mob::inCaravan, BDS 1.26.60 0xBFEE0B0: its head still exists).
 	InCaravan() bool
 	// CaravanHead is the mob this one follows, CaravanTail the one that
 	// follows it; NoID when there is none.
 	CaravanHead() ID
 	CaravanTail() ID
-	// JoinCaravan makes the mob follow head; LeaveCaravan undoes it.
+}
+
+// Caravanner is a mob that can walk in a caravan (a line of mobs each
+// following the one in front, as trader llamas do).
+type Caravanner interface {
+	Mob
+	CaravanMember
+	// JoinCaravan makes the mob follow head and head lead it (BDS 1.26.60
+	// 0xBFEDF10); LeaveCaravan undoes it (0xBFEDDB0). Both send the
+	// caravan's front the caravan-updated actor event with its length.
 	JoinCaravan(head ID)
 	LeaveCaravan()
 }
@@ -75,12 +84,12 @@ func (g *FollowCaravan) Config() FollowCaravanConfig { return g.cfg }
 // SetConfig replaces the goal's settings.
 func (g *FollowCaravan) SetConfig(c FollowCaravanConfig) { g.cfg = c }
 
-func (g *FollowCaravan) caravanner(id ID) Caravanner {
+func (g *FollowCaravan) caravanner(id ID) CaravanMember {
 	a := g.actor(id)
 	if a == nil || !a.IsMob() {
 		return nil
 	}
-	c, _ := a.(Caravanner)
+	c, _ := a.(CaravanMember)
 	return c
 }
 
@@ -99,9 +108,9 @@ func (g *FollowCaravan) CanUse() bool {
 	})
 	defer clear(g.buf)
 	best := float32(temptFloatMaxValue)
-	lead := g.nearest(&best, func(c Caravanner) bool { return c.InCaravan() })
+	lead := g.nearest(&best, func(c CaravanMember) bool { return c.InCaravan() })
 	if lead == nil {
-		lead = g.nearest(&best, func(c Caravanner) bool { return c.Flag(FlagLeashed) })
+		lead = g.nearest(&best, func(c CaravanMember) bool { return c.Flag(FlagLeashed) })
 	}
 	if lead == nil || best < g.cfg.MinLeaderDist2 {
 		return false
@@ -118,10 +127,10 @@ func (g *FollowCaravan) CanUse() bool {
 
 // nearest is the closest candidate passing ok that has no mob behind it.
 // best carries the running minimum from one pass to the next, as in BDS.
-func (g *FollowCaravan) nearest(best *float32, ok func(Caravanner) bool) Caravanner {
-	var out Caravanner
+func (g *FollowCaravan) nearest(best *float32, ok func(CaravanMember) bool) CaravanMember {
+	var out CaravanMember
 	for _, a := range g.buf {
-		c, isC := a.(Caravanner)
+		c, isC := a.(CaravanMember)
 		if !isC || !a.IsMob() || !ok(c) || g.actor(c.CaravanTail()) != nil {
 			continue
 		}
@@ -137,7 +146,7 @@ func (g *FollowCaravan) nearest(best *float32, ok func(Caravanner) bool) Caravan
 // leashedAhead walks from c toward the front of its caravan looking for a
 // leashed mob; it gives up when the step count, starting at i, reaches
 // entity_count - 1.
-func (g *FollowCaravan) leashedAhead(c Caravanner, i int32) bool {
+func (g *FollowCaravan) leashedAhead(c CaravanMember, i int32) bool {
 	for !c.Removed() {
 		if i++; i >= g.cfg.EntityCount-1 || !c.InCaravan() {
 			return false
@@ -154,7 +163,7 @@ func (g *FollowCaravan) leashedAhead(c Caravanner, i int32) bool {
 
 // validLeader is the entity_types test (0x59F91F0), applied to the leader
 // and everyone in front of it.
-func (g *FollowCaravan) validLeader(c Caravanner) bool {
+func (g *FollowCaravan) validLeader(c CaravanMember) bool {
 	for c != nil {
 		if c.Removed() || !c.InCaravan() && !c.Flag(FlagLeashed) || !anyFilter(g.cfg.EntityTypes, g.m, c) {
 			return false
@@ -166,7 +175,7 @@ func (g *FollowCaravan) validLeader(c Caravanner) bool {
 		if !head.IsMob() {
 			return false
 		}
-		c, _ = head.(Caravanner)
+		c, _ = head.(CaravanMember)
 	}
 	return false
 }
