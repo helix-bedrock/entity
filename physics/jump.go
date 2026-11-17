@@ -71,17 +71,41 @@ func (b *Body) mobJump(w World) {
 // feet or, when the feet are on a block boundary, just below.
 func (b *Body) jumpFromGround(w World) {
 	var factor float32 = 1
+	if _, low := b.LowJumpBlock(w); low {
+		factor = lowJumpFactor
+	}
+	b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
+}
+
+// JumpMultiplier is Mob::getJumpMultiplier (BDS 1.26.60 0xBFE4A90): 0.6 on the
+// ground over a low-jump block (honey), else 1.
+func (b *Body) JumpMultiplier(w World) float32 {
+	if !b.OnGround {
+		return 1
+	}
+	if _, low := b.LowJumpBlock(w); low {
+		return lowJumpFactor
+	}
+	return 1
+}
+
+// LowJumpBlock is the low-jump block test the ground jump, Mob::getJumpMultiplier
+// and Mob::getJumpPrevention (0xBFE4520) share: the block at the feet, or, when
+// that block lets mobs jump from below or the feet are on a block boundary, the
+// block just under it.
+func (b *Body) LowJumpBlock(w World) (path.Pos, bool) {
 	feet := b.feet()
 	blk := w.Block(feet)
 	switch {
 	case blk.LowJump:
-		factor = lowJumpFactor
+		return feet, true
 	case blk.JumpFromBelow || float32(feet.Y) >= b.Box.Min.Y:
-		if w.Block(path.Pos{X: feet.X, Y: feet.Y - 1, Z: feet.Z}).LowJump {
-			factor = lowJumpFactor
+		below := path.Pos{X: feet.X, Y: feet.Y - 1, Z: feet.Z}
+		if w.Block(below).LowJump {
+			return below, true
 		}
 	}
-	b.Vel.Y = factor * (b.jumpBoost() + b.jumpPower())
+	return path.Pos{}, false
 }
 
 // jumpPower is the ground jump speed: 0.42 plus 0.1 per variant step, read
