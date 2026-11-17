@@ -95,9 +95,16 @@ func New(rules *Rules, biomes []BiomeInfo) *Spawner {
 			}
 		}
 	}
+	// BDS's ActorSpawnRuleGroup (1.26.60 ctor 0xC057CC0) starts each delay
+	// identifier at the min of the first rule naming it, so a delay_filter
+	// waits that long into the world's life and its spawn_chance applies
+	// from the first try (spawnMobCluster 0xCEAEDB0 skips both while the
+	// delay end is 0).
 	for i := range rules.All {
 		if d := rules.All[i].DelayID; d != "" {
-			s.delays.at[d] = 0
+			if _, ok := s.delays.at[d]; !ok {
+				s.delays.at[d] = int64(rules.All[i].DelayMin)
+			}
 		}
 	}
 	return s
