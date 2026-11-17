@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/helix-bedrock/entity/behavior"
 	"github.com/helix-bedrock/entity/path"
@@ -290,6 +291,18 @@ func (c *Context) Descriptors(j Object, k string) []string {
 		out = append(out, string(bytes.TrimSpace(raw)))
 	}
 	return out
+}
+
+// BlockDescriptors reads a list of block descriptors. A bare name takes the minecraft
+// namespace, as a BDS BlockDescriptor resolves it, so "dirt" matches minecraft:dirt.
+func (c *Context) BlockDescriptors(j Object, k string) []string {
+	list := c.Descriptors(j, k)
+	for i, d := range list {
+		if d != "" && !strings.ContainsRune(d, ':') && d[0] != '{' {
+			list[i] = "minecraft:" + d
+		}
+	}
+	return list
 }
 
 // Sound reads a level sound event name member.

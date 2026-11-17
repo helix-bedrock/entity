@@ -143,7 +143,7 @@ func readMoveToBlock(c *Context, j Object, cfg *behavior.MoveToBlockConfig) {
 	cfg.TargetOffset = c.Vec3(j, "target_offset", cfg.TargetOffset)
 	cfg.OnReach = c.Triggers(j, "on_reach")
 	cfg.OnStayCompleted = c.Triggers(j, "on_stay_completed")
-	cfg.TargetBlocks = c.Descriptors(j, "target_blocks")
+	cfg.TargetBlocks = c.BlockDescriptors(j, "target_blocks")
 	cfg.BlockFilters = c.BlockFilter(j, "target_block_filters")
 }
 
@@ -351,7 +351,7 @@ func vanillaGoals() map[string]GoalFactory {
 			if j.Has("target_selection_method") {
 				cfg.Method, _ = behavior.ParseSelection(c.String(j, "target_selection_method", ""))
 			}
-			cfg.TargetBlocks = c.Descriptors(j, "target_blocks")
+			cfg.TargetBlocks = c.BlockDescriptors(j, "target_blocks")
 			cfg.OnEscape = c.Triggers(j, "on_escape")
 			cfg.Sound = c.Sound(j, "avoid_block_sound", cfg.Sound)
 			soundInterval(c, j, &cfg.SoundInterval)
@@ -735,7 +735,7 @@ func vanillaGoals() map[string]GoalFactory {
 		}, behavior.NewEatMob),
 		"lay_egg": configured(behavior.DefaultLayEgg, func(c *Context, j Object, cfg *behavior.LayEggConfig) {
 			if j.Has("target_blocks") {
-				cfg.TargetBlocks = c.Descriptors(j, "target_blocks")
+				cfg.TargetBlocks = c.BlockDescriptors(j, "target_blocks")
 			}
 			cfg.MaterialsAbove = materials(c, j, "target_materials_above_block", cfg.MaterialsAbove)
 			if j.Has("lay_egg_sound") {
@@ -744,12 +744,12 @@ func vanillaGoals() map[string]GoalFactory {
 			cfg.OnLay = c.Triggers(j, "on_lay")
 		}, behavior.NewLayEgg),
 		"take_block": configured(behavior.DefaultTakeBlock, func(c *Context, j Object, cfg *behavior.TakeBlockConfig) {
-			cfg.Blocks = c.Descriptors(j, "blocks")
+			cfg.Blocks = c.BlockDescriptors(j, "blocks")
 			cfg.CanTake = c.Filter(j, "can_take")
 			cfg.OnTake = c.Triggers(j, "on_take")
 		}, behavior.NewTakeBlock),
 		"place_block": configured(behavior.DefaultPlaceBlock, func(c *Context, j Object, cfg *behavior.PlaceBlockConfig) {
-			cfg.PlaceableCarriedBlocks = c.Descriptors(j, "placeable_carried_blocks")
+			cfg.PlaceableCarriedBlocks = c.BlockDescriptors(j, "placeable_carried_blocks")
 			cfg.CanPlace = c.Filter(j, "can_place")
 			cfg.OnPlace = c.Triggers(j, "on_place")
 		}, behavior.NewPlaceBlock),
@@ -760,7 +760,7 @@ func vanillaGoals() map[string]GoalFactory {
 		}, behavior.NewJumpToBlock),
 		"random_search_and_dig": configured(behavior.DefaultRandomSearchAndDig, func(c *Context, j Object, cfg *behavior.RandomSearchAndDigConfig) {
 			if j.Has("target_blocks") {
-				cfg.TargetBlocks = c.Descriptors(j, "target_blocks")
+				cfg.TargetBlocks = c.BlockDescriptors(j, "target_blocks")
 			}
 			cfg.OnSearchingStart = c.Triggers(j, "on_searching_start")
 			cfg.OnFailDuringSearching = c.Triggers(j, "on_fail_during_searching")
@@ -821,7 +821,7 @@ func vanillaGoals() map[string]GoalFactory {
 		"fertilize_farm_block":   configured(behavior.DefaultFertilizeFarmBlock, nil, behavior.NewFertilizeFarmBlock),
 		"raid_garden": configured(behavior.DefaultRaidGarden, func(c *Context, j Object, cfg *behavior.RaidGardenConfig) {
 			if j.Has("blocks") {
-				cfg.Blocks = c.Descriptors(j, "blocks")
+				cfg.Blocks = c.BlockDescriptors(j, "blocks")
 			}
 		}, behavior.NewRaidGarden),
 		"inspect_bookshelf": configured(behavior.DefaultInspectBookshelf, nil, behavior.NewInspectBookshelf),
