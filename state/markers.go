@@ -6,6 +6,7 @@ import "github.com/helix-bedrock/entity/behavior"
 const (
 	FlagIgnited             = 10
 	FlagSitting             = 24
+	FlagOrphaned            = 29
 	FlagFireImmune          = 50
 	FlagTrusting            = 66
 	FlagHiddenWhenInvisible = 89
@@ -137,6 +138,38 @@ func (c *TypeFamilyConfig) Has(family string) bool {
 // buildSchema 0x14062DAD0): the events run when the mob sits and stands.
 type SittableConfig struct {
 	SitEvent, StandEvent string
+}
+
+// Sit is a player's use on a mob with minecraft:sittable, as BDS 1.26.60's SitComponent
+// (getInteraction 0x7165460, its callback 0x7212D80): only the owner may make the mob sit
+// or stand, unless it is orphaned, when the player becomes its owner and the mob stops
+// being orphaned. The mob turns sitting if it stood and standing if it sat, and runs
+// sit_event or stand_event. False when the player may not. BDS also sends a stat event and
+// a game event at the mob, which are the engine's, and a parrot (Parrot::setSitting
+// 0xBEB96F0) only sits down while it has one more component, which was not identified.
+func Sit(env *Env, c *SittableConfig, player behavior.Actor) bool {
+	m := env.Self
+	if player == nil {
+		return false
+	}
+	orphaned := m.Flag(FlagOrphaned)
+	if !orphaned && m.Owner() != player.ID() {
+		return false
+	}
+	if orphaned {
+		m.SetOwner(player.ID())
+		m.SetFlag(FlagOrphaned, false)
+	}
+	sit := !m.Flag(FlagSitting)
+	m.SetFlag(FlagSitting, sit)
+	ev := c.StandEvent
+	if sit {
+		ev = c.SitEvent
+	}
+	if ev != "" && env.Events != nil {
+		env.Events.Execute(ev, env.tester(m, nil))
+	}
+	return true
 }
 
 // SittableRemoved is SittableDefinition::uninitialize (0x140646DD0): the

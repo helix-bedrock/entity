@@ -23,8 +23,8 @@ func DefaultTrusting() TrustingConfig {
 	return TrustingConfig{InteractText: "action.interact.feed", TrustEvent: EventTameSuccess}
 }
 
-// TrustingInteraction is TrustingComponent::getInteraction (1.21.3
-// 0x140637650): a mob that does not trust yet offers feeding when the
+// TrustingInteraction is TrustingComponent::getInteraction (1.26.60
+// 0x74069D0): a mob that does not trust yet offers feeding when the
 // hand holds a trust item. It returns the interaction text, "" for none.
 func TrustingInteraction(m Mob, c *TrustingConfig, hand Hand) string {
 	if m.Flag(FlagTrusting) {
@@ -38,11 +38,12 @@ func TrustingInteraction(m Mob, c *TrustingConfig, hand Hand) string {
 	return ""
 }
 
-// TryTrust is the feeding: with the probability the mob becomes trusting.
-// The roll lives in a captured BDS lambda that was not read; the
-// probability member says what it does.
+// TryTrust is the feeding, as BDS 1.26.60's trusting callback (0x740A160): with the
+// probability the mob becomes trusting, otherwise it broadcasts the failed-taming event
+// (6). The eating event and using up the item come first and are the engine's.
 func TryTrust(env *Env, c *TrustingConfig) bool {
 	if env.World.Random().NextFloat() >= c.Probability {
+		env.Self.ActorEvent(EventTameFail)
 		return false
 	}
 	BecomeTrusting(env, c)
