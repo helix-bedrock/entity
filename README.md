@@ -9,7 +9,7 @@
 
 [![Minecraft](https://img.shields.io/badge/minecraft-v1.26.60_(Bedrock)-black)](https://feedback.minecraft.net/hc/en-us/sections/360001186971-Release-Changelogs)
 [![Go](https://img.shields.io/badge/go-1.26-00ADD8?logo=go&logoColor=white)](https://go.dev/)
-[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-noncommercial-orange)](LICENSE)
 [![Status](https://img.shields.io/badge/status-in_progress-orange)](STATUS.md)
 
 </div>
@@ -92,5 +92,11 @@ What works today, what is left and the state of every goal is in [STATUS.md](STA
 
 ## License
 
-entity is licensed under [MIT](LICENSE). Mojang's vanilla data it reads lives in
-[helix-data](https://github.com/helix-bedrock/helix-data).
+Noncommercial use only: [PolyForm Noncommercial 1.0.0](LICENSE) with Helix's
+[extra permissions](ADDITIONAL-PERMISSIONS.md). Anyone may use it, run servers with it
+(even ones that make money) and sell their own plugins, but nobody may sell Helix or its
+code. Helix's game behaviour is re-engineered from Minecraft's Bedrock Dedicated Server;
+see [NOTICE.md](NOTICE.md). Not an official Minecraft product. Not approved by or
+associated with Mojang or Microsoft.
+
+Mojang's vanilla data it reads lives in [helix-data](https://github.com/helix-bedrock/helix-data).
