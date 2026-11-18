@@ -16,7 +16,7 @@ type Pose struct {
 }
 
 // Sent is a Pose the way BDS keeps it for the network
-// (MoveActorAbsoluteData, built by sub_85A44D0): the position as float32,
+// (MoveActorAbsoluteData): the position as float32,
 // the rotations as bytes. It is what a viewer last saw.
 type Sent struct {
 	Position                     mgl32.Vec3
@@ -41,7 +41,7 @@ func Quantize(p Pose, mob bool) Sent {
 }
 
 // WrapDegrees wraps d into [-180, 180), as BDS does before rounding:
-// fmod(d+180, 360), plus 360 if negative, minus 180, in float32.
+// fmod(d, 360), plus 360 if negative, minus 180, in float32.
 func WrapDegrees(d float32) float32 {
 	// fmod is exact, so doing it in float64 gives the float32 result.
 	r := float32(math.Mod(float64(d+180), 360))
@@ -52,7 +52,7 @@ func WrapDegrees(d float32) float32 {
 }
 
 // RotationByte is BDS's network rotation: int32((wrap(d) / 360) * 256),
-// truncated, in float32 (sub_85A44D0). The divide comes before the
+// truncated, in float32. The divide comes before the
 // multiply; the other order rounds differently for some angles.
 func RotationByte(d float32) byte {
 	w := WrapDegrees(d)

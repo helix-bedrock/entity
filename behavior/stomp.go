@@ -29,9 +29,9 @@ func DefaultStompEgg() StompEggConfig {
 	return StompEggConfig{MoveToConfig: DefaultMoveTo(), Interval: stompInterval}
 }
 
-// StompEgg is StompEggGoal, a StompBlockGoal (BDS 1.26.60 canUse
-// 0x5694020, start 0x56940A0, tick 0x5694150, findTargetBlock 0x5693E20,
-// isValidTarget 0x5694A80, _canReach 0x5694E70, _moveToBlock 0x5694BD0;
+// StompEgg is StompEggGoal, a StompBlockGoal (BDS 1.26.60 canUse,
+// start, tick, findTargetBlock,
+// isValidTarget, _canReach, _moveToBlock;
 // canContinueToUse and stop are the move-to base's): a mob walks to a
 // turtle egg and jumps on it until it breaks. Not ported: the gameplay
 // event BDS sends before removing the egg, which can keep it.

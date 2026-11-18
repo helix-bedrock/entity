@@ -11,8 +11,8 @@ const (
 // dwelling restriction checks (taken to be the villagers).
 var villagerTypes = [...]string{"minecraft:villager", "minecraft:villager_v2"}
 
-// towards is MoveTowardsRestrictionGoal (BDS 1.26.60 canContinueToUse
-// 0x5502B90, start 0x5502C90): the mob walks back toward its restriction
+// towards is MoveTowardsRestrictionGoal (BDS 1.26.60 canContinueToUse,
+// start): the mob walks back toward its restriction
 // centre when it is outside it. The home and dwelling goals
 // pick the centre.
 type towards struct {
@@ -21,7 +21,7 @@ type towards struct {
 	to    Vec3
 }
 
-// toward finds a random spot on the way to c (BDS 1.26.60 0x5502DA0).
+// toward finds a random spot on the way to c.
 func (g *towards) toward(c Pos) bool {
 	p := g.mob.Pos()
 	d := Vec3{X: float32(c.X) - p.X, Y: float32(c.Y) - p.Y, Z: float32(c.Z) - p.Z}
@@ -51,7 +51,7 @@ func (g *towards) Stop() {}
 // Tick implements goal.Goal.
 func (g *towards) Tick() {}
 
-// TowardsHome is MoveTowardsHomeRestrictionGoal (canUse 0x543D950): back
+// TowardsHome is MoveTowardsHomeRestrictionGoal (canUse): back
 // toward the home (minecraft:home) when outside its restriction radius.
 type TowardsHome struct{ towards }
 
@@ -88,7 +88,7 @@ func NewTowardsDwelling(w World, m Mob, speed float32) *TowardsDwelling {
 	return &TowardsDwelling{towards{base: base{mob: m, world: w, flags: flagsMove}, speed: speed}}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x543D6A0).
+// CanUse implements goal.Goal.
 func (g *TowardsDwelling) CanUse() bool {
 	m := g.mob
 	if m.Nav() == nil {

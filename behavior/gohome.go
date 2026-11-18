@@ -15,7 +15,7 @@ type GoHomeConfig struct {
 	OnFailed               []string `json:"on_failed"`
 }
 
-// DefaultGoHome returns the goal's BDS defaults (TypeSchema 0xDF6A490).
+// DefaultGoHome returns the goal's BDS defaults (TypeSchema).
 func DefaultGoHome() GoHomeConfig {
 	return GoHomeConfig{SpeedMultiplier: 1, Interval: 120, GoalRadius: 0.5, CalculateNewPathRadius: 2}
 }
@@ -36,7 +36,7 @@ type GoHome struct {
 	lastEnd Pos
 }
 
-// NewGoHome makes the goal (0x5751310).
+// NewGoHome makes the goal.
 func NewGoHome(w World, m Mob, c GoHomeConfig) *GoHome {
 	return &GoHome{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, radius2: c.GoalRadius * c.GoalRadius}
 }
@@ -54,7 +54,7 @@ func (g *GoHome) homeDist2(h Pos) float32 {
 }
 
 // home is the home in the mob's dimension (ok), and whether the mob has a
-// home at all (has), the 0x5A00370 / 0x5A004B0 checks.
+// home at all (has), the checks.
 func (g *GoHome) home() (h Pos, ok, has bool) {
 	h, _, ok = g.mob.Home()
 	if ok {
@@ -64,8 +64,8 @@ func (g *GoHome) home() (h Pos, ok, has bool) {
 	return h, false, isAway && a.HomeInOtherDimension()
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5A001F0): the interval roll
-// is on Level::getRandom; a home too far away or in another dimension
+// CanUse implements goal.Goal: the interval roll
+// is on BDS's code; a home too far away or in another dimension
 // fires on_failed.
 func (g *GoHome) CanUse() bool {
 	if _, _, has := g.home(); !has || g.mob.Nav() == nil {
@@ -82,7 +82,7 @@ func (g *GoHome) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A00760).
+// CanContinueToUse implements goal.Goal.
 func (g *GoHome) CanContinueToUse() bool {
 	h, ok, has := g.home()
 	if !has || g.mob.Nav() == nil {
@@ -103,20 +103,20 @@ func (g *GoHome) walk() {
 	}
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5A00890).
+// Start implements goal.Goal.
 func (g *GoHome) Start() {
 	g.walk()
 	g.lastEnd = Pos{X: math.MinInt32, Y: math.MinInt32, Z: math.MinInt32}
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x5A00A00).
+// Stop implements goal.Goal.
 func (g *GoHome) Stop() {
 	if h, _, ok := g.mob.Home(); ok && g.radius2 >= g.homeDist2(h) {
 		g.fire(g.cfg.OnHome)
 	}
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5A00B20): within
+// Tick implements goal.Goal: within
 // calculate_new_path_radius of the end of a path that does not reach home,
 // a new path to a new end is tried; the same end twice fails.
 func (g *GoHome) Tick() {

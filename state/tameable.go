@@ -17,7 +17,7 @@ type TameableConfig struct {
 }
 
 // DefaultTameable is BDS's tameable with a probability of 1. The 1.21.3
-// schema (TameableDefinition::buildSchema 0x14062E080) reads the default
+// schema (0x14062E080) reads the default
 // from a data constant that was not read; 1 is Mojang's documented
 // default. The event numbers are from _attemptToTame 0x140623CA0 and
 // _becomeTame 0x140623EE0.
@@ -65,7 +65,7 @@ func (t *Tameable) Feed(env *Env, player behavior.Actor, h Hand) int {
 }
 
 // Tame makes the mob tame, as _becomeTame: persistent, the success event,
-// the tamed flag and tame_event. BDS also makes a vtable call (488) whose
+// the tamed flag and tame_event. BDS also makes a call (488) whose
 // meaning was not read.
 func (t *Tameable) Tame(env *Env) {
 	m := env.Self
@@ -100,9 +100,9 @@ type TamemountConfig struct {
 	HeartParticle, HeartCount int
 }
 
-// DefaultTamemount is BDS's tamemount (1.26.60 schema 0xC2BB260:
+// DefaultTamemount is BDS's tamemount (1.26.60 schema:
 // min_temper 0, max_temper 100, attempt_temper_mod 5; the 60-tick ride
-// from 1.21.3 MountTameableDefinition::initialize 0x1405E6A70).
+// from 1.21.3 BDS's code 0x1405E6A70).
 func DefaultTamemount() TamemountConfig {
 	return TamemountConfig{
 		MaxTemper: 100, AttemptTemperMod: 5, RideTicks: 60,
@@ -112,7 +112,7 @@ func DefaultTamemount() TamemountConfig {
 
 // Tamemount is minecraft:tamemount: a mount tamed by riding it until its
 // temper gives in (1.21.3 tickMountTamingComponent 0x140181F00,
-// MountTamingComponent::getInteraction 0x1405E3470, _feedItem 0x1405D3940,
+// BDS's code 0x1405E3470, _feedItem 0x1405D3940,
 // tameToPlayer 0x1405ED540).
 type Tamemount struct {
 	cfg     TamemountConfig
@@ -172,7 +172,7 @@ func (t *Tamemount) Tick(env *Env) {
 
 // TameTo tames the mount to a player: owner, persistent, the success event
 // and particles, the tamed flag and tame_event. As in Tameable.Tame, a
-// vtable call (488) is left out.
+// call (488) is left out.
 func (t *Tamemount) TameTo(env *Env, player behavior.Actor) {
 	m := env.Self
 	m.SetOwner(player.ID())

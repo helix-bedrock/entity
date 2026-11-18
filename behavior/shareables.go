@@ -21,7 +21,7 @@ type ShareableItem struct {
 	PickupOnly        bool  `json:"pickup_only"`
 }
 
-// DefaultShareableItem returns an entry's BDS defaults (0x6D93CA0): every amount
+// DefaultShareableItem returns an entry's BDS defaults: every amount
 // unset.
 func DefaultShareableItem() ShareableItem {
 	return ShareableItem{WantAmount: -1, SurplusAmount: -1, MaxAmount: -1, PickupLimit: -1}
@@ -57,7 +57,7 @@ var (
 	armorPickupFrom     = [3]int{1, 20, 30} // from it empty armor slots wait for singular_pickup
 )
 
-// entry is the first entry matching the item (0x5759ED0), nil for none.
+// entry is the first entry matching the item, nil for none.
 func (i *Items) entry(it Item) *ShareableItem {
 	for k := range i.Shareables.Items {
 		if e := &i.Shareables.Items[k]; i.Rules.Matches(e.Item, it) {
@@ -88,7 +88,7 @@ func (i *Items) priority(it Item) int32 {
 // hand is the hand slot the item goes to.
 func (i *Items) hand(it Item) Item { return i.Body.Slot(handSlotFor(it)) }
 
-// WantAmount is how many more of the item the mob wants (0x6D95B50): the
+// WantAmount is how many more of the item the mob wants: the
 // want amount less what the inventory holds. A mob without an inventory
 // wants nothing while the hand for the item is full.
 func (i *Items) WantAmount(it Item) int32 {
@@ -119,7 +119,7 @@ func (i *Items) WantAmount(it Item) int32 {
 }
 
 // shareAmount is how many of the item the mob gives away and the stack it
-// gives (0x6D95FC0). withCount starts the surplus at the item's count, the
+// gives. withCount starts the surplus at the item's count, the
 // way the hand offer asks.
 func (i *Items) shareAmount(it Item, withCount bool) (int32, Item) {
 	s, r := i.Shareables, i.Rules
@@ -178,8 +178,8 @@ func (i *Items) shareAmount(it Item, withCount bool) (int32, Item) {
 // atLeast reports a base game version at or above v.
 func (i *Items) atLeast(v [3]int) bool { return i.Rules.BaseGameAtLeast(v[0], v[1], v[2]) }
 
-// storeRoute reports that a picked-up item goes into the inventory
-// (0x6D95470): always when it may not go to the hand; else only for a
+// storeRoute reports that a picked-up item goes into the inventory:
+// always when it may not go to the hand; else only for a
 // stored_in_inventory entry when it beats what is worn or held.
 func (i *Items) storeRoute(it Item, toHand bool) bool {
 	if !toHand {
@@ -200,7 +200,7 @@ func (i *Items) storeRoute(it Item, toHand bool) bool {
 	return false
 }
 
-// better reports that nw beats cur (0x6D95970): a higher priority, the same
+// better reports that nw beats cur: a higher priority, the same
 // item less damaged, or with orEmpty an empty cur.
 func (i *Items) better(cur, nw Item, orEmpty bool) bool {
 	r := i.Rules
@@ -213,7 +213,7 @@ func (i *Items) better(cur, nw Item, orEmpty bool) bool {
 	return orEmpty && cur.Empty()
 }
 
-// handRoom reports room for the item in the hand (0x6D956C0): an empty hand,
+// handRoom reports room for the item in the hand: an empty hand,
 // or a stack of it below both max and its maximum stack.
 func (i *Items) handRoom(it, hand Item, maxAmount int32, singular bool) bool {
 	r := i.Rules
@@ -230,9 +230,9 @@ func (i *Items) handRoom(it, hand Item, maxAmount int32, singular bool) bool {
 	return r.Stacks(hand, it) && hand.Count < r.MaxStack(hand)
 }
 
-// WantsPickup is the shareables test of an item on the ground (0x6D94AC0).
+// WantsPickup is the shareables test of an item on the ground.
 // anyItem and toHand are pickup_items' can_pickup_any_item and
-// can_pickup_to_hand_or_equipment (1.26.60 passes them to 0x715C200).
+// can_pickup_to_hand_or_equipment (1.26.60 passes them to).
 func (i *Items) WantsPickup(it Item, anyItem, toHand bool) bool {
 	s, r := i.Shareables, i.Rules
 	if s == nil {
@@ -300,8 +300,8 @@ func (i *Items) WantsPickup(it Item, anyItem, toHand bool) bool {
 	return i.better(i.hand(it), one, anyItem)
 }
 
-// pickupCount is how many of the item entity's stack the mob takes
-// (0x6D97270): up to its max amount less what it has, and at most the
+// pickupCount is how many of the item entity's stack the mob takes:
+// up to its max amount less what it has, and at most the
 // pickup limit.
 func (i *Items) pickupCount(it Item) int32 {
 	s, r := i.Shareables, i.Rules
@@ -325,8 +325,8 @@ func (i *Items) pickupCount(it Item) int32 {
 	return n
 }
 
-// replaceSlot is the inventory slot a full inventory gives up for the item
-// (0x6D96AA0): the first one holding something it likes less, or -1.
+// replaceSlot is the inventory slot a full inventory gives up for the item:
+// the first one holding something it likes less, or -1.
 func (i *Items) replaceSlot(it Item) int {
 	if i.Inventory.CanAdd(it) {
 		return -1

@@ -4,18 +4,17 @@ package behavior
 type Charger interface {
 	ItemUser
 	// Chargeable reports an item that can be charged, like a crossbow
-	// (Item vt+984).
 	Chargeable(it Item) bool
-	// Charged reports a stack that holds a charge (0xC3523F0).
+	// Charged reports a stack that holds a charge.
 	Charged(it Item) bool
 	// SetChargeAmount sets the charge amount actor data (item 22), 0 to
 	// 127.
 	SetChargeAmount(v int8)
-	// ChargeTick is the item's server-side tick while it charges (Item
-	// vt+992), which plays the loading sounds.
+	// ChargeTick is the item's server-side tick while it charges (Item),
+	// which plays the loading sounds.
 	ChargeTick(it Item)
 	// LoadCharge is the stack with the ammo as its charged item
-	// (ItemStack::setChargedItem on a copy).
+	// (on a copy).
 	LoadCharge(it, ammo Item) Item
 }
 
@@ -49,15 +48,15 @@ func (g *ChargeHeldItem) charging() bool {
 	return !h.Empty() && g.m.Chargeable(h) && !g.m.Charged(h)
 }
 
-// CanUse implements goal.Goal (0xBDF9AC0).
+// CanUse implements goal.Goal.
 func (g *ChargeHeldItem) CanUse() bool {
 	return g.charging() && g.actor(g.m.Target()) != nil && len(g.cfg.Items) != 0
 }
 
-// CanContinueToUse implements goal.Goal (0xBDF9B60).
+// CanContinueToUse implements goal.Goal.
 func (g *ChargeHeldItem) CanContinueToUse() bool { return g.charging() }
 
-// Start implements goal.Goal (0xBDF9BB0).
+// Start implements goal.Goal.
 func (g *ChargeHeldItem) Start() {
 	g.timer = g.m.UseDuration(g.m.Slot(SlotMainhand))
 	g.m.SetFlag(FlagUsingItem, true)
@@ -65,14 +64,14 @@ func (g *ChargeHeldItem) Start() {
 	g.m.SetChargeAmount(0)
 }
 
-// Stop implements goal.Goal (0xBDF9C90).
+// Stop implements goal.Goal.
 func (g *ChargeHeldItem) Stop() {
 	g.timer = 0
 	g.m.SetFlag(FlagUsingItem, false)
 	g.m.SetChargeAmount(0)
 }
 
-// Tick implements goal.Goal (0xBDF9D30): the charge grows, and when the
+// Tick implements goal.Goal: the charge grows, and when the
 // time is up a random ammo is loaded.
 func (g *ChargeHeldItem) Tick() {
 	m := g.m

@@ -28,7 +28,7 @@ type FollowTargetLeaderConfig struct {
 	StepFactor float32
 }
 
-// DefaultFollowTargetLeader returns the goal's BDS defaults (0xE4AEC20,
+// DefaultFollowTargetLeader returns the goal's BDS defaults (
 // numbers from the goal's code).
 func DefaultFollowTargetLeader() FollowTargetLeaderConfig {
 	return FollowTargetLeaderConfig{
@@ -36,8 +36,8 @@ func DefaultFollowTargetLeader() FollowTargetLeaderConfig {
 	}
 }
 
-// FollowTargetLeader is FollowTargetLeaderGoal (vtable 0xF7B3758, made in
-// 0x54931F0): the mob finds a leader passing leader_filters and walks after
+// FollowTargetLeader is FollowTargetLeaderGoal (made in):
+// the mob finds a leader passing leader_filters and walks after
 // it in short steps while it is between follow_distance and within_radius.
 type FollowTargetLeader struct {
 	base
@@ -65,8 +65,7 @@ func (g *FollowTargetLeader) passes(a Actor) bool {
 	return g.cfg.LeaderFilters == nil || g.cfg.LeaderFilters(g.m, a)
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x59FC9E0; search filter
-// 0x59FCF30).
+// CanUse implements goal.Goal (BDS 1.26.60; search filter).
 func (g *FollowTargetLeader) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
@@ -118,7 +117,7 @@ func (g *FollowTargetLeader) find() Actor {
 	return nil
 }
 
-// CanContinueToUse implements goal.Goal (0x59FD490).
+// CanContinueToUse implements goal.Goal.
 func (g *FollowTargetLeader) CanContinueToUse() bool {
 	l := g.actor(g.leader)
 	if l == nil || !l.Alive() {
@@ -128,7 +127,7 @@ func (g *FollowTargetLeader) CanContinueToUse() bool {
 	return g.cfg.WithinRadius*g.cfg.WithinRadius > d && d > g.cfg.FollowDistance*g.cfg.FollowDistance
 }
 
-// Start implements goal.Goal (0x59FCF70).
+// Start implements goal.Goal.
 func (g *FollowTargetLeader) Start() {
 	g.step()
 	if n := g.m.Nav(); n != nil {
@@ -139,7 +138,7 @@ func (g *FollowTargetLeader) Start() {
 // Stop implements goal.Goal.
 func (g *FollowTargetLeader) Stop() {}
 
-// Tick implements goal.Goal (0x59FD350): a new step once the last path is
+// Tick implements goal.Goal: a new step once the last path is
 // done.
 func (g *FollowTargetLeader) Tick() {
 	n := g.m.Nav()
@@ -150,7 +149,7 @@ func (g *FollowTargetLeader) Tick() {
 	n.MoveTo(g.to, g.cfg.SpeedMultiplier)
 }
 
-// step is BDS 1.26.60 0x59FD090: one step toward the leader, the
+// step is BDS 1.26.60: one step toward the leader, the
 // follow_range attribute times StepFactor long and rounded down per axis, on top of the highest solid
 // block there. Out of range it keeps the old spot.
 func (g *FollowTargetLeader) step() {

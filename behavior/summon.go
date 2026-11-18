@@ -36,7 +36,7 @@ type Summoner interface {
 	// CountEntities is how many entities of the type touch b.
 	CountEntities(entityType string, b Box) int
 	// Summon spawns the entity. When it has an owner component the mob
-	// becomes its owner (0xBFA4000).
+	// becomes its owner.
 	Summon(s Summon)
 	// SetSpellColor sets the mob's spell particle colour actor data, as
 	// ARGB.
@@ -64,8 +64,8 @@ type SummonSequence struct {
 	SummonEvent        string
 }
 
-// DefaultSummonSequence returns a sequence entry's BDS defaults (the parser
-// in 0xBF93840): a line of one entity, centred on the mob.
+// DefaultSummonSequence returns a sequence entry's BDS defaults (the parser):
+// a line of one entity, centred on the mob.
 func DefaultSummonSequence() SummonSequence {
 	return SummonSequence{Shape: SummonLine, Target: SummonAtSelf, Size: 1, EntityLifespan: -1, NumEntitiesSpawned: 1, SoundEvent: NoSound}
 }
@@ -87,7 +87,7 @@ type SummonChoice struct {
 	StartSoundEvent int
 }
 
-// DefaultSummonChoice returns a choice's BDS defaults (0xBF93840). A choice
+// DefaultSummonChoice returns a choice's BDS defaults. A choice
 // with no sequence is dropped by the parser.
 func DefaultSummonChoice() SummonChoice {
 	return SummonChoice{MinActivationRange: 1, MaxActivationRange: 32, CastDuration: -1, DoCasting: true, ParticleColor: -1, StartSoundEvent: NoSound}
@@ -117,8 +117,8 @@ type SummonEntityConfig struct {
 	CastFlags, IdleFlags goal.Flags
 }
 
-// DefaultSummonEntity returns the goal's BDS defaults (goal create
-// 0x54EF1A0, look limits from tick 0xBFA3810).
+// DefaultSummonEntity returns the goal's BDS defaults (goal create,
+// look limits from tick).
 func DefaultSummonEntity() SummonEntityConfig {
 	return SummonEntityConfig{LookYaw: 30, LookPitch: 30, CastFlags: flagsMoveLook | flagCast, IdleFlags: flagCast}
 }
@@ -126,8 +126,8 @@ func DefaultSummonEntity() SummonEntityConfig {
 // flagCast is the control flag bit 8, which no JSON name sets.
 const flagCast goal.Flags = 8
 
-// SummonEntity is SummonActorGoal (canUse 0xBFA2CA0, canContinue
-// 0xBFA3240, start 0xBFA32F0, stop 0xBFA37C0, tick 0xBFA3810): a weighted
+// SummonEntity is SummonActorGoal (canUse, canContinue,
+// start, stop, tick): a weighted
 // pick of the summon choices that fit the distance to the target, then
 // each sequence's entities in a line or circle.
 type SummonEntity struct {
@@ -331,7 +331,7 @@ func (g *SummonEntity) summonOne(s *SummonSequence, t Actor) {
 	}
 }
 
-// place is 0xBFA4000: from the top of the range down to one block under
+// place is: from the top of the range down to one block under
 // its bottom, the first non-solid block on a solid one; the entity stands
 // on top of whatever shape that block has.
 func (g *SummonEntity) place(s *SummonSequence, x, z, lo, hi float32) {

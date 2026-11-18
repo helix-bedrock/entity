@@ -136,8 +136,8 @@ type TickInput struct {
 	// Actions may be nil, which turns off the components that hurt, give
 	// effects, place blocks, teleport, explode or spawn.
 	Actions Actions
-	// Splashed reports a water bottle splash on the mob this tick
-	// (Actor::isAffectedByWaterBottle), for drying_out_timer.
+	// Splashed reports a water bottle splash on the mob this tick,
+	// for drying_out_timer.
 	Splashed bool
 	// CelebrationSound reports that the mob plays celebrate_hunt's sound
 	// (BDS: actor type 256, the piglins).
@@ -273,7 +273,7 @@ func (s *Set) BeforeMove(env *Env, l Liquids) {
 	}
 }
 
-// AfterMove pushes the actors around the mob, as Mob::pushActors does
+// AfterMove pushes the actors around the mob, as BDS does
 // after the mob's travel. dst is scratch space for the actor query and is
 // returned for reuse.
 func (s *Set) AfterMove(env *Env, w PushWorld, dst []behavior.Actor) []behavior.Actor {

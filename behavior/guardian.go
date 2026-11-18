@@ -18,11 +18,11 @@ type GuardianAttacker interface {
 	AttackDamage() (lo, hi float32, ok bool)
 	// HurtBy hurts a with a damage source of the cause from the mob, unless
 	// a is invulnerable to it. ignoreCooldown is the target's hurt
-	// cooldown bypass (Actor +849) that BDS holds on for the magic hit.
+	// cooldown bypass that BDS holds on for the magic hit.
 	HurtBy(a Actor, cause int, damage float32, ignoreCooldown bool)
 	// EntityEvent broadcasts an entity event for the mob.
 	EntityEvent(id int)
-	// ResetAttack zeroes the guardian's attack field (Guardian +1192) when
+	// ResetAttack zeroes the guardian's attack field when
 	// the beam ends.
 	ResetAttack()
 }
@@ -48,8 +48,8 @@ type GuardianAttackConfig struct {
 	AttackCause, MagicCause int
 }
 
-// DefaultGuardianAttack returns the goal's BDS defaults (definition default
-// 0xEA94220, goal setup in 0x5755CB0, numbers from tick 0x5A01560).
+// DefaultGuardianAttack returns the goal's BDS defaults (definition default,
+// goal setup, numbers from tick).
 func DefaultGuardianAttack() GuardianAttackConfig {
 	return GuardianAttackConfig{
 		MagicDamage: 1, HardModeExtraMagicDamage: 2, ElderExtraMagicDamage: 2, SoundDelay: 10,
@@ -58,8 +58,8 @@ func DefaultGuardianAttack() GuardianAttackConfig {
 	}
 }
 
-// GuardianAttack is GuardianAttackGoal (canUse 0x5A00F10, canContinue
-// 0x5A01020, start 0x5A01110, stop 0x5A01450, tick 0x5A01560): the mob
+// GuardianAttack is GuardianAttackGoal (canUse, canContinue,
+// start, stop, tick): the mob
 // stands still and stares at its target; when the beam has charged it hits
 // the target once with its attack damage and once with magic damage, then
 // drops the target.
@@ -145,7 +145,7 @@ func (g *GuardianAttack) Tick() {
 		g.m.SetTarget(NoID)
 		return
 	}
-	// BDS clips from the mob's eyes to the target's eyes (0xB3C3E10).
+	// BDS clips from the mob's eyes to the target's eyes.
 	if !g.world.ClearLine(g.m.Eyes(), t.Eyes()) {
 		g.m.SetTarget(NoID)
 		return

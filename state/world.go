@@ -39,9 +39,9 @@ func DefaultTeleport() TeleportConfig {
 }
 
 // Teleport is the running component, as BDS 1.26.60's TeleportSystem
-// (per mob 0x7697A50), randomTeleport (0x7171BE0) and teleportTowards
-// (0x7171EC0). The enderman's own hurt teleports (EnderMan::_hurt
-// 0xBD3DFE0, hurtEffects 0xBD3DE70) call Random.
+// (per mob), randomTeleport and teleportTowards.
+// The enderman's own hurt teleports (BDS's code,
+// hurtEffects) call Random.
 type Teleport struct {
 	cfg   TeleportConfig
 	timer int32
@@ -155,10 +155,10 @@ func ClampOffset(v behavior.Vec3) behavior.Vec3 {
 	return behavior.Vec3{X: c(v.X), Y: c(v.Y), Z: c(v.Z)}
 }
 
-// Trail is TrailSystem::_tickComponent (1.21.3 0x14015CAD0): with
+// Trail matches BDS (1.21.3 0x14015CAD0): with
 // mobGriefing on and the filter passing, the block is placed in the air
 // under the four corners a quarter block around the mob, moved by the
-// offset turned to the mob's facing (BDS's Actor::buildForward; the
+// offset turned to the mob's facing (BDS's code; the
 // mob's head rotation stands in).
 func Trail(env *Env, c *TrailConfig, a Actions) {
 	if a == nil || c.Block == "" || (c.Offset == (behavior.Vec3{}) && c.Solid) || !env.World.MobGriefing() {
@@ -203,7 +203,7 @@ type GroupSizeConfig struct {
 // DefaultGroupSize is the BDS default.
 func DefaultGroupSize() GroupSizeConfig { return GroupSizeConfig{Interval: 10} }
 
-// GroupSize is GroupSizeSystem::_tickComponent (1.21.3 0x14075CBC0).
+// GroupSize matches BDS (1.21.3 0x14075CBC0).
 type GroupSize struct {
 	cfg   GroupSizeConfig
 	next  uint64
@@ -284,7 +284,7 @@ func (h *Home) SetHome(p behavior.Pos, dim int) { h.pos, h.dim, h.set = p, dim, 
 // Get is the home, ok false when it has none.
 func (h *Home) Get() (p behavior.Pos, dim int, ok bool) { return h.pos, h.dim, h.set }
 
-// Within is HomeComponent::isWithinRestriction (0x1405E72B0).
+// Within matches BDS (0x1405E72B0).
 func (h *Home) Within(p behavior.Pos) bool {
 	r := int64(h.cfg.RestrictionRadius)
 	if r == -1 || !h.set {
@@ -294,7 +294,7 @@ func (h *Home) Within(p behavior.Pos) bool {
 	return dx*dx+dy*dy+dz*dz < r*r
 }
 
-// Tick is HomeComponent::tick (0x1405ED700).
+// Tick matches BDS (0x1405ED700).
 func (h *Home) Tick(env *Env) {
 	c := h.count
 	h.count++
@@ -401,7 +401,7 @@ func DefaultAreaAttack() AreaAttackConfig {
 	return AreaAttackConfig{Cause: CauseNone, AttackSound: 41, SelfAsSource: true, PruneInterval: 1200}
 }
 
-// AreaAttack is AreaAttackSystem::_tickComponent (1.21.3 0x1406C3D50).
+// AreaAttack matches BDS (1.21.3 0x1406C3D50).
 type AreaAttack struct {
 	cfg       AreaAttackConfig
 	cooldowns map[behavior.ID]uint64
@@ -474,7 +474,7 @@ type MobEffectConfig struct {
 	Filter   *definition.Filter
 }
 
-// MobEffect is MobEffectComponent::tick (1.21.3 0x1405ED820): every
+// MobEffect matches BDS (1.21.3 0x1405ED820): every
 // cooldown (or every tick without one) it gives the effect to each
 // entity in its grown box that can receive it, passes the filter and is
 // not immune to the mob's attacks.

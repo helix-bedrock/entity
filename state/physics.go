@@ -39,7 +39,7 @@ func PhysicsFlagComponents() map[string]int {
 		"minecraft:can_fly":        behavior.FlagCanFly,
 		"minecraft:can_power_jump": FlagCanPowerJump,
 		// minecraft:input_ground_controlled: flag 44 on add, off on remove (BDS 1.26.60
-		// WASDControlledDefinition 0xC101DA0, 0xC101EA0). The rider's client steers only a
+		// WASDControlledDefinition). The rider's client steers only a
 		// mob with it.
 		"minecraft:input_ground_controlled":           FlagWASDControlled,
 		"minecraft:is_collidable":                     FlagCollidable,
@@ -64,7 +64,7 @@ func DefaultPhysics() PhysicsConfig {
 	return PhysicsConfig{HasGravity: true, HasCollision: true}
 }
 
-// Apply sets the three actor flags, as PhysicsDefinition::initialize
+// Apply sets the three actor flags, as BDS
 // does when the component is added.
 func (c PhysicsConfig) Apply(m behavior.Mob) {
 	m.SetFlag(FlagHasGravity, c.HasGravity)
@@ -73,7 +73,7 @@ func (c PhysicsConfig) Apply(m behavior.Mob) {
 }
 
 // CollisionBoxConfig is minecraft:collision_box (1.21.3
-// CollisionBoxDefinition::setWidth 0x14056F1F0, setHeight 0x14056EC00).
+// BDS's code 0x14056F1F0, setHeight 0x14056EC00).
 type CollisionBoxConfig struct {
 	Width, Height float32
 	// MinSize is the smallest width BDS keeps; a smaller width is raised
@@ -124,7 +124,7 @@ func DefaultAirDragModifier() ValueConfig { return ValueConfig{Value: 1} }
 // DefaultBounciness is an assumed default, see DefaultFrictionModifier.
 func DefaultBounciness() ValueConfig { return ValueConfig{} }
 
-// WaterMovementConfig is minecraft:water_movement (1.26.60 0x6FAACA0).
+// WaterMovementConfig is minecraft:water_movement.
 type WaterMovementConfig struct {
 	DragFactor float32
 }
@@ -132,8 +132,8 @@ type WaterMovementConfig struct {
 // DefaultWaterMovement is the 1.26.60 default drag of 0.8.
 func DefaultWaterMovement() WaterMovementConfig { return WaterMovementConfig{DragFactor: 0.8} }
 
-// VariableMaxAutoStepConfig is minecraft:variable_max_auto_step (1.26.60
-// 0x6FA96B0; 1.21.3 VariableMaxAutoStepSystemImpl::_tickEntity
+// VariableMaxAutoStepConfig is minecraft:variable_max_auto_step (1.26.60;
+// 1.21.3 BDS's code
 // 0x140B17AD0).
 type VariableMaxAutoStepConfig struct {
 	Base, Controlled, JumpPrevented float32
@@ -157,7 +157,7 @@ func (c VariableMaxAutoStepConfig) Step(jumpPrevented, wasdControlled bool) floa
 	return c.Base
 }
 
-// JumpStaticConfig is minecraft:jump.static (1.26.60 0x7124C50).
+// JumpStaticConfig is minecraft:jump.static.
 type JumpStaticConfig struct {
 	JumpPower float32
 }
@@ -171,7 +171,7 @@ type JumpInfo struct {
 	JumpDelay, AnimationDuration int32
 }
 
-// JumpDynamicConfig is minecraft:jump.dynamic (1.26.60 0x7124C80). Its
+// JumpDynamicConfig is minecraft:jump.dynamic. Its
 // jumps run in move's hop control (Dynamic, TickJump).
 type JumpDynamicConfig struct {
 	Regular, Fast JumpInfo
@@ -184,7 +184,7 @@ func DefaultJumpDynamic() JumpDynamicConfig {
 }
 
 // fixedJump makes one jump kind; BDS's fixed kinds are set in 1.21.3
-// JumpControlComponent::initializeFromDefinition (0x1405E6C70).
+// BDS's code (0x1405E6C70).
 func fixedJump(distance, height float32, delay int32, anim int8) move.JumpInfo {
 	return move.JumpInfo{DistanceScale: distance, Height: height, Delay: delay, Animation: anim}
 }

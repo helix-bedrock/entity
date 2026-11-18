@@ -3,7 +3,7 @@ package behavior
 // MilkDrinker is the part of the mob drink_milk needs on top of ItemUser.
 type MilkDrinker interface {
 	ItemUser
-	// RemoveAllEffects clears every mob effect (0xB305300).
+	// RemoveAllEffects clears every mob effect.
 	RemoveAllEffects()
 }
 
@@ -30,7 +30,7 @@ func NewDrinkMilk(w World, m MilkDrinker, c DrinkMilkConfig) *DrinkMilk {
 	return &DrinkMilk{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x57738E0): once per cooldown, the filters.
+// CanUse implements goal.Goal: once per cooldown, the filters.
 func (g *DrinkMilk) CanUse() bool {
 	now := g.world.CurrentTick()
 	if now < g.next {
@@ -40,18 +40,18 @@ func (g *DrinkMilk) CanUse() bool {
 	return g.cfg.Filters == nil || g.cfg.Filters(g.m, nil)
 }
 
-// CanContinueToUse implements goal.Goal (0x5773970).
+// CanContinueToUse implements goal.Goal.
 func (g *DrinkMilk) CanContinueToUse() bool { return g.m.Flag(FlagUsingItem) }
 
-// Start implements goal.Goal (0x5773990).
+// Start implements goal.Goal.
 func (g *DrinkMilk) Start() {
 	startUsing(g.world, g.m, Item{Name: itemMilkBucket, Count: 1}, &g.end)
 }
 
-// Stop implements goal.Goal (0x5773B30).
+// Stop implements goal.Goal.
 func (g *DrinkMilk) Stop() { stopUsing(g.m, &g.end) }
 
-// Tick implements goal.Goal (0x5773B50): once drunk, the effects go.
+// Tick implements goal.Goal: once drunk, the effects go.
 func (g *DrinkMilk) Tick() {
 	if g.world.CurrentTick() < g.end {
 		return
@@ -68,7 +68,7 @@ func (g *DrinkMilk) Tick() {
 type PotionDrinker interface {
 	ItemUser
 	// DrinkPotion gives the mob the effect of the potion with the aux value
-	// (Potion by ID, then 0xB303F10).
+	// (Potion by ID, then).
 	DrinkPotion(aux int16)
 	// SpeedModifier adds the goal's modifier with the amount to the
 	// movement attribute, or removes it.
@@ -109,7 +109,7 @@ func NewDrinkPotion(w World, m PotionDrinker, c DrinkPotionConfig) *DrinkPotion 
 	return &DrinkPotion{base: base{mob: m, world: w, flags: flagsBit3}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0xBDFAD90): every sixth call, the first
+// CanUse implements goal.Goal: every sixth call, the first
 // potion whose chance and filters pass is drunk.
 func (g *DrinkPotion) CanUse() bool {
 	c := g.calls
@@ -134,19 +134,19 @@ func (g *DrinkPotion) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0xBDFB060).
+// CanContinueToUse implements goal.Goal.
 func (g *DrinkPotion) CanContinueToUse() bool { return g.m.Flag(FlagUsingItem) }
 
-// Start implements goal.Goal (0xBDFB080).
+// Start implements goal.Goal.
 func (g *DrinkPotion) Start() {}
 
-// Stop implements goal.Goal (0xBDFB090).
+// Stop implements goal.Goal.
 func (g *DrinkPotion) Stop() {
 	stopUsing(g.m, &g.end)
 	g.m.SpeedModifier(false, g.cfg.SpeedModifier)
 }
 
-// Tick implements goal.Goal (0xBDFB290): once drunk, the potion works.
+// Tick implements goal.Goal: once drunk, the potion works.
 func (g *DrinkPotion) Tick() {
 	if g.world.CurrentTick() < g.end {
 		return

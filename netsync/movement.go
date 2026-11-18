@@ -22,14 +22,14 @@ type Thresholds struct {
 	StoppedMotion2, SettleDistance2 float32
 }
 
-// DefaultThresholds are BDS's (shouldSendUpdate, sub_8CE9330): 0.0001, 4
+// DefaultThresholds are BDS's (shouldSendUpdate): 0.0001, 4
 // degrees, and 1e-6 for both settle values.
 func DefaultThresholds() Thresholds {
 	return Thresholds{Distance2: 0.0001, Rotation: 4, StoppedMotion2: 1e-6, SettleDistance2: 1e-6}
 }
 
 // Significant reports whether now differs enough from last to send, the
-// way BDS checks it every tick (sub_8CE9330). Rotations are compared as
+// way BDS checks it every tick. Rotations are compared as
 // their byte values in degrees, with no wrap-around handling, as BDS does:
 // a turn from 179 to -180 degrees counts as almost 360.
 func Significant(last, now Sent, motion mgl32.Vec3, t Thresholds) bool {
@@ -59,12 +59,11 @@ type MoveFlags struct {
 	// (BDS sets it after setPos on a list of actors, and on dismount).
 	ForceMoveLocal bool
 	// ForceCompletion is the third flag BDS's sendUpdate takes; it comes
-	// from a one-byte component left by a teleport (sub_B3C5260).
+	// from a one-byte component left by a teleport.
 	ForceCompletion bool
 }
 
 // The MoveActorDelta header bits, as BDS sets them in sendUpdate
-// (sub_8CE8C80).
 const (
 	DeltaX uint16 = 1 << iota
 	DeltaY
@@ -173,8 +172,8 @@ func AbsoluteFlags(onGround bool, f MoveFlags) byte {
 }
 
 // Absolute builds the MoveActorAbsolute BDS sends when an update is forced
-// absolute. BDS only does that when a player rider is dismounted
-// (sub_7158500); every other move is a delta.
+// absolute. BDS only does that when a player rider is dismounted;
+// every other move is a delta.
 func Absolute(runtimeID uint64, now Sent, f MoveFlags) packet.MoveActorAbsolute {
 	return packet.MoveActorAbsolute{
 		EntityRuntimeID: runtimeID,

@@ -35,8 +35,8 @@ type PanicConfig struct {
 	SoundInterval Range[float32]
 }
 
-// DefaultPanic returns BDS 1.26.60's panic defaults (legacy goal parser
-// 0xBF93840): speed 1 and, with no damage_sources, every damage cause.
+// DefaultPanic returns BDS 1.26.60's panic defaults (legacy goal parser):
+// speed 1 and, with no damage_sources, every damage cause.
 func DefaultPanic() PanicConfig {
 	return PanicConfig{SpeedMultiplier: 1, DamageSources: []int{DamageAll}, Sound: NoSound}
 }
@@ -68,7 +68,7 @@ func (g *Panic) hurtRecently(tick uint64) bool {
 	return g.world.CurrentTick()-tick <= panicHurtTicks
 }
 
-// CanUse implements goal.Goal (0xBF9BD70).
+// CanUse implements goal.Goal.
 func (g *Panic) CanUse() bool {
 	if !g.cfg.Force && !g.triggered() {
 		return false
@@ -76,7 +76,7 @@ func (g *Panic) CanUse() bool {
 	return g.pick()
 }
 
-// pick chooses where to run (0xBF9C6D0): water first with prefer_water, then
+// pick chooses where to run: water first with prefer_water, then
 // away from the attacker, then any land spot. It keeps the old spot when
 // nothing is found.
 func (g *Panic) pick() bool {
@@ -153,7 +153,7 @@ func (g *Panic) waterTarget() (Vec3, bool) {
 	return Vec3{X: float32(out.X), Y: float32(out.Y), Z: float32(out.Z)}, found
 }
 
-// CanContinueToUse implements goal.Goal (0xBF9C5B0). Since 1.26.60 the mob
+// CanContinueToUse implements goal.Goal. Since 1.26.60 the mob
 // also keeps panicking while the hurt that started it still counts, even once
 // its path is done.
 func (g *Panic) CanContinueToUse() bool {
@@ -178,7 +178,7 @@ func (g *Panic) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0xBF9BF50). Every 8 ticks the mob paths to its
+// Tick implements goal.Goal. Every 8 ticks the mob paths to its
 // spot again; since 1.26.60 it first picks a new spot when its path is done.
 func (g *Panic) Tick() {
 	now := g.world.CurrentTick()

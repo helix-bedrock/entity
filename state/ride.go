@@ -31,7 +31,7 @@ type RideableConfig struct {
 	Seats                     []Seat
 }
 
-// DefaultRideable is BDS's rideable (1.26.60 schema 0x744CFB0:
+// DefaultRideable is BDS's rideable (1.26.60 schema:
 // seat_count 1, controlling_seat 0, crouching_skip_interact true,
 // pull_in_entities and rider_can_interact false).
 func DefaultRideable() RideableConfig {
@@ -41,7 +41,7 @@ func DefaultRideable() RideableConfig {
 // Rideable is minecraft:rideable: who may ride the mob (1.21.3
 // RideableComponent: getInteraction 0x140637150, allowInteraction
 // 0x140629070, pullInEntity 0x14063C4D0, fitsInVehicle 0x1406327C0, and
-// VehicleStateProvider::canAddPassenger 0x14062FE60). Riding itself is the
+// BDS's code 0x14062FE60). Riding itself is the
 // engine's.
 type Rideable struct{ cfg RideableConfig }
 
@@ -123,7 +123,7 @@ type Rider struct {
 }
 
 // AddRiderConfig is minecraft:addrider. BDS spawns the riders when the
-// component is added (AddRiderComponent::reloadComponent 0x14056E000); the
+// component is added (0x14056E000); the
 // engine does that from this list.
 type AddRiderConfig struct{ Riders []Rider }
 
@@ -149,8 +149,8 @@ type TransformationConfig struct {
 
 // Transformation is minecraft:transformation (1.21.3
 // _tickTransformationComponent 0x14015E980,
-// TransformationComponent::reloadComponent 0x14063DD00, transformIfAble
-// 0x140645B70, TransformationDescription::deserializeData 0x1406322E0, all
+// BDS's code 0x14063DD00, transformIfAble
+// 0x140645B70, BDS's code 0x1406322E0, all
 // defaults 0).
 type Transformation struct {
 	cfg   TransformationConfig

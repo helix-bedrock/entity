@@ -37,7 +37,7 @@ type Roller interface {
 	// with loose block checks): the box of size sx, sy, sz can walk from
 	// from to to.
 	WalkDirectly(from, to Vec3, sx, sy, sz int32) bool
-	// Yaw is the yaw of ActorRotationComponent (Actor +568), the one the
+	// Yaw is the yaw of ActorRotationComponent, the one the
 	// roll faces and pushes along.
 	Yaw() float32
 }
@@ -59,7 +59,7 @@ func NewRoll(w World, m Roller, c RollConfig) *Roll {
 // CanBeInterrupted implements goal.Goal: a roll always finishes.
 func (g *Roll) CanBeInterrupted() bool { return false }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5AFC1C0). Next to a drop, stairs or a slab
+// CanUse implements goal.Goal. Next to a drop, stairs or a slab
 // the roll starts without the chance roll or the path test.
 func (g *Roll) CanUse() bool {
 	m, w := g.m, g.world
@@ -100,7 +100,7 @@ func (g *Roll) CanUse() bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5AFC660).
+// CanContinueToUse implements goal.Goal.
 func (g *Roll) CanContinueToUse() bool {
 	n, ok := g.m.RollCounter()
 	return !ok || n < rollSteps
@@ -112,7 +112,7 @@ func (g *Roll) Start() { g.m.SetFlag(FlagRolling, true) }
 // Stop implements goal.Goal.
 func (g *Roll) Stop() { g.m.SetFlag(FlagRolling, false) }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5AFC7B0).
+// Tick implements goal.Goal.
 func (g *Roll) Tick() {
 	n, _ := g.m.RollCounter()
 	v := g.m.Velocity()
@@ -120,7 +120,7 @@ func (g *Roll) Tick() {
 	g.m.SetVelocity(v)
 }
 
-// step is the roll's motion on tick i (BDS 1.26.60 0x5AFC8B0): a push forward and a
+// step is the roll's motion on tick i: a push forward and a
 // hop, a stop with a hop on the ground at the hop steps, and the push kept
 // in between.
 func (g *Roll) step(i int32, v *Vec3, sx, sz *float32) {

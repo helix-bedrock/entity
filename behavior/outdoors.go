@@ -7,7 +7,7 @@ const (
 	outdoorsRecheck     = 100 // fewest ticks before a reached mob looks again
 	outdoorsRecheckSpan = 100
 	indoorsNear         = 2 // indoors' reach to the path end that counts as there
-	// The move_indoors path step's numbers (BDS 1.26.60 0x5437E90).
+	// The move_indoors path step's numbers.
 	indoorsBedReach2  = 256 // squared distance within which the mob paths straight to the bed
 	indoorsTowardsXZ  = 14  // the step towards a far bed
 	indoorsTowardsY   = 3
@@ -25,8 +25,7 @@ type MoveOutdoorsConfig struct {
 	TimeoutCooldown float32 `json:"timeout_cooldown"`
 }
 
-// DefaultMoveOutdoors returns the goal's BDS defaults (TypeSchema
-// 0xDF78D20).
+// DefaultMoveOutdoors returns the goal's BDS defaults (TypeSchema).
 func DefaultMoveOutdoors() MoveOutdoorsConfig {
 	return MoveOutdoorsConfig{MoveToConfig: MoveToConfig{SpeedMultiplier: 0.5, GoalRadius: 2, SearchCount: 10,
 		SearchHeight: 5, SearchRange: 15}, TimeoutCooldown: 8}
@@ -39,7 +38,7 @@ type MoveOutdoors struct {
 	recheck uint64
 }
 
-// NewMoveOutdoors makes the goal (0x5439B70).
+// NewMoveOutdoors makes the goal.
 func NewMoveOutdoors(w World, m Mob, c MoveOutdoorsConfig) *MoveOutdoors {
 	g := &MoveOutdoors{}
 	g.init(w, m, c.MoveToConfig, flagsMove, g)
@@ -47,7 +46,7 @@ func NewMoveOutdoors(w World, m Mob, c MoveOutdoorsConfig) *MoveOutdoors {
 	return g
 }
 
-// valid is isValidTarget (BDS 1.26.60 0x5438ED0): the block over p is open to the
+// valid is isValidTarget: the block over p is open to the
 // sky.
 func (g *MoveOutdoors) valid(p Pos) bool {
 	return g.world.SkyVisible(Pos{X: p.X, Y: p.Y + 1, Z: p.Z})
@@ -56,7 +55,7 @@ func (g *MoveOutdoors) valid(p Pos) bool {
 // find is the base search.
 func (g *MoveOutdoors) find() bool { return g.findBlock() }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5438EB0).
+// CanUse implements goal.Goal.
 func (g *MoveOutdoors) CanUse() bool { return g.canStart() && g.find() }
 
 // CanContinueToUse implements goal.Goal.
@@ -66,14 +65,14 @@ func (g *MoveOutdoors) nextCheck() uint64 {
 	return g.world.CurrentTick() + uint64(g.world.ThreadRandom().NextInt(outdoorsRecheckSpan)) + outdoorsRecheck
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5438D20): the recheck rolls on
+// Start implements goal.Goal: the recheck rolls on
 // the thread random.
 func (g *MoveOutdoors) Start() {
 	g.recheck = g.nextCheck()
 	g.moveTo.Start()
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x54390F0): a mob at its spot looks for a
+// Tick implements goal.Goal: a mob at its spot looks for a
 // new one now and then.
 func (g *MoveOutdoors) Tick() {
 	if g.world.CurrentTick() > g.recheck && g.reached {
@@ -90,19 +89,18 @@ func (g *MoveOutdoors) Tick() {
 type Indoorer interface {
 	Dweller
 	// HasCeiling reports that the mob's dimension has a ceiling
-	// (Dimension +375).
 	HasCeiling() bool
 	// ShelterTime is the time part of the gate BDS puts on villagers: true
 	// when the mob is not in the villager category (Actor category bit
 	// 0x1000), its dimension is not natural (IDimension slot 2) or the
-	// dimension's sky darken (+377) is 4 or more.
+	// dimension's sky darken is 4 or more.
 	ShelterTime() bool
 	// RainOver reports that the level rains (its rain level is over 0.2)
-	// and the biome at p has rain (Biome +64). Cover and temperature are
+	// and the biome at p has rain. Cover and temperature are
 	// not checked.
 	RainOver(p Pos) bool
-	// SecondPart reports that the block at p has a second part (BlockType
-	// vt+608, which a bed answers).
+	// SecondPart reports that the block at p has a second part (BlockType,
+	// which a bed answers).
 	SecondPart(p Pos) bool
 }
 
@@ -114,7 +112,7 @@ type MoveIndoorsConfig struct {
 }
 
 // DefaultMoveIndoors returns the goal's BDS defaults. The TypeSchema
-// (0xDF77CA0) sets no numbers.
+// sets no numbers.
 func DefaultMoveIndoors() MoveIndoorsConfig { return MoveIndoorsConfig{} }
 
 // MoveIndoors is MoveIndoorsGoal: a dweller caught in the rain goes to its
@@ -124,19 +122,19 @@ type MoveIndoors struct {
 	m       Indoorer
 	cfg     MoveIndoorsConfig
 	timeout int64
-	// waiting and waited are +39 and +88: the rest after a path that did
+	// waiting and waited are and: the rest after a path that did
 	// not get going.
 	waiting bool
 	waited  int64
 	has     bool
 	target  Pos
 	box     Box
-	// start is +52: the first node of the last path, to tell a path that
+	// start is: the first node of the last path, to tell a path that
 	// starts where the last one did.
 	start Pos
 }
 
-// NewMoveIndoors makes the goal (0x54349A0).
+// NewMoveIndoors makes the goal.
 func NewMoveIndoors(w World, m Indoorer, c MoveIndoorsConfig) *MoveIndoors {
 	return &MoveIndoors{base: base{mob: m, world: w, flags: flagsMove}, m: m, cfg: c,
 		timeout: int64(abs32(c.TimeoutCooldown) * ticksPerSecond)}
@@ -146,7 +144,7 @@ func NewMoveIndoors(w World, m Indoorer, c MoveIndoorsConfig) *MoveIndoors {
 // and p is open to the sky.
 func (g *MoveIndoors) rainOn(p Pos) bool { return g.m.RainOver(p) && g.world.SkyVisible(p) }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5437360): it only starts in
+// CanUse implements goal.Goal: it only starts in
 // the rain, which the villager time gate cannot get past either.
 func (g *MoveIndoors) CanUse() bool {
 	if g.waiting && g.waited < g.timeout {
@@ -173,7 +171,7 @@ func (g *MoveIndoors) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x54379E0): the goal
+// CanContinueToUse implements goal.Goal: the goal
 // holds while it rains over the mob; otherwise while the path lasts.
 func (g *MoveIndoors) CanContinueToUse() bool {
 	if g.waiting {
@@ -189,14 +187,14 @@ func (g *MoveIndoors) CanContinueToUse() bool {
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5437E00).
+// Start implements goal.Goal.
 func (g *MoveIndoors) Start() {
 	g.waited, g.waiting = 0, false
 	g.path()
 	g.start = blockOf(g.mob.Pos())
 }
 
-// path is BDS 1.26.60 0x5437E90: in the rain the mob walks to its bed
+// path is BDS 1.26.60: in the rain the mob walks to its bed
 // (by a step towards it when the bed is more than 16 blocks away); when
 // dry it looks, one tick in 80, for a covered spot (under the height
 // map) and walks there with door passing switched off.
@@ -248,7 +246,7 @@ func (g *MoveIndoors) toBed(n Navigator) {
 	g.waiting = g.stuck(n)
 }
 
-// stuck is BDS 1.26.60 0x75147C0: no path, or a path that starts on the
+// stuck is BDS 1.26.60: no path, or a path that starts on the
 // same node as the last one.
 func (g *MoveIndoors) stuck(n Navigator) bool {
 	if !n.Held() {
@@ -265,7 +263,7 @@ func (g *MoveIndoors) stuck(n Navigator) bool {
 	return true
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x54386C0).
+// Stop implements goal.Goal.
 func (g *MoveIndoors) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -274,7 +272,7 @@ func (g *MoveIndoors) Stop() {
 	g.start = Pos{}
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x54387E0): at the bed (inside
+// Tick implements goal.Goal: at the bed (inside
 // its box while the bed stands) or near the path's end, a mob the rain
 // does not reach is done; a finished path gets a new one.
 func (g *MoveIndoors) Tick() {

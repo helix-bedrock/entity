@@ -12,7 +12,7 @@ import (
 type Gifter interface {
 	Mob
 	// TimeOfDay is the dimension's time of day for the level time, from 0
-	// to 1 (Dimension::getTimeOfDay).
+	// to 1.
 	TimeOfDay() float32
 	// DropGift rolls the loot table with the level's Random and the mob as
 	// the looting entity, and spawns each item at the mob's position,
@@ -48,7 +48,7 @@ type DropItemForConfig struct {
 }
 
 // DefaultDropItemFor returns the goal's BDS defaults (the definition's
-// default 0xE8F2D50, copied into the goal by 0x5884460).
+// default, copied into the goal by).
 func DefaultDropItemFor() DropItemForConfig {
 	return DropItemForConfig{
 		MoveToConfig:     MoveToConfig{SpeedMultiplier: 1, GoalRadius: 0.5, SearchHeight: 1},
@@ -61,9 +61,9 @@ func DefaultDropItemFor() DropItemForConfig {
 	}
 }
 
-// DropItemFor is DropItemForGoal (canUse 0x55240F0, canContinue 0x5524110,
-// start 0x5524DC0, stop 0x55256A0, tick 0x5524130, isValidTarget
-// 0x5525A00, findTargetBlock 0x5525700): in the time of day window the mob
+// DropItemFor is DropItemForGoal (canUse, canContinue,
+// start, stop, tick, isValidTarget,
+// findTargetBlock): in the time of day window the mob
 // picks the nearest entity passing the filters, walks to a spot near it,
 // and drops a loot table there once.
 type DropItemFor struct {
@@ -80,7 +80,7 @@ type DropItemFor struct {
 	buf             []Actor
 }
 
-// NewDropItemFor makes the goal (create 0x5523F70).
+// NewDropItemFor makes the goal (create).
 func NewDropItemFor(w World, m Gifter, c DropItemForConfig) *DropItemFor {
 	g := &DropItemFor{m: m, target: NoID}
 	g.init(w, m, c.MoveToConfig, flagsMove|flagsJump, g)
@@ -204,7 +204,7 @@ func (g *DropItemFor) Tick() {
 	lookAtActor(g.mob, t, g.cfg.MaxHeadLookAtHeight, g.mob.MaxHeadXRot())
 }
 
-// valid is the goal's isValidTarget: a solid block (Block::isSolid) with
+// valid is the goal's isValidTarget: a solid block with
 // air above.
 func (g *DropItemFor) valid(p Pos) bool {
 	return g.world.Block(Pos{X: p.X, Y: p.Y + 1, Z: p.Z}).Material == path.MaterialAir && g.world.Block(p).BlockSolid

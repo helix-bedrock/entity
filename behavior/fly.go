@@ -51,7 +51,7 @@ func (g *RandomFly) CanUse() bool {
 	return ok
 }
 
-// position is the goal's findPosition (0x57603C0).
+// position is the goal's findPosition.
 func (g *RandomFly) position() (Vec3, bool) {
 	m, w := g.mob, g.world
 	var p Vec3

@@ -163,7 +163,7 @@ const (
 type World interface {
 	path.World
 	// Door returns the state of the door at p, either half, as BDS's
-	// DoorBlock reads it (0xCB17EC0 finds both halves): its facing (0 to 3)
+	// DoorBlock reads it (finds both halves): its facing (0 to 3)
 	// and whether it is open from the lower half, and whether it is hinged on
 	// the right from the upper half.
 	Door(p path.Pos) (facing int32, open, hinge bool)

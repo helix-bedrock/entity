@@ -19,37 +19,36 @@ const (
 // the engine's EnderDragon; the goals reach them through these hooks.
 type Dragon interface {
 	Mob
-	// FlyTarget is the point the dragon flies to (EnderDragon +2000); the
+	// FlyTarget is the point the dragon flies to; the
 	// zero vector means none. SetFlyTarget replaces it.
 	FlyTarget() Vec3
 	SetFlyTarget(p Vec3)
 	// CrystalsAlive is the number of end crystals still standing
-	// (EnderDragon +2112).
 	CrystalsAlive() int32
 	// FlameCount is how many times the dragon breathed fire since it last
-	// landed (EnderDragon +2012).
+	// landed.
 	FlameCount() int32
 	SetFlameCount(n int32)
-	// SetSitting is EnderDragon::setSitting (vt+448): it sets FlagSitting
+	// SetSitting matches BDS: it sets FlagSitting
 	// and clears the dragon's motion.
 	SetSitting(on bool)
-	// Nodes are the dragon's path nodes (EnderDragon +2024): an outer ring
+	// Nodes are the dragon's path nodes: an outer ring
 	// of 12, an inner ring of 8 and the rest around the podium.
 	Nodes() []Pos
-	// ClosestNode is EnderDragon::findClosestNode (0xBD3A2E0), the node
+	// ClosestNode matches BDS, the node
 	// nearest the dragon.
 	ClosestNode() int
-	// DragonPath is EnderDragon::findPath (0xBD3B5A0): the nodes from node
+	// DragonPath matches BDS: the nodes from node
 	// from to node to, appended to dst, followed by final when hasFinal.
 	// It returns dst unchanged when there is no path.
 	DragonPath(dst []Pos, from, to int, final Pos, hasFinal bool) []Pos
-	// SetAirSpeed sets AirSpeedComponent; SetTurnSpeed sets EnderDragon
-	// +1996, how fast the dragon turns toward its fly target.
+	// SetAirSpeed sets AirSpeedComponent; SetTurnSpeed sets EnderDragon,
+	// how fast the dragon turns toward its fly target.
 	SetAirSpeed(v float32)
 	SetTurnSpeed(v float32)
-	// HeadLook is the head's look vector at the partial tick (vt+288).
+	// HeadLook is the head's look vector at the partial tick.
 	HeadLook(partial float32) Vec3
-	// HeadBox is the box of the dragon's head part (EnderDragon +1920).
+	// HeadBox is the box of the dragon's head part.
 	HeadBox() Box
 	// Yaw is the yaw of ActorRotationComponent.
 	Yaw() float32
@@ -68,7 +67,7 @@ type Dragon interface {
 	// ActorEvent broadcasts an actor event of the mob.
 	ActorEvent(id, data int32)
 	// ShootFireball lets ShooterComponent pick its projectile, then fires
-	// it at t (Mob::performRangedAttack).
+	// it at t.
 	ShootFireball(t Actor)
 	// SpawnBreath spawns the area effect cloud of dragon's breath that
 	// dragonflaming leaves on the ground, owned by the dragon.
@@ -235,7 +234,7 @@ func (f *dragonFlight) aimNode(x, z float32) int {
 	return f.nearestNode(p.X+floorInt(x*-f.fcfg.AimDist), f.fcfg.AimY, p.Z+floorInt(z*-f.fcfg.AimDist))
 }
 
-// nearestPlayer is Dimension's nearest attackable player (0xCF2C080): the
+// nearestPlayer is Dimension's nearest attackable player: the
 // nearest live, not invulnerable player within r of at, the range scaled
 // for sneaking, invisibility and, with a source mob, its head being worn.
 // A negative r has no limit.
@@ -320,9 +319,9 @@ func DefaultDragonHoldingPattern() DragonHoldingPatternConfig {
 		PlayerChanceDiv: 512, PlayerChanceMin: 2, PlayerChanceMax: 66, CrystalChance: 2, TurnChance: 8}
 }
 
-// DragonHoldingPattern is DragonHoldingPatternGoal (vtable 0xF777BF0;
-// canUse 0x5520150, canContinue 0x55201A0, start 0x55201E0, stop
-// 0x5520260, tick 0x55202C0): with no target the dragon circles the ring
+// DragonHoldingPattern is DragonHoldingPatternGoal (;
+// canUse, canContinue, start, stop,
+// tick): with no target the dragon circles the ring
 // of nodes, and at the end of each path may land or pick a player.
 type DragonHoldingPattern struct {
 	dragonFlight
@@ -434,8 +433,8 @@ func DefaultDragonTakeoff() DragonTakeoffConfig {
 	return DragonTakeoffConfig{DragonFlightConfig: DefaultDragonFlight(), PodiumDist: 10}
 }
 
-// DragonTakeoff is DragonTakeoffGoal (canUse 0x55235D0, canContinue
-// 0x5523620, start 0x55236E0, stop 0x5523760, tick 0x55237C0): the dragon
+// DragonTakeoff is DragonTakeoffGoal (canUse, canContinue,
+// start, stop, tick): the dragon
 // leaves the podium the way its head points.
 type DragonTakeoff struct {
 	dragonFlight
@@ -519,8 +518,8 @@ func DefaultDragonLanding() DragonLandingConfig {
 		AirSpeed: 0.6, TurnSpeed: 0.7, LandAirSpeed: 1.5, LandTurnSpeed: 0, Landed: 1}
 }
 
-// DragonLanding is DragonLandingGoal (canUse 0x5520BB0, canContinue
-// 0x5520BD0, start 0x5520C50, stop 0x5520DA0, tick 0x5520EB0): the dragon
+// DragonLanding is DragonLandingGoal (canUse, canContinue,
+// start, stop, tick): the dragon
 // flies a path to the podium, from the side away from the nearest player,
 // and perches.
 type DragonLanding struct {
@@ -655,8 +654,8 @@ func DefaultDragonScanning() DragonScanningConfig {
 		MaxTurn: 100, TurnDistMin: 40, TurnDamping: 0.8}
 }
 
-// DragonScanning is DragonScanningGoal (canUse 0x55217D0, canContinue
-// 0x5521820, start 0x5521C90, stop 0x5521CE0, tick 0x5521D00): perched,
+// DragonScanning is DragonScanningGoal (canUse, canContinue,
+// start, stop, tick): perched,
 // the dragon turns to face the nearest player and targets one that stays
 // near, or takes off when no one comes.
 type DragonScanning struct {
@@ -768,16 +767,15 @@ type DragonFlamingConfig struct {
 	BreathOffset float32
 }
 
-// DefaultDragonFlaming returns the goal's BDS defaults (definition default
-// 0xF263050).
+// DefaultDragonFlaming returns the goal's BDS defaults (definition default).
 func DefaultDragonFlaming() DragonFlamingConfig {
 	return DragonFlamingConfig{GroundFlameCount: 4, Cooldown: 200, FlameTime: 10, RoarTime: 40, SmokeTime: 200,
 		SmokeRadius: 5, SmokeColour: "#DC00EF", RoarSound: soundMad, FlameEvent: actorEventDragonFlaming,
 		BreathOffset: 0.5}
 }
 
-// DragonFlaming is DragonFlamingGoal (canUse 0x551F220, canContinue
-// 0x551F260, start 0x551F3F0, stop 0x551F440, tick 0x551F480): perched with
+// DragonFlaming is DragonFlamingGoal (canUse, canContinue,
+// start, stop, tick): perched with
 // a target, the dragon roars, breathes fire and leaves a cloud of dragon's
 // breath on the ground.
 type DragonFlaming struct {
@@ -886,14 +884,14 @@ type DragonChargePlayerConfig struct {
 }
 
 // DefaultDragonChargePlayer returns the goal's BDS defaults (definition
-// default 0xEA911D0).
+// default).
 func DefaultDragonChargePlayer() DragonChargePlayerConfig {
 	return DragonChargePlayerConfig{ActiveSpeed: 3, FlightSpeed: 0.6, TurnSpeed: 0.7,
 		TargetZone: Range[float32]{10, 150}, ContinueChargeThreshold: 10}
 }
 
-// DragonChargePlayer is DragonChargePlayerGoal (canUse 0x551E410,
-// canContinue 0x551E460, start 0x551E4B0, stop 0x551E730, tick 0x551E850):
+// DragonChargePlayer is DragonChargePlayerGoal (canUse,
+// canContinue, start, stop, tick):
 // fresh off the podium with a target, the dragon charges at the nearest
 // player.
 type DragonChargePlayer struct {
@@ -992,15 +990,15 @@ type DragonStrafePlayerConfig struct {
 }
 
 // DefaultDragonStrafePlayer returns the goal's BDS defaults (definition
-// default 0xEA921A0).
+// default).
 func DefaultDragonStrafePlayer() DragonStrafePlayerConfig {
 	return DragonStrafePlayerConfig{DragonFlightConfig: DefaultDragonFlight(), ActiveSpeed: 0.6, FlightSpeed: 0.6,
 		TurnSpeed: 0.7, TargetZone: Range[float32]{10, 150}, SwitchDirectionProbability: 0.125, InViewTime: 5,
 		FireballRange: 64, ViewAngle: 10, AboveMax: 10, AboveDiv: 80, AboveAdd: 0.4, AboveSub: 1}
 }
 
-// DragonStrafePlayer is DragonStrafePlayerGoal (canUse 0x5522340,
-// canContinue 0x5522390, start 0x5522570, stop 0x5522B30, tick 0x5522C50):
+// DragonStrafePlayer is DragonStrafePlayerGoal (canUse,
+// canContinue, start, stop, tick):
 // flying with a target, the dragon flies at it and shoots one fireball once
 // it has had it in range and in view long enough.
 type DragonStrafePlayer struct {
@@ -1158,8 +1156,8 @@ func DefaultDragonDeath() DragonDeathConfig {
 		DeathEvent: actorEventDragonDeath}
 }
 
-// DragonDeath is DragonDeathGoal (canUse 0x551EA80, canContinue 0x551EAA0,
-// start 0x551EAC0, stop 0x551EBE0, tick 0x551ECE0): the dying dragon flies
+// DragonDeath is DragonDeathGoal (canUse, canContinue,
+// start, stop, tick): the dying dragon flies
 // to the podium with explosions around it and dies there.
 type DragonDeath struct {
 	dragonFlight

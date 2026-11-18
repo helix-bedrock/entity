@@ -11,7 +11,7 @@ type TransportContainer struct {
 	Pos Pos
 	// Kind is the block entity's BDS type (BlockActorType).
 	Kind int32
-	// CanOpen is the chest and shulker box open test (0xD45A7D0): nothing
+	// CanOpen is the chest and shulker box open test: nothing
 	// keeps the lid shut.
 	CanOpen bool
 	// Pair is the other half of a double chest when HasPair is set.
@@ -52,13 +52,13 @@ type ItemTransporter interface {
 	Mob
 	BlockMatcher
 	// Containers appends the container block entities touching b to dst,
-	// in BDS's order (BlockSource::fetchBlockEntities).
+	// in BDS's order.
 	Containers(dst []TransportContainer, b Box) []TransportContainer
 	// Container is the container block entity at p.
 	Container(p Pos) (TransportContainer, bool)
 	// HoldsItem reports an item in the mob's hand.
 	HoldsItem() bool
-	// SeesBlock is the line of sight test to the block at p (0xBF2D080):
+	// SeesBlock is the line of sight test to the block at p:
 	// clips from the mob to the middle of the block's shape, then to the
 	// middle of each face the mob is outside of, hitting nothing or the
 	// block itself.
@@ -106,8 +106,8 @@ type TransportItemsConfig struct {
 }
 
 // DefaultTransportItems returns the goal's BDS defaults (the definition's
-// default 0xF259F80, copied into the goal by 0xBED4D50; kinds from the
-// container test 0xBF2E960, events from 0xBF2B990).
+// default, copied into the goal by; kinds from the
+// container test, events from).
 func DefaultTransportItems() TransportItemsConfig {
 	return TransportItemsConfig{
 		MaxStackSize: 64, InteractionTime: 3, SearchStrategy: TransportRandom,
@@ -138,8 +138,8 @@ const (
 	transportSpeed = 1 // the speed of the path to a container
 )
 
-// TransportItems is TransportItemsGoal (canUse 0xBF2B520, canContinue
-// 0xBF2B630, start 0xBF2B720, stop 0xBF2B7D0, tick 0xBF2BD60): the mob
+// TransportItems is TransportItemsGoal (canUse, canContinue,
+// start, stop, tick): the mob
 // walks to a container in range it has not visited, takes items when its
 // hand is empty or places them when it holds some, and rests once nothing
 // is left to visit.
@@ -165,7 +165,7 @@ type TransportItems struct {
 	interactTicks, idleAt uint64
 }
 
-// NewTransportItems makes the goal (create 0x56C8180).
+// NewTransportItems makes the goal (create).
 func NewTransportItems(w World, m ItemTransporter, c TransportItemsConfig) *TransportItems {
 	g := &TransportItems{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, m: m}
 	g.SetConfig(c)
@@ -278,7 +278,7 @@ func (g *TransportItems) Tick() {
 	g.hadItem, g.seen = g.m.HoldsItem(), true
 }
 
-// usable is the container test (0xBF2E960); visited containers only fail
+// usable is the container test; visited containers only fail
 // it during the search.
 func (g *TransportItems) usable(c TransportContainer, search bool, types []string) bool {
 	if !slices.Contains(g.cfg.ContainerKinds, c.Kind) {
@@ -351,7 +351,7 @@ func (g *TransportItems) search(holds bool) {
 	}
 }
 
-// pathTo is the path to a container (0xBF2D640): taken only when the mob
+// pathTo is the path to a container: taken only when the mob
 // would stand within reach of it at the path's end.
 func (g *TransportItems) pathTo(n Navigator, p Pos) bool {
 	c := blockCentre(p)
@@ -371,7 +371,7 @@ func (g *TransportItems) pathTo(n Navigator, p Pos) bool {
 	return n.MoveTo(c, transportSpeed)
 }
 
-// walk is the walking state (0xBF2CBE0).
+// walk is the walking state.
 func (g *TransportItems) walk() {
 	n := g.mob.Nav()
 	if n == nil {
@@ -399,7 +399,7 @@ func (g *TransportItems) walk() {
 	}
 }
 
-// arrive is the arrived state (0xBF2C8B0): wait for other viewers, open
+// arrive is the arrived state: wait for other viewers, open
 // the container and announce the take or place.
 func (g *TransportItems) arrive() {
 	if g.needSight {
@@ -428,7 +428,7 @@ func (g *TransportItems) arrive() {
 	g.fire(pick(g.m.TakeItems(g.target, g.rules, true), g.cfg.StartTakeSucceed, g.cfg.StartTakeFail))
 }
 
-// interact is the interacting state (0xBF2CF60): once the time is up, move
+// interact is the interacting state: once the time is up, move
 // the items; a change of hand starts the visits over.
 func (g *TransportItems) interact() {
 	if g.interacting && g.world.CurrentTick() < g.interactEnd {
@@ -462,7 +462,7 @@ func reachBox(p Pos) Box {
 	return Box{Min: Vec3{X: c.X - transportReach, Y: c.Y - transportReach, Z: c.Z - transportReach}, Max: Vec3{X: c.X + transportReach, Y: c.Y + transportReach, Z: c.Z + transportReach}}
 }
 
-// intersects is AABB::intersects: the boxes overlap with room to spare.
+// intersects matches BDS: the boxes overlap with room to spare.
 func intersects(a, b Box) bool {
 	return a.Min.X < b.Max.X && b.Min.X < a.Max.X && a.Min.Y < b.Max.Y && b.Min.Y < a.Max.Y && a.Min.Z < b.Max.Z && b.Min.Z < a.Max.Z
 }

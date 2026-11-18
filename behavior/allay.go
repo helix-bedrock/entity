@@ -27,8 +27,8 @@ type ItemGiver interface {
 // noteblockDescriptors is the block BDS compares the heard spot with.
 func noteblockDescriptors() []string { return []string{"minecraft:noteblock"} }
 
-// heardNoteblock is the listen check the noteblock goals share
-// (0x5692E80): a memory younger than listenSeconds whose block is still a
+// heardNoteblock is the listen check the noteblock goals share:
+// a memory younger than listenSeconds whose block is still a
 // note block. An old memory is forgotten.
 func heardNoteblock(w World, m NoteblockListener, listenSeconds int32, blocks []string) (Pos, bool) {
 	p, tick, ok := m.HeardNoteblock()
@@ -63,14 +63,14 @@ type StayNearNoteblockConfig struct {
 }
 
 // DefaultStayNearNoteblock returns the goal's BDS defaults (definition
-// default 0xF0270D0, numbers from tick 0x56932C0).
+// default, numbers from tick).
 func DefaultStayNearNoteblock() StayNearNoteblockConfig {
 	return StayNearNoteblockConfig{Speed: 1, StartDistance: 10, StopDistance: 2, ListenTime: 30,
 		Noteblock: noteblockDescriptors(), LookYaw: 10, Repath: 10}
 }
 
-// StayNearNoteblock is StayNearNoteblockGoal (canUse 0x5692C80,
-// canContinue 0x5693010, start 0x56931B0, stop 0x56931C0, tick 0x56932C0):
+// StayNearNoteblock is StayNearNoteblockGoal (canUse,
+// canContinue, start, stop, tick):
 // the mob goes back to the note block it heard when it is farther than
 // start_distance.
 type StayNearNoteblock struct {
@@ -217,14 +217,14 @@ type GiveToNoteblockConfig struct {
 }
 
 // DefaultGiveToNoteblock returns the goal's BDS defaults (definition
-// default 0xE817DB0, create 0x5740680, numbers from tick 0x59FDFC0).
+// default, create, numbers from tick).
 func DefaultGiveToNoteblock() GiveToNoteblockConfig {
 	return GiveToNoteblockConfig{GiveItemsConfig: defaultGiveItems(), ListenTime: 30, Noteblock: noteblockDescriptors()}
 }
 
-// GiveToNoteblock is GoAndGiveItemsToNoteblockGoal (canUse 0x59FD660,
-// canContinue 0x59FDB90, start 0x59FDE10, stop 0x59FE980, tick
-// 0x59FDFC0): the mob carries its items to the note block it heard and
+// GiveToNoteblock is GoAndGiveItemsToNoteblockGoal (canUse,
+// canContinue, start, stop, tick):
+// the mob carries its items to the note block it heard and
 // throws them onto it.
 type GiveToNoteblock struct {
 	base
@@ -312,15 +312,15 @@ type GiveToOwnerConfig struct {
 	Repath uint64
 }
 
-// DefaultGiveToOwner returns the goal's BDS defaults (definition default
-// 0xE818DE0, numbers from tick 0x59FF300).
+// DefaultGiveToOwner returns the goal's BDS defaults (definition default,
+// numbers from tick).
 func DefaultGiveToOwner() GiveToOwnerConfig {
 	return GiveToOwnerConfig{GiveItemsConfig: defaultGiveItems(), Repath: 10}
 }
 
-// GiveToOwner is GoAndGiveItemsToOwnerGoal (canUse 0x59FEB10, canContinue
-// 0x59FEEE0, start 0x59FF140, stop 0x5A00050, tick 0x59FF300, throw
-// 0x59FF5C0): the mob carries its items to its owner and throws them to
+// GiveToOwner is GoAndGiveItemsToOwnerGoal (canUse, canContinue,
+// start, stop, tick, throw):
+// the mob carries its items to its owner and throws them to
 // it.
 type GiveToOwner struct {
 	base

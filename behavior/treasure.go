@@ -33,7 +33,7 @@ type TreasureHunter interface {
 	// FollowRange is the follow_range attribute.
 	FollowRange() float32
 	// ResetTreasureTimer resets the component BDS keeps next to the
-	// treasure flag (hash 0x8F990EF0: +8 = 0, +12 = +16).
+	// treasure flag (hash 0x8F990EF0: +8 = 0).
 	ResetTreasureTimer()
 }
 
@@ -48,7 +48,6 @@ type FindUnderwaterTreasureConfig struct {
 }
 
 // DefaultFindUnderwaterTreasure returns the goal's BDS defaults
-// (0xDF60620).
 func DefaultFindUnderwaterTreasure() FindUnderwaterTreasureConfig {
 	return FindUnderwaterTreasureConfig{SpeedMultiplier: 1, StopDistance: 2}
 }
@@ -72,10 +71,10 @@ func NewFindUnderwaterTreasure(w World, m TreasureHunter, c FindUnderwaterTreasu
 	return &FindUnderwaterTreasure{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x59F59F0).
+// CanUse implements goal.Goal.
 func (g *FindUnderwaterTreasure) CanUse() bool { return g.m.Flag(FlagTreasure) && g.m.Nav() != nil }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x59F5AD0).
+// CanContinueToUse implements goal.Goal.
 func (g *FindUnderwaterTreasure) CanContinueToUse() bool {
 	return g.CanUse() && g.target != (Pos{})
 }
@@ -83,7 +82,7 @@ func (g *FindUnderwaterTreasure) CanContinueToUse() bool {
 // CanBeInterrupted implements goal.Goal: the trip cannot be cut short.
 func (g *FindUnderwaterTreasure) CanBeInterrupted() bool { return false }
 
-// Start implements goal.Goal (0x59F5B10).
+// Start implements goal.Goal.
 func (g *FindUnderwaterTreasure) Start() {
 	m := g.m
 	from := blockOf(m.Pos())
@@ -119,14 +118,14 @@ func (g *FindUnderwaterTreasure) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x59F6420).
+// Stop implements goal.Goal.
 func (g *FindUnderwaterTreasure) Stop() {
 	g.target = Pos{}
 	g.m.ResetTreasureTimer()
 	g.m.SetFlag(FlagTreasure, false)
 }
 
-// Tick implements goal.Goal (0x59F65F0): every ten ticks the dolphin checks
+// Tick implements goal.Goal: every ten ticks the dolphin checks
 // whether it is stuck, then swims on or gives up.
 func (g *FindUnderwaterTreasure) Tick() {
 	m := g.m

@@ -10,7 +10,7 @@ import (
 type ChunkPos struct{ X, Z int32 }
 
 // ChunkAt is the chunk a position is in: floor(x)>>4, floor(z)>>4, as BDS
-// takes a player's view centre (sub_CF12A70).
+// takes a player's view centre.
 func ChunkAt(p mgl32.Vec3) ChunkPos {
 	return ChunkPos{X: floorBlock(p[0]) >> 4, Z: floorBlock(p[2]) >> 4}
 }
@@ -25,7 +25,7 @@ func floorBlock(f float32) int32 {
 
 // VanillaViewRadius2 is the squared chunk radius of BDS's view area: every
 // chunk with dx² + dz² <= 17 around the centre, 57 chunks. Read live from
-// the Level's offset table (Level slot 264, sub_CE3A100 -> sub_CFE3060);
+// the Level's offset table (Level slot 264);
 // it did not change with tick-distance.
 const VanillaViewRadius2 = 17
 
@@ -47,7 +47,7 @@ func VanillaViewOffsets() [57]ChunkPos {
 //
 // BDS marks every entity in these chunks as seen each tick; on the
 // player's tick a newly seen entity gets AddActor and one no longer seen
-// gets RemoveActor (sub_CF2AE10, sub_A14B5B0). BDS also adds a second
+// gets RemoveActor. BDS also adds a second
 // centre from a component that was not identified.
 func VanillaView(centre ChunkPos, dst []ChunkPos) []ChunkPos {
 	for _, o := range VanillaViewOffsets() {

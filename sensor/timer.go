@@ -30,7 +30,7 @@ type TimerConfig struct {
 
 // DefaultTimer is BDS's timer: looping, random interval, time 0
 // (TimerDefinition ctor, 1.21.3 0x14061D3E0; the 1.26.60 schema
-// 0x745E5E0 reads the same members).
+// reads the same members).
 func DefaultTimer() TimerConfig { return TimerConfig{Looping: true, RandomInterval: true} }
 
 // Timer fires an event after a time (TimerComponent; 1.21.3 tick

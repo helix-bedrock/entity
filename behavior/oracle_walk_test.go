@@ -11,7 +11,7 @@ import (
 )
 
 // walkVersions is the WalkKind the oracle's version i (its map's walk.vN,
-// each class's Mob::_getWalkTargetValue called on a cow) matches. The camel's
+// each class's BDS's code called on a cow) matches. The camel's
 // version on a cow is the animal one; on a camel husk it is 0.
 var walkVersions = [...]WalkKind{
 	WalkMob, WalkMonster, WalkAnimal, WalkMob, WalkSilverfish, WalkSlime, WalkMob, WalkMob,

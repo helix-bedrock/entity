@@ -100,7 +100,7 @@ type BlockInfo struct {
 	Kind     Kind
 	Props    Props
 	Material Material
-	// Solid is Block::isSolid; SolidBlocking is Material::isSolidBlocking.
+	// Solid matches BDS; SolidBlocking is BDS's code.
 	Solid, SolidBlocking bool
 	// Open is the state of open_bit (fence gates, trapdoors).
 	Open bool
@@ -131,7 +131,7 @@ type World interface {
 	// MinY returns the dimension's lowest block height.
 	MinY() int32
 	// Pathable reports whether a mob may move through b going from from
-	// to to: BDS's BlockType::canBePathedThrough (virtual +384). By default
+	// to to: BDS's code. By default
 	// a block is pathable when its material does not block motion; doors,
 	// slabs, top snow and liquids have their own rules.
 	Pathable(b Block, from, to Pos) bool

@@ -12,8 +12,7 @@ const (
 	navExactEnd      = 0x8000
 )
 
-// The pet_sleep_with_owner states (0xEEE6D70, 0xEEE6DA8, 0xEEE6DE0,
-// 0xEEE6E18).
+// The pet_sleep_with_owner states ().
 const (
 	petSleepWalk = iota
 	petSleepApproach
@@ -26,18 +25,18 @@ const (
 type PetSleeper interface {
 	Mob
 	// OwnerBed is the bed block the sleeping owner player lies in and that
-	// bed's other half (BlockType getSecondPart, vt+608); ok is false when
+	// bed's other half (BlockType getSecondPart); ok is false when
 	// the owner is not a player asleep in a bed or the other half is not a
 	// bed block.
 	OwnerBed() (bed, other Pos, ok bool)
-	// OwnerSleeping reports the owner player asleep (Actor vt+336).
+	// OwnerSleeping reports the owner player asleep.
 	OwnerSleeping() bool
 	// ClaimBed gives the bed's block entity the pet; false when another pet
 	// has it.
 	ClaimBed(bed Pos) bool
 	// TellOwner sends the owner the pet-sleeps event (event 14).
 	TellOwner()
-	// SetExactPathEnd sets the navigation's exact end switch (+0x8000)
+	// SetExactPathEnd sets the navigation's exact end switch
 	// and the squared reach of the last node.
 	SetExactPathEnd(reach2 float32)
 	// SetPathSpeed is the speed of the path being followed.
@@ -63,7 +62,7 @@ type PetSleepWithOwnerConfig struct {
 	GoalRadius      float32 `json:"goal_radius"`
 }
 
-// DefaultPetSleepWithOwner returns the goal's BDS defaults (0x5755A70).
+// DefaultPetSleepWithOwner returns the goal's BDS defaults.
 func DefaultPetSleepWithOwner() PetSleepWithOwnerConfig {
 	return PetSleepWithOwnerConfig{SpeedMultiplier: 1, SearchHeight: 1, GoalRadius: 0.5}
 }
@@ -84,7 +83,7 @@ func NewPetSleepWithOwner(w World, m PetSleeper, c PetSleepWithOwnerConfig) *Pet
 	return &PetSleepWithOwner{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5505930). BDS fails when the pet is
+// CanUse implements goal.Goal. BDS fails when the pet is
 // closer than search_range, checked in the assembly.
 func (g *PetSleepWithOwner) CanUse() bool {
 	m := g.m
@@ -108,17 +107,17 @@ func (g *PetSleepWithOwner) CanUse() bool {
 		return false
 	}
 	// The pet walks to the bed's other half, not the one the owner's bed
-	// position names (BDS 1.26.60 canUse 0x5505930).
+	// position names (BDS 1.26.60 canUse).
 	g.target = Vec3{X: float32(other.X) + 0.5, Y: float32(other.Y) + 0.5, Z: float32(other.Z) + 0.5}
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5505C30).
+// CanContinueToUse implements goal.Goal.
 func (g *PetSleepWithOwner) CanContinueToUse() bool {
 	return g.actor(g.m.Owner()) != nil && !g.m.Flag(FlagSitting) && g.m.OwnerSleeping()
 }
 
-// Start implements goal.Goal: IdleState::start (0x5506070), which moves to WalkState.
+// Start implements goal.Goal: BDS's code, which moves to WalkState.
 func (g *PetSleepWithOwner) Start() {
 	m := g.m
 	if n := m.Nav(); n != nil && n.MoveTo(g.target, g.cfg.SpeedMultiplier) {
@@ -130,7 +129,7 @@ func (g *PetSleepWithOwner) Start() {
 }
 
 // Stop implements goal.Goal: every state stops the navigation and goes
-// back to idle (0x5505D30); the sleeping one first gets up.
+// back to idle; the sleeping one first gets up.
 func (g *PetSleepWithOwner) Stop() {
 	m := g.m
 	if g.state == petSleepSleeping {
@@ -155,7 +154,7 @@ func (g *PetSleepWithOwner) Tick() {
 	}
 }
 
-// slowAtEnd is 0x5505EB0: half speed once the mob stands on the path's
+// slowAtEnd is: half speed once the mob stands on the path's
 // last node.
 func (g *PetSleepWithOwner) slowAtEnd() {
 	n := g.m.Nav()
@@ -175,7 +174,7 @@ func (g *PetSleepWithOwner) gap2() float32 {
 	return dz*dz + (dx*dx + dy*dy)
 }
 
-// hopTick is RotateState::tick (0x55063D0): for the first three quarters the pet slows down
+// hopTick matches BDS: for the first three quarters the pet slows down
 // and turns to the bed, then it waits and lies down.
 func (g *PetSleepWithOwner) hopTick() {
 	m := g.m
@@ -198,7 +197,7 @@ func (g *PetSleepWithOwner) hopTick() {
 	p := m.Pos()
 	face := float32(math.Atan2(float64(g.target.Z-p.Z), float64(g.target.X-p.X)))*degPerRad - 90
 	// The rotate state turns the head and body rotation components, not
-	// ActorRotationComponent (BDS 1.26.60 RotateState::tick 0x55063D0).
+	// ActorRotationComponent.
 	_, head := m.HeadRotation()
 	m.SetHeadYaw(approachDegrees(head, face, petSleepTurn))
 	m.SetBodyYaw(approachDegrees(m.BodyYaw(), face, petSleepTurn))

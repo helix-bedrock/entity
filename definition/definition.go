@@ -10,9 +10,9 @@
 // them their meaning, and the engine answers filter tests, runs responses
 // other than set_property and evaluates Molang, through Host and Tester.
 //
-// Read from BDS 1.26.60 (event parse 0xB64EAA0, evaluate 0xB31A220, execute
-// 0xB30C5F0, triggers 0xB30FB40, properties 0xBC7BA50, set_property
-// 0xD56D800 and 0xBC75200) with names and the group stack and filter code
+// Read from BDS 1.26.60 (event parse, evaluate, execute,
+// triggers, properties, set_property)
+// with names and the group stack and filter code
 // from 1.21.3 (ActorDefinitionDiffList, FilterGroup).
 package definition
 
@@ -32,8 +32,7 @@ type Config struct {
 	MaxEnumValueLength int
 }
 
-// DefaultConfig returns BDS 1.26.60's limits (0xBC7BA50, 0xBC7E170,
-// 0xBC7DBB0).
+// DefaultConfig returns BDS 1.26.60's limits ().
 func DefaultConfig() Config {
 	return Config{MinEnumValues: 2, MaxEnumValues: 16, MaxEnumValueLength: 32}
 }
@@ -47,7 +46,7 @@ type Parser struct {
 	// parsing at an unknown test, as BDS's does.
 	KnownTest func(name string) bool
 	// CheckResponse checks one event response against its schema. An error
-	// turns the whole event node off, as BDS's response check (0xB64FA90)
+	// turns the whole event node off, as BDS's response check
 	// does.
 	CheckResponse func(r Response) error
 	// ValidPropertyName reports whether a property name is allowed. Nil

@@ -27,9 +27,9 @@ func DefaultFleeSun() FleeSunConfig {
 	return FleeSunConfig{SpeedMultiplier: 1}
 }
 
-// FleeSun is FleeSunGoal (BDS 1.26.60 canUse 0xBF919C0, FindCoverGoal's
-// canUse 0xBF912B0, the search 0xBF914F0, canContinueToUse 0xBF91710, start
-// 0xBF91810, stop 0xBF91920; tick is BaseGoal's): a mob burning in daylight
+// FleeSun is FleeSunGoal (BDS 1.26.60 canUse, FindCoverGoal's
+// canUse, the search, canContinueToUse, start,
+// stop; tick is BaseGoal's): a mob burning in daylight
 // runs into the shade.
 type FleeSun struct {
 	base

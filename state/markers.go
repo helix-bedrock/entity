@@ -60,7 +60,7 @@ func setString(m Mob, key int, v string) {
 
 // IntDataConfig is a component that holds one number in the mob's actor
 // data: minecraft:variant, mark_variant, skin_id, color and color2. The
-// 1.21.3 schemas (VariantDefinition::buildSchema 0x14062F9F0 and the
+// 1.21.3 schemas (BDS's code 0x14062F9F0 and the
 // rest) read only value, default 0. That each one writes its data key
 // when added was not read from their initialize functions.
 type IntDataConfig struct {
@@ -84,12 +84,12 @@ func (c IntDataConfig) Apply(m Mob) { setInt(m, c.Key, c.Value) }
 
 // MarkerFlagComponents maps the marker components that raise an actor
 // flag while the mob has them to that flag. fire_immune is 1.21.3's
-// FireImmuneDefinition::initialize (0x140638B70: flag 50, and the actor's
+// BDS's code (0x140638B70: flag 50, and the actor's
 // own fire immunity, the engine's); out_of_control is
-// OutOfControlDefinition::initialize (0x140638FF0: flag 96). The other
+// BDS's code (0x140638FF0: flag 96). The other
 // two were not read: their names match the flags. is_charged is 1.26.60's
 // IsChargedDefinition, which sets flag 9 (Powered, the charged creeper's
-// glow) when added (0xC144DE0) and clears it when removed (0xC144EE0).
+// glow) when added and clears it when removed.
 func MarkerFlagComponents() map[string]int {
 	return map[string]int{
 		"minecraft:fire_immune":              FlagFireImmune,
@@ -141,12 +141,12 @@ type SittableConfig struct {
 }
 
 // Sit is a player's use on a mob with minecraft:sittable, as BDS 1.26.60's SitComponent
-// (getInteraction 0x7165460, its callback 0x7212D80): only the owner may make the mob sit
+// (getInteraction, its callback): only the owner may make the mob sit
 // or stand, unless it is orphaned, when the player becomes its owner and the mob stops
 // being orphaned. The mob turns sitting if it stood and standing if it sat, and runs
 // sit_event or stand_event. False when the player may not. BDS also sends a stat event and
-// a game event at the mob, which are the engine's, and a parrot (Parrot::setSitting
-// 0xBEB96F0) only sits down while it has one more component, which was not identified.
+// a game event at the mob, which are the engine's, and a parrot (BDS's code)
+// only sits down while it has one more component, which was not identified.
 func Sit(env *Env, c *SittableConfig, player behavior.Actor) bool {
 	m := env.Self
 	if player == nil {
@@ -172,7 +172,7 @@ func Sit(env *Env, c *SittableConfig, player behavior.Actor) bool {
 	return true
 }
 
-// SittableRemoved is SittableDefinition::uninitialize (0x140646DD0): the
+// SittableRemoved matches BDS (0x140646DD0): the
 // mob stops sitting when the component goes.
 func SittableRemoved(m behavior.Mob) {
 	if m != nil {

@@ -5,14 +5,14 @@ import "github.com/helix-bedrock/entity/goal"
 // Eater is the part of the mob the eating goals need on top of ItemHolder.
 type Eater interface {
 	ItemHolder
-	// Food reports an item with a food component (Item vt+160).
+	// Food reports an item with a food component.
 	Food(it Item) bool
 	// EatCounter and SetEatCounter are the eating counter actor data (item
 	// 91); EatCounter is 0 while it is unset.
 	EatCounter() int32
 	SetEatCounter(c int32)
 	// EatEffect plays the eating effect of the item: its actor event and
-	// sound (Mob vt+544).
+	// sound.
 	EatEffect(it Item)
 }
 
@@ -26,7 +26,7 @@ type FoodEater interface {
 	// is left of the stack, leftover what the food turns into (a bowl;
 	// empty for none). ok is false when the item has no food component.
 	Eat(it Item) (rest, leftover Item, ok bool)
-	// AddToInventory puts the stack in the mob's inventory (Mob vt+928).
+	// AddToInventory puts the stack in the mob's inventory.
 	AddToInventory(it Item) bool
 }
 
@@ -59,7 +59,7 @@ func (g *EatCarriedItem) food() bool {
 	return !h.Empty() && g.m.Food(h)
 }
 
-// CanUse implements goal.Goal (0x5776AA0): food in the mouth for long
+// CanUse implements goal.Goal: food in the mouth for long
 // enough.
 func (g *EatCarriedItem) CanUse() bool {
 	if !g.food() {
@@ -69,20 +69,20 @@ func (g *EatCarriedItem) CanUse() bool {
 	return g.calls >= g.cfg.DelayBeforeEating
 }
 
-// CanContinueToUse implements goal.Goal (0x5777300).
+// CanContinueToUse implements goal.Goal.
 func (g *EatCarriedItem) CanContinueToUse() bool { return g.food() }
 
-// Start implements goal.Goal (0x5776B20).
+// Start implements goal.Goal.
 func (g *EatCarriedItem) Start() { g.calls = 0 }
 
-// Stop implements goal.Goal (0x5776B30).
+// Stop implements goal.Goal.
 func (g *EatCarriedItem) Stop() {
 	g.calls = 0
 	g.m.SetFlag(FlagEating, false)
 	g.m.SetEatCounter(0)
 }
 
-// Tick implements goal.Goal (0x5776BD0): chew, then eat.
+// Tick implements goal.Goal: chew, then eat.
 func (g *EatCarriedItem) Tick() {
 	if !g.food() {
 		return
@@ -155,7 +155,7 @@ const (
 	snackSpeed      = 1.2 // the walk to the food
 	snackPickup2    = 4   // the squared distance it picks food up at
 	snackStartOdds  = 80  // one in this many ticks it starts eating
-	snackFinishOdds = 20  // the goal's vt+96: one in this many it finishes
+	snackFinishOdds = 20  // the goal's: one in this many it finishes
 	snackDone       = 101 // the eating counter after which it may finish
 )
 
@@ -190,7 +190,7 @@ func (g *Snacking) foodBox() Box {
 	return Box{Min: sub(b.Min, d), Max: add(b.Max, d)}
 }
 
-// find is 0x592F820: food in the hand, or food on the ground to walk to.
+// find is: food in the hand, or food on the ground to walk to.
 func (g *Snacking) find() bool {
 	m := g.m
 	if !m.HasInventory() || len(g.cfg.Items) == 0 {
@@ -211,13 +211,13 @@ func (g *Snacking) find() bool {
 	return false
 }
 
-// CanUse implements goal.Goal (0x592F6F0).
+// CanUse implements goal.Goal.
 func (g *Snacking) CanUse() bool {
 	m := g.m
 	return g.next <= g.world.CurrentTick() && !m.Flag(FlagBaby) && !m.Flag(FlagSitting) && !m.InWater() && m.Nav() != nil && g.find()
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B07ED0): on the
+// CanContinueToUse implements goal.Goal: on the
 // way to food the target must still be alive with a path to it, and the
 // water and stop chance tests run as well.
 func (g *Snacking) CanContinueToUse() bool {
@@ -232,7 +232,7 @@ func (g *Snacking) CanContinueToUse() bool {
 	return !m.InWater() && float32(g.stop) <= g.world.IRandom().NextFloat()
 }
 
-// Start implements goal.Goal (0x5930640).
+// Start implements goal.Goal.
 func (g *Snacking) Start() {
 	m := g.m
 	g.near = m.EntitiesOfType(g.near[:0], actorTypeItem, m.ID(), g.foodBox())
@@ -249,7 +249,7 @@ func (g *Snacking) Start() {
 	g.next = 0
 }
 
-// Stop implements goal.Goal (0x5930980): the food is dropped and the
+// Stop implements goal.Goal: the food is dropped and the
 // cooldown drawn.
 func (g *Snacking) Stop() {
 	m, w := g.m, g.world
@@ -274,7 +274,7 @@ func (g *Snacking) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x59310C0).
+// Tick implements goal.Goal.
 func (g *Snacking) Tick() {
 	m := g.m
 	h := m.Slot(SlotMainhand)

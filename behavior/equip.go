@@ -5,14 +5,14 @@ package behavior
 type Equipper interface {
 	ItemHolder
 	// PendingEquip is the stack pickup_items left for the equip_item
-	// component (EquipItemComponent +152 and its count at +156); ok is
+	// component (its count); ok is
 	// false while none waits. ClearPendingEquip drops it.
 	PendingEquip() (it Item, ok bool)
 	ClearPendingEquip()
 	// Admiring is AdmireItemComponent's admiring flag; false without the
 	// component.
 	Admiring() bool
-	// Wearable is the armor slot an item goes in (0xC35C400 and 0xC357890);
+	// Wearable is the armor slot an item goes in;
 	// ok is false for an item that is not worn.
 	Wearable(it Item) (slot int, ok bool)
 	// WearAllowed is the equip_item component's rule from base game version
@@ -23,7 +23,7 @@ type Equipper interface {
 	// MobArmorEquipment.
 	Armor(slot int) Item
 	SetArmor(slot int, it Item)
-	// Stacks reports two stacks of the same item that stack (0xC3587F0);
+	// Stacks reports two stacks of the same item that stack;
 	// MaxStack is the item's maximum stack size.
 	Stacks(a, b Item) bool
 	MaxStack(it Item) int32
@@ -31,8 +31,8 @@ type Equipper interface {
 	DropItem(it Item)
 }
 
-// EquipItem is EquipItemGoal (BDS 1.26.60 canUse 0x5528B40, tick
-// 0x5528C40; canContinueToUse calls canUse): the mob puts on what it
+// EquipItem is EquipItemGoal (BDS 1.26.60 canUse, tick;
+// canContinueToUse calls canUse): the mob puts on what it
 // picked up.
 type EquipItem struct {
 	base
@@ -108,12 +108,12 @@ type Admirer interface {
 	AdmiredItem() Item
 	// AdmireEnd is the tick the component's admiring ends.
 	AdmireEnd() uint64
-	// EndAdmiring is the component's end of admiring (0x71B2940).
+	// EndAdmiring is the component's end of admiring.
 	EndAdmiring()
-	// AddToInventory puts the stack in the mob's inventory (Mob vt+928).
+	// AddToInventory puts the stack in the mob's inventory.
 	AddToInventory(it Item) bool
 	// KeepAdmired puts the admired item in the inventory when the
-	// shareables want it (0x6D95470), and resets the component.
+	// shareables want it, and resets the component.
 	KeepAdmired(it Item)
 }
 
@@ -145,7 +145,7 @@ func NewAdmireItem(w World, m Admirer, c AdmireItemConfig) *AdmireItem {
 	return &AdmireItem{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x4A7B750): not just hurt, and something to
+// CanUse implements goal.Goal: not just hurt, and something to
 // admire.
 func (g *AdmireItem) CanUse() bool {
 	if s, ok := g.m.AdmireCooldown(); ok && g.m.RecentlyHurt(s*ticksPerSecond) {
@@ -154,10 +154,10 @@ func (g *AdmireItem) CanUse() bool {
 	return g.m.Admiring()
 }
 
-// CanContinueToUse implements goal.Goal (0x4A7B940).
+// CanContinueToUse implements goal.Goal.
 func (g *AdmireItem) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x4A7B950): the item goes in the offhand.
+// Start implements goal.Goal: the item goes in the offhand.
 func (g *AdmireItem) Start() {
 	m := g.m
 	it := m.AdmiredItem()
@@ -172,7 +172,7 @@ func (g *AdmireItem) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x4A7BFB0).
+// Stop implements goal.Goal.
 func (g *AdmireItem) Stop() {
 	m := g.m
 	m.SetSlot(SlotOffhand, Item{})
@@ -184,7 +184,7 @@ func (g *AdmireItem) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x4A7C840): admiring ends on time, and the
+// Tick implements goal.Goal: admiring ends on time, and the
 // sound repeats.
 func (g *AdmireItem) Tick() {
 	m := g.m
@@ -206,15 +206,15 @@ func (g *AdmireItem) Tick() {
 type Barterer interface {
 	Mob
 	Hurter
-	// BarterPending is the component's "item handed over" flag (+38);
+	// BarterPending is the component's "item handed over" flag;
 	// ClearBarter clears it.
 	BarterPending() bool
 	ClearBarter()
 	// BarterCooldown is the component's cooldown_after_being_attacked in
-	// seconds (+32).
+	// seconds.
 	BarterCooldown() int32
 	// BarterLoot rolls the description's barter_table with the level's
-	// thread random (Level vt+2680, BarterGoal::tick 0x4A806F0); nil
+	// thread random; nil
 	// without the description.
 	BarterLoot() []Item
 	// SpawnItem spawns the stack as an item entity at p moving at vel.
@@ -251,7 +251,7 @@ func NewBarter(w World, m Barterer) *Barter {
 	return &Barter{base: base{mob: m, world: w}, m: m}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x4A80510): an item to barter with and not
+// CanUse implements goal.Goal: an item to barter with and not
 // just hurt.
 func (g *Barter) CanUse() bool {
 	if g.m.RecentlyHurt(g.m.BarterCooldown() * ticksPerSecond) {
@@ -261,7 +261,7 @@ func (g *Barter) CanUse() bool {
 	return g.m.BarterPending()
 }
 
-// CanContinueToUse implements goal.Goal (0x4A806E0).
+// CanContinueToUse implements goal.Goal.
 func (g *Barter) CanContinueToUse() bool { return g.CanUse() }
 
 // Start implements goal.Goal.
@@ -270,7 +270,7 @@ func (g *Barter) Start() {}
 // Stop implements goal.Goal.
 func (g *Barter) Stop() {}
 
-// Tick implements goal.Goal (0x4A806F0).
+// Tick implements goal.Goal.
 func (g *Barter) Tick() {
 	m := g.m
 	if items := m.BarterLoot(); items != nil {
@@ -285,8 +285,8 @@ func (g *Barter) Tick() {
 }
 
 // throw is the loot's velocity: toward the nearest player, or a random flat
-// push. The nearest is the first of BDS's sorted nearby query (BDS 1.26.60
-// 0xB3D4280, type player), so ties end in libc++ std::sort's order.
+// push. The nearest is the first of BDS's sorted nearby query (BDS 1.26.60,
+// type player), so ties end in libc++ std::sort's order.
 func (g *Barter) throw() Vec3 {
 	m := g.m
 	b := m.Box()

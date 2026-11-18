@@ -66,7 +66,7 @@ func isNodeMember(name string) bool {
 	return false
 }
 
-// parseEvent reads an event node the way BDS 1.26.60 does (0xB64EAA0).
+// parseEvent reads an event node the way BDS 1.26.60 does.
 // randomize, then sequence, then first_valid win over everything else in the
 // node; only a node with none of them is a leaf.
 func (p *Parser) parseEvent(raw json.RawMessage, warn func(error)) *Event {
@@ -154,7 +154,7 @@ func (p *Parser) ParseTrigger(raw json.RawMessage, warn func(error)) *Trigger {
 }
 
 // parseTrigger reads a trigger: an event name, or an object with event,
-// target and filters (0xBFF93C0).
+// target and filters.
 func (p *Parser) parseTrigger(raw json.RawMessage, warn func(error)) *Trigger {
 	switch kindOf(raw) {
 	case kindString:
@@ -191,7 +191,7 @@ func (p *Parser) parseTrigger(raw json.RawMessage, warn func(error)) *Trigger {
 }
 
 // groupList reads an add or remove object's component_groups: one name or
-// an array of names. A non-string entry ends the list (0xB65CE70).
+// an array of names. A non-string entry ends the list.
 func groupList(raw json.RawMessage, warn func(error)) []string {
 	if raw == nil {
 		return nil
@@ -234,7 +234,7 @@ type modifier struct {
 	responses   []Response
 }
 
-// evaluate walks a node and collects the leaves to run (0xB31A220).
+// evaluate walks a node and collects the leaves to run.
 func (ev *Event) evaluate(t Tester, rnd func() float32, out []modifier) []modifier {
 	for ev.Kind == KindFirstValid {
 		next := (*Event)(nil)

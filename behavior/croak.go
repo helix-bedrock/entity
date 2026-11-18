@@ -33,7 +33,7 @@ func NewCroak(w World, m Mob, c CroakConfig) *Croak {
 
 func (g *Croak) pass() bool { return g.cfg.Filters == nil || g.cfg.Filters(g.mob, nil) }
 
-// CanUse implements goal.Goal (0x576C020): the next croak is drawn the
+// CanUse implements goal.Goal: the next croak is drawn the
 // first time the filters pass, and dropped when they fail.
 func (g *Croak) CanUse() bool {
 	if !g.pass() {
@@ -49,10 +49,10 @@ func (g *Croak) CanUse() bool {
 	return g.world.CurrentTick() >= g.next
 }
 
-// CanContinueToUse implements goal.Goal (0x576C130).
+// CanContinueToUse implements goal.Goal.
 func (g *Croak) CanContinueToUse() bool { return g.pass() && g.world.CurrentTick() < g.until }
 
-// Start implements goal.Goal (0x576C1A0).
+// Start implements goal.Goal.
 func (g *Croak) Start() {
 	g.mob.SetFlag(FlagCroaking, true)
 	if g.cfg.Duration.Min > g.cfg.Duration.Max {
@@ -61,7 +61,7 @@ func (g *Croak) Start() {
 	g.until = g.world.CurrentTick() + randomTicks(g.world.IRandom(), g.cfg.Duration)
 }
 
-// Stop implements goal.Goal (0x576C250).
+// Stop implements goal.Goal.
 func (g *Croak) Stop() {
 	g.mob.SetFlag(FlagCroaking, false)
 	g.next, g.until = 0, 0

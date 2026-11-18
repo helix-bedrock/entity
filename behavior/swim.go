@@ -32,8 +32,8 @@ func DefaultSwimIdle() SwimIdleConfig {
 	return SwimIdleConfig{IdleTime: 5 * ticksPerSecond, SuccessRate: 0.1}
 }
 
-// SwimIdle is SwimIdleGoal (BDS 1.26.60 canUse 0x56964A0, canContinueToUse
-// 0x56966B0, start 0x5696700, tick 0x5696820; stop is BaseGoal's): a fish
+// SwimIdle is SwimIdleGoal (BDS 1.26.60 canUse, canContinueToUse,
+// start, tick; stop is BaseGoal's): a fish
 // that is not moving now and then stays still for a while. The chance roll
 // draws from the thread random.
 type SwimIdle struct {
@@ -87,8 +87,8 @@ func DefaultRandomSwim() RandomSwimConfig {
 	return RandomSwimConfig{StrollConfig: DefaultStroll(), AvoidSurface: true}
 }
 
-// RandomSwim is RandomSwimmingGoal (BDS 1.26.60 canUse 0x55135B0,
-// canContinueToUse 0x5513600, the position 0x5513740; start, stop and tick
+// RandomSwim is RandomSwimmingGoal (BDS 1.26.60 canUse,
+// canContinueToUse, the position; start, stop and tick
 // are random_stroll's): random_stroll for swimmers, aiming at a random depth
 // below the surface that is not too steep to reach.
 type RandomSwim struct {
@@ -257,7 +257,7 @@ func (g *RandomBreach) Stop() {
 	}
 }
 
-// position is the goal's findPosition (0x575FEF0): the first air block
+// position is the goal's findPosition: the first air block
 // above the water at a random spot, within the follow range.
 func (g *RandomBreach) position() (Vec3, bool) {
 	m, w := g.mob, g.world

@@ -35,8 +35,7 @@ func Navigation(order []string, comps definition.Group) (n *nav.Navigation, name
 type Movement struct {
 	// Name is the component, such as minecraft:movement.basic.
 	Name string
-	// MaxTurn is max_turn in degrees per tick, 30 by default (1.26.60
-	// 0x7133490).
+	// MaxTurn is max_turn in degrees per tick, 30 by default (1.26.60).
 	MaxTurn float32
 	// Glider is movement.glide's state, nil for the other kinds.
 	Glider *move.Glider
@@ -46,8 +45,8 @@ type Movement struct {
 	JSON Object
 }
 
-// The movement defaults: max_turn (1.26.60 0x7133490) and movement.glide's
-// speeds (1.21.3 GlideMoveControlDescription::deserializeData 0x140631590).
+// The movement defaults: max_turn and movement.glide's
+// speeds (1.21.3 0x140631590).
 const (
 	defaultMaxTurn        = 30
 	defaultGlideStart     = 0.1

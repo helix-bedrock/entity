@@ -54,7 +54,7 @@ func NewNap(w World, m Mob, c NapConfig) *Nap {
 	return &Nap{base: base{mob: m, world: w, flags: flagsAll}, cfg: c, next: w.CurrentTick()}
 }
 
-// woken is 0x5753B60: a mob in the box grown by the detect sizes that is
+// woken is: a mob in the box grown by the detect sizes that is
 // not a creative player and not one of the exceptions.
 func (g *Nap) woken() bool {
 	m := g.mob
@@ -86,14 +86,14 @@ func (g *Nap) filters() bool {
 	return g.cfg.CanNapFilters == nil || g.cfg.CanNapFilters(g.mob, g.actor(g.mob.Target()))
 }
 
-// inSolid is BlockSource vtable +80: the fox's block blocks motion and is
+// inSolid is the fox's block blocks motion and is
 // solid.
 func (g *Nap) inSolid() bool {
 	b := g.world.Block(blockOf(g.mob.Pos()))
 	return b.Ground && b.BlockSolid
 }
 
-// CanUse implements goal.Goal (0x57539C0).
+// CanUse implements goal.Goal.
 func (g *Nap) CanUse() bool {
 	if g.mob.Nav() == nil || g.next > g.world.CurrentTick() {
 		return false
@@ -101,7 +101,7 @@ func (g *Nap) CanUse() bool {
 	return g.filters() && !g.woken() && !g.inSolid()
 }
 
-// CanContinueToUse implements goal.Goal (0x5753F40).
+// CanContinueToUse implements goal.Goal.
 func (g *Nap) CanContinueToUse() bool {
 	now := g.world.CurrentTick()
 	if now > g.detect {
@@ -116,7 +116,7 @@ func (g *Nap) CanContinueToUse() bool {
 	return g.filters() && !g.inSolid()
 }
 
-// Start implements goal.Goal (0x5753D60).
+// Start implements goal.Goal.
 func (g *Nap) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -126,7 +126,7 @@ func (g *Nap) Start() {
 	g.detect = g.world.CurrentTick() + napDetectEvery
 }
 
-// Stop implements goal.Goal (0x5753EB0).
+// Stop implements goal.Goal.
 func (g *Nap) Stop() {
 	g.mob.SetFlag(FlagSleeping, false)
 	g.mob.SetVelocity(Vec3{})
@@ -169,7 +169,7 @@ func (g *FindCover) open(p Pos) bool {
 	return p.Y >= w.MaxHeight() || p.Y >= w.MinHeight() && p.Y >= w.HeightMap(p.X, p.Z)
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0xBF912B0).
+// CanUse implements goal.Goal.
 func (g *FindCover) CanUse() bool {
 	m := g.mob
 	if g.world.CurrentTick() < g.ready {
@@ -186,7 +186,7 @@ func (g *FindCover) CanUse() bool {
 	return ok
 }
 
-// find is 0xBF914F0: up to 10 random spots, the first covered one the mob
+// find is: up to 10 random spots, the first covered one the mob
 // would rather walk to than not.
 func (g *FindCover) find() (Vec3, bool) {
 	r := g.world.IRandom()
@@ -204,20 +204,20 @@ func (g *FindCover) find() (Vec3, bool) {
 	return Vec3{}, false
 }
 
-// CanContinueToUse implements goal.Goal (0xBF91710).
+// CanContinueToUse implements goal.Goal.
 func (g *FindCover) CanContinueToUse() bool {
 	n := g.mob.Nav()
 	return n != nil && !n.Done()
 }
 
-// Start implements goal.Goal (0xBF91810).
+// Start implements goal.Goal.
 func (g *FindCover) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(g.at, g.cfg.SpeedMultiplier)
 	}
 }
 
-// Stop implements goal.Goal (0xBF91920).
+// Stop implements goal.Goal.
 func (g *FindCover) Stop() { g.ready = g.world.CurrentTick() + uint64(int64(g.cfg.Cooldown)) }
 
 // Tick implements goal.Goal.

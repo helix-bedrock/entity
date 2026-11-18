@@ -8,7 +8,7 @@ const (
 	kineticMinLength = 0.0001
 )
 
-// The kinetic weapon goal's states (goal +528).
+// The kinetic weapon goal's states (goal).
 const (
 	kineticApproach = iota
 	kineticCharge
@@ -60,7 +60,7 @@ type UseKineticWeaponConfig struct {
 }
 
 // DefaultUseKineticWeapon returns the goal's BDS defaults (definition
-// default 0xE29AA90; the v1_21_120 one, 0xEF78A80, has the same numbers).
+// default; the v1_21_120 one,, has the same numbers).
 func DefaultUseKineticWeapon() UseKineticWeaponConfig {
 	return UseKineticWeaponConfig{
 		MeleeConfig:      DefaultMelee(),
@@ -70,8 +70,8 @@ func DefaultUseKineticWeapon() UseKineticWeaponConfig {
 	}
 }
 
-// UseKineticWeapon is UseKineticWeaponGoal (BDS 1.26.60 canUse 0x56A0310, canContinue
-// 0x56A03F0, start 0x569FFA0, stop 0x56A0260, tick 0x56A04D0): a
+// UseKineticWeapon is UseKineticWeaponGoal (BDS 1.26.60 canUse, canContinue,
+// start, stop, tick): a
 // melee_attack whose mob, holding a kinetic weapon, closes in, charges
 // through the target, runs past it and turns for another charge, and backs
 // off once the attack ends.
@@ -91,7 +91,7 @@ type UseKineticWeapon struct {
 	hasEnd      bool
 }
 
-// NewUseKineticWeapon makes the goal (create 0x56CAAF0).
+// NewUseKineticWeapon makes the goal (create).
 func NewUseKineticWeapon(w World, m KineticWielder, c UseKineticWeaponConfig) *UseKineticWeapon {
 	g := &UseKineticWeapon{Melee: *NewMelee(w, m, c.MeleeConfig), k: m, reach: Range[float32]{0, 3}}
 	g.kcfg = c
@@ -126,7 +126,7 @@ func (g *UseKineticWeapon) CanContinueToUse() bool {
 }
 
 // Start implements goal.Goal. MeleeAttackBaseGoal's start in 1.26.60
-// (0x5433220) sets the repath timer to the fail increase.
+// sets the repath timer to the fail increase.
 func (g *UseKineticWeapon) Start() {
 	g.Melee.Start()
 	g.repath = g.cfg.FailIncrease
@@ -141,7 +141,7 @@ func (g *UseKineticWeapon) Stop() {
 	g.Melee.Stop()
 }
 
-// readWeapon is 0x569FFD0: the held weapon's reach times the multiplier.
+// readWeapon is: the held weapon's reach times the multiplier.
 func (g *UseKineticWeapon) readWeapon() {
 	if r, ok := g.k.KineticReach(); ok {
 		m := g.kcfg.WeaponReachMultiplier
@@ -190,7 +190,7 @@ func (g *UseKineticWeapon) Tick() {
 			g.step(t, false, dist2(g.m.Pos(), t.Pos()))
 			return
 		}
-		// 0x56A0BB0: run past the target.
+		// BDS: run past the target.
 		g.state = kineticReposition
 		g.past(t, g.kcfg.RepositionDistance)
 		g.walk()
@@ -223,7 +223,7 @@ func (g *UseKineticWeapon) Tick() {
 	}
 }
 
-// cooldown is 0x56A1090: the attack ends and the mob runs past the target
+// cooldown is: the attack ends and the mob runs past the target
 // for the melee cooldown.
 func (g *UseKineticWeapon) cooldown() {
 	g.state = kineticCooldown
@@ -252,7 +252,7 @@ func (g *UseKineticWeapon) walk() {
 	}
 }
 
-// follow is 0x56A0F10: when the repath timer runs out the walk to the spot
+// follow is: when the repath timer runs out the walk to the spot
 // is made again, unless a path still runs and the roll keeps it. The timer
 // is not reset. The roll draws from the thread random.
 func (g *UseKineticWeapon) follow() {
@@ -270,7 +270,7 @@ func (g *UseKineticWeapon) follow() {
 	}
 }
 
-// past is 0x56A0C40: a block a random distance in r from the target, meant
+// past is: a block a random distance in r from the target, meant
 // to lie beyond it in the direction from the mob turned by up to half
 // melee_fov. BDS turns the angle, already in radians, from degrees once
 // more, so the spot ends up close to +z of the target whatever the
@@ -297,7 +297,7 @@ func (g *UseKineticWeapon) past(t Actor, r Range[float32]) {
 	g.hasSpot = true
 }
 
-// wander is 0x56A1200: a random land spot around the mob, its ranges the
+// wander is: a random land spot around the mob, its ranges the
 // distance's ends plus the reach's middle, then the walk there.
 func (g *UseKineticWeapon) wander(r Range[float32]) {
 	h := (g.reach.Min + g.reach.Max) * 0.5

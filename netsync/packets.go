@@ -21,7 +21,7 @@ type Spawn struct {
 }
 
 // AddActor builds the AddActor BDS sends when a player starts seeing an
-// entity (sub_8AED300). The position is the last-sent position, not the
+// entity. The position is the last-sent position, not the
 // live one, and the rotations are the last-sent bytes turned back into
 // degrees, so they are always multiples of 1.40625. BDS only sends
 // attributes for mobs; the engine leaves s.Attributes empty for others.
@@ -111,7 +111,7 @@ func HandEquipment(runtimeID uint64, h Hand) packet.MobEquipment {
 }
 
 // SpawnEquipment appends the equipment packets BDS sends a player right
-// after AddActor for a mob (sub_A14B5B0): MobArmourEquipment when any armour
+// after AddActor for a mob: MobArmourEquipment when any armour
 // slot is filled, then MobEquipment for the main hand when it holds
 // something, then for the off hand when it holds something. Seen live in
 // that order; the off hand was not in the capture.
@@ -141,12 +141,11 @@ func NewMobEquipment(runtimeID uint64, e Equipment, dst []packet.Packet) []packe
 }
 
 // ActorEventDead is the ActorEvent BDS sends right after the spawn packets
-// when the entity is not alive (the actor check at vtable+376 in
-// sub_A14B5B0).
+// when the entity is not alive (the actor check at in).
 const ActorEventDead byte = 3
 
 // ActorEvent builds an ActorEvent. BDS broadcasts events at once, to every
-// player that sees the entity (sub_CE34FA0).
+// player that sees the entity.
 func ActorEvent(runtimeID uint64, event byte, data int32) packet.ActorEvent {
 	return packet.ActorEvent{EntityRuntimeID: runtimeID, EventType: event, EventData: data}
 }
@@ -154,14 +153,14 @@ func ActorEvent(runtimeID uint64, event byte, data int32) packet.ActorEvent {
 // AnimateSwingArm is Animate's swing action.
 const AnimateSwingArm uint8 = 1
 
-// SwingArm builds the Animate BDS broadcasts when a mob swings to attack
-// (sub_A1537A0): action 1, data 0. Its other fields were not read.
+// SwingArm builds the Animate BDS broadcasts when a mob swings to attack:
+// action 1, data 0. Its other fields were not read.
 func SwingArm(runtimeID uint64) packet.Animate {
 	return packet.Animate{ActionType: AnimateSwingArm, EntityRuntimeID: runtimeID}
 }
 
 // DefaultSwingCooldown is how many ticks BDS waits between two swings of
-// one mob (sub_A1537A0).
+// one mob.
 func DefaultSwingCooldown() uint64 { return 10 }
 
 // SwingReady reports whether a mob that last swung at lastSwing (swung
@@ -178,14 +177,14 @@ func Motion(runtimeID uint64, velocity mgl32.Vec3, tick uint64) packet.SetActorM
 }
 
 // Data builds SetActorData, which BDS broadcasts in the data pass when
-// any synched data or entity property changed (sub_B3A3C00). tick is the
+// any synched data or entity property changed. tick is the
 // player input tick for players and 0 for others.
 func Data(runtimeID uint64, meta protocol.EntityMetadata, props protocol.EntityProperties, tick uint64) packet.SetActorData {
 	return packet.SetActorData{EntityRuntimeID: runtimeID, EntityMetadata: meta, EntityProperties: props, Tick: tick}
 }
 
 // Attributes builds UpdateAttributes with the changed attributes, which
-// BDS broadcasts in the data pass before SetActorData (sub_B3A3C00).
+// BDS broadcasts in the data pass before SetActorData.
 func Attributes(runtimeID uint64, attrs []protocol.Attribute, tick uint64) packet.UpdateAttributes {
 	return packet.UpdateAttributes{EntityRuntimeID: runtimeID, Attributes: attrs, Tick: tick}
 }

@@ -3,7 +3,7 @@ package nav
 import "github.com/helix-bedrock/entity/path"
 
 // OpenDoorsConfig is the open_door annotation's numbers. The JSON component
-// has no fields; these are BDS's constants (0x7142350).
+// has no fields; these are BDS's constants.
 type OpenDoorsConfig struct {
 	// LeaveReach2 is the squared horizontal distance from the oldest door's
 	// centre past which the mob closes it.
@@ -19,14 +19,14 @@ func DefaultOpenDoors() OpenDoorsConfig {
 }
 
 // DoorToggler sets the door at p open or closed as the mob, with the door's
-// own sound and events (BDS's DoorBlock::setOpen, 0xCB18730, with the
+// own sound and events (BDS's code,, with the
 // actor). The engine may apply it later in the tick.
 type DoorToggler interface {
 	SetDoorOpen(p path.Pos, open bool)
 }
 
 // OpenDoors is BDS's OpenDoorAnnotationComponent and its system
-// (OpenDoorAnnotationSystem, tick 0x77B6F10): the minecraft:annotation.open_door
+// (OpenDoorAnnotationSystem, tick): the minecraft:annotation.open_door
 // component. Unlike the open_door goal, it needs no goal slot: every tick it
 // opens a door on the node the mob is walking to and closes the doors it
 // opened once the mob is past them. Mobs with it have actor flag 81
@@ -55,10 +55,10 @@ func (o *OpenDoors) SetConfig(c OpenDoorsConfig) { o.cfg = c }
 func (o *OpenDoors) Doors() []path.Pos { return o.doors }
 
 // Reset forgets the doors without closing them, as BDS does when the
-// component is removed (0x7141F90).
+// component is removed.
 func (o *OpenDoors) Reset() { o.doors = o.doors[:0] }
 
-// Tick is the system's tick for one mob (0x7142350). BDS runs it only for a
+// Tick is the system's tick for one mob. BDS runs it only for a
 // mob that is not removed; the caller checks that. The doors toggle through t.
 //
 // BDS quirks kept: without a path every remembered door is forgotten but only
@@ -100,7 +100,7 @@ func mayOpen(m *Mob, n *Navigation, k path.Kind) bool {
 	return m.OpensDoors && n.Flags&FlagCanOpenDoors != 0
 }
 
-// closeOldest is 0x7142170: it toggles the oldest door, if it is still a
+// closeOldest is: it toggles the oldest door, if it is still a
 // door, and forgets it.
 func (o *OpenDoors) closeOldest(w World, t DoorToggler) {
 	if len(o.doors) == 0 {
@@ -114,7 +114,7 @@ func (o *OpenDoors) closeOldest(w World, t DoorToggler) {
 	o.doors = o.doors[:len(o.doors)-1]
 }
 
-// toggleDoor is 0x7142080: the door at p is set to the opposite of its open
+// toggleDoor is: the door at p is set to the opposite of its open
 // state.
 func toggleDoor(w World, p path.Pos, t DoorToggler) {
 	_, open, _ := w.Door(p)

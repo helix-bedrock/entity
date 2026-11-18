@@ -6,18 +6,18 @@ type Picker interface {
 	ItemHolder
 	Hurter
 	// CanPickUpLoot is the mob's spawn roll that pickup_based_on_chance
-	// asks for (Mob +823).
+	// asks for.
 	CanPickUpLoot() bool
 	// HasShareables reports a shareables description on the entity.
 	HasShareables() bool
 	// CanStoreHand reports an inventory, an item in the hand and room for
-	// it in the inventory (0x5757660).
+	// it in the inventory.
 	CanStoreHand() bool
 	// Admiring is AdmireItemComponent's admiring flag; false without the
 	// component.
 	Admiring() bool
-	// PickupWanted is the candidate test for one item entity (1.26.60
-	// 0x55074E0): not removed, its pickup delay over, wanted by the
+	// PickupWanted is the candidate test for one item entity (1.26.60):
+	// not removed, its pickup delay over, wanted by the
 	// shareables, and with SameItems the hand's stacking rules. Items
 	// implements it.
 	PickupWanted(item Actor, f PickupFlags) bool
@@ -25,7 +25,7 @@ type Picker interface {
 	// entities.
 	ItemOf(a Actor) (Item, bool)
 	// EquipPending reports equip_item holding a stack it has not put on
-	// yet (EquipItemComponent +152); false without the component.
+	// yet; false without the component.
 	EquipPending() bool
 	// CanSee is the visibility cache test; false without the component.
 	CanSee(a Actor) bool
@@ -65,9 +65,9 @@ func DefaultPickupItems() PickupItemsConfig {
 	return PickupItemsConfig{SpeedMultiplier: 1, MaxDist: 1, SearchHeight: 1, GoalRadius: 0.5, ToHandOrEquipment: true}
 }
 
-// PickupItems is PickupItemsGoal (BDS 1.26.60 canUse 0x5506C20,
-// canContinueToUse 0x5507CC0, start 0x5508090, stop 0x5508280, tick
-// 0x5508440, the candidate filter 0x55074E0): the mob walks to an item on
+// PickupItems is PickupItemsGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, stop, tick,
+// the candidate filter): the mob walks to an item on
 // the ground and takes it.
 type PickupItems struct {
 	base

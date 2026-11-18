@@ -84,7 +84,7 @@ func (f *Finder) FindPath(w World, s *Settings, flags Flags, target Vec3, maxDis
 	f.size = Pos{floorInt(s.Width + 1), floorInt(s.Height + 1), floorInt(s.Width + 1)}
 	switch {
 	case s.Fly:
-		// TODO: the flier start search (0xD170C00's flier branch).
+		// TODO: the flier start search ('s flier branch).
 		return nil
 	case s.Swim && (s.InWater || s.PathFromAir):
 		return f.findSwimming(target)
@@ -250,7 +250,7 @@ func (f *Finder) nearestPathable(start Pos) (Pos, bool) {
 			return up, true
 		}
 	case NodeFence:
-		// TODO: BDS tries the fence's escape positions (0xC565830).
+		// TODO: BDS tries the fence's escape positions.
 	}
 	by := floorInt(s.Box.Min.Y)
 	x0, x1 := floorInt(s.Box.Min.X), floorInt(s.Box.Max.X)

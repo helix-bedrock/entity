@@ -9,12 +9,11 @@ const FlagPowered = 9
 // of Mob. The dash state lives in the engine's WitherBoss.
 type Dasher interface {
 	Mob
-	// WantsDash reports that the mob asked for a dash spot (WitherBoss
-	// +1280).
+	// WantsDash reports that the mob asked for a dash spot (WitherBoss).
 	WantsDash() bool
-	// StartDash marks the dash as running (WitherBoss +1281).
+	// StartDash marks the dash as running.
 	StartDash()
-	// EndDash clears both dash bits and sets the WitherBoss timer at +1308
+	// EndDash clears both dash bits and sets the WitherBoss timer
 	// to delay.
 	EndDash(delay int32)
 	// ScaleAirSpeed multiplies the mob's AirSpeedComponent by f.
@@ -38,9 +37,9 @@ func DefaultWitherRandomAttackPos() WitherRandomAttackPosConfig {
 	return WitherRandomAttackPosConfig{StrollConfig: DefaultStroll(), AirSpeedScale: 15, EndDelay: 20}
 }
 
-// WitherRandomAttackPos is WitherRandomAttackPosGoal (vtable 0xF786230;
-// canUse 0x56613D0, canContinue 0x5661560, start 0x5661570, stop
-// 0x5661720, tick 0xBF9DB20): when the wither asks for it, it dashes fast
+// WitherRandomAttackPos is WitherRandomAttackPosGoal (;
+// canUse, canContinue, start, stop,
+// tick): when the wither asks for it, it dashes fast
 // past its target, toward a random spot's side.
 type WitherRandomAttackPos struct {
 	Stroll
@@ -91,7 +90,7 @@ func (g *WitherRandomAttackPos) CanUse() bool {
 	return true
 }
 
-// position is the goal's findPosition (0xBF9DD60), random stroll's.
+// position is the goal's findPosition, random stroll's.
 func (g *WitherRandomAttackPos) position() (Vec3, bool) {
 	return landPos(g.world, g.mob, g.cfg.XZDist, g.cfg.YDist)
 }
@@ -141,14 +140,14 @@ type WitherTargetHighestDamageConfig struct {
 }
 
 // DefaultWitherTargetHighestDamage returns the goal's BDS defaults (the
-// definition default 0xE4CF820 is all zero).
+// definition default is all zero).
 func DefaultWitherTargetHighestDamage() WitherTargetHighestDamageConfig {
 	return WitherTargetHighestDamageConfig{}
 }
 
-// WitherTargetHighestDamage is WitherTargetHighestDamageGoal (vtable
-// 0xFAEF690; canUse 0xBF32970, canContinue 0xBF32B60, start 0xBF32B90,
-// find 0xBF329C0, valid 0xBF32C50): the mob targets whoever dealt it the
+// WitherTargetHighestDamage is WitherTargetHighestDamageGoal (;
+// canUse, canContinue, start,
+// find, valid): the mob targets whoever dealt it the
 // most damage, among those it may target within its follow range.
 type WitherTargetHighestDamage struct {
 	target

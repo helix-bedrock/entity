@@ -95,10 +95,10 @@ func New(rules *Rules, biomes []BiomeInfo) *Spawner {
 			}
 		}
 	}
-	// BDS's ActorSpawnRuleGroup (1.26.60 ctor 0xC057CC0) starts each delay
+	// BDS's ActorSpawnRuleGroup (1.26.60 ctor) starts each delay
 	// identifier at the min of the first rule naming it, so a delay_filter
 	// waits that long into the world's life and its spawn_chance applies
-	// from the first try (spawnMobCluster 0xCEAEDB0 skips both while the
+	// from the first try (spawnMobCluster skips both while the
 	// delay end is 0).
 	for i := range rules.All {
 		if d := rules.All[i].DelayID; d != "" {
@@ -174,7 +174,7 @@ func (s *State) TickChunk(w World, lv *Level, r Rand, cx, cz int32) {
 	}
 }
 
-// PostProcess is BDS's postProcessSpawnMobs (1.26.60 BedrockSpawner vtable
+// PostProcess is BDS's postProcessSpawnMobs (1.26.60
 // slot 12): the herd a chunk gets once, on its first tick after world
 // generation. It picks one column, x then z, finds the first floor from the
 // top without the surface search's stops, and spawns a cluster there as the
@@ -507,8 +507,8 @@ func (s *State) passes(w World, lv *Level, r Rand, rule *Rule, c *conditions) bo
 	return rule.VillageDistance == 0 || !w.PlayerInVillage(c.pos, rule.VillageDistance)
 }
 
-// placement is BDS's spawn position check at p, the block above the floor
-// (1.26.60 0xCD8F2F0). With a tick range of 5 or more the 9 chunks around p
+// placement is BDS's spawn position check at p, the block above the floor.
+// With a tick range of 5 or more the 9 chunks around p
 // must have ticked within the last tick; at exactly 4 that check is skipped
 // and the player distance is capped at 44; below 4 nothing spawns.
 func (s *State) placement(w World, lv *Level, rule *Rule, p path.Pos) bool {

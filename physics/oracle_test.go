@@ -51,7 +51,7 @@ func sameBits(a, b float32) bool { return math.Float32bits(a) == math.Float32bit
 
 func sameVec(a, b Vec3) bool { return sameBits(a.X, b.X) && sameBits(a.Y, b.Y) && sameBits(a.Z, b.Z) }
 
-// TestOracleClip compares clip with BDS 1.26.60's (0xDD972F0) on the oracle's
+// TestOracleClip compares clip with BDS 1.26.60's on the oracle's
 // cases, bit for bit. Record: 15 f32 in (s, mov, v), then depth, free,
 // clipped (f32) and axis (i32).
 func TestOracleClip(t *testing.T) {

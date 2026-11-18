@@ -43,7 +43,7 @@ func (g *Stroll) init(w World, m Mob, c StrollConfig, f positionFinder) {
 	*g = Stroll{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, finder: f}
 }
 
-// position is random_stroll's findPosition (0xBDC91E0).
+// position is random_stroll's findPosition.
 func (g *Stroll) position() (Vec3, bool) {
 	return landPos(g.world, g.mob, g.cfg.XZDist, g.cfg.YDist)
 }
@@ -56,7 +56,7 @@ func (g *Stroll) CanUse() bool {
 	if g.mob.Vehicle() != NoID {
 		return g.no("riding")
 	}
-	// The interval roll draws from Level::getRandom (RandomStrollGoal::canUse 0xBF9D8B0).
+	// The interval roll draws from BDS's code.
 	if g.cfg.Interval != 0 && g.world.Random().NextInt(g.cfg.Interval) != 0 {
 		return g.no("random interval failed")
 	}

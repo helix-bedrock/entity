@@ -4,7 +4,7 @@ package behavior
 const (
 	villageStride     = 0.75 // the share of the follow range walked per path
 	exploreTries      = 10
-	villageInterval   = 50 // the village goals' ticks between searches (0x5476470)
+	villageInterval   = 50 // the village goals' ticks between searches
 	villageSearchNone = -1
 )
 
@@ -22,8 +22,7 @@ type MoveToVillageConfig struct {
 	SearchRange  int32   `json:"search_range"`
 }
 
-// DefaultMoveToVillage returns the goal's BDS defaults (TypeSchema
-// 0xDF7CD50).
+// DefaultMoveToVillage returns the goal's BDS defaults (TypeSchema).
 func DefaultMoveToVillage() MoveToVillageConfig {
 	return MoveToVillageConfig{SpeedMultiplier: 1, CooldownTime: 8, GoalRadius: 1.5}
 }
@@ -57,7 +56,7 @@ func (g *moveToVillage) initVillage(w World, d Dweller, c MoveToVillageConfig, h
 
 func (g *moveToVillage) village() (Box, bool) { return g.d.Village(g.search) }
 
-// canUseVillage is canUse (BDS 1.26.60 0x543C8E0).
+// canUseVillage is canUse.
 func (g *moveToVillage) canUseVillage() bool {
 	if !g.canStart() {
 		return false
@@ -66,7 +65,7 @@ func (g *moveToVillage) canUseVillage() bool {
 	return ok && !inBounds(b, g.mob.Pos())
 }
 
-// valid is isValidTarget (0x543D560): the target is in the village.
+// valid is isValidTarget: the target is in the village.
 func (g *moveToVillage) valid(p Pos) bool {
 	b, ok := g.village()
 	return ok && inBounds(b, vecOf(p))
@@ -78,7 +77,7 @@ func (g *moveToVillage) reachable(p Pos) bool { return g.moveTo.reachable(p) }
 // find is unused: start picks the target.
 func (g *moveToVillage) find() bool { return false }
 
-// pick is _selectRandomPosInVillage (0x543CFC0): a random point of the
+// pick is _selectRandomPosInVillage: a random point of the
 // village, x then z then y from the thread random, raised to the ground
 // from that y.
 func (g *moveToVillage) pick() Vec3 {
@@ -93,7 +92,7 @@ func (g *moveToVillage) pick() Vec3 {
 	return Vec3{X: float32(x), Y: float32(g.world.AboveTopSolidAt(Pos{X: x, Y: y, Z: z})), Z: float32(z)}
 }
 
-// moveToBlock is moveMobToBlock (0x543CD30): one stride of the follow
+// moveToBlock is moveMobToBlock: one stride of the follow
 // range toward the target, raised to the ground from the stride's end.
 func (g *moveToVillage) moveToBlock() {
 	p := g.mob.Pos()
@@ -105,10 +104,10 @@ func (g *moveToVillage) moveToBlock() {
 	}
 }
 
-// Start implements goal.Goal (0x543C8B0).
+// Start implements goal.Goal.
 func (g *moveToVillage) Start() { g.aim = g.picker.pick() }
 
-// CanContinueToUse implements goal.Goal (0x543D3A0). The near test is
+// CanContinueToUse implements goal.Goal. The near test is
 // against the floored target point, offset included.
 func (g *moveToVillage) CanContinueToUse() bool {
 	if !g.keepLite() {
@@ -126,7 +125,7 @@ func (g *moveToVillage) CanContinueToUse() bool {
 	return true
 }
 
-// Tick implements goal.Goal (0x543CC40).
+// Tick implements goal.Goal.
 func (g *moveToVillage) Tick() {
 	g.moveTo.Tick()
 	if pathNear(g.mob, g.radius2) {
@@ -139,7 +138,7 @@ func (g *moveToVillage) Tick() {
 	}
 }
 
-// pathNear is 0x7514630: the path is done, or its end is within r of the
+// pathNear is: the path is done, or its end is within r of the
 // mob.
 func pathNear(m Mob, r float32) bool {
 	n := m.Nav()
@@ -160,7 +159,7 @@ func pathNear(m Mob, r float32) bool {
 // MoveToVillage is MoveToVillageGoal.
 type MoveToVillage struct{ moveToVillage }
 
-// NewMoveToVillage makes the goal (BDS 1.26.60 0x5476470). Its target point is
+// NewMoveToVillage makes the goal. Its target point is
 // BaseMoveToGoal's: the aim plus the offset one block up.
 func NewMoveToVillage(w World, d Dweller, c MoveToVillageConfig) *MoveToVillage {
 	g := &MoveToVillage{}
@@ -179,8 +178,7 @@ type StrollTowardsVillageConfig struct {
 	StartChance float32 `json:"start_chance"`
 }
 
-// DefaultStrollTowardsVillage returns the goal's BDS defaults (TypeSchema
-// 0xDF85F70).
+// DefaultStrollTowardsVillage returns the goal's BDS defaults (TypeSchema).
 func DefaultStrollTowardsVillage() StrollTowardsVillageConfig {
 	return StrollTowardsVillageConfig{MoveToVillageConfig: DefaultMoveToVillage(), StartChance: 1}
 }
@@ -193,7 +191,7 @@ type StrollTowardsVillage struct {
 	reach int32
 }
 
-// NewStrollTowardsVillage makes the goal (BDS 1.26.60 0x5695370). Its
+// NewStrollTowardsVillage makes the goal. Its
 // target point is BaseMoveToGoal's: the aim plus the offset one block up.
 func NewStrollTowardsVillage(w World, d Dweller, c StrollTowardsVillageConfig) *StrollTowardsVillage {
 	g := &StrollTowardsVillage{cfg: c, reach: c.SearchRange}
@@ -202,7 +200,7 @@ func NewStrollTowardsVillage(w World, d Dweller, c StrollTowardsVillageConfig) *
 	return g
 }
 
-// CanUse implements goal.Goal (0x5695420): the start chance rolls on the
+// CanUse implements goal.Goal: the start chance rolls on the
 // thread random.
 func (g *StrollTowardsVillage) CanUse() bool {
 	if g.world.ThreadRandom().NextFloat() > g.cfg.StartChance {
@@ -211,7 +209,7 @@ func (g *StrollTowardsVillage) CanUse() bool {
 	return g.canUseVillage()
 }
 
-// pick is _selectRandomPosInVillage (0x5695510): search_range blocks from
+// pick is _selectRandomPosInVillage: search_range blocks from
 // the mob toward a random village point, raised to the ground from that
 // point's height (getAboveTopSolidBlock).
 func (g *StrollTowardsVillage) pick() Vec3 {
@@ -234,13 +232,13 @@ type MoveThroughVillageConfig struct {
 func DefaultMoveThroughVillage() MoveThroughVillageConfig { return MoveThroughVillageConfig{} }
 
 // MoveThroughVillage is MoveThroughVillageGoal. BDS 1.26.52 never starts
-// it: canUse and canContinue return false (0x52774E0, 0x52774F0).
+// it: canUse and canContinue return false.
 type MoveThroughVillage struct {
 	base
 	cfg MoveThroughVillageConfig
 }
 
-// NewMoveThroughVillage makes the goal (0x52CDC70).
+// NewMoveThroughVillage makes the goal.
 func NewMoveThroughVillage(w World, m Mob, c MoveThroughVillageConfig) *MoveThroughVillage {
 	return &MoveThroughVillage{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
 }
@@ -277,8 +275,7 @@ type ExploreOutskirtsConfig struct {
 	DistFromBoundary  Vec3    `json:"dist_from_boundary"`
 }
 
-// DefaultExploreOutskirts returns the goal's BDS defaults (TypeSchema
-// 0xE6D8270).
+// DefaultExploreOutskirts returns the goal's BDS defaults (TypeSchema).
 func DefaultExploreOutskirts() ExploreOutskirtsConfig {
 	return ExploreOutskirtsConfig{NextXZ: 5, NextY: 3, DistFromBoundary: Vec3{X: 5, Z: 5}}
 }
@@ -296,14 +293,14 @@ type ExploreOutskirts struct {
 	target                      Vec3
 }
 
-// NewExploreOutskirts makes the goal (0x53E3A90).
+// NewExploreOutskirts makes the goal.
 func NewExploreOutskirts(w World, d Dweller, c ExploreOutskirtsConfig) *ExploreOutskirts {
 	return &ExploreOutskirts{base: base{mob: d, world: w, flags: flagsMoveLook | flagsBit3}, d: d, cfg: c,
 		minWait: int32(c.MinWaitTime * ticksPerSecond), maxWait: int32(c.MaxWaitTime * ticksPerSecond),
 		maxTravel: int32(c.MaxTravelTime * ticksPerSecond)}
 }
 
-// CanUse implements goal.Goal (0x577A530): a spot on the village edge,
+// CanUse implements goal.Goal: a spot on the village edge,
 // pushed explore_dist out from its middle.
 func (g *ExploreOutskirts) CanUse() bool {
 	m := g.mob
@@ -322,7 +319,7 @@ func (g *ExploreOutskirts) CanUse() bool {
 	if g.cfg.MinPerimeter > float32(int32(perim)) {
 		return false
 	}
-	// BDS 1.26.60 0x552A380 draws the edge point on the mob's thread random.
+	// BDS 1.26.60 draws the edge point on the mob's thread random.
 	x, z := edgePoint(b, g.world.ThreadRandom().NextInt(int32(perim)))
 	p := Vec3{X: x, Y: m.Pos().Y, Z: z}
 	dir := normalize(sub(p, boxCentre(b)))
@@ -332,7 +329,7 @@ func (g *ExploreOutskirts) CanUse() bool {
 }
 
 // shrink is the box moved in by d on each side, an axis that crosses
-// collapsing to its middle (0xD782590).
+// collapsing to its middle.
 func shrink(b Box, d Vec3) Box {
 	lo, hi := add(b.Min, d), sub(b.Max, d)
 	if lo.X > hi.X {
@@ -370,7 +367,7 @@ func edgePoint(b Box, r int32) (x, z float32) {
 	return b.Min.X, b.Min.Z
 }
 
-// CanContinueToUse implements goal.Goal (0x577AAC0).
+// CanContinueToUse implements goal.Goal.
 func (g *ExploreOutskirts) CanContinueToUse() bool {
 	if g.done {
 		return false
@@ -381,7 +378,7 @@ func (g *ExploreOutskirts) CanContinueToUse() bool {
 	return g.waited < g.maxWait
 }
 
-// Start implements goal.Goal (0x577AAF0).
+// Start implements goal.Goal.
 func (g *ExploreOutskirts) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.MoveTo(g.target, g.cfg.SpeedMultiplier)
@@ -389,7 +386,7 @@ func (g *ExploreOutskirts) Start() {
 	g.travelling = true
 }
 
-// Stop implements goal.Goal (0x577AC10).
+// Stop implements goal.Goal.
 func (g *ExploreOutskirts) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -398,11 +395,11 @@ func (g *ExploreOutskirts) Stop() {
 	g.waitFor, g.waited, g.travelled = 0, 0, 0
 }
 
-// Tick implements goal.Goal (0x577AD30).
+// Tick implements goal.Goal.
 func (g *ExploreOutskirts) Tick() {
 	n := g.mob.Nav()
 	idle := n == nil || n.Done()
-	r := g.world.ThreadRandom() // BDS 1.26.60 0x552AB80
+	r := g.world.ThreadRandom() // BDS 1.26.60
 	if !g.travelling {
 		g.waited++
 		if g.waited > g.waitFor && idle {

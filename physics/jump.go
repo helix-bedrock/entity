@@ -30,8 +30,8 @@ func (b *Body) jumpBoost() float32 {
 	return float32(b.JumpBoost+1) * 0.1
 }
 
-// mobJump is MobJumpSystem (0x74C10B0) and, for the ground jump it
-// requests, JumpFromGround for non-player mobs (0x74C01F0).
+// mobJump is MobJumpSystem and, for the ground jump it
+// requests, JumpFromGround for non-player mobs.
 func (b *Body) mobJump(w World) {
 	inc := float32(liquidJump)
 	if b.Jump.Pending {
@@ -77,8 +77,8 @@ func (b *Body) mobJump(w World) {
 
 // jumpFromGround is the non-player jump of BDS 1.26.60's JumpFromGroundSystem: weaker off
 // a low-jump block at the feet or, when the feet are on a block boundary, just below.
-// A magma cube's jump (0x77E4CA0) sets the speed and grows with its size; every other
-// mob's (0x77E48A0) keeps a faster rise and, while it sprints, pushes it 0.2 forward.
+// A magma cube's jump sets the speed and grows with its size; every other
+// mob's keeps a faster rise and, while it sprints, pushes it 0.2 forward.
 func (b *Body) jumpFromGround(w World) {
 	var factor float32 = 1
 	if _, low := b.LowJumpBlock(w); low {
@@ -101,7 +101,7 @@ func tableSin(a float32) float32 {
 	return float32(math.Sin(float64(uint16(int32(a))) * math.Pi * 2 / 65536))
 }
 
-// JumpMultiplier is Mob::getJumpMultiplier (BDS 1.26.60 0xBFE4A90): 0.6 on the
+// JumpMultiplier matches BDS: 0.6 on the
 // ground over a low-jump block (honey), else 1.
 func (b *Body) JumpMultiplier(w World) float32 {
 	if !b.OnGround {
@@ -113,8 +113,8 @@ func (b *Body) JumpMultiplier(w World) float32 {
 	return 1
 }
 
-// LowJumpBlock is the low-jump block test the ground jump, Mob::getJumpMultiplier
-// and Mob::getJumpPrevention (0xBFE4520) share: the block at the feet, or, when
+// LowJumpBlock is the low-jump block test the ground jump, BDS's code
+// and BDS's code share: the block at the feet, or, when
 // that block lets mobs jump from below or the feet are on a block boundary, the
 // block just under it.
 func (b *Body) LowJumpBlock(w World) (path.Pos, bool) {

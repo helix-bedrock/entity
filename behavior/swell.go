@@ -41,7 +41,7 @@ func NewSwell(w World, c Creeper, cfg SwellConfig) *Swell {
 	return &Swell{base: base{mob: c, world: w, flags: flagsMove}, c: c, cfg: cfg, target: NoID}
 }
 
-// CanUse implements goal.Goal (0x533D530).
+// CanUse implements goal.Goal.
 func (g *Swell) CanUse() bool {
 	if g.c.Nav() == nil {
 		return g.no("no navigation")
@@ -65,7 +65,7 @@ func (g *Swell) CanUse() bool {
 // CanContinueToUse implements goal.Goal.
 func (g *Swell) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x533D970).
+// Start implements goal.Goal.
 func (g *Swell) Start() {
 	if n := g.c.Nav(); n != nil {
 		n.Stop()
@@ -77,10 +77,10 @@ func (g *Swell) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x533DD30).
+// Stop implements goal.Goal.
 func (g *Swell) Stop() { g.target = NoID }
 
-// Tick implements goal.Goal (0x533DD70).
+// Tick implements goal.Goal.
 func (g *Swell) Tick() {
 	t := g.actor(g.target)
 	if t == nil {
@@ -94,7 +94,6 @@ func (g *Swell) Tick() {
 }
 
 // boxDistance is the distance between two boxes, 0 when they overlap
-// (0xD781B70).
 func boxDistance(a, b Box) float32 {
 	var d float32
 	switch {

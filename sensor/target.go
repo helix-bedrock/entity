@@ -20,7 +20,7 @@ type TargetNearbyConfig struct {
 }
 
 // DefaultTargetNearby is BDS's sensor: inside 1, outside 5, must_see off
-// (1.26.60 schema 0x70046C0).
+// (1.26.60 schema).
 func DefaultTargetNearby() TargetNearbyConfig {
 	return TargetNearbyConfig{InsideRange: 1, OutsideRange: 5}
 }
@@ -84,7 +84,7 @@ func (s *TargetNearby) Tick(env *Env) {
 	s.seen, s.inside, s.outside, s.dist = seen, inside, outside, d
 }
 
-// Distance is BDS's distance from self's box to the target: AABB::distanceTo
+// Distance is BDS's distance from self's box to the target: BDS's code
 // is called with the target's box where it takes a point, so it measures to
 // the target box's minimum corner (1.21.3 0x1420D1560).
 func Distance(self, target behavior.Box) float32 {

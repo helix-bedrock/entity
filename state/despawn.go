@@ -32,7 +32,7 @@ type DespawnConfig struct {
 	EdgeTickRange int32
 }
 
-// DefaultDespawn is BDS's despawn (1.26.60 schema 0x723A360:
+// DefaultDespawn is BDS's despawn (1.26.60 schema:
 // remove_child_entities false, min_range_inactivity_timer 30,
 // despawn_from_inactivity true, min_range_random_chance 800,
 // despawn_from_chance true, despawn_from_simulation_edge true,
@@ -61,11 +61,11 @@ type Chunks interface {
 	UntickedNeighbour(p behavior.Pos, r int32) bool
 }
 
-// Despawn is minecraft:despawn, as BDS 1.26.60's despawn tick 0x723BB90
-// and its tail 0x723C570 (names from 1.21.3 DespawnComponent::tick and
+// Despawn is minecraft:despawn, as BDS 1.26.60's despawn tick
+// and its tail (names from 1.21.3 BDS's code and
 // _tryStandardDespawnRules). The first player search has no distance
-// (FLT_MAX), the near check takes min_distance (definition +84) and the far
-// checks max_distance (+88), capped at 44 when the tick range is 4 or less.
+// (FLT_MAX), the near check takes min_distance (definition) and the far
+// checks max_distance, capped at 44 when the tick range is 4 or less.
 type Despawn struct {
 	cfg DespawnConfig
 	buf []behavior.Actor
@@ -148,7 +148,7 @@ func (d *Despawn) standard(env *Env, chunks Chunks) bool {
 	return c.FromDistance && !d.playerWithin(env, m.Pos(), c.MaxDistance)
 }
 
-// playerWithin is Dimension::fetchAnyInteractablePlayer: a player that is
+// playerWithin matches BDS: a player that is
 // not a spectator within dist.
 func (d *Despawn) playerWithin(env *Env, p behavior.Vec3, dist float32) bool {
 	d.buf = env.World.Players(d.buf[:0])

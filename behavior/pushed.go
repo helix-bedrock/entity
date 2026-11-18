@@ -33,7 +33,7 @@ func NewTargetWhenPushed(w World, p Pushable, c TargetWhenPushedConfig) *TargetW
 	return &TargetWhenPushed{base: base{mob: p, world: w}, p: p, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x53441A0).
+// CanUse implements goal.Goal.
 func (g *TargetWhenPushed) CanUse() bool {
 	id, ok := g.p.PushedBy()
 	return ok && id != NoID
@@ -42,7 +42,7 @@ func (g *TargetWhenPushed) CanUse() bool {
 // CanContinueToUse implements goal.Goal: the goal runs for one tick.
 func (g *TargetWhenPushed) CanContinueToUse() bool { return false }
 
-// Start implements goal.Goal (0x53442D0).
+// Start implements goal.Goal.
 func (g *TargetWhenPushed) Start() {
 	id, _ := g.p.PushedBy()
 	a := g.actor(id)
@@ -54,7 +54,7 @@ func (g *TargetWhenPushed) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x5344580).
+// Stop implements goal.Goal.
 func (g *TargetWhenPushed) Stop() { g.p.ClearPushedBy() }
 
 // Tick implements goal.Goal.

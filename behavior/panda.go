@@ -31,7 +31,7 @@ func NewLayDown(w World, m Mob, c LayDownConfig) *LayDown {
 	return &LayDown{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5750550).
+// CanUse implements goal.Goal.
 func (g *LayDown) CanUse() bool {
 	if g.mob.InWater() {
 		return false
@@ -39,7 +39,7 @@ func (g *LayDown) CanUse() bool {
 	return g.cfg.Interval == 0 || g.world.ThreadRandom().NextInt(g.cfg.Interval) == 0
 }
 
-// CanContinueToUse implements goal.Goal (0x5750650).
+// CanContinueToUse implements goal.Goal.
 func (g *LayDown) CanContinueToUse() bool {
 	return g.cfg.RandomStopInterval != 0 && g.world.ThreadRandom().NextInt(g.cfg.RandomStopInterval) != 0
 }
@@ -81,15 +81,15 @@ func NewScared(w World, m Mob, c ScaredConfig) *Scared {
 	return &Scared{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5926D10).
+// CanUse implements goal.Goal.
 func (g *Scared) CanUse() bool {
 	return !g.mob.Flag(FlagSitting) && g.world.ThunderLevel() > scaredThunder
 }
 
-// CanContinueToUse implements goal.Goal (0x5926F50).
+// CanContinueToUse implements goal.Goal.
 func (g *Scared) CanContinueToUse() bool { return g.world.ThunderLevel() > scaredThunder }
 
-// Start implements goal.Goal (0x5926DE0).
+// Start implements goal.Goal.
 func (g *Scared) Start() {
 	m := g.mob
 	m.SetFlag(FlagScared, true)
@@ -99,7 +99,7 @@ func (g *Scared) Start() {
 	m.SetFlag(FlagTransitionSitting, true)
 }
 
-// Stop implements goal.Goal (0x5926E40): the panda is left sitting.
+// Stop implements goal.Goal: the panda is left sitting.
 func (g *Scared) Stop() {
 	m := g.mob
 	m.SetFlag(FlagScared, false)
@@ -107,7 +107,7 @@ func (g *Scared) Stop() {
 	m.SetFlag(FlagTransitionSitting, true)
 }
 
-// Tick implements goal.Goal (0x5926E80).
+// Tick implements goal.Goal.
 func (g *Scared) Tick() {
 	if g.cfg.SoundInterval > 0 && g.world.IRandom().NextInt(g.cfg.SoundInterval) == 0 {
 		g.mob.PlaySoundAt(scaredSound, g.mob.AttachPos(attachBody))
@@ -128,7 +128,7 @@ type Sneezer interface {
 	// +0), so a startled mob hops.
 	MakeJump(a Actor)
 	// LevelEventData broadcasts the level event at p with a number as its
-	// data (Level vtable +1688).
+	// data.
 	LevelEventData(id int32, p Vec3, data int32)
 	// DropOwnLoot rolls the loot table and drops what it gives at the mob.
 	DropOwnLoot(table string)
@@ -174,7 +174,7 @@ func NewSneeze(w World, m Sneezer, c SneezeConfig) *Sneeze {
 	return &Sneeze{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, cooldown: c.Cooldown}
 }
 
-// CanUse implements goal.Goal (0x5931D70).
+// CanUse implements goal.Goal.
 func (g *Sneeze) CanUse() bool {
 	if g.cooldown > 0 {
 		g.cooldown--
@@ -183,10 +183,10 @@ func (g *Sneeze) CanUse() bool {
 	return g.world.IRandom().NextFloat() <= g.cfg.Probability
 }
 
-// CanContinueToUse implements goal.Goal (0x5931DB0).
+// CanContinueToUse implements goal.Goal.
 func (g *Sneeze) CanContinueToUse() bool { return g.timer > 0 }
 
-// Start implements goal.Goal (0x5931DC0).
+// Start implements goal.Goal.
 func (g *Sneeze) Start() {
 	g.m.SetFlag(FlagSneezing, true)
 	if g.cfg.PrepareSound != NoSound {
@@ -195,13 +195,13 @@ func (g *Sneeze) Start() {
 	g.timer = ticksPerSecond * int32(g.cfg.PrepareTime)
 }
 
-// Stop implements goal.Goal (0x5931EA0).
+// Stop implements goal.Goal.
 func (g *Sneeze) Stop() {
 	g.m.SetFlag(FlagSneezing, false)
 	g.cooldown = g.cfg.Cooldown
 }
 
-// Tick implements goal.Goal (0x5931ED0): when the timer runs out the
+// Tick implements goal.Goal: when the timer runs out the
 // sneeze happens.
 func (g *Sneeze) Tick() {
 	if g.timer > 0 {

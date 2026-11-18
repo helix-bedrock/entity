@@ -11,9 +11,9 @@ type BlockCarrier interface {
 	// CarriedBlock is the block the carried item places; ok is false when
 	// the item is not a block item.
 	CarriedBlock() (name string, ok bool)
-	// MayPlace is the block's mayPlace test at p (BlockType vt+536).
+	// MayPlace is the block's mayPlace test at p.
 	MayPlace(block string, p Pos) bool
-	// CanSeeBlock is 0xB5C5190: the line from the mob's attach point 3 to
+	// CanSeeBlock is: the line from the mob's attach point 3 to
 	// the block's centre hits nothing, or hits that block.
 	CanSeeBlock(p Pos) bool
 }
@@ -33,7 +33,7 @@ type TakeBlockConfig struct {
 	RequiresLineOfSight    bool `json:"requires_line_of_sight"`
 }
 
-// DefaultTakeBlock returns the goal's BDS defaults (0xDCBC320).
+// DefaultTakeBlock returns the goal's BDS defaults.
 func DefaultTakeBlock() TakeBlockConfig {
 	return TakeBlockConfig{XZRange: Range[int32]{Min: -2, Max: 2}, YRange: Range[int32]{Max: 3}, Chance: 1,
 		AffectedByGriefingRule: true, RequiresLineOfSight: true}
@@ -52,24 +52,24 @@ func NewTakeBlock(w World, m BlockCarrier, c TakeBlockConfig) *TakeBlock {
 	return &TakeBlock{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5699850).
+// CanUse implements goal.Goal.
 func (g *TakeBlock) CanUse() bool {
 	m, w := g.m, g.world
 	if !m.Slot(SlotMainhand).Empty() || g.cfg.AffectedByGriefingRule && !w.MobGriefing() {
 		return false
 	}
-	// Level getThreadRandom (BDS 1.26.60 canUse 0x5699850).
+	// Level getThreadRandom (BDS 1.26.60 canUse).
 	if !chance(w.ThreadRandom(), g.cfg.Chance) {
 		return false
 	}
 	return g.cfg.CanTake == nil || g.cfg.CanTake(m, g.actor(m.Target()))
 }
 
-// Tick implements goal.Goal (0x5699A30).
+// Tick implements goal.Goal.
 func (g *TakeBlock) Tick() {
 	m, w := g.m, g.world
 	// The offsets roll on Level getThreadRandom, and an empty blocks list
-	// takes any block that is not air (BDS 1.26.60 tick 0x5699A30).
+	// takes any block that is not air (BDS 1.26.60 tick).
 	p := add3(blockOf(m.Pos()), blockOffset(w.ThreadRandom(), g.cfg.XZRange, g.cfg.YRange))
 	b := w.Block(p)
 	if b.Name == airName || len(g.cfg.Blocks) > 0 && !slices.Contains(g.cfg.Blocks, b.Name) {
@@ -107,7 +107,7 @@ type PlaceBlockConfig struct {
 	AffectedByGriefingRule bool         `json:"affected_by_griefing_rule"`
 }
 
-// DefaultPlaceBlock returns the goal's BDS defaults (0xDCA7D20).
+// DefaultPlaceBlock returns the goal's BDS defaults.
 func DefaultPlaceBlock() PlaceBlockConfig {
 	return PlaceBlockConfig{XZRange: Range[int32]{Min: -2, Max: 2}, YRange: Range[int32]{Max: 3}, Chance: 1,
 		AffectedByGriefingRule: true}
@@ -133,7 +133,7 @@ func NewPlaceBlock(w World, m BlockCarrier, c PlaceBlockConfig) *PlaceBlock {
 	return &PlaceBlock{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x550A2E0): the chance rolls
+// CanUse implements goal.Goal: the chance rolls
 // on the thread random.
 func (g *PlaceBlock) CanUse() bool {
 	m, w := g.m, g.world
@@ -152,7 +152,7 @@ func (g *PlaceBlock) CanUse() bool {
 	return g.cfg.CanPlace == nil || g.cfg.CanPlace(m, g.actor(m.Target()))
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x550A510): the spot must be air
+// Tick implements goal.Goal: the spot must be air
 // over a solid block. The weighted list skips the carried item and
 // mayPlace. Every roll is on the thread random.
 func (g *PlaceBlock) Tick() {
@@ -228,7 +228,7 @@ func randomIncl(r Random, s Range[int32]) int32 {
 	return s.Min
 }
 
-// chance is Random::chance (0x48CAB20): no draw at 0 or below or at 1 and
+// chance matches BDS: no draw at 0 or below or at 1 and
 // above.
 func chance(r Random, p float32) bool {
 	if p <= 0 {
@@ -239,7 +239,7 @@ func chance(r Random, p float32) bool {
 
 func add3(a, b Pos) Pos { return Pos{X: a.X + b.X, Y: a.Y + b.Y, Z: a.Z + b.Z} }
 
-// The base Goal methods TakeBlock keeps (1.26.60 vtable).
+// The base Goal methods TakeBlock keeps.
 
 // Start implements goal.Goal.
 func (g *TakeBlock) Start() {}
@@ -248,10 +248,9 @@ func (g *TakeBlock) Start() {}
 func (g *TakeBlock) Stop() {}
 
 // CanContinueToUse implements goal.Goal: the base Goal asks CanUse again
-// (0xBF8F520).
 func (g *TakeBlock) CanContinueToUse() bool { return g.CanUse() }
 
-// The base Goal methods PlaceBlock keeps (1.26.60 vtable).
+// The base Goal methods PlaceBlock keeps.
 
 // Start implements goal.Goal.
 func (g *PlaceBlock) Start() {}
@@ -260,5 +259,4 @@ func (g *PlaceBlock) Start() {}
 func (g *PlaceBlock) Stop() {}
 
 // CanContinueToUse implements goal.Goal: the base Goal asks CanUse again
-// (0xBF8F520).
 func (g *PlaceBlock) CanContinueToUse() bool { return g.CanUse() }

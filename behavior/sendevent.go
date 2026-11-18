@@ -40,8 +40,7 @@ type SendEventChoice struct {
 }
 
 // DefaultSendEventChoice returns a choice's BDS defaults (the 1.26.60
-// conversion 0xBEC3C00; the same numbers as the older parser in
-// 0xBF93840).
+// conversion; the same numbers as the older parser in).
 func DefaultSendEventChoice() SendEventChoice {
 	return SendEventChoice{MinActivationRange: 1, MaxActivationRange: 32, LookAtTarget: true, DoCasting: true, ParticleColor: -1, StartSoundEvent: NoSound}
 }
@@ -67,14 +66,14 @@ type SendEventConfig struct {
 	CastFlags, IdleFlags goal.Flags
 }
 
-// DefaultSendEvent returns the goal's BDS defaults (create 0x54F5050, look
-// limit from tick 0xBFA0B30).
+// DefaultSendEvent returns the goal's BDS defaults (create, look
+// limit from tick).
 func DefaultSendEvent() SendEventConfig {
 	return SendEventConfig{LookYaw: 10, CastFlags: flagsMoveLook | flagCast, IdleFlags: flagCast}
 }
 
-// SendEvent is SendEventGoal (canUse 0xBF9FF50, canContinue 0xBFA06C0,
-// start 0xBFA0770, stop 0xBFA0AE0, tick 0xBFA0B30): a weighted pick of the
+// SendEvent is SendEventGoal (canUse, canContinue,
+// start, stop, tick): a weighted pick of the
 // choices that have an entity in range passing their filters, then each
 // stage's event fired on that entity after its delay.
 type SendEvent struct {

@@ -38,8 +38,8 @@ type blockSet []string
 func (s blockSet) matches(b Block) bool { return slices.Contains(s, b.Name) }
 
 // pickHit picks the target of a block search: a random hit in search
-// order, or the nearest after libc++'s std::sort (avoid_block 0x4A7E040,
-// move_to_block 0x54395E0; both on the thread random).
+// order, or the nearest after libc++'s std::sort (avoid_block,
+// move_to_block; both on the thread random).
 func pickHit(w World, hits []blockHit, method int) (Pos, bool) {
 	if len(hits) == 0 {
 		return Pos{}, false
@@ -89,7 +89,7 @@ func NewAvoidBlock(w World, m Mob, c AvoidBlockConfig) *AvoidBlock {
 	return &AvoidBlock{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, cfg: c}
 }
 
-// find is the block search (0x48C4DD0); it sets the block.
+// find is the block search; it sets the block.
 func (g *AvoidBlock) find() bool {
 	g.hits = searchBlocks(g.hits[:0], g.world, blockOf(g.mob.Pos()), g.cfg.SearchRange, g.cfg.SearchHeight, blockSet(g.cfg.TargetBlocks))
 	p, ok := pickHit(g.world, g.hits, g.cfg.Method)
@@ -99,7 +99,7 @@ func (g *AvoidBlock) find() bool {
 	return ok
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x4A7DCA0): the interval rolls
+// CanUse implements goal.Goal: the interval rolls
 // on the mob's thread random. BDS makes the path here and
 // follows it in start; the port checks it here and paths again in Start.
 func (g *AvoidBlock) CanUse() bool {
@@ -152,7 +152,7 @@ func (g *AvoidBlock) Stop() {
 	m.SetFlag(FlagAvoidingBlock, false)
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x4A7E6F0): sprint while inside
+// Tick implements goal.Goal: sprint while inside
 // the search range of the block; the sound interval is on the thread
 // random.
 func (g *AvoidBlock) Tick() {

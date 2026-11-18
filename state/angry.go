@@ -35,10 +35,10 @@ type AngryConfig struct {
 	LastHurtWindow int32
 }
 
-// DefaultAngry is BDS's angry (1.26.60 schema 0x735EE80: duration 25,
+// DefaultAngry is BDS's angry (1.26.60 schema: duration 25,
 // duration_delta 0, broadcast_anger, _on_attack and _on_being_attacked
 // false, broadcast_anger_when_dying true, broadcast_range 20; the 2-tick
-// window from 1.21.3 AngrySystem::_tickComponent 0x1406C3BB0).
+// window from 1.21.3 BDS's code 0x1406C3BB0).
 func DefaultAngry() AngryConfig {
 	return AngryConfig{Duration: 25, WhenDying: true, BroadcastRange: 20, Sound: behavior.NoSound, LastHurtWindow: 2}
 }
@@ -50,9 +50,9 @@ type Alerted interface {
 }
 
 // Angry is minecraft:angry: the mob stays angry at its target until the
-// timer runs out, alerting friends (1.21.3 AngrySystem::_tickComponent
-// 0x1406C3BB0, AngryComponent::canGetAngry 0x140564940,
-// AngryDefinition::initialize 0x1405699E0, alertFriendsToAnger
+// timer runs out, alerting friends (1.21.3 BDS's code
+// 0x1406C3BB0, BDS's code 0x140564940,
+// BDS's code 0x1405699E0, alertFriendsToAnger
 // 0x1406C6010, calmDown 0x1406C7EC0, setNextSoundEventTick 0x14056EE70).
 type Angry struct {
 	cfg       AngryConfig
@@ -129,7 +129,7 @@ func (a *Angry) Tick(env *Env) {
 	}
 }
 
-// soundDelay draws from sound_interval; RandomValueBounds::getFloat was
+// soundDelay draws from sound_interval; BDS's code was
 // not read and is taken as a uniform draw.
 func (a *Angry) soundDelay(r behavior.Random) float32 {
 	iv := a.cfg.SoundInterval

@@ -5,10 +5,10 @@
 // themselves run through the mob's definition (definition.Instance).
 //
 // Read from BDS 1.26.60 where the parsers decompile or disassemble (the
-// timer 0x745E5E0, scheduler 0x715A210, entity sensor 0x724AE70 and
-// 0x724B1D0, target sensor 0x70046C0, damage sensor 0x72357B0). The tick
+// timer, scheduler, entity sensor and,
+// target sensor, damage sensor). The tick
 // logic is from 1.21.3 (TimerComponent, SchedulerSystem,
-// EnvironmentSensorSystem, EntitySubsensor::senseEntities,
+// EnvironmentSensorSystem, BDS's code,
 // _tickTargetNearbyComponent, DamageSensorComponent), whose 1.26.60
 // versions were not found by name; the addresses are on each type.
 package sensor
@@ -34,7 +34,7 @@ type Env struct {
 	Events Events
 	// Tester returns the filter context of self, with other as the other
 	// subject (nil for none). The engine fills in self's target and the
-	// rest, as BDS's Actor::initParams does.
+	// rest, as BDS's code does.
 	Tester func(other behavior.Actor) definition.Tester
 }
 

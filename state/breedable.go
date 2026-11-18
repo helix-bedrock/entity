@@ -50,7 +50,7 @@ type BreedableConfig struct {
 	RefuseSound int
 }
 
-// DefaultBreedable is BDS's breedable (1.26.60 schema 0x6FCAED0:
+// DefaultBreedable is BDS's breedable (1.26.60 schema:
 // require_tame true, allow_sitting false, extra_baby_chance 0,
 // breed_cooldown 60, causes_pregnancy and require_full_health false;
 // inherit_tamed and blend_attributes true from the 1.21.3 constructor
@@ -65,7 +65,7 @@ func DefaultBreedable() BreedableConfig {
 }
 
 // Birth is one baby a mating makes. The engine creates it (BDS's
-// ActorFactory::createBornActor), adds it to the world, blends its
+// BDS's code), adds it to the world, blends its
 // attributes when BlendAttributes is set and gives it its parents' genes,
 // then calls Breedable.Born.
 type Birth struct {
@@ -79,8 +79,8 @@ type Birth struct {
 	// LoveCause is the player who fed the parents, NoID for none.
 	LoveCause behavior.ID
 	// Trusted are the players who fed the mob and its partner (NoID where it was not a
-	// player), whom a baby with minecraft:trust trusts (1.26.60 0x7371850 into
-	// createBornActor 0xBFF2400).
+	// player), whom a baby with minecraft:trust trusts (1.26.60 into
+	// createBornActor).
 	Trusted [2]behavior.ID
 	event   *definition.Trigger
 }
@@ -118,8 +118,7 @@ func (b *Breedable) Cooldown() int32 { return b.cooldown }
 func (b *Breedable) LoveCause() behavior.ID { return b.loveCause }
 
 // SetState puts back a saved love timer, cooldown and love cause, as
-// BDS's load reads InLove, BreedCooldown and LoveCause (1.26.60
-// 0x7372E40).
+// BDS's load reads InLove, BreedCooldown and LoveCause (1.26.60).
 func (b *Breedable) SetState(love, cooldown int32, cause behavior.ID) {
 	b.love, b.cooldown, b.loveCause = max(love, 0), max(cooldown, 0), cause
 }
@@ -253,7 +252,7 @@ func (b *Breedable) endLove(env *Env, partner behavior.Actor, pb *Breedable) (ow
 }
 
 // loveCauses are the mob's and the partner's love causes that are players, NoID for
-// others; the first falls back to the partner's, as 0x7371850 does.
+// others; the first falls back to the partner's, as does.
 func (b *Breedable) loveCauses(env *Env, pb *Breedable) (own, partner behavior.ID) {
 	own, partner = behavior.NoID, behavior.NoID
 	if p := env.World.Actor(b.loveCause); p != nil && p.IsPlayer() {

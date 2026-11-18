@@ -6,21 +6,21 @@ type Sleeper interface {
 	// BedDirection is the bed block's direction state at p; ok is false
 	// when the block has no direction.
 	BedDirection(p Pos) (dir int32, ok bool)
-	// Sleeping is Actor vt+336.
+	// Sleeping is.
 	Sleeping() bool
-	// SetSleeping is Actor vt+344. Waking also clears the bounding box
+	// SetSleeping is. Waking also clears the bounding box
 	// update request.
 	SetSleeping(on bool)
 	// SetSleepCollider clears the movement interpolation and sets the
-	// collision box (0xB2D5FC0).
+	// collision box.
 	SetSleepCollider(width, height float32)
 	// SetSleepYaw sets the body, head and look yaw while lying down.
 	SetSleepYaw(yaw float32)
-	// HealOnWake heals the missing health (0xB303CA0) unless the mob may
-	// not (Actor +761).
+	// HealOnWake heals the missing health unless the mob may
+	// not.
 	HealOnWake()
 	// StandUpSpot is where the mob gets out of the bed at p, from where it
-	// lay down (0xC736290); ok is false when p is not a bed or no spot is
+	// lay down; ok is false when p is not a bed or no spot is
 	// free.
 	StandUpSpot(bed Pos, from Vec3) (Pos, bool)
 }
@@ -41,8 +41,8 @@ type SleepConfig struct {
 	DirOffset [4][2]float32 `json:"-"`
 }
 
-// DefaultSleep returns the goal's BDS defaults (TypeSchema 0xDF84F60; the
-// bed table from the goal 0x592D090).
+// DefaultSleep returns the goal's BDS defaults (TypeSchema; the
+// bed table from the goal).
 func DefaultSleep() SleepConfig {
 	return SleepConfig{MoveToPOIConfig: DefaultMoveToPOI(), SleepColliderHeight: 1, SleepColliderWidth: 1,
 		DirYaw:    [4]float32{180, 270, 0, 90},
@@ -59,7 +59,7 @@ type Sleep struct {
 	// stood when it lay down.
 	spot, laidFrom Vec3
 	yaw            float32
-	// resting and rest are +336 and +328: the cooldown after waking.
+	// resting and rest are and: the cooldown after waking.
 	resting bool
 	rest    int64
 	woke    bool
@@ -77,7 +77,7 @@ func NewSleep(w World, m Sleeper, c SleepConfig) *Sleep {
 // find is unused by the POI goals.
 func (g *Sleep) find() bool { return false }
 
-// CanUse implements goal.Goal (0x592D200).
+// CanUse implements goal.Goal.
 func (g *Sleep) CanUse() bool {
 	if !g.canUse() || !g.cfg.CanSleepWhileRiding && g.mob.Vehicle() != NoID {
 		return false
@@ -107,7 +107,7 @@ func (g *Sleep) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B03F40): until
+// CanContinueToUse implements goal.Goal: until
 // something wakes the mob (flag 77). Once at the bed only the bed is
 // tested, else only the walk.
 func (g *Sleep) CanContinueToUse() bool {
@@ -121,10 +121,10 @@ func (g *Sleep) CanContinueToUse() bool {
 	return !g.woke
 }
 
-// Start implements goal.Goal (0x592D6B0).
+// Start implements goal.Goal.
 func (g *Sleep) Start() { g.startPOI() }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x5B03B60). The mob gets up at
+// Stop implements goal.Goal. The mob gets up at
 // the bed's stand-up spot, or one block above where it lay when the bed has
 // none; it is put in the middle of that block, half a block up.
 func (g *Sleep) Stop() {
@@ -150,7 +150,7 @@ func (g *Sleep) Stop() {
 	g.stopPOI()
 }
 
-// Tick implements goal.Goal (0x592DC30).
+// Tick implements goal.Goal.
 func (g *Sleep) Tick() {
 	g.tickPOI()
 	m := g.m

@@ -77,7 +77,7 @@ type near struct {
 	d2 float32
 }
 
-// sortedNear is BDS's nearby query (BDS 1.26.60 0xB3D4280): the entities in the box
+// sortedNear is BDS's nearby query: the entities in the box
 // grown by d, nearest first. It reuses dst and buf.
 func sortedNear(w World, m Mob, d float32, dst []Actor, buf []near) ([]Actor, []near) {
 	return sortedNearBox(w, m, Vec3{X: d, Y: d, Z: d}, dst, buf)
@@ -103,7 +103,7 @@ func sortedNearBox(w World, m Mob, d Vec3, dst []Actor, buf []near) ([]Actor, []
 }
 
 // sortNear sorts nearest first with libc++'s std::sort, as BDS's sorted
-// nearby query does (BDS 1.26.60 0xB3D4280, sort 0xB40A630), so entities
+// nearby query does (sort), so entities
 // at the same distance end in BDS's order.
 func sortNear(s []near) {
 	stdSort(s, func(x, y near) bool { return x.d2 < y.d2 })
@@ -251,11 +251,11 @@ func (g *RandomLook) Tick() {
 // tableSin is entry i of BDS's 65536-entry sine table.
 func tableSin(i uint16) float32 { return float32(math.Sin(float64(i) * math.Pi * 2 / 65536)) }
 
-// TableCos is mce::Math::cos: the cosine of an angle in radians through
+// TableCos is mce::BDS's code: the cosine of an angle in radians through
 // BDS's sine table.
 func TableCos(rad float32) float32 { return tableSin(uint16(int32(rad*sinScale + sinQuarter))) }
 
-// ViewVector is Actor::getViewVector for a pitch and yaw in degrees,
+// ViewVector matches BDS for a pitch and yaw in degrees,
 // through BDS's sine table.
 func ViewVector(pitch, yaw float32) Vec3 {
 	a := (yaw*-radPerDeg - math.Pi) * sinScale

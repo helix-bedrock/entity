@@ -50,15 +50,15 @@ type BlockJumper interface {
 	Mob
 	MoveController
 	PathProber
-	// StandingOn is Actor::getBlockPosCurrentlyStandingOn (BDS 1.26.60
-	// 0xB394740): the honey test and the start block use it.
+	// StandingOn matches BDS (BDS 1.26.60):
+	// the honey test and the start block use it.
 	StandingOn() Pos
 	// HasLookControl reports LookControlComponent.
 	HasLookControl() bool
 	// DiscardFriction and SetDiscardFriction are DiscardFrictionFlagComponent.
 	DiscardFriction() bool
 	SetDiscardFriction(on bool)
-	// SetBox replaces the mob's collision box (Actor::setAABB).
+	// SetBox replaces the mob's collision box.
 	SetBox(b Box)
 	// EffectAmplifier is the amplifier of an active mob effect.
 	EffectAmplifier(id int) (amp int32, ok bool)
@@ -136,8 +136,8 @@ func NewJumpToBlock(w World, m BlockJumper, c JumpToBlockConfig) *JumpToBlock {
 }
 
 // nextCooldown is the tick the next jump may start: a random time in the
-// cooldown range from now, on Level::getRandom (BDS 1.26.60 ctor
-// 0x5A06E20, stop 0x5A084F0, tick 0x5A08680).
+// cooldown range from now, on BDS's code (BDS 1.26.60 ctor,
+// stop, tick).
 func (g *JumpToBlock) nextCooldown() uint64 {
 	r := g.cfg.Cooldown
 	return g.world.CurrentTick() + uint64(int32(((r.Max-r.Min)*g.world.Random().NextFloat()+r.Min)*ticksPerSecond))
@@ -146,7 +146,7 @@ func (g *JumpToBlock) nextCooldown() uint64 {
 // CanBeInterrupted implements goal.Goal: a jump always finishes.
 func (g *JumpToBlock) CanBeInterrupted() bool { return false }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5A07100).
+// CanUse implements goal.Goal.
 func (g *JumpToBlock) CanUse() bool {
 	m := g.m
 	if g.cooldown > g.world.CurrentTick() || !m.OnGround() || g.actor(m.Vehicle()) != nil || m.InWater() || m.InLava() {
@@ -158,7 +158,7 @@ func (g *JumpToBlock) CanUse() bool {
 	return g.world.Block(m.StandingOn()).Name != honeyBlockName
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A07390).
+// CanContinueToUse implements goal.Goal.
 func (g *JumpToBlock) CanContinueToUse() bool {
 	return g.cooldown <= g.world.CurrentTick() && g.m.Nav() != nil && g.m.HasLookControl()
 }
@@ -172,7 +172,7 @@ func (g *JumpToBlock) restore() {
 	g.m.SetBox(sortedBox(sub(c, half), add(c, half)))
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5A07540): the blocks around the mob it
+// Start implements goal.Goal: the blocks around the mob it
 // could land on, then the ones an arc reaches.
 func (g *JumpToBlock) Start() {
 	m, w := g.m, g.world
@@ -244,7 +244,7 @@ func (g *JumpToBlock) landable(from, p Pos) bool {
 	return false
 }
 
-// candidates is _findJumpableBlocks (BDS 1.26.60 0x5A07F40): the cells far enough away
+// candidates is _findJumpableBlocks: the cells far enough away
 // that an arc reaches, last found first. With pref, once a preferred block
 // turns up only preferred blocks count.
 func (g *JumpToBlock) candidates(pref bool) bool {
@@ -293,7 +293,7 @@ func (g *JumpToBlock) candidates(pref bool) bool {
 	return len(g.cands) > 0
 }
 
-// pick is _selectTarget (BDS 1.26.60 0x5A08DE0): a weighted random candidate, taken off
+// pick is _selectTarget: a weighted random candidate, taken off
 // the list. One with a short full walking path is not jumped to.
 func (g *JumpToBlock) pick() bool {
 	w := g.world
@@ -303,7 +303,7 @@ func (g *JumpToBlock) pick() bool {
 	for _, c := range g.cands {
 		total += c.weight
 	}
-	r := w.ThreadRandom().NextInt(total) // 0x5A08DE0
+	r := w.ThreadRandom().NextInt(total)
 	i := -1
 	for k, c := range g.cands {
 		if r -= c.weight; r < 0 {
@@ -326,7 +326,7 @@ func (g *JumpToBlock) pick() bool {
 	return true
 }
 
-// turn is _rotateTowardsTarget (BDS 1.26.60 0x5A091B0): one turn step towards the
+// turn is _rotateTowardsTarget: one turn step towards the
 // landing block, done when within a degree of it.
 func (g *JumpToBlock) turn(maxTurn float32) bool {
 	p := g.m.Pos()
@@ -344,7 +344,7 @@ func (g *JumpToBlock) turn(maxTurn float32) bool {
 	return abs32(d) < jumpBlockTurnDone
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5A08680).
+// Tick implements goal.Goal.
 func (g *JumpToBlock) Tick() {
 	m, w := g.m, g.world
 	maxTurn, ok := m.MoveControl()
@@ -408,7 +408,7 @@ func (g *JumpToBlock) jump() {
 	m.PlaySoundAt(jumpBlockSound, m.Pos())
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x5A084F0).
+// Stop implements goal.Goal.
 func (g *JumpToBlock) Stop() {
 	g.state = jumpBlockDone
 	g.restore()

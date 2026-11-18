@@ -15,7 +15,7 @@ const (
 type PlayDeader interface {
 	Mob
 	// LastDamage is the mob's last damage: a stamp that changes with each
-	// hit (Mob +792), its cause (-1 for none) and its amount.
+	// hit, its cause (-1 for none) and its amount.
 	LastDamage() (stamp uint64, cause int, amount float32)
 	// Health is the health attribute's current value as an integer.
 	Health() int32
@@ -64,7 +64,7 @@ func NewPlayDead(w World, m PlayDeader, c PlayDeadConfig) *PlayDead {
 	return g
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x550B150): once per hit, a matching cause,
+// CanUse implements goal.Goal: once per hit, a matching cause,
 // the filters, and below force_below_health or by chance with enough
 // damage.
 func (g *PlayDead) CanUse() bool {
@@ -97,10 +97,10 @@ func (g *PlayDead) CanUse() bool {
 	return amount > float32(d)
 }
 
-// CanContinueToUse implements goal.Goal (0x550B620).
+// CanContinueToUse implements goal.Goal.
 func (g *PlayDead) CanContinueToUse() bool { return g.world.CurrentTick() < g.until }
 
-// Start implements goal.Goal (0x550B330).
+// Start implements goal.Goal.
 func (g *PlayDead) Start() {
 	if n := g.m.Nav(); n != nil {
 		n.Stop()
@@ -116,7 +116,7 @@ func (g *PlayDead) Start() {
 	g.until = g.world.CurrentTick() + uint64(int64(g.cfg.Duration))
 }
 
-// Stop implements goal.Goal (0x550B5E0).
+// Stop implements goal.Goal.
 func (g *PlayDead) Stop() {
 	g.m.SetFlag(FlagPlayingDead, false)
 	g.m.SetTarget(NoID)
@@ -168,7 +168,7 @@ func (g *Beg) wants(p Actor) bool {
 	return ok && contains(g.cfg.Items, it)
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x4A82B50): the nearest pickable player
+// CanUse implements goal.Goal: the nearest pickable player
 // within look_distance, holding a listed item.
 func (g *Beg) CanUse() bool {
 	d := g.cfg.LookDistance
@@ -194,7 +194,7 @@ func (g *Beg) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x4A82DC0).
+// CanContinueToUse implements goal.Goal.
 func (g *Beg) CanContinueToUse() bool {
 	p := g.actor(g.player)
 	if p == nil || !p.Alive() || !p.Pickable() {
@@ -204,19 +204,19 @@ func (g *Beg) CanContinueToUse() bool {
 	return dist2(g.m.Pos(), p.Pos()) <= d*d && g.timer > 0 && g.wants(p)
 }
 
-// Start implements goal.Goal (0x4A82F90).
+// Start implements goal.Goal.
 func (g *Beg) Start() {
 	g.m.SetFlag(FlagInterested, true)
 	g.timer = randomInt(g.world.ThreadRandom(), g.cfg.LookTime.Min, g.cfg.LookTime.Max)
 }
 
-// Stop implements goal.Goal (0x4A83080).
+// Stop implements goal.Goal.
 func (g *Beg) Stop() {
 	g.m.SetFlag(FlagInterested, false)
 	g.player = NoID
 }
 
-// Tick implements goal.Goal (0x4A830D0).
+// Tick implements goal.Goal.
 func (g *Beg) Tick() {
 	p := g.actor(g.player)
 	if p == nil || !p.Alive() {

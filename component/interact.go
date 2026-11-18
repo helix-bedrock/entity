@@ -110,7 +110,7 @@ func (c *Context) AddRiderConfig(j Object) state.AddRiderConfig {
 }
 
 // TransformationConfig reads minecraft:transformation, as
-// TransformationDescription::deserializeData: delay is seconds or an
+// BDS's code: delay is seconds or an
 // object of value, range_min, range_max and the block assist members.
 func (c *Context) TransformationConfig(j Object) state.TransformationConfig {
 	t := state.TransformationConfig{

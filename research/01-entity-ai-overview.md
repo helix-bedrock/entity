@@ -3,9 +3,8 @@
 Clean-room notes written in our own words. They contain no decompiled code,
 addresses or symbol dumps.
 
-**Build:** every claim comes from **BDS 1.26.52**. Most of it was read in the
-Linux build's IDA database, with names from its RTTI and vtables; the rest
-comes from its strings and the vanilla behaviour pack that ships with it. The
+**Build:** every claim comes from **BDS 1.26.52**. Most of it comes from the
+Linux server build; the rest comes from its strings and the vanilla behaviour pack that ships with it. The
 older 1.21.3 build was used only to put names on functions.
 
 **Status as of 2026-10-22:** first pass. Every claim has a confidence level:

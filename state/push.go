@@ -8,7 +8,7 @@ import (
 )
 
 // PushMode is how a pushable_by_entity preset moves the mob (1.26.60
-// PushMode enum, 0xDDAB610).
+// PushMode enum).
 type PushMode uint8
 
 // The push modes, by BDS number.
@@ -27,7 +27,7 @@ func PushModeNames() []string {
 }
 
 // PushPreset is one preset of minecraft:pushable_by_entity (1.26.60
-// PushableByEntityPreset, reflection 0xE1D9D10).
+// PushableByEntityPreset, reflection).
 type PushPreset struct {
 	// Filter picks the preset, with self the pushed mob and other the
 	// pusher; nil passes.
@@ -55,8 +55,8 @@ type PushPreset struct {
 	PlaySoundImpulseThreshold float32
 }
 
-// DefaultPushPreset is the 1.26.60 default preset (static 0xFD47DE8,
-// initialized in 0x5B012D0).
+// DefaultPushPreset is the 1.26.60 default preset (static,
+// initialized).
 func DefaultPushPreset() PushPreset {
 	return PushPreset{
 		Mode: PushDefault, Strength: 0.05, MinDistance: 0.1, MaxDistance: math.MaxFloat32,
@@ -70,7 +70,7 @@ func DefaultPushPreset() PushPreset {
 type PushableByEntityConfig struct {
 	Presets []PushPreset
 	// Reach is how far past its box, on x and z, a mob pushes others
-	// (Mob::pushActors, 1.26.60 0xBFEE7F0, grows the box by 0.2).
+	// (grows the box by 0.2).
 	Reach float32
 	// MinecartAlign is how closely two minecarts must line up, as the
 	// cosine between the push and the pushed cart's heading, to share
@@ -111,7 +111,7 @@ func (p *PushableByEntity) Config() PushableByEntityConfig { return p.cfg }
 func (p *PushableByEntity) SetConfig(c PushableByEntityConfig) { p.cfg = c }
 
 // Preset returns the first preset whose filter passes with self the
-// pushed mob and other the pusher, else the default (1.26.60 0x75178D0).
+// pushed mob and other the pusher, else the default.
 // BDS falls back to a built-in boat or minecart preset for those entity
 // types behind a version toggle that was not identified; that fallback
 // is not ported, and vanilla boats and minecarts list their presets.
@@ -145,7 +145,7 @@ type PushWorld interface {
 	// (VehicleInputIntentComponent).
 	Controlled(a behavior.Actor) bool
 	// PullIn lets vehicle a take mob b as a passenger, or b take a, and
-	// stops the navigation of a mob pulled in (1.26.60 0x7517B50).
+	// stops the navigation of a mob pulled in.
 	PullIn(a, b behavior.Actor)
 	// IsMinecart reports that the actor is a minecart type.
 	IsMinecart(a behavior.Actor) bool
@@ -157,18 +157,18 @@ type PushWorld interface {
 	Velocity(a behavior.Actor) behavior.Vec3
 	SetVelocity(a behavior.Actor, v behavior.Vec3)
 	// PushedBy gives a the PushedByComponent naming by, as BDS's push
-	// (0x7516F70) does for the pushed side only, before the push lands. The
+	// does for the pushed side only, before the push lands. The
 	// component is removed from every entity once a tick.
 	PushedBy(a, by behavior.Actor)
 	// Push adds v to the actor's motion, pushed by by. The engine also
 	// sends a pushed player its motion and breaks a painting or leash knot
-	// pushed at all, as BDS's push apply (0x7518430) does.
+	// pushed at all, as BDS's push apply does.
 	Push(a, by behavior.Actor, v behavior.Vec3)
 	// PlaySound plays a level sound event at p.
 	PlaySound(a behavior.Actor, event int, p behavior.Vec3)
 }
 
-// PushActors is Mob::pushActors (1.26.60 0xBFEE7F0) for the ticking mob,
+// PushActors matches BDS for the ticking mob,
 // whose own component is self (nil when it cannot be pushed). Players are
 // skipped; they push in their own movement. dst is scratch space for the
 // actor query and is returned for reuse.
@@ -229,7 +229,7 @@ func (p *PushableByEntity) PushedBy(env *Env, w PushWorld, self, by behavior.Act
 	p.push(env, w, self, by, true)
 }
 
-// skipPush is 1.26.60 0x7517560 without its first check (a level
+// skipPush is 1.26.60 without its first check (a level
 // virtual, believed to be the client side test): either rides, or one
 // last left the other.
 func skipPush(w PushWorld, a, b behavior.Actor) bool {
@@ -237,7 +237,7 @@ func skipPush(w PushWorld, a, b behavior.Actor) bool {
 		w.PrevVehicle(a) == b.ID() || w.PrevVehicle(b) == a.ID()
 }
 
-// push is the 1.26.60 push (0x7516F70): it pushes the mob a away from the
+// push is the 1.26.60 push: it pushes the mob a away from the
 // pusher b and, unless selfOnly, b away from a when b's own preset pushes.
 func (p *PushableByEntity) push(env *Env, w PushWorld, a, b behavior.Actor, selfOnly bool) {
 	if skipPush(w, a, b) {
@@ -292,9 +292,9 @@ func (p *PushableByEntity) sound(env *Env, w PushWorld, pre PushPreset, a behavi
 	p.lastSound, p.played = now, true
 }
 
-// vectors returns the pushes on a and b for the preset's mode: default
-// (0x7518320), legacy_boat (0x7517D90), legacy_minecart (0x7517E90) and
-// ball (0x75180E0). dist is the mode's distance, never below MinDistance.
+// vectors returns the pushes on a and b for the preset's mode: default,
+// legacy_boat, legacy_minecart and
+// ball. dist is the mode's distance, never below MinDistance.
 func (p *PushableByEntity) vectors(w PushWorld, pre PushPreset, a, b behavior.Actor, dx, dz, dist float32) (va, vb behavior.Vec3) {
 	if dist <= 0 && pre.Mode != PushBall {
 		return
@@ -372,7 +372,7 @@ func tableSin(i int32) float32 {
 	return float32(math.Sin(float64(uint16(i)) * 2 * math.Pi / 65536))
 }
 
-// intersects is AABB::intersects: the boxes overlap with some volume.
+// intersects matches BDS: the boxes overlap with some volume.
 func intersects(a, b behavior.Box) bool {
 	return a.Max.X > b.Min.X && a.Min.X < b.Max.X &&
 		a.Max.Y > b.Min.Y && a.Min.Y < b.Max.Y &&

@@ -8,7 +8,7 @@ import (
 )
 
 // class is the BDS actor class a mob is made from, which decides its own
-// spawn check (Mob::checkSpawnRules and its overrides).
+// spawn check (its overrides).
 type class uint8
 
 const (
@@ -107,10 +107,10 @@ func floorPos(v path.Vec3) path.Pos {
 
 func below(p path.Pos) path.Pos { return path.Pos{X: p.X, Y: p.Y - 1, Z: p.Z} }
 
-// CheckSpawnRules is the mob's own spawn check (Mob::checkSpawnRules and its overrides),
-// which BDS also runs for a monster spawner's mobs: Spawner::spawnMob (1.26.60 0xCD8F8C0)
+// CheckSpawnRules is the mob's own spawn check (its overrides),
+// which BDS also runs for a monster spawner's mobs: BDS's code
 // asks it of every mob spawned with its natural spawn flag set, and the spawner's flag
-// changes nothing in Mob's (0xBFE5530) or Monster's (0xBD3E490, darkness first) checks.
+// changes nothing in Mob's or Monster's (darkness first) checks.
 func CheckSpawnRules(w World, lv *Level, r Rand, typ string, m Mob) bool {
 	return checkSpawn(w, lv, r, typ, m)
 }
@@ -164,7 +164,7 @@ func isMonster(c class) bool {
 	return false
 }
 
-// darkEnough is Monster::isDarkEnoughToSpawn; other classes pass.
+// darkEnough matches BDS; other classes pass.
 func darkEnough(w World, lv *Level, c class, m Mob) bool {
 	if c == classDarkMonster || c == classZeroWalkDark || c == classMagmaCube {
 		return true
@@ -191,7 +191,7 @@ func feet(m Mob) path.Pos {
 	return floorPos(v)
 }
 
-// mobCheck is Mob::checkSpawnRules.
+// mobCheck matches BDS.
 func mobCheck(w World, lv *Level, typ string, m Mob) bool {
 	p := feet(m)
 	if solidIn(w, m.Box()) && w.EntitiesIn(m.Box()) > 0 {
@@ -224,7 +224,7 @@ func walkTarget(w World, lv *Level, typ string, m Mob, p path.Pos) float32 {
 	return behavior.WalkTarget(behavior.WalkKindOf(typ), &b, walkWorld{w, lv}, p, m.FireImmune())
 }
 
-// waterCheck is WaterAnimal::checkSpawnRules: the mob is moved down a random
+// waterCheck matches BDS: the mob is moved down a random
 // amount below the top of the water column, then needs water around it.
 func waterCheck(w World, r Rand, m Mob) bool {
 	pos := m.Pos()

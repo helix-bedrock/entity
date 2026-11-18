@@ -21,7 +21,7 @@ const (
 	categoryMonsterClass uint32 = 0x80006
 )
 
-// categoryNames is BDS 1.26.60's name table (0x9DA1FC0), which also has
+// categoryNames is BDS 1.26.60's name table, which also has
 // names for unions of categories.
 func categoryNames(name string) uint32 {
 	switch name {
@@ -65,7 +65,7 @@ func categoryNames(name string) uint32 {
 	return 0
 }
 
-// ActorCategories reads an attack_types string as BDS does (0x9DA2D90): the
+// ActorCategories reads an attack_types string as BDS does: the
 // names split at spaces, tabs and NULs, each looked up without case, ORed.
 // "none" and unknown names add nothing.
 func ActorCategories(s string) uint32 {
@@ -76,8 +76,8 @@ func ActorCategories(s string) uint32 {
 	return c
 }
 
-// Categorized is an entity that knows its BDS actor categories (Actor
-// +544), which BDS sets from the entity's C++ class.
+// Categorized is an entity that knows its BDS actor categories (Actor),
+// which BDS sets from the entity's C++ class.
 type Categorized interface {
 	Categories() uint32
 }

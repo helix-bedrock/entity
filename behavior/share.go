@@ -14,21 +14,21 @@ type Sharer interface {
 	// Shareable reports ShareableComponent and ContainerComponent.
 	Shareable() bool
 	// ShareOffers appends what the mob may give away to dst: with nothing
-	// in the hand, the inventory slots the shareables allow (0x6D95FC0);
-	// else the hand when the shareables let it go (0x6D95E50).
+	// in the hand, the inventory slots the shareables allow;
+	// else the hand when the shareables let it go.
 	ShareOffers(dst []ShareOffer) []ShareOffer
 	// SharesWith reports a mob with a shareables description and a
 	// ShareableComponent.
 	SharesWith(a Actor) bool
 	// ShareWanted reports that the other wants more of the item than it
-	// holds in its hand (0x6D95B50 against its hand count).
+	// holds in its hand (against its hand count).
 	ShareWanted(other Actor, it Item) bool
 	// TakeShare takes the offered stack out of its inventory slot
-	// (0x7066EF0) and returns it; a hand offer returns the hand.
+	// and returns it; a hand offer returns the hand.
 	TakeShare(o ShareOffer) Item
-	// StoreItem puts a stack back in the inventory (0xB4A5790).
+	// StoreItem puts a stack back in the inventory.
 	StoreItem(it Item)
-	// ThrowItem throws the stack from the mob toward p (0xB309150).
+	// ThrowItem throws the stack from the mob toward p.
 	ThrowItem(it Item, toward Vec3)
 	// CanSee is the visibility cache test; true without the component.
 	CanSee(a Actor) bool
@@ -79,7 +79,7 @@ func NewShareItems(w World, m Sharer, c ShareItemsConfig) *ShareItems {
 	return &ShareItems{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, r2: c.GoalRadius * c.GoalRadius}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5AFD2B0): an offer and a
+// CanUse implements goal.Goal: an offer and a
 // nearby mob that wants it.
 func (g *ShareItems) CanUse() bool {
 	m := g.m
@@ -110,7 +110,7 @@ func (g *ShareItems) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5AFF230): the
+// CanContinueToUse implements goal.Goal: the
 // target must still be alive.
 func (g *ShareItems) CanContinueToUse() bool {
 	if !g.m.Shareable() || g.timer < shareGiveUp {
@@ -120,7 +120,7 @@ func (g *ShareItems) CanContinueToUse() bool {
 	return t != nil && t.Alive() && dist2(t.Pos(), g.m.Pos()) <= shareKeep2
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5AFF3B0): the item is held
+// Start implements goal.Goal: the item is held
 // out and the walk begins; the repath wait is only set when a path was
 // made.
 func (g *ShareItems) Start() {
@@ -135,7 +135,7 @@ func (g *ShareItems) Start() {
 	}
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x5AFF660): an unthrown item goes
+// Stop implements goal.Goal: an unthrown item goes
 // back.
 func (g *ShareItems) Stop() {
 	if !g.item.Empty() {
@@ -149,7 +149,7 @@ func (g *ShareItems) Stop() {
 	g.timer = 0
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5AFF9E0). BDS measures the
+// Tick implements goal.Goal. BDS measures the
 // throw distance from the target to itself, so with a goal_radius above 0
 // the item is thrown once the countdown runs out, however far away the
 // target is.
@@ -188,7 +188,7 @@ func (g *ShareItems) Tick() {
 	// BDS measures the mob against itself on the flat here, so only the
 	// height to the target's feet counts.
 	dy := m.Pos().Y - t.Box().Min.Y
-	g.repath = repathTicks(g.world.Random(), dy*dy) // BDS 1.26.60 tick 0x5AFF9E0
+	g.repath = repathTicks(g.world.Random(), dy*dy) // BDS 1.26.60 tick
 	if n := m.Nav(); n == nil || !n.MoveToActor(t, g.cfg.SpeedMultiplier) {
 		g.repath += itemRepathFailWait
 	}

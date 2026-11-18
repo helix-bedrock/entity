@@ -93,7 +93,7 @@ func NewAquaticChargeAttack(w World, m AquaticCharger, c AquaticChargeAttackConf
 	return &AquaticChargeAttack{base: base{mob: m, world: w, flags: flagsMove}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x4A7CB90).
+// CanUse implements goal.Goal.
 func (g *AquaticChargeAttack) CanUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || g.m.InBoat(t) {
@@ -102,7 +102,7 @@ func (g *AquaticChargeAttack) CanUse() bool {
 	return g.m.WasInWater(g.m)
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x4A7CD70).
+// CanContinueToUse implements goal.Goal.
 func (g *AquaticChargeAttack) CanContinueToUse() bool {
 	t := g.actor(g.m.Target())
 	if t == nil || !t.Alive() {
@@ -116,7 +116,7 @@ func (g *AquaticChargeAttack) CanContinueToUse() bool {
 	return d*d >= dist2(t.Pos(), g.m.Pos())
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x4A7CF00).
+// Start implements goal.Goal.
 func (g *AquaticChargeAttack) Start() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -135,15 +135,15 @@ func (g *AquaticChargeAttack) aim(t Actor) {
 
 func (g *AquaticChargeAttack) clearWander() { g.wander, g.last, g.stuck = Vec3{}, Vec3{}, 0 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x4A7D090).
+// Stop implements goal.Goal.
 func (g *AquaticChargeAttack) Stop() {
 	g.m.Event(chargeStopEvent, NoID)
 	g.hit, g.missed = false, false
 	g.clearWander()
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x4A7D160; reach 0x4A7D8C0,
-// knock 0x4A7D9C0).
+// Tick implements goal.Goal (BDS 1.26.60; reach,
+// knock).
 func (g *AquaticChargeAttack) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -239,7 +239,7 @@ func (g *AquaticChargeAttack) knock(t Actor) {
 		Extra: knockbackExtra, DirX: -dir.X, DirZ: -dir.Z})
 }
 
-// end finishes a charge (BDS 1.26.60 0x4A7D6B0): hit or missed, a random cooldown, and
+// end finishes a charge: hit or missed, a random cooldown, and
 // one step of swimming about.
 func (g *AquaticChargeAttack) end(hit bool) {
 	if hit {
@@ -264,7 +264,7 @@ func (g *AquaticChargeAttack) wanderRange() int32 {
 	return wanderLowRange
 }
 
-// wanderStep is one tick of swimming about (BDS 1.26.60 0x7519F00): steer at the
+// wanderStep is one tick of swimming about: steer at the
 // wander spot and pick a new one when it is reached or the mob is stuck.
 func (g *AquaticChargeAttack) wanderStep(attr float32) {
 	if !g.m.WasInWater(g.m) {
@@ -294,7 +294,7 @@ func (g *AquaticChargeAttack) wanderStep(attr float32) {
 	g.pickWander()
 }
 
-// pickWander is the swim spot picker (BDS 1.26.60 0x75194E0): up to five
+// pickWander is the swim spot picker: up to five
 // land helper spots under the water surface, else one straight ahead along
 // the rotation yaw. The depth roll is on the thread random.
 func (g *AquaticChargeAttack) pickWander() {
@@ -369,7 +369,7 @@ func (g *AquaticChargeAttack) setWander(w Vec3) {
 	}
 }
 
-// steer is the swim steering step (BDS 1.26.60 0x751A290): turn towards
+// steer is the swim steering step: turn towards
 // dir by at most limit degrees and take vel as the motion when it differs.
 func steer(m AquaticCharger, dir, vel Vec3, limit float32) {
 	if length2(dir) > steerEpsilon {

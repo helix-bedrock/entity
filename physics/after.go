@@ -23,7 +23,7 @@ func (b *Body) horizontalCollision() bool {
 // lavaWalking is set for a mob in lava whose navigation walks on lava.
 func (b *Body) lavaWalking() bool { return b.travel == TravelLava && b.Nav.CanWalkInLava }
 
-// afterMove is the pipeline after the move (0x4895C90 items 14 to 20).
+// afterMove is the pipeline after the move (items 14 to 20).
 func (b *Body) afterMove(w World) {
 	b.autoClimb = false
 	if b.horizontalCollision() {
@@ -60,7 +60,7 @@ func (b *Body) afterMove(w World) {
 	}
 }
 
-// waterDrag is MobMovementDrag::tickApplyWaterDrag (0x726B010).
+// waterDrag matches BDS.
 func (b *Body) waterDrag() {
 	d := float32(waterDrag)
 	switch {
@@ -90,7 +90,7 @@ func (b *Body) lavaDrag() {
 	}
 }
 
-// gravityStep is the gravity systems (0x7261270): the travel type picks an
+// gravityStep is the gravity systems: the travel type picks an
 // acceleration, then ApplyGravity adds it.
 func (b *Body) gravityStep(w World) {
 	b.gravity, b.slowFall = 0, false
@@ -119,7 +119,7 @@ func (b *Body) applyGravity() {
 	}
 }
 
-// airGravity is MobMovementGravity's ground and air rule (0x7261080).
+// airGravity is MobMovementGravity's ground and air rule.
 func (b *Body) airGravity() bool {
 	if !b.Flags.Has(FlagHasGravity) {
 		return false
@@ -135,7 +135,7 @@ func (b *Body) airGravity() bool {
 	return true
 }
 
-// liquidGravity is the water (0x7260A40) and lava (0x7260DC0) rule: a mob
+// liquidGravity is the water and lava rule: a mob
 // whose middle top and bottom are both in a non-air block floats unless its
 // navigation sinks it or, without navigation, it has gravity or no physics.
 func (b *Body) liquidGravity(w World) bool {
@@ -156,7 +156,6 @@ func (b *Body) liquidGravity(w World) bool {
 }
 
 // verticalDrag is MobMovementDrag's ground, air and lava-walk vertical drag
-// (0x726D710, 0x7271A80).
 func (b *Body) verticalDrag() {
 	var d float32
 	switch {
@@ -192,8 +191,8 @@ func damp(v, k float32) float32 {
 	return v * k
 }
 
-// applyFriction is MobMovementFriction's ground (0x7274A70), air
-// (0x72779A0) and lava-walk (0x727AF20) friction.
+// applyFriction is MobMovementFriction's ground, air
+// and lava-walk friction.
 func (b *Body) applyFriction() {
 	lavaWalk := b.lavaWalking()
 	if b.travel != TravelGround && b.travel != TravelAir && !lavaWalk {
@@ -237,7 +236,7 @@ func (b *Body) applyFriction() {
 	}
 }
 
-// climbOutOfLiquid is ClimbOutOfLiquidSystem (0x725DE90): a mob pressing
+// climbOutOfLiquid is ClimbOutOfLiquidSystem: a mob pressing
 // against a bank lifts out when the space above is free.
 func (b *Body) climbOutOfLiquid(w World) {
 	v := Vec3{X: b.Vel.X, Y: b.Vel.Y + 0.6 - b.Pos.Y + b.prePos.Y, Z: b.Vel.Z}

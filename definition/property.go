@@ -49,7 +49,7 @@ func (p *Parser) validPropertyName(name string) bool {
 	return ok && ns != "" && n != ""
 }
 
-// parseProperty reads one property the way 0xBC7BA50 does.
+// parseProperty reads one property the way does.
 func (p *Parser) parseProperty(name string, raw json.RawMessage, warn func(error)) (Property, error) {
 	prop := Property{Name: name}
 	if kindOf(raw) == kindNull {
@@ -223,7 +223,7 @@ func boolNumber(b bool) float32 {
 }
 
 // convert turns a set_property value into the property's type the way
-// 0xBC75200 does: ints truncate, bools are non-zero, enums need one of the
+// does: ints truncate, bools are non-zero, enums need one of the
 // values exactly. ok is false when BDS logs an error and sets nothing.
 func (prop *Property) convert(v Value) (Value, bool) {
 	switch prop.Type {

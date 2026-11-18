@@ -11,11 +11,11 @@ const (
 type Worker interface {
 	Dweller
 	// RainingAt reports rain on p: the biome there has rain, the level
-	// rains harder than 0.2 and the rain reaches p (0xC8D60C0).
+	// rains harder than 0.2 and the rain reaches p.
 	RainingAt(p Pos) bool
-	// PlayWorkSound plays the job site's sound event (0x54FDF30).
+	// PlayWorkSound plays the job site's sound event.
 	PlayWorkSound(sound string)
-	// StampWork tells the village the dweller worked (0xBD1D0F0).
+	// StampWork tells the village the dweller worked.
 	StampWork()
 }
 
@@ -32,7 +32,7 @@ type WorkConfig struct {
 	OnArrival           []string `json:"on_arrival"`
 }
 
-// DefaultWork returns the goal's BDS defaults (TypeSchema 0xE0F4FA0).
+// DefaultWork returns the goal's BDS defaults (TypeSchema).
 func DefaultWork() WorkConfig {
 	return WorkConfig{SpeedMultiplier: 0.5, WorkInRainTolerance: -1}
 }
@@ -48,8 +48,8 @@ type workGoal struct {
 	w    Worker
 	cfg  WorkConfig
 	step workStep
-	// cooldown, worked, soundTime and soundDelay are +212, +216, +220 and
-	// +224; rainCheck is +232.
+	// cooldown, worked, soundTime and soundDelay are,, and;
+	// rainCheck is.
 	rest, worked, soundTime, soundDelay, rainCheck int32
 	arrived                                        bool
 	sound                                          string
@@ -66,7 +66,7 @@ func (g *workGoal) rainedOff() bool {
 	return !g.cfg.CanWorkInRain && g.w.RainingAt(blockOf(g.aim))
 }
 
-// canUseWork is canUse (BDS 1.26.60 0x5662B70).
+// canUseWork is canUse.
 func (g *workGoal) canUseWork() bool {
 	if g.rest > 0 {
 		g.rest--
@@ -89,7 +89,7 @@ func (g *workGoal) canUseWork() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5663050).
+// CanContinueToUse implements goal.Goal.
 func (g *workGoal) CanContinueToUse() bool {
 	if !g.keepLite() {
 		return false
@@ -113,7 +113,7 @@ func (g *workGoal) CanContinueToUse() bool {
 	return !g.w.RainingAt(blockOf(g.aim))
 }
 
-// startWork is start (0x5661D10). The sound delay is drawn from the
+// startWork is start. The sound delay is drawn from the
 // thread random.
 func (g *workGoal) startWork() {
 	g.startPOI()
@@ -121,7 +121,7 @@ func (g *workGoal) startWork() {
 	g.soundDelay = randomInt(g.world.ThreadRandom(), g.cfg.SoundDelayMin, g.cfg.SoundDelayMax)
 }
 
-// Stop implements goal.Goal (0x56631E0).
+// Stop implements goal.Goal.
 func (g *workGoal) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -131,7 +131,7 @@ func (g *workGoal) Stop() {
 	g.stopPOI()
 }
 
-// Tick implements goal.Goal (0x5663340).
+// Tick implements goal.Goal.
 func (g *workGoal) Tick() {
 	if !g.mob.LookBusy() {
 		g.mob.LookAt(Vec3{X: g.aim.X + 0.5, Y: g.aim.Y + workLookY, Z: g.aim.Z + 0.5}, workLook, workLook)
@@ -156,7 +156,7 @@ func (g *workGoal) Tick() {
 // Work is WorkGoal: a villager walks to its job site and works there.
 type Work struct{ workGoal }
 
-// NewWork makes the goal (0x54FD090).
+// NewWork makes the goal.
 func NewWork(w World, m Worker, c WorkConfig) *Work {
 	g := &Work{}
 	g.initWork(w, m, c, g, g)
@@ -172,7 +172,7 @@ func (g *Work) CanUse() bool { return g.canUseWork() }
 // Start implements goal.Goal.
 func (g *Work) Start() { g.startWork() }
 
-// atWork is slot 21, useWorkstation (0x56636A0): the work sound every
+// atWork is slot 21, useWorkstation: the work sound every
 // sound delay, redrawn from the thread random.
 func (g *Work) atWork() {
 	if g.soundTime > g.soundDelay {
@@ -209,8 +209,7 @@ type WorkComposterConfig struct {
 	MinItemCount        int32 `json:"min_item_count"`
 }
 
-// DefaultWorkComposter returns the goal's BDS defaults (TypeSchema
-// 0xE0F3EC0).
+// DefaultWorkComposter returns the goal's BDS defaults (TypeSchema).
 func DefaultWorkComposter() WorkComposterConfig {
 	return WorkComposterConfig{WorkConfig: DefaultWork(), CanFillComposter: true, CanEmptyComposter: true, MinItemCount: 10}
 }
@@ -238,13 +237,13 @@ func (g *WorkComposter) find() bool { return false }
 // CanUse implements goal.Goal.
 func (g *WorkComposter) CanUse() bool { return g.canUseWork() }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5661B70).
+// Start implements goal.Goal.
 func (g *WorkComposter) Start() {
 	g.startWork()
 	g.uses, g.nextUse = 0, 0
 }
 
-// atWork is slot 21 (BDS 1.26.60 0x5661E90).
+// atWork is slot 21.
 func (g *WorkComposter) atWork() {
 	now := g.world.CurrentTick()
 	if g.nextUse == 0 {
@@ -272,7 +271,7 @@ func (g *WorkComposter) atWork() {
 }
 
 // useTime is the wait to the next use, drawn on the thread random (BDS
-// 1.26.60 0x5661E90).
+// 1.26.60).
 func (g *WorkComposter) useTime() uint64 {
 	return uint64(randomInt(g.world.ThreadRandom(), g.ccfg.UseBlockMin, g.ccfg.UseBlockMax))
 }

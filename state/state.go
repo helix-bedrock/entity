@@ -19,8 +19,8 @@
 // and the packets, and answers through Mob.
 //
 // The defaults are read from the BDS 1.26.60 parsers where they decompile
-// (breedable 0x6FCAED0, angry 0x735EE80, tamemount 0xC2BB260, healable
-// 0xDE9D860, despawn 0x723A360, nameable 0x71373A0, rideable 0x744CFB0). The logic is from 1.21.3
+// (breedable, angry, tamemount, healable,
+// despawn, nameable, rideable). The logic is from 1.21.3
 // (AgeableSystem, BreedableComponent, TameableComponent,
 // MountTamingComponent, AngrySystem, HealableComponent, DespawnComponent),
 // whose 1.26.60 versions were not found by name; the addresses are on each
@@ -51,7 +51,7 @@ const (
 const AttachHead = 3
 
 // ParticleHeart is the particle type BDS spreads over a mob in love or
-// newly tamed (ActorParticles::spawnParticlesInArea type 7).
+// newly tamed (type 7).
 const ParticleHeart = 7
 
 // The actor events (ActorEvent) the components broadcast, by BDS number.
@@ -67,40 +67,40 @@ const (
 type Mob interface {
 	behavior.Mob
 	// Health is the current and maximum health, as BDS's integer
-	// Actor::getHealth and getMaxHealth.
+	// BDS's code and getMaxHealth.
 	Health() (health, maxHealth int32)
 	// Heal adds health.
 	Heal(amount int32)
 	// SetOwner makes the entity the mob's owner.
 	SetOwner(id behavior.ID)
-	// Persistent reports Actor::isPersistent.
+	// Persistent reports BDS's code.
 	Persistent() bool
 	// ResetNoActionTime zeroes the inactivity timer.
 	ResetNoActionTime()
 	// ActorEvent broadcasts an actor event (EventTameFail and the rest).
 	ActorEvent(id int)
 	// DropItem spawns one of the item a descriptor names at the mob, as
-	// Actor::spawnAtLocation; false when the descriptor names no item.
+	// BDS's code; false when the descriptor names no item.
 	DropItem(item string) bool
 	// AddEffect gives the mob a mob effect by name.
 	AddEffect(name string, duration, amplifier int32)
-	// CanAttack is the mob's Mob::canAttack(target, forced) test.
+	// CanAttack is the mob's BDS's code(target, forced) test.
 	CanAttack(target behavior.Actor, forced bool) bool
 	// Particles spreads count particles of a type over the mob's box, as
-	// ActorParticles::spawnParticlesInArea.
+	// BDS's code.
 	Particles(kind, count int)
-	// MakeMad is the mount's refusal (BDS vtable call 496 on a failed
+	// MakeMad is the mount's refusal (call 496 on a failed
 	// taming ride; its name was not read): the engine's rear-up and sound.
 	MakeMad()
-	// Despawn removes the mob as BDS's Actor::despawn.
+	// Despawn removes the mob as BDS's code.
 	Despawn()
-	// Hurt deals damage of an actor damage cause, as Actor::hurt.
+	// Hurt deals damage of an actor damage cause, as BDS.
 	Hurt(cause int, amount float32)
 	// SetOnFire sets the mob on fire for a number of seconds.
 	SetOnFire(seconds int32)
-	// CanSeeDaylight is Actor::canSeeDaylight.
+	// CanSeeDaylight matches BDS.
 	CanSeeDaylight() bool
-	// InWaterOrRain is Actor::isInWaterOrRain.
+	// InWaterOrRain matches BDS.
 	InWaterOrRain() bool
 	// InPowderSnow reports powder snow in the mob's box shrunk by 0.001.
 	InPowderSnow() bool
@@ -118,7 +118,7 @@ type Mob interface {
 	// when it is not leashed; SetLeashHolder ties the leash to one.
 	LeashHolder() behavior.ID
 	SetLeashHolder(id behavior.ID)
-	// DropLeash breaks the leash as Actor::dropLeash, dropping the lead
+	// DropLeash breaks the leash as BDS, dropping the lead
 	// item and sending the change when asked.
 	DropLeash(dropItem, send bool)
 	// StopRiding takes the mob off its vehicle.
@@ -207,7 +207,7 @@ type Item struct {
 // Hand is the item a player interacts with, answered by the engine.
 type Hand interface {
 	// Matches reports that the held item matches a descriptor, as
-	// ItemDescriptor::sameItem.
+	// BDS's code.
 	Matches(item string) bool
 }
 
@@ -225,7 +225,7 @@ func match(h Hand, items []Item) int {
 	return -1
 }
 
-// emptyFilter is FilterGroup::empty: no tests and no subgroups.
+// emptyFilter matches BDS: no tests and no subgroups.
 func emptyFilter(f *definition.Filter) bool {
 	return f == nil || len(f.Groups) == 0 && len(f.Tests) == 0
 }

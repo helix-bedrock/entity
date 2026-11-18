@@ -57,7 +57,7 @@ func NewFloatWander(w World, m Mob, c FloatWanderConfig) *FloatWander {
 	return g
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x59F7E20).
+// CanUse implements goal.Goal.
 func (g *FloatWander) CanUse() bool { return g.mob.Nav() != nil && !g.mob.Flag(FlagResting) }
 
 // CanContinueToUse implements goal.Goal.
@@ -72,7 +72,7 @@ func (g *FloatWander) Stop() {}
 // air reports an air block at p.
 func (g *FloatWander) air(p Pos) bool { return g.world.Block(p).Name == airName }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x59F7EF0). Every roll is on the
+// Tick implements goal.Goal. Every roll is on the
 // thread random.
 func (g *FloatWander) Tick() {
 	m := g.mob
@@ -184,7 +184,7 @@ func (g *FloatWander) nearSurface(b Pos) bool {
 // floatSurfaceDirs is the order the surface test looks out: z-, x+, z+, x-.
 var floatSurfaceDirs = [...]Pos{{Z: -1}, {X: 1}, {Z: 1}, {X: -1}}
 
-// reaches is the must_reach sweep (BDS 1.26.60 0x59F8B30): the mob's box moved a block
+// reaches is the must_reach sweep: the mob's box moved a block
 // at a time toward t hits no block, nor liquid unless allowed.
 func (g *FloatWander) reaches(t Vec3, dist float32) bool {
 	if dist <= 1 {

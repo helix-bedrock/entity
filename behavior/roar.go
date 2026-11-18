@@ -66,24 +66,24 @@ func NewKnockbackRoar(w World, m Roarer, c KnockbackRoarConfig) *KnockbackRoar {
 	return &KnockbackRoar{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, counter: c.Cooldown}
 }
 
-// CanUse implements goal.Goal (0x574F8B0).
+// CanUse implements goal.Goal.
 func (g *KnockbackRoar) CanUse() bool {
 	c := g.counter
 	g.counter++
 	return c > g.cfg.Cooldown
 }
 
-// CanContinueToUse implements goal.Goal (0x574F8D0).
+// CanContinueToUse implements goal.Goal.
 func (g *KnockbackRoar) CanContinueToUse() bool { return g.ticks < g.cfg.Duration }
 
-// Start implements goal.Goal (0x574F8E0).
+// Start implements goal.Goal.
 func (g *KnockbackRoar) Start() {
 	g.m.SetFlag(FlagRoaring, true)
 	g.m.PlaySoundAt(roarSound, g.m.Pos())
 	g.counter, g.ticks = 0, 0
 }
 
-// Stop implements goal.Goal (0x574F980).
+// Stop implements goal.Goal.
 func (g *KnockbackRoar) Stop() {
 	g.m.SetFlag(FlagRoaring, false)
 	if g.cfg.OnRoarEnd != "" {
@@ -102,7 +102,7 @@ func (g *KnockbackRoar) pass(f RoarFilter, e Actor) bool {
 	return f(e, g.m, e)
 }
 
-// Tick implements goal.Goal (0x574F9E0).
+// Tick implements goal.Goal.
 func (g *KnockbackRoar) Tick() {
 	g.ticks++
 	if g.ticks != g.cfg.AttackTime {

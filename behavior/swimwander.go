@@ -51,9 +51,9 @@ type SwimWanderer interface {
 	Yaw() float32
 }
 
-// SwimWander is SwimWanderGoal (BDS 1.26.60 canUse 0x5696850,
-// canContinueToUse 0x5697AF0, start 0x5697C50, tick 0x5697C60, the steer
-// 0x5696B40; stop is BaseGoal's): a fish swims along its view, steering
+// SwimWander is SwimWanderGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, tick, the steer;
+// stop is BaseGoal's): a fish swims along its view, steering
 // away from blocks ahead and around it.
 type SwimWander struct {
 	base
@@ -214,7 +214,7 @@ func (g *SwimWander) push(p Vec3) Vec3 {
 	return scale(normalize(sum), swimPush)
 }
 
-// viewVector is Actor::getViewVector with no partial tick: the direction
+// viewVector matches BDS with no partial tick: the direction
 // of last tick's rotation, through BDS's sine table.
 func viewVector(m Mob) Vec3 {
 	pitch, yaw := m.PrevRotation()

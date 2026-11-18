@@ -99,7 +99,7 @@ func (g *FollowMob) outsideHome(a Actor) bool {
 	return ok && r > 0 && dist2(vecOf(c), a.Pos()) > float32(r)
 }
 
-// keeps is the getEntities predicate (0x5751A70).
+// keeps is the getEntities predicate.
 func (g *FollowMob) keeps(a Actor) bool {
 	if !a.IsMob() || !g.cfg.Filters(g.mob, a) {
 		return false
@@ -107,7 +107,7 @@ func (g *FollowMob) keeps(a Actor) bool {
 	return !spectator(g.world, a) && !g.outsideHome(a)
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x59F9A20): both rolls are on
+// CanUse implements goal.Goal: both rolls are on
 // the thread random.
 func (g *FollowMob) CanUse() bool {
 	m := g.mob
@@ -141,7 +141,7 @@ func (g *FollowMob) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x59FA020): the
+// CanContinueToUse implements goal.Goal: the
 // target must be alive.
 func (g *FollowMob) CanContinueToUse() bool {
 	t := g.actor(g.target)
@@ -152,11 +152,11 @@ func (g *FollowMob) CanContinueToUse() bool {
 	return dist2(g.mob.Pos(), t.Pos()) > g.cfg.StopDistance*g.cfg.StopDistance
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x59FA210).
+// Start implements goal.Goal.
 func (g *FollowMob) Start() { g.timer = 0 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x59FA220; the goal's abort
-// switch at +193 is always on).
+// Stop implements goal.Goal (BDS 1.26.60; the goal's abort
+// switch is always on).
 func (g *FollowMob) Stop() {
 	g.target = NoID
 	if n := g.mob.Nav(); n != nil {
@@ -164,7 +164,7 @@ func (g *FollowMob) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x59FA370): nothing happens
+// Tick implements goal.Goal: nothing happens
 // while the target is leashed or dead.
 func (g *FollowMob) Tick() {
 	t := g.actor(g.target)

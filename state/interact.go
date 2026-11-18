@@ -104,7 +104,7 @@ type GiveTrigger struct {
 type GiveableConfig struct{ Triggers []GiveTrigger }
 
 // Giveable is minecraft:giveable: a player gives the mob an item into its
-// inventory (BDS 1.26.60 getInteraction 0x7265080, callback 0x734AF40): the
+// inventory (BDS 1.26.60 getInteraction, callback): the
 // first trigger whose cooldown is over and whose items match, when the mob's
 // container has room. BDS's callback adds one of the item (no aux, no user
 // data) to the container, uses up the player's item, fires on_give and starts
@@ -169,7 +169,7 @@ type NameableConfig struct {
 	DefaultTrigger                   *definition.Trigger
 }
 
-// DefaultNameable is BDS's nameable (1.26.60 schema 0x71373A0:
+// DefaultNameable is BDS's nameable (1.26.60 schema:
 // allow_name_tag_renaming true, always_show false).
 func DefaultNameable() NameableConfig { return NameableConfig{AllowNameTagRenaming: true} }
 

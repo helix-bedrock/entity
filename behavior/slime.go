@@ -24,7 +24,7 @@ type Slime interface {
 	Yaw() float32
 }
 
-// wrapDegrees is mce::Math::wrapDegrees without the final fold: the angle
+// wrapDegrees is mce::BDS's code without the final fold: the angle
 // in [-180, 180).
 func wrapDegrees(a float32) float32 {
 	v := float32(math.Mod(float64(a+180), 360))
@@ -73,8 +73,7 @@ func (g *SlimeKeepOnJumping) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeKeepOnJumping) Stop() {}
 
-// Tick implements goal.Goal (BDS 1.26.60 canUse 0x5B05040, tick
-// 0x5B050F0).
+// Tick implements goal.Goal (BDS 1.26.60 canUse, tick).
 func (g *SlimeKeepOnJumping) Tick() { g.s.KeepMoving(g.cfg.SpeedMultiplier) }
 
 // SlimeFloatConfig is the JSON of minecraft:behavior.slime_float.
@@ -102,7 +101,7 @@ func NewSlimeFloat(w World, s Slime, c SlimeFloatConfig) *SlimeFloat {
 	return &SlimeFloat{base: base{mob: s, world: w}, s: s, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B04B20).
+// CanUse implements goal.Goal.
 func (g *SlimeFloat) CanUse() bool {
 	if _, ok := g.s.MoveTurn(); !ok || !g.s.HasJumpControl() {
 		return false
@@ -119,7 +118,7 @@ func (g *SlimeFloat) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeFloat) Stop() {}
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5B04D00): the jump roll is on
+// Tick implements goal.Goal: the jump roll is on
 // the thread random.
 func (g *SlimeFloat) Tick() {
 	if g.cfg.JumpChance > g.world.ThreadRandom().NextFloat() {
@@ -161,7 +160,7 @@ func NewSlimeRandomDirection(w World, s Slime, c SlimeRandomDirectionConfig) *Sl
 		minTime: int32(c.MinChangeTime * ticksPerSecond), addTime: c.AddRandomTime * ticksPerSecond}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B05250).
+// CanUse implements goal.Goal.
 func (g *SlimeRandomDirection) CanUse() bool {
 	if _, ok := g.s.MoveTurn(); !ok || g.actor(g.s.Target()) != nil {
 		return false
@@ -178,7 +177,7 @@ func (g *SlimeRandomDirection) Start() {}
 // Stop implements goal.Goal.
 func (g *SlimeRandomDirection) Stop() {}
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5B05450): both rolls are on the
+// Tick implements goal.Goal: both rolls are on the
 // thread random.
 func (g *SlimeRandomDirection) Tick() {
 	t := g.timer
@@ -236,7 +235,7 @@ func NewSlimeAttack(w World, m Mob, c SlimeAttackConfig) *SlimeAttack {
 	return &SlimeAttack{base: base{mob: m, world: w}, cfg: c, cooldown: int32(c.GrowTiredTime * ticksPerSecond)}
 }
 
-// target is the mob's target while it is alive (Actor vt+376 isAlive).
+// target is the mob's target while it is alive (isAlive).
 func (g *SlimeAttack) target() Actor {
 	t := g.actor(g.mob.Target())
 	if t == nil || !t.Alive() {
@@ -245,7 +244,7 @@ func (g *SlimeAttack) target() Actor {
 	return t
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B045D0).
+// CanUse implements goal.Goal.
 func (g *SlimeAttack) CanUse() bool {
 	if g.mob.Nav() == nil {
 		return false
@@ -260,7 +259,7 @@ func (g *SlimeAttack) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5B04710).
+// CanContinueToUse implements goal.Goal.
 func (g *SlimeAttack) CanContinueToUse() bool {
 	if g.target() == nil {
 		return false
@@ -276,7 +275,7 @@ func (g *SlimeAttack) Start() { g.timer = g.cooldown }
 // Stop implements goal.Goal.
 func (g *SlimeAttack) Stop() {}
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5B04780): a target being removed is still
+// Tick implements goal.Goal: a target being removed is still
 // pathed to, but not looked at.
 func (g *SlimeAttack) Tick() {
 	t := g.actor(g.mob.Target())

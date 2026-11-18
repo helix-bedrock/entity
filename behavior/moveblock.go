@@ -60,7 +60,7 @@ func NewMoveToBlock(w World, m Mob, c MoveToBlockConfig) *MoveToBlock {
 		radius2: c.GoalRadius * c.GoalRadius, stay: int32(c.StayDuration * ticksPerSecond)}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5439480): interval and chance
+// CanUse implements goal.Goal: interval and chance
 // roll on the mob's thread random.
 func (g *MoveToBlock) CanUse() bool {
 	if g.cooldown != 0 {
@@ -79,7 +79,7 @@ func (g *MoveToBlock) CanUse() bool {
 	return g.cfg.StartChance >= r.NextFloat() && g.find()
 }
 
-// find is the goal's block search (BDS 1.26.60 0x54395E0).
+// find is the goal's block search.
 func (g *MoveToBlock) find() bool {
 	g.hits = searchBlocks(g.hits[:0], g.world, blockOf(g.mob.Pos()), g.cfg.SearchRange, g.cfg.SearchHeight, blockSet(g.cfg.TargetBlocks))
 	p, ok := pickHit(g.world, g.hits, g.cfg.Method)
@@ -89,7 +89,7 @@ func (g *MoveToBlock) find() bool {
 	return ok
 }
 
-// valid is isValidTarget (0x5277D50): the block filters pass and the block
+// valid is isValidTarget: the block filters pass and the block
 // is still one of the list.
 func (g *MoveToBlock) valid(p Pos) bool {
 	if f := g.cfg.BlockFilters; f != nil && !f(g.mob, g.actor(g.mob.Target()), p) {
@@ -121,7 +121,7 @@ func (g *MoveToBlock) endOff(n Navigator) bool {
 	return dist2(add(vecOf(end), Vec3{X: 0.5, Y: 0.5, Z: 0.5}), g.centre()) > moveBlockNear
 }
 
-// CanContinueToUse implements goal.Goal (0x5277AE0).
+// CanContinueToUse implements goal.Goal.
 func (g *MoveToBlock) CanContinueToUse() bool {
 	n := g.mob.Nav()
 	if n == nil {
@@ -160,7 +160,7 @@ func (g *MoveToBlock) Stop() {
 	g.fails = 0
 }
 
-// moveToBlock is moveMobToBlock (0x52783B0): the path's end is offset by
+// moveToBlock is moveMobToBlock: the path's end is offset by
 // target_offset.
 func (g *MoveToBlock) moveToBlock() {
 	n := g.mob.Nav()
@@ -180,7 +180,7 @@ func (g *MoveToBlock) repath() {
 	}
 }
 
-// pathStuck is BDS's path stuck check (0x721A5E0): true without a path or
+// pathStuck is BDS's path stuck check: true without a path or
 // when the path starts where the stored start is; a new start is stored.
 func pathStuck(n Navigator, last *Pos) bool {
 	if n == nil || !n.Held() {
@@ -204,7 +204,7 @@ func (g *MoveToBlock) fire(events []string) {
 	}
 }
 
-// Tick implements goal.Goal (0x5277E80).
+// Tick implements goal.Goal.
 func (g *MoveToBlock) Tick() {
 	if !g.fired && g.reached {
 		g.fire(g.cfg.OnReach)

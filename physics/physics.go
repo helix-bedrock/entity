@@ -64,7 +64,7 @@ const (
 type Block struct {
 	Air      bool
 	Material path.Material
-	// Friction is the block's friction (block permutation +176).
+	// Friction is the block's friction (block permutation).
 	Friction             float32
 	SoulSand, PowderSnow bool
 	// Climbable is block flag bit 33 (ladders, vines and the like).

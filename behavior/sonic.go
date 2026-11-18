@@ -13,15 +13,15 @@ type SonicBoomer interface {
 	Targeter
 	Knocker
 	// SonicHit hurts the entity with the sonic_boom damage cause (31) when
-	// it is not immune to it, the way BDS's Actor::hurt does.
+	// it is not immune to it, the way BDS's code does.
 	SonicHit(a Actor, damage float32)
-	// SonicCooldown is the warden's own sonic boom cooldown (Warden +1112),
+	// SonicCooldown is the warden's own sonic boom cooldown,
 	// which every sonic_boom goal of the warden shares; ok is false while
 	// it is unset.
 	SonicCooldown() (until uint64, ok bool)
 	SetSonicCooldown(until uint64)
 	// LevelEventXYZ broadcasts the level event with a compound of x, y
-	// and z float tags (Level vtable +1680).
+	// and z float tags.
 	LevelEventXYZ(id int32, p Vec3)
 }
 
@@ -69,7 +69,7 @@ type SonicBoom struct {
 	// end is when the attack ends, attack when the boom fires, cooldown
 	// when the goal may start again.
 	end, attack, cooldown timer
-	// unused is the goal's never-set stamp at +144 that tick still checks.
+	// unused is the goal's never-set stamp that tick still checks.
 	unused timer
 }
 
@@ -78,7 +78,7 @@ func NewSonicBoom(w World, m SonicBoomer, c SonicBoomConfig) *SonicBoom {
 	return &SonicBoom{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0xBDCCFB0).
+// CanUse implements goal.Goal.
 func (g *SonicBoom) CanUse() bool {
 	m := g.m
 	t := g.actor(m.Target())
@@ -98,7 +98,7 @@ func (g *SonicBoom) CanUse() bool {
 	return withinBox(m.Pos(), t.Pos(), g.cfg.AttackRangeHorizontal, g.cfg.AttackRangeVertical)
 }
 
-// CanContinueToUse implements goal.Goal (0xBDCD280).
+// CanContinueToUse implements goal.Goal.
 func (g *SonicBoom) CanContinueToUse() bool {
 	if g.end.set && g.world.CurrentTick() > g.end.at {
 		return false
@@ -113,7 +113,7 @@ func (g *SonicBoom) playSound(s int) {
 	}
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0xBFA1C50): the look is only
+// Start implements goal.Goal: the look is only
 // set while the look control is free.
 func (g *SonicBoom) Start() {
 	m := g.m
@@ -134,7 +134,7 @@ func (g *SonicBoom) Start() {
 	g.playSound(g.cfg.ChargeSound)
 }
 
-// Stop implements goal.Goal (0xBDCD7F0).
+// Stop implements goal.Goal.
 func (g *SonicBoom) Stop() {
 	m := g.m
 	m.SetFlag(FlagSonicBoom, false)
@@ -146,7 +146,7 @@ func (g *SonicBoom) Stop() {
 	g.cooldown = timer{at: at, set: true}
 }
 
-// Tick implements goal.Goal (0xBDCD980).
+// Tick implements goal.Goal.
 func (g *SonicBoom) Tick() {
 	m := g.m
 	t := g.actor(m.Target())

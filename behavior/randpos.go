@@ -13,7 +13,7 @@ const scoreFloor = -99999
 // ignored.
 const homeSlack = 4
 
-// posSearch is the arguments of BDS's random position helper (0xBD0A310).
+// posSearch is the arguments of BDS's random position helper.
 type posSearch struct {
 	h, v int32
 	// yOffset shifts the vertical range.
@@ -70,7 +70,7 @@ func randomPos(w World, m Mob, s posSearch) (Vec3, bool) {
 	if s.tries <= 0 {
 		return Vec3{}, false
 	}
-	// BDS's wrappers draw from Level::getThreadRandom.
+	// BDS's wrappers draw from BDS's code.
 	r := w.ThreadRandom()
 	res := restrict(m, s.h)
 	flier, swimmer := s.air || m.Flag(FlagCanFly), m.Flag(FlagCanSwim)
@@ -186,7 +186,7 @@ func snap(w World, c Pos, lo, hi int32, collision bool) (int32, bool) {
 	return 0, false
 }
 
-// awayPos is BDS's away-from helper (0xBD0B530): a random position whose
+// awayPos is BDS's away-from helper: a random position whose
 // offset points away from from. Every caller in 1.26.52 passes 10 tries.
 func awayPos(w World, m Mob, h, v int32, from Vec3, collision bool) (Vec3, bool) {
 	p := m.Pos()
@@ -194,7 +194,7 @@ func awayPos(w World, m Mob, h, v int32, from Vec3, collision bool) (Vec3, bool)
 	return randomPos(w, m, posSearch{h: h, v: v, dir: &d, collision: collision, tries: landTries})
 }
 
-// towardsPos is BDS's towards helper (0xBD09C60): a random position whose
+// towardsPos is BDS's towards helper: a random position whose
 // offset points towards to, with 10 tries and the ground test.
 func towardsPos(w World, m Mob, h, v int32, to Vec3) (Vec3, bool) {
 	d := sub(to, m.Pos())
@@ -205,42 +205,42 @@ func towardsPos(w World, m Mob, h, v int32, to Vec3) (Vec3, bool) {
 // caller in 1.26.52 passes 10.
 const landTries = 10
 
-// landPos is BDS's land position helper (0xBD09940).
+// landPos is BDS's land position helper.
 func landPos(w World, m Mob, h, v int32) (Vec3, bool) {
 	return randomPos(w, m, posSearch{h: h, v: v, tries: landTries})
 }
 
-// WalkKind is which C++ class's Mob::getWalkTargetValue (vtable slot 170)
+// WalkKind is which C++ class's BDS's code
 // a mob has: the score random strolling, panic and the spawner give a
 // position. Checked against BDS 1.26.60 with the component oracle.
 type WalkKind uint8
 
 const (
-	// WalkMob is the base Mob (0xBFEF6E0): every position scores 0. The
+	// WalkMob is the base Mob: every position scores 0. The
 	// pillager, vindicator, ghast, axolotl and glow squid override back to
 	// this.
 	WalkMob WalkKind = iota
-	// WalkAnimal (0xBEAA670) scores 10 over grass, -0.5 over magma unless
+	// WalkAnimal scores 10 over grass, -0.5 over magma unless
 	// fire immune, else brightness - 0.5.
 	WalkAnimal
-	// WalkMonster (0xBD40530) scores -0.5 over magma unless fire immune,
+	// WalkMonster scores -0.5 over magma unless fire immune,
 	// else 0.5 - brightness.
 	WalkMonster
-	// WalkSilverfish (0xBD15FA0) scores 10 inside its hideout stones, else
+	// WalkSilverfish scores 10 inside its hideout stones, else
 	// as a monster.
 	WalkSilverfish
-	// WalkSlime (0xBD18FC0, also magma cubes and sulfur cubes) scores -0.5
+	// WalkSlime (also magma cubes and sulfur cubes) scores -0.5
 	// over magma unless fire immune, else 0.
 	WalkSlime
-	// WalkStrider (0xBD81EC0) scores 10 inside lava, else 0.
+	// WalkStrider scores 10 inside lava, else 0.
 	WalkStrider
-	// WalkTurtle (0xBD82CD0) scores inside water by the water above it.
+	// WalkTurtle scores inside water by the water above it.
 	WalkTurtle
-	// WalkDolphin (0xBEAE8D0) scores 10 inside water, else 0.
+	// WalkDolphin scores 10 inside water, else 0.
 	WalkDolphin
-	// WalkMooshroom (0xBEB64F0) scores 10 over mycelium, else as an animal.
+	// WalkMooshroom scores 10 over mycelium, else as an animal.
 	WalkMooshroom
-	// WalkParrot (0xBEB9980) scores 10 in air or inside a log or wood,
+	// WalkParrot scores 10 in air or inside a log or wood,
 	// else 0.
 	WalkParrot
 )
@@ -298,7 +298,7 @@ func DefaultWalkBlocks() WalkBlocks {
 
 // WalkKindOf is the walk target kind of a vanilla mob identifier: the C++
 // class BDS 1.26.60's ActorFactory makes it from, read from each live mob's
-// vtable by the component oracle. Identifiers not listed are plain Mobs.
+// by the component oracle. Identifiers not listed are plain Mobs.
 func WalkKindOf(id string) WalkKind {
 	switch id {
 	case "minecraft:cow", "minecraft:chicken", "minecraft:pig", "minecraft:sheep", "minecraft:wolf",
@@ -353,14 +353,14 @@ var brightnessRamp = [16]float32{0, 0.017543858, 0.037037037, 0.058823526, 0.083
 	0.14285712, 0.1794872, 0.22222225, 0.27272731, 0.33333334, 0.40740743, 0.50000006,
 	0.61904764, 0.77777773, 1}
 
-// BrightnessRamp is BlockSource::getBrightness for a raw light level (0 to
+// BrightnessRamp matches BDS for a raw light level (0 to
 // 15; higher levels count as 15): the ramp value plus the dimension's
-// ambient light, clamped to 0..1 (DimensionBrightnessRamp::buildBrightnessRamp).
+// ambient light, clamped to 0..1.
 func BrightnessRamp(raw uint8, ambient float32) float32 {
 	return min(max(brightnessRamp[min(raw, 15)]+ambient, 0), 1)
 }
 
-// WalkTarget is Mob::getWalkTargetValue for the class kind at p. Scores
+// WalkTarget matches BDS for the class kind at p. Scores
 // over a block read the block below p; scores in a block read p itself.
 func WalkTarget(k WalkKind, b *WalkBlocks, w WalkWorld, p Pos, fireImmune bool) float32 {
 	switch k {

@@ -121,7 +121,7 @@ func (in *Instance) Components() Group { return in.components }
 // priority start in this order.
 func (in *Instance) Order() []string { return in.order }
 
-// Refresh rebuilds the actor the way Actor::reload does: on the first call
+// Refresh rebuilds the actor the way BDS's code does: on the first call
 // it sets the property defaults and runs the init event; then it folds the
 // group stack and calls rebuild with the components while further group and
 // property changes are queued, applies the pending property values, and
@@ -198,7 +198,6 @@ func (in *Instance) Execute(event string, ctx Tester) bool {
 }
 
 // Trigger runs an event as part of an event chain, sharing its guard
-// (ActorDefinitionDescriptor::_executeEvent, 0xB30C5F0).
 func (in *Instance) Trigger(event string, ctx Tester, g *Guard) bool {
 	key := guardKey{event: event, nameTag: in.host.NameTag()}
 	if slices.Contains(g.seen, key) {
@@ -252,7 +251,7 @@ func (in *Instance) RunTrigger(t *Trigger, ctx Tester) {
 	}
 }
 
-// runTrigger sends a trigger to its target (0xB30FB40). player, parent,
+// runTrigger sends a trigger to its target. player, parent,
 // damager, holder and item do nothing in BDS.
 func (in *Instance) runTrigger(t *Trigger, ctx Tester, g *Guard) {
 	switch t.Target {
@@ -337,7 +336,7 @@ func (in *Instance) propertyIndex(name string) int {
 }
 
 // setProperties runs a set_property response: literal bools and numbers are
-// used as they are, strings go to the engine's Molang (0xD56D800).
+// used as they are, strings go to the engine's Molang.
 func (in *Instance) setProperties(data json.RawMessage, ctx Tester) {
 	var obj map[string]json.RawMessage
 	if json.Unmarshal(data, &obj) != nil {

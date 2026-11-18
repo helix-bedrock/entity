@@ -60,7 +60,7 @@ func (g *SwimUpForBreath) CanUse() bool {
 }
 
 // layersUp counts the layers from the mob up to the first one with a
-// surface cell (0xBDD0020); 0 when there is none below the height limit.
+// surface cell; 0 when there is none below the height limit.
 func (g *SwimUpForBreath) layersUp() int32 {
 	p := g.mob.Pos()
 	r := g.cfg.SearchRadius
@@ -109,7 +109,7 @@ func (g *SwimUpForBreath) Tick() {
 	g.find()
 }
 
-// find is the goal's search (0xBDD0310): the surface cells of the first
+// find is the goal's search: the surface cells of the first
 // layer up that has any, of which the last within the radius by x + z
 // distance becomes the target.
 func (g *SwimUpForBreath) find() {

@@ -34,8 +34,8 @@ func NewBreed(w World, m Breeder, speed float32) *Breed {
 	return &Breed{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, speed: speed, partner: NoID}
 }
 
-// closeEnough is BDS 1.26.60's breeding reach (inlined in BreedGoal::canUse
-// 0x5518130 and tick 0x5518E70). Each mob is a box of its width and height
+// closeEnough is BDS 1.26.60's breeding reach (inlined in BDS's code
+// and tick). Each mob is a box of its width and height
 // centred on its position, feet included, with the mob at at. For mobs half
 // a block or bigger (the larger of width and height), each axis takes the
 // point halfway between the two centres, clamps it into each box, and the

@@ -7,8 +7,7 @@ type ItemBody interface {
 	Hurter
 	// Armor is the item in an armor slot.
 	Armor(slot int) Item
-	// CanPickUpItem is the mob's own pick-up test for a stack (Mob
-	// vt+752).
+	// CanPickUpItem is the mob's own pick-up test for a stack (Mob).
 	CanPickUpItem(it Item) bool
 	// DropItem spawns the stack as an item entity at the mob.
 	DropItem(it Item)
@@ -123,7 +122,7 @@ func (i *Items) AddToInventory(it Item) bool {
 func (i *Items) StoreItem(it Item) { i.AddToInventory(it) }
 
 // CanStoreHand reports an inventory, an item in the main hand and room for
-// it (0x5757660).
+// it.
 func (i *Items) CanStoreHand() bool {
 	h := i.Body.Slot(SlotMainhand)
 	return i.Inventory != nil && !h.Empty() && i.Inventory.CanAdd(h)
@@ -132,8 +131,8 @@ func (i *Items) CanStoreHand() bool {
 // EquipPending reports equip_item holding a stack to put on.
 func (i *Items) EquipPending() bool { return i.Equip != nil && i.Equip.Pending }
 
-// PickupWanted is pickup_items' test of one item entity (1.26.60
-// 0x55074E0): the shareables test gets can_pickup_any_item, and
+// PickupWanted is pickup_items' test of one item entity (1.26.60):
+// the shareables test gets can_pickup_any_item, and
 // pickup_same_items_as_in_hand adds the hand's stacking rules.
 func (i *Items) PickupWanted(a Actor, f PickupFlags) bool {
 	it, ok := i.Body.ItemOf(a)
@@ -219,8 +218,8 @@ func (i *Items) PickUp(a Actor, f PickupFlags) {
 	b.SendTakeItem(a)
 }
 
-// addFrom moves n of the item entity's stack into the inventory
-// (0xB2E8DC0); what does not fit stays on the ground.
+// addFrom moves n of the item entity's stack into the inventory;
+// what does not fit stays on the ground.
 func (i *Items) addFrom(a Actor, it Item, n int32) {
 	if i.Inventory == nil {
 		return
@@ -231,7 +230,7 @@ func (i *Items) addFrom(a Actor, it Item, n int32) {
 	i.Body.SetItemCount(a, it.Count-n+rest.Count)
 }
 
-// startAdmiring is AdmireItemComponent's start (0x71B26C0): nothing while
+// startAdmiring is AdmireItemComponent's start: nothing while
 // the mob is still in its hurt cooldown.
 func (i *Items) startAdmiring(it Item, giver ID) {
 	s := i.Admire
@@ -273,7 +272,7 @@ func (i *Items) AdmireEnd() uint64 {
 	return i.Admire.End
 }
 
-// EndAdmiring clears the admire component (0x71B2940).
+// EndAdmiring clears the admire component.
 func (i *Items) EndAdmiring() {
 	if i.Admire != nil {
 		c := i.Admire.Config
@@ -323,7 +322,7 @@ func (i *Items) ClearPendingEquip() {
 	}
 }
 
-// ShareOffers appends what the mob may give away (0x59270F0): with an empty
+// ShareOffers appends what the mob may give away: with an empty
 // hand one offer per kind of item in the inventory, else the hand.
 func (i *Items) ShareOffers(dst []ShareOffer) []ShareOffer {
 	if i.Inventory == nil {

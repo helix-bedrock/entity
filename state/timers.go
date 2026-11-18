@@ -7,7 +7,7 @@ import (
 	"github.com/helix-bedrock/entity/definition"
 )
 
-// CauseNone is ActorDamageCause::None.
+// CauseNone is None.
 const CauseNone = -1
 
 // DamageOverTimeConfig is minecraft:damage_over_time (1.21.3 schema
@@ -135,7 +135,7 @@ type InstantDespawnConfig struct {
 	RemoveChildEntities bool
 }
 
-// InstantDespawn is InstantDespawnComponent::tick (1.21.3 0x1405BC500):
+// InstantDespawn matches BDS (1.21.3 0x1405BC500):
 // the mob despawns as soon as the chunks around it are loaded. With
 // remove_child_entities, onDespawn (0x1405B7250) also removes the mobs it
 // leashes; that is the engine's when the mob despawns.
@@ -345,7 +345,7 @@ type BribeableConfig struct {
 	Cooldown int32
 	Items    []string
 	// BribeTime is how long a bribe lasts (BDS 1.26.60's bribe callback
-	// 0x7404580 sets 200 ticks), Flag the actor flag it sets (58, which the
+	// sets 200 ticks), Flag the actor flag it sets (58, which the
 	// treasure hunt reads and clears).
 	BribeTime int32
 	Flag      int
@@ -356,10 +356,10 @@ func DefaultBribeable() BribeableConfig {
 	return BribeableConfig{Cooldown: 2 * ticksPerSecond, BribeTime: 200, Flag: behavior.FlagTreasure}
 }
 
-// Bribeable is the running component (BDS 1.26.60: getInteraction
-// 0x7375240, item check 0x7375140, callback 0x7404580, BribeableSystem::tick
-// 0x5B87310). The engine runs the interaction: Bribe checks and bribes, and
-// the engine shows the mob eating the item (Actor::feed) and uses it up.
+// Bribeable is the running component (BDS 1.26.60: getInteraction,
+// item check, callback, BDS's code).
+// The engine runs the interaction: Bribe checks and bribes, and
+// the engine shows the mob eating the item and uses it up.
 type Bribeable struct {
 	cfg      BribeableConfig
 	time     int32
@@ -376,7 +376,6 @@ func (b *Bribeable) Config() BribeableConfig { return b.cfg }
 func (b *Bribeable) SetConfig(c BribeableConfig) { b.cfg = c }
 
 // CanBribe reports that the bribe time and the cooldown are both over
-// (0x7375140).
 func (b *Bribeable) CanBribe() bool { return b.time <= 0 && b.cooldown <= 0 }
 
 // Takes reports that the held item is one of bribe_items and the mob can be
@@ -404,12 +403,12 @@ func (b *Bribeable) Bribe(m Mob) {
 }
 
 // Bribed starts the cooldown, as BDS's client does when a bribe runs out
-// (0x7375040, client only; the server never starts it).
+// (client only; the server never starts it).
 func (b *Bribeable) Bribed() { b.cooldown = b.cfg.Cooldown }
 
-// Tick is BribeableSystem::tick on the server (1.26.60 0x5B87310): the
+// Tick matches BDS on the server: the
 // bribe time counts down, and a running cooldown clears it. The flag stays
-// until the treasure hunt clears it; the client's reset (0x7375040) is not
+// until the treasure hunt clears it; the client's reset is not
 // run on a server.
 func (b *Bribeable) Tick() {
 	if b.time > 0 {
@@ -588,12 +587,12 @@ func (e *Explode) Tick(env *Env, a Actions) {
 }
 
 // ExplodeRemoved is what removing minecraft:explode does (BDS 1.26.60's component
-// storage removal 0xB4AE1E0 -> 0x725A1D0): the ignited flag drops. A creeper whose
+// storage removal): the ignited flag drops. A creeper whose
 // target walks out of range loses its exploding group this way, and its swell then
 // shrinks back.
 func ExplodeRemoved(m behavior.Mob) { m.SetFlag(FlagIgnited, false) }
 
-// Detonate is ExplodeComponent::explode (1.21.3 0x1405AFFF0): fire and
+// Detonate matches BDS (1.21.3 0x1405AFFF0): fire and
 // block breaking obey mobGriefing when asked to, then the mob is removed.
 func (e *Explode) Detonate(env *Env, a Actions, at behavior.Vec3) {
 	grief := env.World.MobGriefing()

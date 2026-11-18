@@ -96,7 +96,7 @@ func (c *Context) pushPreset(o Object) state.PushPreset {
 }
 
 // pushable reads the old minecraft:pushable as the 1.26.60 data upgrade
-// (0xB363120) does: a missing or true is_pushable means
+// does: a missing or true is_pushable means
 // pushable_by_entity, a missing or true is_pushable_by_piston means
 // pushable_by_block.
 func (c *Context) pushable(j Object) (byEntity, byBlock bool) {
@@ -313,7 +313,7 @@ func (c *Context) readPhysics(s, prev *state.Set, read func(string) (Object, boo
 }
 
 // physicsChanged applies minecraft:physics's three flags when the
-// component is added or its JSON changes, as PhysicsDefinition::initialize
+// component is added or its JSON changes, as BDS
 // does, drops a removed buoyant component's mob by its drag, and sets the
 // marker components' flags as they come and go. What BDS does with the
 // flags when minecraft:physics is removed was not read; they are left.

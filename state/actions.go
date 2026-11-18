@@ -10,10 +10,10 @@ import "github.com/helix-bedrock/entity/behavior"
 // than one core the engine must order them the way it orders any other
 // cross-entity change.
 type Actions interface {
-	// Hurt damages target by an actor damage cause, as Actor::hurt with an
+	// Hurt damages target by an actor damage cause, as BDS with an
 	// ActorDamageByActorSource from by (behavior.NoID for no source).
 	Hurt(target behavior.Actor, by behavior.ID, cause int, amount float32)
-	// CanReceiveEffect is Actor::canReceiveMobEffectsFromGameplay and not
+	// CanReceiveEffect matches BDS and not
 	// being invulnerable to an entity attack from by.
 	CanReceiveEffect(target behavior.Actor, by behavior.ID) bool
 	// GiveEffect adds a mob effect by name for a number of ticks.
@@ -22,12 +22,12 @@ type Actions interface {
 	EffectTicks(target behavior.Actor, effect string) int32
 	// RemoveEffect removes a mob effect by name.
 	RemoveEffect(target behavior.Actor, effect string)
-	// Teleport tries to move the mob to p as TeleportComponent::teleport
+	// Teleport tries to move the mob to p as BDS
 	// does (finding ground below p, checking the space and liquids, the
 	// sound and particles); false when it cannot.
 	Teleport(p behavior.Vec3) bool
 	// PlaceBlock places the block a descriptor names at p when the block
-	// there is air and the block may be placed (BlockLegacy::mayPlace),
+	// there is air and the block may be placed,
 	// with block update flags 3.
 	PlaceBlock(p behavior.Pos, block string) bool
 	// Explode makes an explosion caused by the mob.

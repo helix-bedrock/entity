@@ -5,7 +5,7 @@ import (
 	"github.com/helix-bedrock/entity/definition"
 )
 
-// RailSensorConfig is minecraft:rail_sensor (1.26.60 0x7157630).
+// RailSensorConfig is minecraft:rail_sensor.
 type RailSensorConfig struct {
 	// CheckBlockTypes runs on_deactivate every tick the mob is off an
 	// activator rail.
@@ -53,7 +53,7 @@ func (r *RailSensor) Config() RailSensorConfig { return r.cfg }
 // SetConfig replaces the settings.
 func (r *RailSensor) SetConfig(c RailSensorConfig) { r.cfg = c }
 
-// Tick is RailActivatorSystem::_tickComponent (1.21.3 0x14015C6A0). It
+// Tick matches BDS (1.21.3 0x14015C6A0). It
 // fires every tick, not only on a change: on_activate on a powered
 // activator rail, on_deactivate on an unpowered one and, with
 // check_block_types, off one.

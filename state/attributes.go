@@ -35,7 +35,7 @@ type AttackConfig struct {
 	EffectDuration, EffectAmplifier int32
 }
 
-// DefaultAttack is BDS's attack (1.26.60 parser 0x6FCAB10: damage 0,
+// DefaultAttack is BDS's attack (1.26.60 parser: damage 0,
 // effect_duration 1, effect_amplifier 0; effect_amplifier is new in
 // 1.26.60).
 func DefaultAttack() AttackConfig { return AttackConfig{EffectDuration: 1} }
@@ -48,8 +48,8 @@ type SlotDropChance struct {
 
 // EquipmentConfig is minecraft:equipment: the loot table the engine fills
 // the mob's equipment from, and each slot's drop chance (default 0,
-// 1.21.3 EquipmentTableDefinition::buildSchema 0x142A127B0; 1.26.60
-// parser 0x6FF88B0).
+// 1.21.3 BDS's code 0x142A127B0; 1.26.60
+// parser).
 type EquipmentConfig struct {
 	Table          string
 	SlotDropChance []SlotDropChance
@@ -67,7 +67,7 @@ type EquipSlot struct {
 	OnUnequip     *definition.Trigger
 }
 
-// EquippableConfig is minecraft:equippable (1.26.60 parser 0x7251020).
+// EquippableConfig is minecraft:equippable (1.26.60 parser).
 type EquippableConfig struct{ Slots []EquipSlot }
 
 // Equippable is minecraft:equippable. The engine moves the items; entity
@@ -121,7 +121,7 @@ type ExperienceRewardConfig struct {
 }
 
 // ScaleConfig is minecraft:scale. Its default of 1 was not read from BDS
-// (ScaleDefinition::buildSchema 0x14062CE00 shows none).
+// (0x14062CE00 shows none).
 type ScaleConfig struct{ Value float32 }
 
 // DefaultScale is the scale's default.
@@ -135,13 +135,13 @@ type AttackCooldownConfig struct {
 }
 
 // DefaultAttackCooldown is BDS's attack_cooldown (1.21.3
-// AttackCooldownDefinition::buildSchema 0x140562020: 0 to 1 seconds).
+// BDS's code 0x140562020: 0 to 1 seconds).
 func DefaultAttackCooldown() AttackCooldownConfig {
 	return AttackCooldownConfig{Time: behavior.Range[float32]{Min: 0, Max: 1}}
 }
 
 // AttackCooldown is minecraft:attack_cooldown (1.21.3
-// AttackCooldownDefinition::initialize 0x140569B90,
+// BDS's code 0x140569B90,
 // _tickAttackCooldownComponent 0x14015BC40).
 type AttackCooldown struct {
 	cfg   AttackCooldownConfig

@@ -24,7 +24,7 @@ type CelebrateConfig struct {
 	OnCelebrationEndEvent []string       `json:"on_celebration_end_event"`
 }
 
-// DefaultCelebrate returns the goal's BDS defaults (TypeSchema 0xE0EAAA0).
+// DefaultCelebrate returns the goal's BDS defaults (TypeSchema).
 func DefaultCelebrate() CelebrateConfig {
 	return CelebrateConfig{Duration: 30, CelebrationSound: 286}
 }
@@ -48,16 +48,16 @@ func NewCelebrate(w World, m Celebrator, c CelebrateConfig) *Celebrate {
 	return &Celebrate{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x550CAF0): only without a live
+// CanUse implements goal.Goal: only without a live
 // target.
 func (g *Celebrate) CanUse() bool {
 	return g.m.HasJumpControl() && g.actor(g.mob.Target()) == nil
 }
 
-// CanContinueToUse implements goal.Goal (0x550D1D0).
+// CanContinueToUse implements goal.Goal.
 func (g *Celebrate) CanContinueToUse() bool { return g.ran < int32(g.cfg.Duration*ticksPerSecond) }
 
-// Start implements goal.Goal (0x550CBD0).
+// Start implements goal.Goal.
 func (g *Celebrate) Start() {
 	r := g.world.ThreadRandom()
 	g.soundIn = intervalTicks(r, g.cfg.SoundInterval)
@@ -65,7 +65,7 @@ func (g *Celebrate) Start() {
 	g.mob.SetFlag(FlagCelebrating, true)
 }
 
-// Stop implements goal.Goal (0x550D1F0).
+// Stop implements goal.Goal.
 func (g *Celebrate) Stop() {
 	g.mob.SetFlag(FlagCelebrating, false)
 	for _, e := range g.cfg.OnCelebrationEndEvent {
@@ -73,7 +73,7 @@ func (g *Celebrate) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (0x550CDF0).
+// Tick implements goal.Goal.
 func (g *Celebrate) Tick() {
 	r := g.world.ThreadRandom()
 	sound := g.soundIn
@@ -101,7 +101,6 @@ type FireworkLauncher interface {
 	Mob
 	// LaunchFirework shoots a firework rocket (projectile 72) owned by the
 	// mob from p, with one small ball star of the colour and fade colour
-	// (0xAF54630).
 	LaunchFirework(p Vec3, colour, fade int32)
 }
 
@@ -113,8 +112,7 @@ type CelebrateSurviveConfig struct {
 	OnCelebrationEndEvent []string       `json:"on_celebration_end_event"`
 }
 
-// DefaultCelebrateSurvive returns the goal's BDS defaults (TypeSchema
-// 0xE0F2DD0).
+// DefaultCelebrateSurvive returns the goal's BDS defaults (TypeSchema).
 func DefaultCelebrateSurvive() CelebrateSurviveConfig {
 	return CelebrateSurviveConfig{Duration: 30, FireworksInterval: Range[float32]{Min: 10, Max: 20}}
 }
@@ -128,19 +126,19 @@ type CelebrateSurvive struct {
 	next, end uint64
 }
 
-// NewCelebrateSurvive makes the goal (0x551C3F0).
+// NewCelebrateSurvive makes the goal.
 func NewCelebrateSurvive(w World, m FireworkLauncher, c CelebrateSurviveConfig) *CelebrateSurvive {
 	return &CelebrateSurvive{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x54FB930): the raid's end event adds the
+// CanUse implements goal.Goal: the raid's end event adds the
 // goal, so it always starts.
 func (g *CelebrateSurvive) CanUse() bool { return true }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x56612C0).
+// CanContinueToUse implements goal.Goal.
 func (g *CelebrateSurvive) CanContinueToUse() bool { return g.world.CurrentTick() < g.end }
 
-// Start implements goal.Goal (BDS 1.26.60 0x56602C0): thread random.
+// Start implements goal.Goal: thread random.
 func (g *CelebrateSurvive) Start() {
 	now := g.world.CurrentTick()
 	g.next = now + uint64(intervalTicks(g.world.ThreadRandom(), g.cfg.FireworksInterval))
@@ -148,7 +146,7 @@ func (g *CelebrateSurvive) Start() {
 	g.mob.SetFlag(FlagCelebrating, true)
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x56612F0).
+// Stop implements goal.Goal.
 func (g *CelebrateSurvive) Stop() {
 	g.mob.SetFlag(FlagCelebrating, false)
 	for _, e := range g.cfg.OnCelebrationEndEvent {
@@ -156,7 +154,7 @@ func (g *CelebrateSurvive) Stop() {
 	}
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5660430): a firework now and then under the
+// Tick implements goal.Goal: a firework now and then under the
 // open sky.
 func (g *CelebrateSurvive) Tick() {
 	now := g.world.CurrentTick()

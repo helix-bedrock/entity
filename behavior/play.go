@@ -35,8 +35,8 @@ type PlayConfig struct {
 	RandomPosSearchRange, RandomPosSearchHeight int32
 }
 
-// DefaultPlay returns the goal's BDS defaults (definition default
-// 0xE905EE0, goal setup 0x5A2B090).
+// DefaultPlay returns the goal's BDS defaults (definition default,
+// goal setup).
 func DefaultPlay() PlayConfig {
 	return PlayConfig{
 		SpeedMultiplier: 1, MaxPlayDuration: 50 * ticksPerSecond, ChanceToStart: 0.0025, FollowDistance: 2,
@@ -44,8 +44,8 @@ func DefaultPlay() PlayConfig {
 	}
 }
 
-// Play is PlayGoal (canUse 0x550B720, start 0x550BE00, stop 0x550BEF0,
-// tick 0x550BFC0): the mob picks the nearest mob of its own type passing
+// Play is PlayGoal (canUse, start, stop,
+// tick): the mob picks the nearest mob of its own type passing
 // friend_types and chases it, or runs to random spots when there is none,
 // for max_play_duration_seconds.
 type Play struct {
@@ -68,7 +68,7 @@ func (g *Play) Config() PlayConfig { return g.cfg }
 // SetConfig replaces the goal's settings.
 func (g *Play) SetConfig(c PlayConfig) { g.cfg = c }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x550B720): the start roll is
+// CanUse implements goal.Goal: the start roll is
 // on the thread random.
 func (g *Play) CanUse() bool {
 	if g.m.Nav() == nil || g.world.ThreadRandom().NextFloat() > g.cfg.ChanceToStart {
@@ -122,10 +122,10 @@ func (g *Play) friendType(c Actor) bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x550BDF0).
+// CanContinueToUse implements goal.Goal.
 func (g *Play) CanContinueToUse() bool { return g.timer > 0 }
 
-// Start implements goal.Goal (0x550BE00).
+// Start implements goal.Goal.
 func (g *Play) Start() {
 	if g.actor(g.friend) != nil {
 		g.m.SetChasingDuringPlay(true)
@@ -133,13 +133,13 @@ func (g *Play) Start() {
 	g.timer = g.cfg.MaxPlayDuration
 }
 
-// Stop implements goal.Goal (0x550BEF0).
+// Stop implements goal.Goal.
 func (g *Play) Stop() {
 	g.m.SetChasingDuringPlay(false)
 	g.friend = NoID
 }
 
-// Tick implements goal.Goal (0x550BFC0): chase the friend while it is
+// Tick implements goal.Goal: chase the friend while it is
 // farther than follow_distance; with no friend, a new random spot each
 // time the path ends.
 func (g *Play) Tick() {

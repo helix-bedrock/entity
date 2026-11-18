@@ -35,14 +35,13 @@ type Jumper interface {
 	// DiscardFriction and SetDiscardFriction are DiscardFrictionFlagComponent.
 	DiscardFriction() bool
 	SetDiscardFriction(on bool)
-	// SetBox replaces the mob's collision box (Actor::setAABB).
+	// SetBox replaces the mob's collision box.
 	SetBox(b Box)
 	// EffectAmplifier is the amplifier of an active mob effect.
 	EffectAmplifier(id int) (amp int32, ok bool)
 	// LastHurtTime is the tick the mob was last hurt
-	// (Actor::getLastHurtTimestamp).
 	LastHurtTime() uint64
-	// StandingOn is Actor::getBlockPosCurrentlyStandingOn.
+	// StandingOn matches BDS.
 	StandingOn() Pos
 }
 
@@ -109,7 +108,7 @@ func NewJumpAroundTarget(w World, m Jumper, c JumpAroundTargetConfig) *JumpAroun
 // CanBeInterrupted implements goal.Goal: a jump always finishes.
 func (g *JumpAroundTarget) CanBeInterrupted() bool { return false }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5A05C40).
+// CanUse implements goal.Goal.
 func (g *JumpAroundTarget) CanUse() bool {
 	if g.world.CurrentTick() < g.cooldown {
 		return false
@@ -126,8 +125,8 @@ func (g *JumpAroundTarget) CanUse() bool {
 	if d <= g.cfg.ValidDistance.Min || g.cfg.ValidDistance.Max <= d {
 		return false
 	}
-	// The start block is the one stood on (BDS 1.26.60 canUse 0x5A05C40,
-	// 0xB394740); the air above counts from the feet block.
+	// The start block is the one stood on (BDS 1.26.60 canUse,);
+	// the air above counts from the feet block.
 	at := blockOf(p)
 	if g.world.Block(g.m.StandingOn()).NoJumpStart {
 		return false
@@ -173,7 +172,7 @@ func (g *JumpAroundTarget) snap(l Vec3) (Pos, bool) {
 	return Pos{}, false
 }
 
-// jumpVector is _calculateOptimalJumpVector (0x574C500): the jump angles in
+// jumpVector is _calculateOptimalJumpVector: the jump angles in
 // a random order, the first one whose arc works.
 func (g *JumpAroundTarget) jumpVector(l Vec3) (Vec3, bool) {
 	copy(g.angles, g.cfg.JumpAngles)
@@ -204,8 +203,8 @@ func (g *JumpAroundTarget) jumpVector(l Vec3) (Vec3, bool) {
 	return Vec3{}, false
 }
 
-// jumpArc is TargetRelativeMovementGoalUtils::calculateJumpVectorForElevationAngle
-// (0x53434F0): the launch velocity that reaches to at the elevation angle,
+// jumpArc matches BDS:
+// the launch velocity that reaches to at the elevation angle,
 // and with collision on, a check that the box swept along the arc touches
 // no block.
 func jumpArc(w World, box Box, from, to Vec3, collide bool, angle, maxV, scale float32) (Vec3, bool) {
@@ -271,8 +270,8 @@ func sweepHits(w World, box Box, a, b Vec3, boxScale float32) bool {
 	}
 }
 
-// pointBehind is TargetRelativeMovementGoalUtils::getRandomPointBehindTarget
-// (BDS 1.26.60 0xBF2A600): a point at a random distance in [lo, hi) from the
+// pointBehind matches BDS:
+// a point at a random distance in [lo, hi) from the
 // target's feet, around the direction opposite its head yaw, spread by a
 // gaussian. Both draws are on the thread random.
 func pointBehind(w World, t Actor, spread, lo, hi float32) Vec3 {
@@ -286,10 +285,10 @@ func pointBehind(w World, t Actor, spread, lo, hi float32) Vec3 {
 	return Vec3{X: f.X - s*d, Y: f.Y, Z: f.Z - c*d}
 }
 
-// CanContinueToUse implements goal.Goal (0x5A06690).
+// CanContinueToUse implements goal.Goal.
 func (g *JumpAroundTarget) CanContinueToUse() bool { return g.state != jumpDone }
 
-// Start implements goal.Goal (0x5A066A0). BDS faces the landing spot
+// Start implements goal.Goal. BDS faces the landing spot
 // with a yaw of +atan2, not the -atan2 every other goal uses.
 func (g *JumpAroundTarget) Start() {
 	g.started = g.world.CurrentTick()
@@ -301,7 +300,7 @@ func (g *JumpAroundTarget) Start() {
 	g.m.SetYaw(yaw)
 }
 
-// Stop implements goal.Goal (0x5A06C20).
+// Stop implements goal.Goal.
 func (g *JumpAroundTarget) Stop() {
 	g.m.SetFlag(FlagJumpGoal, false)
 	now := g.world.CurrentTick()
@@ -325,7 +324,7 @@ func sortedBox(a, b Vec3) Box {
 	}
 }
 
-// Tick implements goal.Goal (0x5A06810).
+// Tick implements goal.Goal.
 func (g *JumpAroundTarget) Tick() {
 	now := g.world.CurrentTick()
 	ready := g.state == jumpPreparing && now-g.started >= g.cfg.PrepareJump

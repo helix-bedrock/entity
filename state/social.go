@@ -23,8 +23,8 @@ func DefaultTrusting() TrustingConfig {
 	return TrustingConfig{InteractText: "action.interact.feed", TrustEvent: EventTameSuccess}
 }
 
-// TrustingInteraction is TrustingComponent::getInteraction (1.26.60
-// 0x74069D0): a mob that does not trust yet offers feeding when the
+// TrustingInteraction matches BDS (1.26.60):
+// a mob that does not trust yet offers feeding when the
 // hand holds a trust item. It returns the interaction text, "" for none.
 func TrustingInteraction(m Mob, c *TrustingConfig, hand Hand) string {
 	if m.Flag(FlagTrusting) {
@@ -38,7 +38,7 @@ func TrustingInteraction(m Mob, c *TrustingConfig, hand Hand) string {
 	return ""
 }
 
-// TryTrust is the feeding, as BDS 1.26.60's trusting callback (0x740A160): with the
+// TryTrust is the feeding, as BDS 1.26.60's trusting callback: with the
 // probability the mob becomes trusting, otherwise it broadcasts the failed-taming event
 // (6). The eating event and using up the item come first and are the engine's.
 func TryTrust(env *Env, c *TrustingConfig) bool {
@@ -50,7 +50,7 @@ func TryTrust(env *Env, c *TrustingConfig) bool {
 	return true
 }
 
-// BecomeTrusting is TrustingComponent::_becomeTrusting (0x1406240D0): the
+// BecomeTrusting matches BDS (0x1406240D0): the
 // mob turns persistent, broadcasts the event, raises the trusting flag
 // and runs trust_event.
 func BecomeTrusting(env *Env, c *TrustingConfig) {
@@ -257,7 +257,7 @@ type AngerLevelConfig struct {
 }
 
 // Nuisance is one entity the mob is angry at, as BDS 1.26.60 saves it
-// under "Nuisances" (save 0x735D5D0, load 0x7384410).
+// under "Nuisances" (save, load).
 type Nuisance struct {
 	ID    behavior.ID
 	Anger int32
@@ -267,13 +267,13 @@ type Nuisance struct {
 }
 
 // AngerLevel is the warden's anger, AngerLevelComponent of BDS 1.26.60:
-// its suspects are a std::multiset kept in BDS's order (insert 0x7402320):
+// its suspects are a std::multiset kept in BDS's order (insert):
 // angry ones first, then players, then by anger, later inserts after
 // equal ones.
 type AngerLevel struct {
 	cfg  AngerLevelConfig
 	next uint64
-	// top is the component's +36: the highest anger at the last decrement,
+	// top is the component's: the highest anger at the last decrement,
 	// raised by any increase above it.
 	top       int32
 	nuisances []Nuisance
@@ -288,10 +288,10 @@ func (a *AngerLevel) Config() AngerLevelConfig { return a.cfg }
 // SetConfig replaces the settings.
 func (a *AngerLevel) SetConfig(c AngerLevelConfig) { a.cfg = c }
 
-// Anger is the component's highest anger (+36).
+// Anger is the component's highest anger.
 func (a *AngerLevel) Anger() int32 { return a.top }
 
-// AngerFor is 0x735E9E0: the anger at the mob's target when it is a
+// AngerFor is: the anger at the mob's target when it is a
 // suspect, else the highest anger.
 func (a *AngerLevel) AngerFor(target behavior.ID) int32 {
 	if i := a.find(target); target != behavior.NoID && i >= 0 {
@@ -324,7 +324,7 @@ func (a *AngerLevel) Suspects(dst []behavior.ID) []behavior.ID {
 	return dst
 }
 
-// Calm is 0x735E8C0: the entity is not a suspect or its anger is below
+// Calm is: the entity is not a suspect or its anger is below
 // angry_threshold.
 func (a *AngerLevel) Calm(id behavior.ID) bool {
 	i := a.find(id)
@@ -350,7 +350,7 @@ func (a *AngerLevel) find(id behavior.ID) int {
 	return -1
 }
 
-// before is the set's comparator (0x7402320): k sorts before n.
+// before is the set's comparator: k sorts before n.
 func (a *AngerLevel) before(k, n Nuisance) bool {
 	t := a.cfg.AngryThreshold
 	if k.Anger >= t {
@@ -369,7 +369,7 @@ func (a *AngerLevel) insert(n Nuisance) {
 	a.nuisances = slices.Insert(a.nuisances, i, n)
 }
 
-// Valid is the suspect test (0x735E4F0): alive, the nuisance filter, and a
+// Valid is the suspect test: alive, the nuisance filter, and a
 // player only when not invulnerable and in survival or adventure.
 func (a *AngerLevel) Valid(env *Env, o behavior.Actor) bool {
 	if o == nil || !o.Alive() {
@@ -391,10 +391,10 @@ func (a *AngerLevel) Valid(env *Env, o behavior.Actor) bool {
 	return mode == -1 || mode == behavior.GameModeSurvival || mode == behavior.GameModeAdventure
 }
 
-// Tick is AngerLevelSystem::tick (0x6F61670, per entity 0x6F929B0): the
+// Tick matches BDS (per entity): the
 // decrements due since the last one, then remove_targets_below_angry_threshold.
 // The first tick stands for the component's init, which sets the next
-// decrement one interval on (0xC3D7D60).
+// decrement one interval on.
 func (a *AngerLevel) Tick(env *Env) {
 	now := env.World.CurrentTick()
 	step := uint64(max(a.cfg.DecrementInterval, 1))
@@ -414,7 +414,7 @@ func (a *AngerLevel) Tick(env *Env) {
 	}
 }
 
-// decrement is 0x735EB30: one anger off every suspect; suspects that
+// decrement is: one anger off every suspect; suspects that
 // exist but are no longer valid go, missing ones stay until their anger
 // runs out; the highest anger of the valid ones is kept.
 func (a *AngerLevel) decrement(env *Env) {
@@ -436,7 +436,7 @@ func (a *AngerLevel) decrement(env *Env) {
 	a.top = top
 }
 
-// Increase is 0x735DC60: anger at a valid o goes up by amount, held
+// Increase is: anger at a valid o goes up by amount, held
 // between 0 and max_anger (a suspect at 0 is dropped), playing the first
 // on_increase_sound whose condition holds at the head when asked; a mob
 // whose target is not a player drops it for a player now angry enough.
@@ -493,7 +493,7 @@ type WeightedTrigger struct {
 }
 
 // RavagerBlockedConfig is minecraft:ravager_blocked. Its 1.26.60 parser
-// (sub_726B6C0) and the code that runs it were not read: Blocked picks a
+// and the code that runs it were not read: Blocked picks a
 // reaction by weight.
 type RavagerBlockedConfig struct {
 	KnockbackStrength float32
@@ -528,7 +528,7 @@ type SpellEffect struct {
 }
 
 // SpellEffectsConfig is minecraft:spell_effects: the effects added and
-// removed when the component is added. Its parser (1.26.60 sub_6FCABB0)
+// removed when the component is added. Its parser
 // was not decompiled and its initialize was not read; durations are taken
 // as seconds and kept as ticks.
 type SpellEffectsConfig struct {

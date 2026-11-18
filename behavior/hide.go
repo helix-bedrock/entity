@@ -17,13 +17,13 @@ type Hider interface {
 	// SetHide replaces the HideComponent's two flags.
 	SetHide(hiding, triggered bool)
 	Trader
-	// Raid reports a raid on the dweller's village (+648) and whether it
+	// Raid reports a raid on the dweller's village and whether it
 	// has started (raid +4 == 0).
 	Raid() (exists, running bool)
 	// HasVillage reports that the DwellerComponent's village is still
-	// there (its weak pointer, 0x723E6C0).
+	// there (its weak pointer).
 	HasVillage() bool
-	// CanReach reports a path to p (nav vt+40).
+	// CanReach reports a path to p (nav).
 	CanReach(p Vec3) bool
 }
 
@@ -34,7 +34,7 @@ type HideConfig struct {
 	Duration float32 `json:"duration"`
 }
 
-// DefaultHide returns the goal's BDS defaults (TypeSchema 0xDF6BF90).
+// DefaultHide returns the goal's BDS defaults (TypeSchema).
 func DefaultHide() HideConfig {
 	return HideConfig{MoveToPOIConfig: DefaultMoveToPOI(), Duration: 1}
 }
@@ -48,7 +48,7 @@ type Hide struct {
 	failed int16
 }
 
-// NewHide makes the goal (0x52BBA60).
+// NewHide makes the goal.
 func NewHide(w World, m Hider, c HideConfig) *Hide {
 	g := &Hide{m: m, cfg: c}
 	g.initPOI(w, m, c.MoveToPOIConfig, g, g)
@@ -60,7 +60,7 @@ func NewHide(w World, m Hider, c HideConfig) *Hide {
 // find is unused by the POI goals.
 func (g *Hide) find() bool { return false }
 
-// lookup is the goal's POI lookup (0x5749A30): its own POI while it can
+// lookup is the goal's POI lookup: its own POI while it can
 // get there, else the village's nearest free one.
 func (g *Hide) lookup(kind POIKind) (POI, bool) {
 	if p, ok := g.m.POI(kind); ok && g.failed < hideMaxTries && g.m.CanReach(vecOf(p.Pos)) {
@@ -69,7 +69,7 @@ func (g *Hide) lookup(kind POIKind) (POI, bool) {
 	return g.m.FreePOI(kind, blockOf(g.mob.Pos()))
 }
 
-// CanUse implements goal.Goal (0x5749130).
+// CanUse implements goal.Goal.
 func (g *Hide) CanUse() bool {
 	hiding, triggered, ok := g.m.Hide()
 	if !ok {
@@ -88,7 +88,7 @@ func (g *Hide) CanUse() bool {
 		return false
 	}
 	if triggered {
-		// 0x57494E0: a raid that has started takes over the request.
+		// BDS: a raid that has started takes over the request.
 		if _, running := g.m.Raid(); !hiding && running {
 			g.m.SetHide(true, triggered)
 		}
@@ -106,7 +106,7 @@ func (g *Hide) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A03540): a hiding
+// CanContinueToUse implements goal.Goal: a hiding
 // mob with a village stays exactly while the village has a raid; only
 // without a village does the walk decide.
 func (g *Hide) CanContinueToUse() bool {
@@ -117,14 +117,14 @@ func (g *Hide) CanContinueToUse() bool {
 	return g.keepLite()
 }
 
-// Start implements goal.Goal (0x5749740).
+// Start implements goal.Goal.
 func (g *Hide) Start() {
 	g.hooks.moveToBlock()
 	g.last = blockOf(g.mob.Pos())
 	g.cooldown, g.tries = 0, 0
 }
 
-// Stop implements goal.Goal (0x5749F10).
+// Stop implements goal.Goal.
 func (g *Hide) Stop() {
 	if hiding, triggered, ok := g.m.Hide(); ok {
 		switch {
@@ -150,5 +150,5 @@ func (g *Hide) reset() {
 	g.failed = 0
 }
 
-// Tick implements goal.Goal (0x5273610).
+// Tick implements goal.Goal.
 func (g *Hide) Tick() { g.tickPOI() }

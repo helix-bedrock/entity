@@ -14,7 +14,7 @@ type DamageCondition struct {
 }
 
 // DefaultDamageCondition is a condition's defaults: 1 damage a tick. The
-// 1.21.3 parser (HurtOnConditionDefinition::buildSchema 0x14062A8B0) does
+// 1.21.3 parser (0x14062A8B0) does
 // not show the default; 1 is Mojang's documented one.
 func DefaultDamageCondition() DamageCondition { return DamageCondition{DamagePerTick: 1} }
 
@@ -70,7 +70,7 @@ func (h *HurtOnCondition) fire(cause int) bool {
 }
 
 // flagFireImmune is the actor flag of a fire-immune mob. BDS's test here
-// is a vtable call (160) taken as this flag.
+// is a call (160) taken as this flag.
 const flagFireImmune = 50
 
 // BreathableConfig is minecraft:breathable.
@@ -107,9 +107,9 @@ func DefaultBreathable() BreathableConfig {
 	}
 }
 
-// Breathable is minecraft:breathable: the air supply (BDS 1.26.60's tick sub_79139D0, its
-// medium sub_7370980, its damage source sub_79198E0; the definition's numbers from 1.21.3
-// BreathableDefinition::initialize 0x14056A060). Players and mobs run the same component, as
+// Breathable is minecraft:breathable: the air supply (BDS 1.26.60's tick, its
+// medium, its damage source; the definition's numbers from 1.21.3
+// BDS's code 0x14056A060). Players and mobs run the same component, as
 // in BDS: anything that is a [Breather] can.
 type Breathable struct {
 	cfg    BreathableConfig
@@ -126,12 +126,12 @@ type Breather interface {
 	Breath(breathe, nonBreathe []string) Medium
 	// HasEffect reports a mob effect by ID.
 	HasEffect(id int) bool
-	// UnderWater reports the breathing point under the water's surface (Actor::isHeadInLiquid
-	// with water, sub_B39C240).
+	// UnderWater reports the breathing point under the water's surface (BDS's code
+	// with water).
 	UnderWater() bool
 	// SetFlag sets an actor flag.
 	SetFlag(n int, on bool)
-	// AttachPos is Actor::getAttachPos for a BDS actor location number.
+	// AttachPos matches BDS for a BDS actor location number.
 	AttachPos(loc int) behavior.Vec3
 	// Respiration is the highest respiration level of the worn armour.
 	Respiration() int32
@@ -227,7 +227,7 @@ func (b *Breathable) Tick(env *Env, invulnerable bool) {
 	b.TickFor(m, env.World, invulnerable)
 }
 
-// TickFor updates the air supply as BDS 1.26.60's tick (sub_79139D0). An entity that breathes
+// TickFor updates the air supply as BDS 1.26.60's tick. An entity that breathes
 // refills its air, at once or over inhale_time. One that does not, in any medium it cannot
 // breathe, loses one air a tick (one in respiration + 1 ticks with Respiration armour), sends
 // bubbles with its head under water, and once its air is down to suffocate_time is hurt for 2,
@@ -313,7 +313,7 @@ func (b *BurnsInDaylight) SetConfig(c BurnsInDaylightConfig) { b.cfg = c }
 
 // Tick sets the mob on fire in daylight: by day, alive, not fire immune,
 // not in water, rain or powder snow, nothing in the protection slot, and
-// seeing the sky. BDS also tests a vtable call (408) whose meaning was not
+// seeing the sky. BDS also tests a call (408) whose meaning was not
 // read, and its day test (a level call, bit 0) is taken as World.IsDay.
 func (b *BurnsInDaylight) Tick(env *Env) {
 	m := env.Self

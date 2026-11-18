@@ -13,38 +13,38 @@ const (
 // Mob. Spawning is the engine's: the goal says what to spawn and where.
 type HorseTrapper interface {
 	Mob
-	// Remove is Actor vt+96.
+	// Remove is.
 	Remove()
-	// Difficulty is the level difficulty (Level vt+296), 0 for peaceful.
+	// Difficulty is the level difficulty, 0 for peaceful.
 	Difficulty() int
-	// SpecialMultiplier is Level vt+320 for the mob's dimension, the
+	// SpecialMultiplier is for the mob's dimension, the
 	// moon-phase difficulty share.
 	SpecialMultiplier() float32
-	// LightningRod is 0xC9E6BD0: the lightning rod within 64 blocks a bolt
+	// LightningRod is: the lightning rod within 64 blocks a bolt
 	// at p is drawn to.
 	LightningRod(p Pos) (Pos, bool)
 	// SpawnLightning spawns a lightning bolt (actor type 93) at p with the
-	// mob as its spawner, one that sets fires and does damage (+924 0).
+	// mob as its spawner, one that sets fires and does damage (0).
 	SpawnLightning(p Vec3)
 	// Spawn spawns an entity of the kind with the spawn event at p; false
 	// when none was made.
 	Spawn(kind, event string, p Vec3) (ID, bool)
-	// SetInvulnerableTime sets the entity's Actor +404 ticks (60 here).
+	// SetInvulnerableTime sets the entity's ticks (60 here).
 	SetInvulnerableTime(id ID, ticks int32)
 	// Push adds v to the entity's motion, the way Actor's push helper does
 	// (some kinds ignore it).
 	Push(id ID, v Vec3)
-	// TameTo is Mob vt+1440 with false (Horse 0xBD318C0) on a spawned horse
+	// TameTo is with false (Horse) on a spawned horse
 	// for the nearest player.
 	TameTo(id, player ID)
 	// HeadEmpty reports nothing in the entity's head armour slot.
 	HeadEmpty(id ID) bool
 	// GiveEnchantedHead puts a stack of one of the item, randomly enchanted
-	// at the level (0xBF20470), in the head slot.
+	// at the level, in the head slot.
 	GiveEnchantedHead(id ID, item string, level int32)
 	// EnchantHand randomly enchants the carried item at the level.
 	EnchantHand(id ID, level int32)
-	// Ride makes the rider ride the mount (Actor vt+224).
+	// Ride makes the rider ride the mount.
 	Ride(rider, mount ID)
 }
 
@@ -64,8 +64,8 @@ type SkeletonHorseTrapConfig struct {
 	InvulnerTime int32  `json:"-"`
 }
 
-// DefaultSkeletonHorseTrap returns the goal's BDS defaults (TypeSchema
-// 0xDCB8150; spawns from the tick 0x592B240).
+// DefaultSkeletonHorseTrap returns the goal's BDS defaults (TypeSchema;
+// spawns from the tick).
 func DefaultSkeletonHorseTrap() SkeletonHorseTrapConfig {
 	return SkeletonHorseTrapConfig{Duration: 1, Horses: 4, Horse: "minecraft:skeleton_horse",
 		Rider: "minecraft:skeleton", Event: "minecraft:spring_trap", Helmet: "minecraft:iron_helmet", InvulnerTime: 60}
@@ -81,7 +81,7 @@ type SkeletonHorseTrap struct {
 	players []Actor
 }
 
-// NewSkeletonHorseTrap makes the goal (0x5304AA0). It has no control
+// NewSkeletonHorseTrap makes the goal. It has no control
 // flags.
 func NewSkeletonHorseTrap(w World, m HorseTrapper, c SkeletonHorseTrapConfig) *SkeletonHorseTrap {
 	return &SkeletonHorseTrap{base: base{mob: m, world: w}, m: m, cfg: c, timer: int32(c.Duration * ticksPerSecond)}
@@ -109,7 +109,7 @@ func (g *SkeletonHorseTrap) nearest() Actor {
 	return near
 }
 
-// CanUse implements goal.Goal (0x592CF50): each call counts the trap down;
+// CanUse implements goal.Goal: each call counts the trap down;
 // once it runs out the trap horse is removed.
 func (g *SkeletonHorseTrap) CanUse() bool {
 	t := g.timer
@@ -124,7 +124,7 @@ func (g *SkeletonHorseTrap) CanUse() bool {
 // CanContinueToUse implements goal.Goal: BDS asks canUse again.
 func (g *SkeletonHorseTrap) CanContinueToUse() bool { return g.CanUse() }
 
-// Tick implements goal.Goal (0x592B240).
+// Tick implements goal.Goal.
 func (g *SkeletonHorseTrap) Tick() {
 	m := g.m
 	player := g.nearest()
@@ -184,7 +184,7 @@ func (g *SkeletonHorseTrap) enchantLevel() int32 {
 	return l
 }
 
-// The base Goal methods SkeletonHorseTrap keeps (1.26.60 vtable: start and stop are no-ops).
+// The base Goal methods SkeletonHorseTrap keeps (start and stop are no-ops).
 
 // Start implements goal.Goal.
 func (g *SkeletonHorseTrap) Start() {}

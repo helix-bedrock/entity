@@ -37,7 +37,7 @@ type Ranged interface {
 	Shoot()
 	// RestartAngry restarts AngryComponent's duration; nothing without one.
 	RestartAngry()
-	// RangedAttack is Mob::performRangedAttack with a power of 0.1 to 1.
+	// RangedAttack matches BDS with a power of 0.1 to 1.
 	RangedAttack(t Actor, power float32)
 }
 
@@ -112,8 +112,8 @@ type rangeJSON struct {
 const rangedUnset = -1
 
 // UnmarshalJSON reads minecraft:behavior.ranged_attack the way BDS 1.26.60
-// does (definition 0xDFECB30, old format 0xE1DCB20, checks 0x5AE4630, goal
-// setup 0x58AF3C0 in 1.26.52). Fields the JSON leaves out keep the values c
+// does (definition, old format, checks, goal
+// setup in 1.26.52). Fields the JSON leaves out keep the values c
 // already has, so decode into DefaultRangedAttack().
 func (c *RangedAttackConfig) UnmarshalJSON(b []byte) error {
 	var j rangedJSON
@@ -213,9 +213,9 @@ func DefaultRangedAttack() RangedAttackConfig {
 	}
 }
 
-// RangedAttack is RangedAttackGoal (BDS 1.26.60 canUse 0x5AF9A90,
-// canContinueToUse 0x5AF9CF0, start 0x5AF9EF0, stop 0x5AF9F60, tick
-// 0x5AFA0A0, setup 0x5ABBC40): the mob keeps its distance, faces the
+// RangedAttack is RangedAttackGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, stop, tick,
+// setup): the mob keeps its distance, faces the
 // target and shoots in bursts, or charges and fires a crossbow.
 type RangedAttack struct {
 	base

@@ -51,9 +51,9 @@ type CanSeer interface {
 	CanSee(a Actor) bool
 }
 
-// Avoid is AvoidMobTypeGoal (BDS 1.26.60 canUse 0x4A7F1F0, canContinueToUse
-// 0x4A7F740, start 0x4A7F940, stop 0x4A7FBD0, tick 0x4A7FE20, the search
-// 0x4A7EC80, the flee 0x4A7F210): the mob runs from the nearest entity that
+// Avoid is AvoidMobTypeGoal (BDS 1.26.60 canUse, canContinueToUse,
+// start, stop, tick, the search,
+// the flee): the mob runs from the nearest entity that
 // matches its first matching entry.
 type Avoid struct {
 	base

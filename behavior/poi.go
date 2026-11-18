@@ -13,17 +13,17 @@ const (
 
 // POI is a village point of interest as the engine sees it.
 type POI struct {
-	// Pos is the POI block (+128).
+	// Pos is the POI block.
 	Pos Pos
-	// Radius is how near counts as there (+168).
+	// Radius is how near counts as there.
 	Radius float32
-	// UseBox is +218: the goal aims at the middle of Box and counts as
+	// UseBox is: the goal aims at the middle of Box and counts as
 	// there once the mob's box touches it.
 	UseBox bool
 	// Box is the POI block's box, joined with the other half of a two block
-	// POI such as a bed (0xBD0D110).
+	// POI such as a bed.
 	Box Box
-	// Sound is the job site's work sound event (+184).
+	// Sound is the job site's work sound event.
 	Sound string
 }
 
@@ -33,20 +33,18 @@ type Dweller interface {
 	Mob
 	// IsDweller reports a DwellerComponent.
 	IsDweller() bool
-	// POI is the dweller's own POI of the kind in its village (0x7072420,
-	// then 0xBD13BA0).
+	// POI is the dweller's own POI of the kind in its village (
+	// then).
 	POI(kind POIKind) (POI, bool)
 	// FreePOI is the village's nearest unclaimed POI of the kind to p
-	// (0xBD1C9A0).
 	FreePOI(kind POIKind, p Pos) (POI, bool)
-	// POIResult records how a trip to the POI ended (0x5279660): ok clears
+	// POIResult records how a trip to the POI ended: ok clears
 	// its fail count; otherwise the count goes up and, while it is 2 or
 	// less, the engine shows level event 2009 three times on the POI's top
-	// (0xBD0D270).
 	POIResult(kind POIKind, ok bool)
 	// Village is the bounds of the dweller's village, or of the nearest
 	// village within 64 blocks of the mob when it has none, searching
-	// search blocks (-1 for no limit) (0x527AB80).
+	// search blocks (-1 for no limit).
 	Village(search int32) (bounds Box, ok bool)
 }
 
@@ -60,7 +58,7 @@ type MoveToPOIConfig struct {
 	POIType         POIKind `json:"poi_type"`
 }
 
-// DefaultMoveToPOI returns the goal's BDS defaults (TypeSchema 0xDF7AD80).
+// DefaultMoveToPOI returns the goal's BDS defaults (TypeSchema).
 func DefaultMoveToPOI() MoveToPOIConfig {
 	return MoveToPOIConfig{SpeedMultiplier: 1, TimeoutCooldown: 8}
 }
@@ -75,10 +73,10 @@ type moveToPOI struct {
 	moveTo
 	d    Dweller
 	kind POIKind
-	// box is +168: the POI is a box, and goalBox is it grown by the radius.
+	// box is: the POI is a box, and goalBox is it grown by the radius.
 	box     bool
 	goalBox Box
-	// sameY is +169: a path whose end is not at the POI's height fails.
+	// sameY is: a path whose end is not at the POI's height fails.
 	sameY bool
 	find  poiLookup
 }
@@ -91,10 +89,10 @@ func (g *moveToPOI) initPOI(w World, d Dweller, c MoveToPOIConfig, h moveToHooks
 	g.d, g.kind, g.find = d, c.POIType, f
 }
 
-// lookup is the base POI lookup (0x5279A90): the dweller's own POI.
+// lookup is the base POI lookup: the dweller's own POI.
 func (g *moveToPOI) lookup(kind POIKind) (POI, bool) { return g.d.POI(kind) }
 
-// valid is isValidTarget (0x52797E0): the POI still exists.
+// valid is isValidTarget: the POI still exists.
 func (g *moveToPOI) valid(Pos) bool {
 	_, ok := g.find.lookup(g.kind)
 	return ok
@@ -103,7 +101,7 @@ func (g *moveToPOI) valid(Pos) bool {
 // reachable is the base path check.
 func (g *moveToPOI) reachable(p Pos) bool { return g.moveTo.reachable(p) }
 
-// moveToBlock is moveMobToBlock (0x52798C0): BDS walks the path canUse
+// moveToBlock is moveMobToBlock: BDS walks the path canUse
 // made, which goes to the stored point.
 func (g *moveToPOI) moveToBlock() {
 	if n := g.mob.Nav(); n != nil {
@@ -111,12 +109,12 @@ func (g *moveToPOI) moveToBlock() {
 	}
 }
 
-// canUse is MoveToPOIGoal's canUse (0x5272320).
+// canUse is MoveToPOIGoal's canUse.
 func (g *moveToPOI) canUse() bool {
 	return g.canStart() && g.d.IsDweller() && g.begin(g.kind)
 }
 
-// begin is 0x5278FD0: aim at the POI and see whether it can be reached.
+// begin is: aim at the POI and see whether it can be reached.
 func (g *moveToPOI) begin(kind POIKind) bool {
 	n := g.mob.Nav()
 	if n == nil {
@@ -132,7 +130,7 @@ func (g *moveToPOI) begin(kind POIKind) bool {
 	m := g.mob.Pos()
 	if g.box {
 		g.aim = boxCentre(poi.Box)
-		// BDS grows the box by the squared radius it keeps at +68.
+		// BDS grows the box by the squared radius it keeps.
 		g.goalBox = grow(poi.Box, g.radius2)
 		if overlaps(g.goalBox, g.mob.Box()) {
 			g.reached = true
@@ -170,10 +168,10 @@ func grow(b Box, d float32) Box {
 		Max: Vec3{X: max(lo.X, hi.X), Y: max(lo.Y, hi.Y), Z: max(lo.Z, hi.Z)}}
 }
 
-// startPOI is the base start (0x48C91B0).
+// startPOI is the base start.
 func (g *moveToPOI) startPOI() { g.Start() }
 
-// stopPOI is MoveToPOIGoal's stop (0x5272A30).
+// stopPOI is MoveToPOIGoal's stop.
 func (g *moveToPOI) stopPOI() {
 	if _, ok := g.find.lookup(g.kind); ok {
 		g.d.POIResult(g.kind, g.cooldown == 0 && g.tries <= moveToGiveUp)
@@ -182,7 +180,7 @@ func (g *moveToPOI) stopPOI() {
 	g.box = false
 }
 
-// tickPOI is MoveToPOIGoal's tick (0x5273610).
+// tickPOI is MoveToPOIGoal's tick.
 func (g *moveToPOI) tickPOI() {
 	if !g.box {
 		g.Tick()
@@ -212,7 +210,7 @@ func (g *moveToPOI) tickPOI() {
 // meeting area.
 type MoveToPOI struct{ moveToPOI }
 
-// NewMoveToPOI makes the goal (0x52B9D00).
+// NewMoveToPOI makes the goal.
 func NewMoveToPOI(w World, d Dweller, c MoveToPOIConfig) *MoveToPOI {
 	g := &MoveToPOI{}
 	g.initPOI(w, d, c, g, g)
@@ -225,7 +223,7 @@ func (g *MoveToPOI) find() bool { return false }
 // CanUse implements goal.Goal.
 func (g *MoveToPOI) CanUse() bool { return g.canUse() }
 
-// CanContinueToUse implements goal.Goal (0x48C8A40).
+// CanContinueToUse implements goal.Goal.
 func (g *MoveToPOI) CanContinueToUse() bool { return g.keepLite() }
 
 // Start implements goal.Goal.

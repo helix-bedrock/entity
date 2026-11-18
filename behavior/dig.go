@@ -64,7 +64,7 @@ type RandomSearchAndDigConfig struct {
 	OnSuccess             []string
 }
 
-// DefaultRandomSearchAndDig returns the goal's BDS defaults (0xE007D40).
+// DefaultRandomSearchAndDig returns the goal's BDS defaults.
 func DefaultRandomSearchAndDig() RandomSearchAndDigConfig {
 	return RandomSearchAndDigConfig{SpeedMultiplier: 1, GoalRadius: 1.5, TargetDigPositionOffset: 2.25,
 		FindValidPositionRetries: 5, SearchRangeXZ: 10, SearchRangeY: 7,
@@ -88,7 +88,7 @@ type RandomSearchAndDig struct {
 	nextDust                      uint64
 }
 
-// NewRandomSearchAndDig makes the goal (0x5761190, 0x58A6190): the
+// NewRandomSearchAndDig makes the goal: the
 // cooldown is drawn first, then the digging time.
 func NewRandomSearchAndDig(w World, m GroundDigger, c RandomSearchAndDigConfig) *RandomSearchAndDig {
 	g := &RandomSearchAndDig{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c,
@@ -107,7 +107,7 @@ func roundTicks(s float32) uint64 {
 	return uint64(uint16(int32(math.Round(float64(s * ticksPerSecond)))))
 }
 
-// valid is 0x5761980: air over a target block.
+// valid is: air over a target block.
 func (g *RandomSearchAndDig) valid(p Pos) bool {
 	w := g.world
 	if w.Block(p).Name != airName {
@@ -120,7 +120,7 @@ func (g *RandomSearchAndDig) valid(p Pos) bool {
 	return g.m.DefaultDigBlock(below)
 }
 
-// find is 0x5762FE0.
+// find is.
 func (g *RandomSearchAndDig) find() (Pos, bool) {
 	for range max(g.cfg.FindValidPositionRetries, 0) {
 		v, ok := landPos(g.world, g.m, g.cfg.SearchRangeXZ, g.cfg.SearchRangeY)
@@ -134,7 +134,7 @@ func (g *RandomSearchAndDig) find() (Pos, bool) {
 	return Pos{}, false
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5511510): the path must end within
+// CanUse implements goal.Goal: the path must end within
 // goal_radius of the spot.
 func (g *RandomSearchAndDig) CanUse() bool {
 	if g.world.CurrentTick() < g.coolEnd {
@@ -169,7 +169,7 @@ func (g *RandomSearchAndDig) forward() Vec3 {
 	return Vec3{X: -cb * tableSin(uint16(int32(a))), Y: tableSin(uint16(int32(b))), Z: -cb * tableSin(uint16(int32(a+sinQuarter)))}
 }
 
-// CanContinueToUse implements goal.Goal (0x55117D0): digging stops once
+// CanContinueToUse implements goal.Goal: digging stops once
 // the block in front is gone.
 func (g *RandomSearchAndDig) CanContinueToUse() bool {
 	if g.state == digDigging {
@@ -187,7 +187,7 @@ func (g *RandomSearchAndDig) CanContinueToUse() bool {
 	return g.valid(g.pos) && !g.m.InWater()
 }
 
-// Start implements goal.Goal (0x5511C20).
+// Start implements goal.Goal.
 func (g *RandomSearchAndDig) Start() {
 	m := g.m
 	if n := m.Nav(); n != nil {
@@ -202,7 +202,7 @@ func (g *RandomSearchAndDig) Start() {
 	g.fire(g.cfg.OnSearchingStart)
 }
 
-// Stop implements goal.Goal (0x5512DC0). A dig that turned up nothing
+// Stop implements goal.Goal. A dig that turned up nothing
 // counts as failed digging even when it never started.
 func (g *RandomSearchAndDig) Stop() {
 	m := g.m
@@ -224,7 +224,7 @@ func (g *RandomSearchAndDig) Stop() {
 	g.coolEnd = g.world.CurrentTick() + g.cooldown
 }
 
-// Tick implements goal.Goal (0x5511E90).
+// Tick implements goal.Goal.
 func (g *RandomSearchAndDig) Tick() {
 	switch g.state {
 	case digSearching:

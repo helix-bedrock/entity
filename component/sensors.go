@@ -170,7 +170,6 @@ func (c *Context) SchedulerConfig(j Object) sensor.SchedulerConfig {
 
 // EntitySensorConfig reads minecraft:entity_sensor. Without subsensors,
 // the old top-level members make one subsensor, as BDS upgrades them
-// (0xB360C50).
 func (c *Context) EntitySensorConfig(j Object) sensor.EntitySensorConfig {
 	e := sensor.DefaultEntitySensor()
 	e.RelativeRange = c.Bool(j, "relative_range", e.RelativeRange)

@@ -7,10 +7,10 @@ import (
 )
 
 // lavaShrink is how far TravelTypeSensingSystem shrinks the box before
-// looking for lava (0x1AC7C58).
+// looking for lava.
 var lavaShrink = Vec3{X: 0.1, Y: 0.4, Z: 0.1}
 
-// shrink is AABB::shrink (0xD782590): each side moves in by d, and an axis
+// shrink matches BDS: each side moves in by d, and an axis
 // that turns inside out collapses to its centre.
 func shrink(b Box, d Vec3) Box {
 	lo, hi := b.Min, b.Max
@@ -41,8 +41,8 @@ func (b *Body) touchesLava(w World) bool {
 	return false
 }
 
-// waterShrink is how far BDS 1.26.60's LiquidPhysicsSystem (sub_77DCDE0) shrinks the box
-// before looking for water (0x1A7E930).
+// waterShrink is how far BDS 1.26.60's LiquidPhysicsSystem shrinks the box
+// before looking for water.
 var waterShrink = Vec3{X: 0.001, Y: 0.401, Z: 0.001}
 
 // touchesWater is the water test of the liquid physics.
@@ -59,9 +59,9 @@ func (b *Body) touchesWater(w World) bool {
 }
 
 // UpdateLiquid sets WasInWater for the next tick as BDS 1.26.60 does after a mob moves: its
-// LiquidPhysicsSystem (sub_77DCDE0) finds the liquid the box touches, lava (box shrunk by
+// LiquidPhysicsSystem finds the liquid the box touches, lava (box shrunk by
 // 0.1, 0.4, 0.1) before water (shrunk by 0.001, 0.401, 0.001), and the water state update
-// (sub_78274B0) keeps the in-water flag only for water, and never for a mob riding a boat
+// keeps the in-water flag only for water, and never for a mob riding a boat
 // (inBoat). The host calls it once Box is where the mob ended up. The current's push is the
 // host's, as it knows the blocks' flow: see [Body.LiquidBoxes].
 func (b *Body) UpdateLiquid(w World, inBoat bool) {
@@ -75,7 +75,7 @@ func (b *Body) LiquidBoxes() (lava, water Box) {
 	return shrink(b.Box, lavaShrink), shrink(b.Box, waterShrink)
 }
 
-// sense is TravelTypeSensingSystem (0x7391B90).
+// sense is TravelTypeSensingSystem.
 func (b *Body) sense(w World) {
 	b.liquid = false
 	switch {
@@ -93,7 +93,7 @@ func (b *Body) sense(w World) {
 }
 
 // groundFriction is the friction of the block under the box
-// (GroundTravelTypeSystem 0x7552A50): air gives 0.546, soul sand is
+// (GroundTravelTypeSystem): air gives 0.546, soul sand is
 // stickier without soul speed, and a zero friction counts as 0.546.
 func (b *Body) groundFriction(w World) float32 {
 	blk := w.Block(path.Pos{X: floorInt(b.Pos.X), Y: floorInt(b.Box.Min.Y - 0.1), Z: floorInt(b.Pos.Z)})
@@ -112,13 +112,13 @@ func (b *Body) groundFriction(w World) float32 {
 }
 
 // setSpeed is the travel speed systems: GroundTravelType, MobAirSpeed,
-// WaterTravel (0x7309950) and LavaTravel (0x74C3BC0).
+// WaterTravel and LavaTravel.
 func (b *Body) setSpeed(w World) {
 	b.speed = b.RelativeSpeed(w)
 }
 
 // RelativeSpeed is the move speed for the travel type the body sensed on its last tick
-// (BDS 1.26.60 0xBFE04C0 of the travel type 0xBFE01E0): on the ground the movement speed
+// (BDS 1.26.60 of the travel type): on the ground the movement speed
 // scaled by the block's friction, in the air the air speed, and the water and lava speeds.
 // controlled_by_player moves the mob by it.
 func (b *Body) RelativeSpeed(w World) float32 {
@@ -165,8 +165,8 @@ func (b *Body) waterSpeed() float32 {
 	return uw + (spd-uw)*lvl/maxDepthStrider
 }
 
-// moveRelative is the input movement shared by DefaultMoveSystems
-// (0x75AADF0), WaterMove (0x7315FA0) and LavaMove (0x7535A10).
+// moveRelative is the input movement shared by DefaultMoveSystems,
+// WaterMove and LavaMove.
 func (b *Body) moveRelative() {
 	x, y, z := b.Input.X, b.Input.Y, b.Input.Z
 	l2 := z*z + (x*x + y*y)
@@ -218,7 +218,7 @@ func (b *Body) travelMove(w World) {
 	case TravelGround, TravelAir:
 		b.moveRelative()
 		b.friction = 1
-		// MobTravel +37 is assumed set for mobs: nothing found in 1.26.52
+		// is assumed set for mobs: nothing found in 1.26.52
 		// clears it, and without it ground friction never applies.
 		if b.OnGround {
 			b.friction = 0.6
@@ -244,7 +244,7 @@ func (b *Body) travelMove(w World) {
 	}
 }
 
-// navTravel is the navigation type's travel (vtable slot 11). It reports
+// navTravel is the navigation type's travel. It reports
 // whether the normal travel still runs this tick.
 func (b *Body) navTravel(w World) bool {
 	switch b.Nav.Travel {
@@ -256,7 +256,7 @@ func (b *Body) navTravel(w World) bool {
 	return true
 }
 
-// floatTravel is FloatNavigation's travel (0xBD6D7F0): the mob drifts on
+// floatTravel is FloatNavigation's travel: the mob drifts on
 // its velocity with its own drag, and turns toward its target or the way it
 // moves.
 func (b *Body) floatTravel(w World) bool {
@@ -302,7 +302,7 @@ func (b *Body) floatTravel(w World) bool {
 	return false
 }
 
-// swimTravel is WaterBoundPathNavigation's travel (0xBD73BC0). A swimmer on
+// swimTravel is WaterBoundPathNavigation's travel. A swimmer on
 // a path in water drifts on its velocity with 0.9 drag; one off a path
 // without a target stops rising.
 func (b *Body) swimTravel() bool {
@@ -326,7 +326,7 @@ func (b *Body) swimTravel() bool {
 
 func scale(v Vec3, k float32) Vec3 { return Vec3{X: v.X * k, Y: v.Y * k, Z: v.Z * k} }
 
-// addMove is Actor::move (0xB2CD6D0): it adds to the tick's move request.
+// addMove matches BDS: it adds to the tick's move request.
 func (b *Body) addMove(v Vec3) {
 	b.delta.X += v.X
 	b.delta.Y += v.Y

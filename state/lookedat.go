@@ -7,15 +7,14 @@ import (
 	"github.com/helix-bedrock/entity/definition"
 )
 
-// The set_target modes of minecraft:looked_at, by BDS number (the parser
-// sub_6FE1940).
+// The set_target modes of minecraft:looked_at, by BDS number (the parser).
 const (
 	LookedAtNever               = 0
 	LookedAtOnceAndStop         = 1
 	LookedAtOnceAndKeepScanning = 2
 )
 
-// The line_of_sight_obstruction_type values, by BDS number (sub_6FE1A70).
+// The line_of_sight_obstruction_type values, by BDS number.
 const (
 	LineOfSightOutline            = 0
 	LineOfSightCollision          = 1
@@ -29,8 +28,8 @@ type LookAtLocation struct {
 	VerticalOffset float32
 }
 
-// LookedAtConfig is minecraft:looked_at as BDS 1.26.60 reads it (parser
-// sub_6FDD2B0, defaults in the definition built by sub_B4D34D0).
+// LookedAtConfig is minecraft:looked_at as BDS 1.26.60 reads it (parser,
+// defaults in the definition built by).
 type LookedAtConfig struct {
 	SearchRadius    float32
 	SetTarget       int
@@ -68,7 +67,7 @@ func DefaultLookedAt() LookedAtConfig {
 	}
 }
 
-// LookedAt is the running component (LookedAtSystem, per mob 0x77FDD20):
+// LookedAt is the running component (LookedAtSystem, per mob):
 // a cooldown, then the nearest player (or first entity) in the search
 // radius looking at the owner; after min_looked_at_duration it may become
 // the target, looked_at_event fires, the stare sound plays and a new
@@ -165,7 +164,7 @@ func (l *LookedAt) find(env *Env) behavior.Actor {
 	return found
 }
 
-// looking is the system's test of one looker (sub_77FF2C0): not in
+// looking is the system's test of one looker: not in
 // creative or spectator, one of the owner's points inside its view cone
 // and in clear sight from its head, and the filters passed.
 func (l *LookedAt) looking(env *Env, a behavior.Actor) bool {

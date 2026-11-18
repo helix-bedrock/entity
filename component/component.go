@@ -1,6 +1,6 @@
 // Package component builds a mob's goals from the components of its entity
-// definition, the way BDS 1.26.60 does when a mob's component groups change
-// (Mob::createAIGoals): every minecraft:behavior.* component becomes a goal
+// definition, the way BDS 1.26.60 does when a mob's component groups change:
+// every minecraft:behavior.* component becomes a goal
 // with the priority and control flags in its JSON, in the order the
 // definition added the components. It also reads the minecraft:navigation.*
 // and minecraft:movement.* components.
@@ -15,10 +15,10 @@
 // Resolver.
 //
 // Read from BDS 1.26.60: the shared goal fields in the legacy goal parser
-// (0xBF93840: priority, control_flags), goal creation (one initializer per
-// goal, such as 0x54412E0) and GoalSelectorComponent::addGoal (0x741DC50);
-// the rebuild order from 1.21.3 (Mob::createAIGoals 0x14190DC30,
-// EntityGoalFactory::addGoals 0x140628770).
+// (: priority, control_flags), goal creation (one initializer per
+// goal, such as) and BDS's code;
+// the rebuild order from 1.21.3 (BDS's code 0x14190DC30,
+// BDS's code 0x140628770).
 package component
 
 import (

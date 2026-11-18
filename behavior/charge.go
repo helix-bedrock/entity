@@ -31,7 +31,7 @@ func NewChargeAttack(w World, m Attacker, c ChargeAttackConfig) *ChargeAttack {
 	return &ChargeAttack{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5769460).
+// CanUse implements goal.Goal.
 func (g *ChargeAttack) CanUse() bool {
 	wanted, ok := g.m.MoveWanted()
 	if !ok {
@@ -44,17 +44,17 @@ func (g *ChargeAttack) CanUse() bool {
 	return dist2(g.m.Pos(), t.Pos()) > g.cfg.MinDistance*g.cfg.MinDistance
 }
 
-// CanContinueToUse implements goal.Goal (0x5769640).
+// CanContinueToUse implements goal.Goal.
 func (g *ChargeAttack) CanContinueToUse() bool {
 	wanted, ok := g.m.MoveWanted()
 	if !ok || !wanted || !g.m.Flag(FlagCharging) {
 		return false
 	}
 	t := g.actor(g.m.Target())
-	return t != nil && t.Alive() // BDS 1.26.60 0x5519920
+	return t != nil && t.Alive() // BDS 1.26.60
 }
 
-// Start implements goal.Goal (0x57697B0).
+// Start implements goal.Goal.
 func (g *ChargeAttack) Start() {
 	t := g.actor(g.m.Target())
 	if t == nil {
@@ -65,10 +65,10 @@ func (g *ChargeAttack) Start() {
 	g.m.PlaySoundAt(g.cfg.SoundEvent, g.m.Pos())
 }
 
-// Stop implements goal.Goal (0x5769A60).
+// Stop implements goal.Goal.
 func (g *ChargeAttack) Stop() { g.m.SetFlag(FlagCharging, false) }
 
-// Tick implements goal.Goal (0x5769A80).
+// Tick implements goal.Goal.
 func (g *ChargeAttack) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil {

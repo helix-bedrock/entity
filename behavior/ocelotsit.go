@@ -24,19 +24,19 @@ func NewOcelotSitOnBlock(w World, m Mob, c MoveToConfig) *OcelotSitOnBlock {
 	return g
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x55048A0).
+// CanUse implements goal.Goal.
 func (g *OcelotSitOnBlock) CanUse() bool {
 	m := g.mob
 	return m.Flag(FlagTamed) && !m.Flag(FlagSitting) && g.canStart() && g.find()
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x4A81A60, the base).
+// CanContinueToUse implements goal.Goal (the base).
 func (g *OcelotSitOnBlock) CanContinueToUse() bool { return g.keep() }
 
 // find is the base findTargetBlock.
 func (g *OcelotSitOnBlock) find() bool { return g.findBlock() }
 
-// valid is the goal's isValidTarget (BDS 1.26.60 0x5504B10): air above, and a chest no
+// valid is the goal's isValidTarget: air above, and a chest no
 // one has open, a lit furnace, or a bed's foot.
 func (g *OcelotSitOnBlock) valid(p Pos) bool {
 	w := g.world
@@ -55,14 +55,14 @@ func (g *OcelotSitOnBlock) valid(p Pos) bool {
 	return false
 }
 
-// reachable is the goal's path check (0x5754CB0): it aims at the top of
+// reachable is the goal's path check: it aims at the top of
 // the block's collision shape, then runs the base check.
 func (g *OcelotSitOnBlock) reachable(p Pos) bool {
 	g.offset = Vec3{Y: g.world.Block(p).ShapeTop}
 	return g.moveTo.reachable(p)
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x55049A0): once there, the cat sits and is
+// Tick implements goal.Goal: once there, the cat sits and is
 // put on the block.
 func (g *OcelotSitOnBlock) Tick() {
 	g.moveTo.Tick()

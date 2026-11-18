@@ -77,7 +77,7 @@ type moveTo struct {
 	offset      Vec3
 	hits        []blockHit
 	// aim, when useAim is set, is the float target the POI and village
-	// goals keep at +100 in place of the target block; aimHalf adds half a
+	// goals keep in place of the target block; aimHalf adds half a
 	// block on each axis for the target point (MoveToPOI's slot 17);
 	// aimOffset adds the offset instead (BaseMoveToBlockGoal's slot 17).
 	aim                        Vec3
@@ -92,7 +92,7 @@ func (g *moveTo) init(w World, m Mob, c MoveToConfig, flags goal.Flags, h moveTo
 		interval: moveToInterval, hooks: h, offset: Vec3{Y: 1}, repath: moveToRepath, restTime: moveToCooldown * ticksPerSecond, maxStay: moveToMaxStay}
 }
 
-// canStart is the base canUse (BDS 1.26.60 0x4A81950) without
+// canStart is the base canUse without
 // findTargetBlock. The interval and the chance both draw from the thread
 // random.
 func (g *moveTo) canStart() bool {
@@ -112,7 +112,7 @@ func (g *moveTo) canStart() bool {
 	return moveToChance >= t.NextFloat()
 }
 
-// keep is BaseMoveToBlockGoal's canContinue (0x4A81A60).
+// keep is BaseMoveToBlockGoal's canContinue.
 func (g *moveTo) keep() bool {
 	if n := g.mob.Nav(); n != nil {
 		if end, ok := n.PathEnd(); ok && dist2(vecOf(end), g.targetPos()) > g.radius2 {
@@ -122,7 +122,7 @@ func (g *moveTo) keep() bool {
 	return g.keepLite()
 }
 
-// keepLite is BaseMoveToGoal's canContinue (0x4A81CB0): no path end check.
+// keepLite is BaseMoveToGoal's canContinue: no path end check.
 func (g *moveTo) keepLite() bool {
 	if g.cooldown != 0 || g.stay > g.maxStay || g.tries > moveToGiveUp {
 		return false
@@ -186,7 +186,7 @@ func (g *moveTo) Stop() {
 	g.tries = 0
 }
 
-// Tick implements goal.Goal (0x4A825F0).
+// Tick implements goal.Goal.
 func (g *moveTo) Tick() {
 	t := g.targetPos()
 	p, b := g.mob.Pos(), g.mob.Box()
@@ -206,7 +206,7 @@ func (g *moveTo) Tick() {
 	}
 }
 
-// stuck is the path check after a repath (0x75147C0): the path starts
+// stuck is the path check after a repath: the path starts
 // where the last one did.
 func (g *moveTo) stuck() bool {
 	n := g.mob.Nav()
@@ -244,8 +244,8 @@ var (
 	DefaultMoveToLiquid = MoveToLiquidConfig{MoveToConfig: DefaultMoveTo(), Material: materialAny}
 )
 
-// MoveToLiquid is MoveToLiquidGoal (BDS 1.26.60 canUse 0x543A860,
-// canContinueToUse 0x543A970; start 0x4A82450, stop 0x4A824E0 and tick are
+// MoveToLiquid is MoveToLiquidGoal (BDS 1.26.60 canUse,
+// canContinueToUse; start, stop and tick are
 // BaseMoveToGoal's), which move_to_water and move_to_lava
 // also use: a mob out of the liquid walks to the nearest spot where it can
 // stand in it with air above.
@@ -276,7 +276,7 @@ func (g *MoveToLiquid) CanUse() bool { return g.outside() && g.canStart() && g.f
 // CanContinueToUse implements goal.Goal.
 func (g *MoveToLiquid) CanContinueToUse() bool { return g.outside() && g.keep() }
 
-// valid is the goal's isValidTarget (0x543AA70): the liquid one up over the
+// valid is the goal's isValidTarget: the liquid one up over the
 // mob's width, with air above it.
 func (g *MoveToLiquid) valid(p Pos) bool {
 	b := g.mob.Box()
@@ -295,12 +295,12 @@ func (g *MoveToLiquid) valid(p Pos) bool {
 	return true
 }
 
-// matches is the search predicate (0x543ECC0).
+// matches is the search predicate.
 func (g *MoveToLiquid) matches(b Block) bool {
 	return g.material == materialAny || b.Material == g.material
 }
 
-// find is the goal's findTargetBlock (0x543ABD0): the nearest block of the
+// find is the goal's findTargetBlock: the nearest block of the
 // liquid that is valid and reachable. Hits at the same distance stay in
 // the order libc++'s std::sort leaves them.
 func (g *MoveToLiquid) find() bool {
@@ -332,13 +332,13 @@ func NewMoveToLand(w World, m Mob, c MoveToConfig) *MoveToLand {
 	return g
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x543A5B0).
+// CanUse implements goal.Goal.
 func (g *MoveToLand) CanUse() bool { return g.mob.InWater() && g.canStart() && g.find() }
 
 // CanContinueToUse implements goal.Goal.
 func (g *MoveToLand) CanContinueToUse() bool { return g.mob.InWater() && g.keep() }
 
-// valid is the goal's isValidTarget (BDS 1.26.60 0x543A620).
+// valid is the goal's isValidTarget.
 func (g *MoveToLand) valid(p Pos) bool {
 	return g.world.LiquidBlock(p).BlocksMotion && g.world.LiquidBlock(Pos{X: p.X, Y: p.Y + 1, Z: p.Z}).Material == path.MaterialAir
 }
@@ -349,7 +349,7 @@ const (
 	landAimPast   = 2
 )
 
-// moveToBlock is the goal's moveMobToBlock (BDS 1.26.60 0x543A6B0).
+// moveToBlock is the goal's moveMobToBlock.
 func (g *MoveToLand) moveToBlock() {
 	c := Vec3{X: float32(g.target.X) + landAimCentre, Y: float32(g.target.Y) + 1, Z: float32(g.target.Z) + landAimCentre}
 	d := sub(c, g.mob.Pos())
@@ -362,8 +362,8 @@ func (g *MoveToLand) moveToBlock() {
 // find is the goal's findTargetBlock: BaseMoveToBlockGoal's search.
 func (g *MoveToLand) find() bool { return g.findBlock() }
 
-// findBlock is BaseMoveToBlockGoal's findTargetBlock (BDS 1.26.60
-// 0x4A81DA0), which tests each spot with the goal's isValidTarget and,
+// findBlock is BaseMoveToBlockGoal's findTargetBlock (BDS 1.26.60),
+// which tests each spot with the goal's isValidTarget and,
 // when it is nearer than the best so far, the path check.
 func (g *moveTo) findBlock() bool {
 	m := g.mob
@@ -446,7 +446,7 @@ type blockMatcher interface {
 	matches(b Block) bool
 }
 
-// searchBlocks is BDS's region block search (0xC8E3790): every block of
+// searchBlocks is BDS's region block search: every block of
 // both layers within h blocks up or down of c and r blocks across (a
 // circle) that m keeps, in BDS's order: chunk x, chunk z, sub chunk y,
 // layer 0 then the liquid layer, then x, z, y inside the sub chunk.

@@ -13,18 +13,17 @@ const (
 // MountSeeker is the part of the mob find_mount needs on top of Mob.
 type MountSeeker interface {
 	Mob
-	// AcceptsRider is the mount's canAddPassenger for the mob (Actor
-	// vt+744).
+	// AcceptsRider is the mount's canAddPassenger for the mob (Actor).
 	AcceptsRider(mount ID) bool
-	// ActorSleeping is Actor vt+336 for another entity.
+	// ActorSleeping is for another entity.
 	ActorSleeping(id ID) bool
 	// ActorWet is another entity's WasInWaterFlagComponent.
 	ActorWet(id ID) bool
-	// CanRide is 0xB3C4ED0: the mob can ride the mount now.
+	// CanRide is: the mob can ride the mount now.
 	CanRide(mount ID) bool
-	// StartRiding mounts the entity (Actor vt+224).
+	// StartRiding mounts the entity.
 	StartRiding(mount ID)
-	// GiveUpRiding is Actor vt+408 with false, which find_mount calls when
+	// GiveUpRiding is with false, which find_mount calls when
 	// the mount is lost.
 	GiveUpRiding()
 	// PathToActor makes a path to the entity for the goal to follow
@@ -49,14 +48,14 @@ type FindMountConfig struct {
 	MaxFailedAttempts int32   `json:"max_failed_attempts"`
 }
 
-// DefaultFindMount returns the goal's BDS defaults (0x5319A20).
+// DefaultFindMount returns the goal's BDS defaults.
 func DefaultFindMount() FindMountConfig {
 	return FindMountConfig{MountDistance: -1, MaxFailedAttempts: 20}
 }
 
-// FindMount is FindMountGoal (BDS 1.26.60 canUse 0x59F4BE0,
-// canContinueToUse 0x59F4FB0, start 0x59F5060, stop 0x59F5380, tick
-// 0x59F5500): the mob looks for the nearest mob that takes it as a rider,
+// FindMount is FindMountGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, stop, tick):
+// the mob looks for the nearest mob that takes it as a rider,
 // walks there and gets on.
 type FindMount struct {
 	base

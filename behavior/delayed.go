@@ -49,13 +49,13 @@ func (g *DelayedAttack) attacking() bool {
 	return g.m.Flag(FlagDelayedAttacking) && g.cooldown > 0 && g.cooldown < g.dcfg.AttackDuration
 }
 
-// CanContinueToUse implements goal.Goal (0x576CE70): an attack under way
+// CanContinueToUse implements goal.Goal: an attack under way
 // always finishes.
 func (g *DelayedAttack) CanContinueToUse() bool {
 	return g.attacking() || g.Melee.CanContinueToUse()
 }
 
-// Stop implements goal.Goal (0x576CEC0).
+// Stop implements goal.Goal.
 func (g *DelayedAttack) Stop() {
 	g.m.SetFlag(FlagDelayedAttacking, false)
 	g.cooldown = g.dcfg.AttackDuration
@@ -63,7 +63,7 @@ func (g *DelayedAttack) Stop() {
 	g.Melee.Stop()
 }
 
-// Tick implements goal.Goal (0x576CF00). g.cooldown is the attack timer:
+// Tick implements goal.Goal. g.cooldown is the attack timer:
 // it counts down from attack_duration once the attack starts.
 func (g *DelayedAttack) Tick() {
 	t := g.actor(g.target)
@@ -144,13 +144,13 @@ func NewStompAttack(w World, m Attacker, c StompAttackConfig) *StompAttack {
 	return &StompAttack{Melee: NewMelee(w, m, c.MeleeConfig), scfg: c}
 }
 
-// Stop implements goal.Goal (0x533B430).
+// Stop implements goal.Goal.
 func (g *StompAttack) Stop() {
 	g.m.SetFlag(FlagStanding, false)
 	g.Melee.Stop()
 }
 
-// Tick implements goal.Goal (0x533B460).
+// Tick implements goal.Goal.
 func (g *StompAttack) Tick() {
 	t := g.actor(g.target)
 	if t == nil {

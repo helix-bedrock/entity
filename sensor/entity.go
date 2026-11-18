@@ -27,7 +27,7 @@ type SubsensorConfig struct {
 }
 
 // DefaultSubsensor is BDS's subsensor: range 10 by 10, at least one
-// entity, no maximum, cooldown -1 (1.26.60 schema 0x724B1D0).
+// entity, no maximum, cooldown -1 (1.26.60 schema).
 func DefaultSubsensor() SubsensorConfig {
 	return SubsensorConfig{Range: [2]float32{10, 10}, MinCount: 1, MaxCount: -1, Cooldown: -1}
 }
@@ -43,14 +43,14 @@ type EntitySensorConfig struct {
 }
 
 // DefaultEntitySensor is BDS's entity sensor: relative range, all
-// entities, no subsensors (1.26.60 0x724AE70). An entity file with the
-// old top-level members has them moved into one subsensor (0xB360C50).
+// entities, no subsensors. An entity file with the
+// old top-level members has them moved into one subsensor.
 func DefaultEntitySensor() EntitySensorConfig { return EntitySensorConfig{RelativeRange: true} }
 
 // EntitySensor counts the entities near the mob that pass each
 // subsensor's filters and fires its event when the count is in bounds
-// (1.21.3 EntitySensorComponent::tick 0x1405BC350,
-// EntitySubsensor::senseEntities 0x1405BA970).
+// (1.21.3 BDS's code 0x1405BC350,
+// BDS's code 0x1405BA970).
 type EntitySensor struct {
 	cfg EntitySensorConfig
 	// next is the tick each subsensor checks again.

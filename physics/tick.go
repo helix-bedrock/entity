@@ -7,7 +7,7 @@ import "github.com/helix-bedrock/entity/trace"
 const inputDecay = 0.98
 
 // Tick runs one movement tick of a mob, in BDS's order: the jump systems of
-// the AI step (0x48A41B0), then the movement pipeline (0x4895C90).
+// the AI step, then the movement pipeline.
 //
 // It is called from the mob's own tick; w must stay valid for the call.
 func (b *Body) Tick(w World) {

@@ -5,7 +5,7 @@ package behavior
 type CaravanMember interface {
 	Actor
 	// InCaravan reports that the mob follows another one in a caravan
-	// (Mob::inCaravan, BDS 1.26.60 0xBFEE0B0: its head still exists).
+	// (BDS 1.26.60: its head still exists).
 	InCaravan() bool
 	// CaravanHead is the mob this one follows, CaravanTail the one that
 	// follows it; NoID when there is none.
@@ -18,8 +18,8 @@ type CaravanMember interface {
 type Caravanner interface {
 	Mob
 	CaravanMember
-	// JoinCaravan makes the mob follow head and head lead it (BDS 1.26.60
-	// 0xBFEDF10); LeaveCaravan undoes it (0xBFEDDB0). Both send the
+	// JoinCaravan makes the mob follow head and head lead it (BDS 1.26.60);
+	// LeaveCaravan undoes it. Both send the
 	// caravan's front the caravan-updated actor event with its length.
 	JoinCaravan(head ID)
 	LeaveCaravan()
@@ -52,7 +52,7 @@ type FollowCaravanConfig struct {
 	FollowDist float32
 }
 
-// DefaultFollowCaravan returns the goal's BDS defaults (0xE4ADC10, numbers
+// DefaultFollowCaravan returns the goal's BDS defaults (numbers
 // from the goal's code).
 func DefaultFollowCaravan() FollowCaravanConfig {
 	return FollowCaravanConfig{
@@ -61,7 +61,7 @@ func DefaultFollowCaravan() FollowCaravanConfig {
 	}
 }
 
-// FollowCaravan is FollowCaravanGoal (vtable 0xF7B3598): a mob that is not
+// FollowCaravan is FollowCaravanGoal: a mob that is not
 // leashed joins the end of a caravan whose front is leashed, then follows
 // the mob in front of it.
 type FollowCaravan struct {
@@ -93,7 +93,7 @@ func (g *FollowCaravan) caravanner(id ID) CaravanMember {
 	return c
 }
 
-// CanUse implements goal.Goal (0x59F8DF0): the nearest caravan end in reach,
+// CanUse implements goal.Goal: the nearest caravan end in reach,
 // or else the nearest leashed mob, becomes the leader when the chain in
 // front of it leads to a leashed mob within entity_count.
 func (g *FollowCaravan) CanUse() bool {
@@ -161,7 +161,7 @@ func (g *FollowCaravan) leashedAhead(c CaravanMember, i int32) bool {
 	return false
 }
 
-// validLeader is the entity_types test (0x59F91F0), applied to the leader
+// validLeader is the entity_types test, applied to the leader
 // and everyone in front of it.
 func (g *FollowCaravan) validLeader(c CaravanMember) bool {
 	for c != nil {
@@ -180,7 +180,7 @@ func (g *FollowCaravan) validLeader(c CaravanMember) bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (0x59F9320): the caravan still leads
+// CanContinueToUse implements goal.Goal: the caravan still leads
 // to a leashed mob; a mob that falls behind speeds up for a while, and gives
 // up when it is still behind at the top speed.
 func (g *FollowCaravan) CanContinueToUse() bool {
@@ -207,19 +207,19 @@ func (g *FollowCaravan) CanContinueToUse() bool {
 	return true
 }
 
-// Start implements goal.Goal (0x59F94B0).
+// Start implements goal.Goal.
 func (g *FollowCaravan) Start() {
 	g.timer = 0
 	g.speed = g.cfg.SpeedMultiplier
 }
 
-// Stop implements goal.Goal (0x59F94D0).
+// Stop implements goal.Goal.
 func (g *FollowCaravan) Stop() {
 	g.m.LeaveCaravan()
 	g.speed = g.cfg.SpeedMultiplier
 }
 
-// Tick implements goal.Goal (0x59F94F0): the mob walks to follow_dist short
+// Tick implements goal.Goal: the mob walks to follow_dist short
 // of the mob in front, and stops once it is that close.
 func (g *FollowCaravan) Tick() {
 	if !g.m.InCaravan() {

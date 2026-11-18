@@ -55,8 +55,7 @@ type DoorUser interface {
 	PathNodes() (nodes []Pos, index int, ok bool)
 	// Door is the door at p; ok is false when the block is not a door.
 	Door(p Pos) (DoorState, bool)
-	// SetDoorOpen opens or closes the door at p as the mob (DoorBlock
-	// 0xC580E70).
+	// SetDoorOpen opens or closes the door at p as the mob (DoorBlock).
 	SetDoorOpen(p Pos, open bool)
 	// Width is the mob's collision box width.
 	Width() float32
@@ -88,7 +87,7 @@ func NewDoorInteract(w World, m DoorUser) *DoorInteract {
 	return &DoorInteract{base: base{mob: m, world: w}, m: m}
 }
 
-// CanUse implements goal.Goal (0x576D6C0): the door at the mob's head
+// CanUse implements goal.Goal: the door at the mob's head
 // height, or else at one of the next path nodes.
 func (g *DoorInteract) CanUse() bool {
 	m := g.m
@@ -115,7 +114,7 @@ func (g *DoorInteract) CanUse() bool {
 	return g.have
 }
 
-// find is 0x576D9F0: the door at g.door counts when the mob is near it and
+// find is: the door at g.door counts when the mob is near it and
 // the path goes into or out of it through its closed side.
 func (g *DoorInteract) find(nodes []Pos, idx int) bool {
 	g.in, g.out = noDir, noDir
@@ -199,10 +198,10 @@ func doorSide(s DoorState) int8 {
 	return noDir
 }
 
-// CanContinueToUse implements goal.Goal (0x576DDA0).
+// CanContinueToUse implements goal.Goal.
 func (g *DoorInteract) CanContinueToUse() bool { return g.have && !g.passed }
 
-// Start implements goal.Goal (0x576DDC0).
+// Start implements goal.Goal.
 func (g *DoorInteract) Start() {
 	g.wide = g.m.Width()+doorWideSlack > doorWideMob
 	st, _ := g.m.Door(g.door)
@@ -212,7 +211,7 @@ func (g *DoorInteract) Start() {
 	g.toDoor = Vec3{X: float32(g.door.X) + 0.5 - p.X, Z: float32(g.door.Z) + 0.5 - p.Z}
 }
 
-// Tick implements goal.Goal (0x576DE90): the mob is through once it is past
+// Tick implements goal.Goal: the mob is through once it is past
 // the door's edge on the way out.
 func (g *DoorInteract) Tick() { g.passed = g.through() }
 
@@ -237,7 +236,7 @@ type OpenDoorConfig struct {
 	CloseDoorAfter bool `json:"close_door_after"`
 }
 
-// DefaultOpenDoor returns the goal's BDS defaults (0xDCA3AE0).
+// DefaultOpenDoor returns the goal's BDS defaults.
 func DefaultOpenDoor() OpenDoorConfig { return OpenDoorConfig{CloseDoorAfter: true} }
 
 // OpenDoor is OpenDoorGoal: the mob opens a door on its path and closes it
@@ -253,27 +252,27 @@ func NewOpenDoor(w World, m DoorUser, c OpenDoorConfig) *OpenDoor {
 	return &OpenDoor{DoorInteract: DoorInteract{base: base{mob: m, world: w}, m: m}, cfg: c}
 }
 
-// CanContinueToUse implements goal.Goal (0x5755030): only while the door is
+// CanContinueToUse implements goal.Goal: only while the door is
 // to be closed again.
 func (g *OpenDoor) CanContinueToUse() bool {
 	return g.cfg.CloseDoorAfter && g.timer > 0 && g.have && !g.passed
 }
 
-// Start implements goal.Goal (0x5755050).
+// Start implements goal.Goal.
 func (g *OpenDoor) Start() {
 	g.DoorInteract.Start()
 	g.timer = openDoorTime
 	g.m.SetDoorOpen(g.door, !g.wasOpen)
 }
 
-// Stop implements goal.Goal (0x57550E0).
+// Stop implements goal.Goal.
 func (g *OpenDoor) Stop() {
 	if g.cfg.CloseDoorAfter && g.have {
 		g.m.SetDoorOpen(g.door, g.wasOpen)
 	}
 }
 
-// Tick implements goal.Goal (0x5755180).
+// Tick implements goal.Goal.
 func (g *OpenDoor) Tick() {
 	g.timer--
 	g.DoorInteract.Tick()
@@ -291,7 +290,7 @@ func NewBreakDoor(w World, m DoorUser) *BreakDoor {
 	return &BreakDoor{DoorInteract: DoorInteract{base: base{mob: m, world: w}, m: m}}
 }
 
-// CanUse implements goal.Goal (0x48CA070). The width test reads the value
+// CanUse implements goal.Goal. The width test reads the value
 // the last start left.
 func (g *BreakDoor) CanUse() bool {
 	if !g.DoorInteract.CanUse() || g.have && g.wide {
@@ -309,7 +308,7 @@ func (g *BreakDoor) angry() bool {
 	return g.actor(m.Target()) != nil && g.actor(m.LastHurtByMob()) == nil
 }
 
-// CanContinueToUse implements goal.Goal (0x48CA310).
+// CanContinueToUse implements goal.Goal.
 func (g *BreakDoor) CanContinueToUse() bool {
 	if !g.angry() || g.time > breakDoorTime {
 		return false
@@ -321,7 +320,7 @@ func (g *BreakDoor) CanContinueToUse() bool {
 	return g.blocking() || g.wide
 }
 
-// blocking is 0x576E040: the door still closes the path's way in or out.
+// blocking is: the door still closes the path's way in or out.
 func (g *BreakDoor) blocking() bool {
 	st, ok := g.m.Door(g.door)
 	if !ok {
@@ -331,7 +330,7 @@ func (g *BreakDoor) blocking() bool {
 	return side == g.in || side == g.out
 }
 
-// Start implements goal.Goal (0x48CA150).
+// Start implements goal.Goal.
 func (g *BreakDoor) Start() {
 	g.DoorInteract.Start()
 	g.time = 0
@@ -340,14 +339,14 @@ func (g *BreakDoor) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x48CA250).
+// Stop implements goal.Goal.
 func (g *BreakDoor) Stop() {
 	if g.m.Difficulty() == difficultyHard {
 		g.m.DoorEvent(eventDoorCrackStop, Vec3{X: float32(g.door.X), Y: float32(g.door.Y), Z: float32(g.door.Z)}, 0)
 	}
 }
 
-// Tick implements goal.Goal (0x48CA400): the mob knocks now and then, and
+// Tick implements goal.Goal: the mob knocks now and then, and
 // after breakDoorTime ticks the door breaks.
 func (g *BreakDoor) Tick() {
 	g.DoorInteract.Tick()
@@ -389,20 +388,20 @@ func (g *RestrictOpenDoor) indoorsAtNight() bool {
 	return b.Y < w.MinHeight() || b.Y < w.HeightMap(b.X, b.Z)
 }
 
-// CanUse implements goal.Goal (0x5925190).
+// CanUse implements goal.Goal.
 func (g *RestrictOpenDoor) CanUse() bool { return g.mob.Nav() != nil && g.indoorsAtNight() }
 
-// CanContinueToUse implements goal.Goal (0x59253A0).
+// CanContinueToUse implements goal.Goal.
 func (g *RestrictOpenDoor) CanContinueToUse() bool { return g.indoorsAtNight() }
 
-// Start implements goal.Goal (0x59254E0).
+// Start implements goal.Goal.
 func (g *RestrictOpenDoor) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.SetFlags(n.Flags() &^ uint32(nav.FlagCanOpenDoors|nav.FlagCanPassDoors))
 	}
 }
 
-// Stop implements goal.Goal (0x59255C0): both switches come back on, even
+// Stop implements goal.Goal: both switches come back on, even
 // when they were off before.
 func (g *RestrictOpenDoor) Stop() {
 	if n := g.mob.Nav(); n != nil {
@@ -410,8 +409,8 @@ func (g *RestrictOpenDoor) Stop() {
 	}
 }
 
-// PlayerRideTamed is PlayerVehicleTamedGoal (BDS 1.26.60 canUse 0x550C2A0,
-// canContinueToUse 0x550C2E0; start and tick are empty, stop is BaseGoal's):
+// PlayerRideTamed is PlayerVehicleTamedGoal (BDS 1.26.60 canUse,
+// canContinueToUse; start and tick are empty, stop is BaseGoal's):
 // a tamed mob with a rider does nothing else.
 type PlayerRideTamed struct{ base }
 
@@ -426,17 +425,17 @@ func (g *PlayerRideTamed) CanUse() bool { return len(g.mob.Riders()) > 0 && g.mo
 // CanContinueToUse implements goal.Goal.
 func (g *PlayerRideTamed) CanContinueToUse() bool { return g.CanUse() }
 
-// The base Goal methods DoorInteract keeps (1.26.60 vtable: stop is a no-op).
+// The base Goal methods DoorInteract keeps (stop is a no-op).
 
 // Stop implements goal.Goal.
 func (g *DoorInteract) Stop() {}
 
-// The base Goal methods RestrictOpenDoor keeps (1.26.60 vtable: tick is a no-op).
+// The base Goal methods RestrictOpenDoor keeps (tick is a no-op).
 
 // Tick implements goal.Goal.
 func (g *RestrictOpenDoor) Tick() {}
 
-// PlayerRideTamed's start and tick do nothing (1.26.60 vtable).
+// PlayerRideTamed's start and tick do nothing.
 
 // Start implements goal.Goal.
 func (g *PlayerRideTamed) Start() {}

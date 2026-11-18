@@ -14,8 +14,8 @@ func DefaultFloat() FloatConfig {
 	return FloatConfig{ChancePerTickToFloat: 0.8}
 }
 
-// Float is FloatGoal (BDS 1.26.60 canUse 0x59F7610, start 0x59F77C0, tick
-// 0x59F77D0; canContinueToUse is BaseGoal's, which asks canUse): a mob in
+// Float is FloatGoal (BDS 1.26.60 canUse, start, tick;
+// canContinueToUse is BaseGoal's, which asks canUse): a mob in
 // water or lava jumps to stay afloat.
 type Float struct {
 	base

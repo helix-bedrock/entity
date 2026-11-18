@@ -32,13 +32,12 @@ type InventoryConfig struct {
 }
 
 // DefaultInventory returns minecraft:inventory's BDS defaults
-// (ContainerDescription::deserializeData 0x737C8C0, 1.26.60).
 func DefaultInventory() InventoryConfig {
 	return InventoryConfig{ContainerType: "none", Size: 5}
 }
 
-// EquipItemConfig is minecraft:equip_item (EquipItemDefinition, schema
-// 0x6FD3540, 1.26.60): the items equip_item never puts on, and whether it
+// EquipItemConfig is minecraft:equip_item (EquipItemDefinition, schema,
+// 1.26.60): the items equip_item never puts on, and whether it
 // puts on armour at all.
 type EquipItemConfig struct {
 	// ExcludedItems are item descriptors, passed to the engine to match.
@@ -104,7 +103,7 @@ type ShooterConfig struct {
 }
 
 // Pick is the projectile to shoot at target: the first entry whose
-// filters pass, else the default def. ShooterComponent::onShoot (1.21.3
+// filters pass, else the default def. BDS's code (1.21.3
 // 0x14063ADE0), which makes this choice, was not read.
 func (c *ShooterConfig) Pick(env *Env, target behavior.Actor) (def string, aux int32, loseTarget bool) {
 	ctx := env.tester(env.Self, target)

@@ -75,7 +75,7 @@ func (g *MoveToRandomBlock) standable() bool {
 	return true
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x543BA50).
+// CanUse implements goal.Goal.
 func (g *MoveToRandomBlock) CanUse() bool {
 	if g.mob.Nav() == nil {
 		return false
@@ -96,7 +96,7 @@ func (g *MoveToRandomBlock) CanUse() bool {
 	return g.standable()
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x543BEF0): canUse
+// CanContinueToUse implements goal.Goal: canUse
 // runs again first, cooldown and all.
 func (g *MoveToRandomBlock) CanContinueToUse() bool {
 	if !g.CanUse() || g.target == (Vec3{}) || g.cooldown > 0 {
@@ -105,7 +105,7 @@ func (g *MoveToRandomBlock) CanContinueToUse() bool {
 	return g.standable()
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x543BD80).
+// Start implements goal.Goal.
 func (g *MoveToRandomBlock) Start() {
 	if n := g.mob.Nav(); n != nil && g.target != (Vec3{}) && !n.Done() {
 		n.Stop()
@@ -114,7 +114,7 @@ func (g *MoveToRandomBlock) Start() {
 	g.last = g.mob.Pos()
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x543C6A0).
+// Stop implements goal.Goal.
 func (g *MoveToRandomBlock) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -122,7 +122,7 @@ func (g *MoveToRandomBlock) Stop() {
 	g.target = Vec3{}
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x543C0A0).
+// Tick implements goal.Goal.
 func (g *MoveToRandomBlock) Tick() {
 	if g.target == (Vec3{}) {
 		return
@@ -175,8 +175,8 @@ func (g *MoveToRandomBlock) Tick() {
 }
 
 // turnAside is how a stuck mob changes direction: up and down flip, a
-// side turns one of two ways by a coin flip from Level::getRandom (BDS
-// 1.26.60 tick 0x543C0A0).
+// side turns one of two ways by a coin flip from BDS's code (BDS
+// 1.26.60 tick).
 func turnAside(w World, dir uint8) uint8 {
 	if dir <= dirUp {
 		return dir ^ 1

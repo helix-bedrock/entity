@@ -32,7 +32,7 @@ func (t *target) owner() Actor {
 	return o
 }
 
-// valid is TargetGoal::isValidTarget plus the must_reach cache (0xBDD60E0).
+// valid matches BDS plus the must_reach cache.
 func (t *target) valid(a Actor) bool {
 	return a != nil && t.canAttack(a) && (!t.mustReach || t.canReach(a))
 }
@@ -128,8 +128,8 @@ func DefaultTeleportToOwner() TeleportToOwnerConfig {
 	return TeleportToOwnerConfig{Cooldown: teleportOwnerCooldown}
 }
 
-// TeleportToOwner is TeleportToOwnerGoal (BDS 1.26.60 canUse 0x569BB00,
-// start 0x569BE10): when its filters pass, a pet jumps to a free spot next
+// TeleportToOwner is TeleportToOwnerGoal (BDS 1.26.60 canUse,
+// start): when its filters pass, a pet jumps to a free spot next
 // to its owner. It runs for one tick.
 type TeleportToOwner struct {
 	base
@@ -185,7 +185,7 @@ func (g *TeleportToOwner) Stop() {}
 func (g *TeleportToOwner) Tick() {}
 
 // Sit is SitGoal (minecraft:behavior.stay_while_sitting; BDS 1.26.60
-// canUse 0x5B00FF0, start 0x5B010B0): a sitting mob stops moving and keeps
+// canUse, start): a sitting mob stops moving and keeps
 // still.
 type Sit struct{ base }
 

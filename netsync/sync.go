@@ -97,12 +97,12 @@ type Entity struct {
 	// minecraft:conditional_bandwidth_optimization.
 	Bandwidth *Bandwidth
 	// AlwaysSend sends every movement update to every viewer, skipping the
-	// throttle (a flag component in BDS, checked in sub_8CFC460).
+	// throttle (a flag component in BDS, checked).
 	AlwaysSend bool
 	// Dead marks an entity that is not alive.
 	Dead bool
 	// ZeroRotation starts the last-sent rotation at 0, as BDS does for
-	// actor type 64 (sub_8CE9830).
+	// actor type 64.
 	ZeroRotation bool
 }
 
@@ -484,7 +484,6 @@ func (s *Sync) sendMove(es *entityState, m pendingMove, tick uint64) {
 	rid := es.e.Spawn.RuntimeID
 	if !s.opts.Deltas {
 		// BDS sends an absolute update to everyone and always stores it
-		// (sub_8CE8C80).
 		s.absolutes = append(s.absolutes, Absolute(rid, now, m.flags))
 		s.Broadcast(m.id, &s.absolutes[len(s.absolutes)-1], PhaseMovement)
 		es.last = now

@@ -56,14 +56,14 @@ type Settings struct {
 	Swim, Fly, Walk        bool
 	DoorOpener             bool // actor flag DoorOpener
 	DoorBreaker            bool // actor flag DoorBreaker
-	LavaWalker             bool // BDS's +234: lava does not stop it
-	LavaComponent          bool // BDS's +235: a component that also allows lava
-	InWater                bool // BDS's +49
-	PathFromAir            bool // BDS's +50
-	SpecialStartNeighbours bool // BDS's +48: two actor types search six neighbours
+	LavaWalker             bool // BDS's: lava does not stop it
+	LavaComponent          bool // BDS's: a component that also allows lava
+	InWater                bool // BDS's
+	PathFromAir            bool // BDS's
+	SpecialStartNeighbours bool // BDS's: two actor types search six neighbours
 
 	// BreakBlocks is set when the mob has a break_blocks component;
-	// Breakable lists the blocks it breaks. With MobGriefing (BDS's +239, a
+	// Breakable lists the blocks it breaks. With MobGriefing (BDS's, a
 	// level setting) they are NodeBreakable.
 	BreakBlocks bool
 	Breakable   func(Block) bool

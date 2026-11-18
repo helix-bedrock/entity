@@ -54,7 +54,7 @@ func (g *SilverfishMerge) spot() Pos {
 	return Pos{X: floorInt(p.X) + f.X, Y: floorInt(p.Y+0.5) + f.Y, Z: floorInt(p.Z) + f.Z}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B000C0).
+// CanUse implements goal.Goal.
 func (g *SilverfishMerge) CanUse() bool {
 	m, w := g.m, g.world
 	if g.actor(m.Target()) != nil {
@@ -63,8 +63,7 @@ func (g *SilverfishMerge) CanUse() bool {
 	if n := m.Nav(); n == nil || !n.Done() {
 		return false
 	}
-	// Both rolls are the mob's thread random (BDS 1.26.60 canUse
-	// 0x5B000C0, 0xB39C0F0).
+	// Both rolls are the mob's thread random (BDS 1.26.60 canUse).
 	if r := w.ThreadRandom(); w.MobGriefing() && r.NextInt(mergeChance) == 0 {
 		g.facing = r.NextInt(mergeFacings)
 		if w.Block(g.spot()).Infested != "" {
@@ -79,7 +78,7 @@ func (g *SilverfishMerge) CanUse() bool {
 // CanContinueToUse implements goal.Goal.
 func (g *SilverfishMerge) CanContinueToUse() bool { return !g.merging && !g.done }
 
-// Start implements goal.Goal (BDS 1.26.60 0x5B00370).
+// Start implements goal.Goal.
 func (g *SilverfishMerge) Start() {
 	if !g.merging {
 		g.Stroll.Start()
@@ -113,7 +112,7 @@ func NewSilverfishWake(w World, m Silverfish) *SilverfishWake {
 	return &SilverfishWake{base: base{mob: m, world: w}, m: m}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B007E0).
+// CanUse implements goal.Goal.
 func (g *SilverfishWake) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
@@ -136,7 +135,7 @@ func (g *SilverfishWake) Start() {}
 // Stop implements goal.Goal.
 func (g *SilverfishWake) Stop() {}
 
-// Tick implements goal.Goal (0x5B00950): when the countdown runs out, every
+// Tick implements goal.Goal: when the countdown runs out, every
 // infested block in range gives up its silverfish, in BDS's order, until a
 // coin flip after one of them says stop.
 func (g *SilverfishWake) Tick() {
@@ -160,7 +159,7 @@ func (g *SilverfishWake) Tick() {
 				} else {
 					w.SetBlock(p, PlacedBlock{Name: host}, m.ID())
 				}
-				// Level getThreadRandom (BDS 1.26.60 tick 0x5B00950).
+				// Level getThreadRandom (BDS 1.26.60 tick).
 				if w.ThreadRandom().NextBool() {
 					return
 				}

@@ -21,12 +21,12 @@ type Attacker interface {
 	// HasAttack reports the minecraft:attack component (the actor
 	// definition's attack description); melee goals do not start without it.
 	HasAttack() bool
-	// Slot is the item in a hand slot; SlotMainhand is Mob::getCarriedItem.
+	// Slot is the item in a hand slot; SlotMainhand is BDS's code.
 	Slot(slot int) Item
 	// Difficulty is the level's difficulty, 0 (peaceful) to 3 (hard).
 	Difficulty() int
-	// Ignite sets the entity with the ID on fire for at least seconds
-	// (Actor::setOnFire). It is called only from AttackResult.
+	// Ignite sets the entity with the ID on fire for at least seconds.
+	// It is called only from AttackResult.
 	Ignite(id ID, seconds int32)
 	// Swing swings the mob's arm.
 	Swing()
@@ -107,8 +107,8 @@ type Melee struct {
 	cooldown int32
 	repath   int32
 	done     bool
-	// last is where the chase step last saw the target (MeleeAttackBaseGoal
-	// +136); delayed_attack and stomp_attack measure their reach from it.
+	// last is where the chase step last saw the target (MeleeAttackBaseGoal);
+	// delayed_attack and stomp_attack measure their reach from it.
 	last Vec3
 	// box is set for MeleeBoxAttackGoal, which only replaces the tick.
 	box bool
@@ -129,10 +129,10 @@ func NewMeleeBox(w World, m Attacker, c MeleeConfig) *Melee {
 	return g
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal 0x54325B0).
+// CanUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal).
 // A mob that rides passes without a path. A sun-avoiding navigation skips a
-// target standing in the sun while the mob is out of it (0x5432A70).
-// set_persistent is never set on this goal in 1.26.60 (0x5604EF0), and
+// target standing in the sun while the mob is out of it.
+// set_persistent is never set on this goal in 1.26.60, and
 // hijack_mount_navigation is not built: no vanilla mob uses it.
 func (g *Melee) CanUse() bool {
 	if g.m.Admiring() {
@@ -169,13 +169,13 @@ func (g *Melee) CanUse() bool {
 	return true
 }
 
-// sunBlocked is 0x5432A70: the mob is out of the sun and the target, not
+// sunBlocked is: the mob is out of the sun and the target, not
 // removed, is in it.
 func (g *Melee) sunBlocked(t Actor) bool {
 	return !t.Removed() && !sunlit(g.world, g.m.Pos()) && sunlit(g.world, t.Pos())
 }
 
-// sunlit is the sun test of 0x5432A70 at an entity's feet: daytime, and the
+// sunlit is the sun test of at an entity's feet: daytime, and the
 // block at or above the build limit or at or above the height map.
 func sunlit(w World, p Vec3) bool {
 	if !w.IsDay() {
@@ -188,8 +188,8 @@ func sunlit(w World, p Vec3) bool {
 	return b.Y >= w.MinHeight() && b.Y >= w.HeightMap(b.X, b.Z)
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal
-// 0x5432EF0). attack_once after a hit, the random stop (thread random) and
+// CanContinueToUse implements goal.Goal (BDS 1.26.60 MeleeAttackBaseGoal).
+// attack_once after a hit, the random stop (thread random) and
 // a monster target in peaceful clear the mob's target as they stop.
 func (g *Melee) CanContinueToUse() bool {
 	if g.m.Admiring() {
@@ -220,7 +220,6 @@ func (g *Melee) CanContinueToUse() bool {
 
 // Start implements goal.Goal. BDS follows the path canUse made, none for a
 // riding mob, and sets the repath timer to path_fail_time_increase
-// (0x5433220).
 func (g *Melee) Start() {
 	g.done = false
 	g.repath = g.cfg.FailIncrease
@@ -260,7 +259,7 @@ func (g *Melee) reach2(t Actor) float32 {
 // inFOV is the melee_fov test.
 func (g *Melee) inFOV(t Actor) bool { return inFOV(g.m, t.Pos(), g.cfg.MeleeFOV) }
 
-// inFOV is the field of view test (0x7267140): q lies within fov degrees
+// inFOV is the field of view test: q lies within fov degrees
 // of the mob's body yaw.
 func inFOV(m Mob, q Vec3, fov float32) bool {
 	p := m.Pos()
@@ -319,8 +318,8 @@ func (g *Melee) AttackResult(target ID, hit, killed bool) {
 	}
 }
 
-// spreadFire is can_spread_on_fire (BDS 1.26.60 _attemptAttackTarget
-// 0x5431880): a burning mob with an empty hand sets the target alight by a
+// spreadFire is can_spread_on_fire (BDS 1.26.60 _attemptAttackTarget):
+// a burning mob with an empty hand sets the target alight by a
 // difficulty chance drawn on the level's IRandom.
 func (g *Melee) spreadFire(target ID) {
 	if !g.cfg.CanSpreadOnFire || !g.m.OnFire() {
@@ -335,7 +334,7 @@ func (g *Melee) spreadFire(target ID) {
 	}
 }
 
-// step is the chase step the melee goals share (1.26.60 0x5431120): look
+// step is the chase step the melee goals share: look
 // at the target (the look control's yaw limit is y_max_head_rotation, its
 // pitch limit x_max_rotation), count the repath timer down, and while the target is
 // tracked or seen remember where it stands (its feet, the bottom of its
@@ -394,7 +393,7 @@ func (g *Melee) chase(t Actor, d2 float32, inReach bool) {
 	}
 }
 
-// boxTick is MeleeBoxAttackGoal's tick (1.26.60 0x5433900): the reach is
+// boxTick is MeleeBoxAttackGoal's tick: the reach is
 // a box overlap with the cooldown spent, the path distance is flat to the
 // target's vehicle (one level, as BDS takes it) or the target, and a hit
 // needs a block-free line between the eyes.

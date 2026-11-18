@@ -22,9 +22,9 @@ func DefaultMountPathing() MountPathingConfig {
 	return MountPathingConfig{SpeedMultiplier: 1}
 }
 
-// MountPathing is MountPathingGoal (BDS 1.26.60 canUse 0x5435D30,
-// canContinueToUse 0x5435FD0, start 0x5436280, stop 0x5436310, tick
-// 0x54364D0): a mount carrying a mob walks toward its rider's target. While
+// MountPathing is MountPathingGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, stop, tick):
+// a mount carrying a mob walks toward its rider's target. While
 // the rider steers the mount itself (HijackMountNavigationComponent) the
 // goal runs and holds its flags but does nothing.
 type MountPathing struct {
@@ -159,8 +159,8 @@ func (g *MountPathing) outOfReach(t Actor) bool {
 	return reach <= dist2(g.mob.Pos(), c)
 }
 
-// RunAroundLikeCrazy is RunAroundLikeCrazyGoal (BDS 1.26.60 canUse
-// 0x5AFCAF0, canContinueToUse 0x5AFCD60, start 0x5AFCC50; stop and tick are
+// RunAroundLikeCrazy is RunAroundLikeCrazyGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start; stop and tick are
 // BaseGoal's): an untamed horse with a player on its back runs to random
 // spots nearby.
 type RunAroundLikeCrazy struct {

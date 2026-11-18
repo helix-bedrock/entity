@@ -4,7 +4,7 @@ package behavior
 // passes; what the host does with it is not mapped yet.
 const knockbackExtra = 0.5
 
-// Knockback is the argument block of Actor::knockback (Actor vtable +1096)
+// Knockback is the argument block of BDS's code
 // as aquatic_charge_attack, ram_attack and knockback_roar fill it.
 type Knockback struct {
 	Power     float32
@@ -24,8 +24,8 @@ type Knocker interface {
 
 // MoveController is a mob that may have a MoveControlComponent.
 type MoveController interface {
-	// MoveControl reports the move control's maximum turn per tick (its
-	// +20); ok is false when the mob has none.
+	// MoveControl reports the move control's maximum turn per tick (its);
+	// ok is false when the mob has none.
 	MoveControl() (maxTurn float32, ok bool)
 	// SetBodyYaw sets the body rotation (MobBodyRotationComponent).
 	SetBodyYaw(yaw float32)

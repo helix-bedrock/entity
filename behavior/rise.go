@@ -40,7 +40,7 @@ func NewRiseToLiquidLevel(w World, m Mob, c RiseToLiquidLevelConfig) *RiseToLiqu
 	return &RiseToLiquidLevel{base: base{mob: m, world: w, flags: flagsJump}, cfg: c}
 }
 
-// CanUse implements goal.Goal (0x5925AE0); a sitting mob stands up.
+// CanUse implements goal.Goal; a sitting mob stands up.
 func (g *RiseToLiquidLevel) CanUse() bool {
 	if !g.mob.InWater() && !g.mob.InLava() {
 		return false
@@ -60,7 +60,7 @@ func (g *RiseToLiquidLevel) Start() {}
 // Stop implements goal.Goal.
 func (g *RiseToLiquidLevel) Stop() {}
 
-// Tick implements goal.Goal (0x5925B90): find the top liquid block above
+// Tick implements goal.Goal: find the top liquid block above
 // the box bottom and push the mob towards its surface.
 func (g *RiseToLiquidLevel) Tick() {
 	m := g.mob

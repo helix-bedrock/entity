@@ -77,7 +77,7 @@ func parseOperator(s string) (Operator, bool) {
 }
 
 // Compare applies the operator to a test's value a and the JSON value b, as
-// FilterTest::_testValuesWithOperator does for numbers. An unknown operator
+// BDS's code does for numbers. An unknown operator
 // is false.
 func Compare[T int32 | float32](op Operator, a, b T) bool {
 	switch op {
@@ -157,7 +157,7 @@ type Filter struct {
 	Tests      []Test
 }
 
-// Eval runs the filter the way FilterGroup::evaluate does: subgroups first,
+// Eval runs the filter the way BDS's code does: subgroups first,
 // then tests, stopping at the first member that decides the result.
 func (f *Filter) Eval(t Tester) bool {
 	if f == nil {
@@ -217,7 +217,7 @@ func (p *Parser) parseFilter(raw json.RawMessage) (*Filter, error) {
 	return f, err
 }
 
-// parseObject is FilterGroup::_parseObject.
+// parseObject matches BDS.
 func (p *Parser) parseObject(f *Filter, raw json.RawMessage) error {
 	switch kindOf(raw) {
 	case kindArray:
@@ -262,7 +262,7 @@ func (p *Parser) parseObject(f *Filter, raw json.RawMessage) error {
 	return nil
 }
 
-// parseMember is FilterGroup::_parseMember.
+// parseMember matches BDS.
 func (p *Parser) parseMember(f *Filter, key string, raw json.RawMessage) error {
 	if kindOf(raw) == kindNull {
 		return fmt.Errorf("filter: member %q is null", key)
@@ -291,7 +291,7 @@ func (p *Parser) parseMember(f *Filter, key string, raw json.RawMessage) error {
 	return nil
 }
 
-// parseTest is FilterGroup::_parseTest with the inputs every test shares.
+// parseTest matches BDS with the inputs every test shares.
 func (p *Parser) parseTest(f *Filter, obj map[string]json.RawMessage) error {
 	var name string
 	if json.Unmarshal(obj["test"], &name) != nil {

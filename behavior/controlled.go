@@ -24,32 +24,32 @@ type PlayerControlled interface {
 	// ItemMatches reports the stack matching an item descriptor, as the
 	// engine reads it (BDS's item names and their aliases).
 	ItemMatches(descriptor string, it Item) bool
-	// HeldItem is the player's selected item (Actor vt+624).
+	// HeldItem is the player's selected item.
 	HeldItem(id ID) Item
 	// Yaw is ActorRotationComponent's yaw; YawOf is another entity's.
 	Yaw() float32
 	YawOf(id ID) float32
-	// SetSprinting is Mob vt+1112.
+	// SetSprinting is.
 	SetSprinting(on bool)
-	// SetSpeed is Mob vt+1128.
+	// SetSpeed is.
 	SetSpeed(s float32)
 	// ResetMovement sets the movement attribute's current value back to
-	// its base (start's AttributeInstance +124 = +112).
+	// its base.
 	ResetMovement()
 	// RideFriction is the friction of the block at p: BDS uses 0.6 for one
-	// block (BDS 1.26.60 qword 0xFEE92F0, taken to be air) and the block's own friction
-	// (BlockType +176) for the others.
+	// block (BDS 1.26.60 qword, taken to be air) and the block's own friction
+	// for the others.
 	RideFriction(p Pos) float32
 	// MaxAutoStep is the MaxAutoStepComponent height; ok is false without
 	// it.
 	MaxAutoStep() (h float32, ok bool)
-	// WalkThrough is BDS 1.26.60 0x7513DE0: the block at p is one the mob passes (a
-	// block with the type bit +264 and two door-like states).
+	// WalkThrough is BDS 1.26.60: the block at p is one the mob passes (a
+	// block with the type bit and two door-like states).
 	WalkThrough(p Pos) bool
 	// Jump asks for a jump this tick (the component 0x2F50F705 flag).
 	Jump()
 	// MoveRelativeSpeed is the move speed for the mob's travel type
-	// (BDS 1.26.60 0xBFE04C0 of the travel type 0xBFE01E0).
+	// (BDS 1.26.60 of the travel type).
 	MoveRelativeSpeed() float32
 }
 
@@ -61,7 +61,7 @@ type ControlledByPlayerConfig struct {
 	MountSpeedMultiplier    float32 `json:"mount_speed_multiplier"`
 }
 
-// DefaultControlledByPlayer returns the goal's BDS defaults (0x5394770).
+// DefaultControlledByPlayer returns the goal's BDS defaults.
 func DefaultControlledByPlayer() ControlledByPlayerConfig {
 	return ControlledByPlayerConfig{FractionalRotation: 0.5, FractionalRotationLimit: 5, MountSpeedMultiplier: 1}
 }
@@ -79,7 +79,7 @@ func NewControlledByPlayer(w World, m PlayerControlled, c ControlledByPlayerConf
 	return &ControlledByPlayer{base: base{mob: m, world: w}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x551B270): a player rides the mob and one
+// CanUse implements goal.Goal: a player rides the mob and one
 // player rider holds a control item.
 func (g *ControlledByPlayer) CanUse() bool {
 	m := g.m
@@ -118,16 +118,16 @@ func (g *ControlledByPlayer) CanUse() bool {
 // CanContinueToUse implements goal.Goal: BDS asks canUse again.
 func (g *ControlledByPlayer) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (BDS 1.26.60 0x551B1D0).
+// Start implements goal.Goal.
 func (g *ControlledByPlayer) Start() {
 	g.m.ResetMovement()
 	g.m.SetSpeed(g.m.Speed())
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x551B250).
+// Stop implements goal.Goal.
 func (g *ControlledByPlayer) Stop() { g.m.SetSprinting(false) }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x551B700): the mob turns part of the way to
+// Tick implements goal.Goal: the mob turns part of the way to
 // the rider's yaw, jumps a step in its way and moves forward.
 func (g *ControlledByPlayer) Tick() {
 	m := g.m

@@ -47,7 +47,7 @@ type DamageTrigger struct {
 }
 
 // DefaultDamageTrigger is BDS's trigger: any cause, deals damage,
-// multiplier 1, modifier 0 (1.26.60 schema 0x72357B0).
+// multiplier 1, modifier 0 (1.26.60 schema).
 func DefaultDamageTrigger() DamageTrigger {
 	return DamageTrigger{Cause: CauseNone, Multiplier: 1, Sound: behavior.NoSound}
 }

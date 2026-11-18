@@ -7,8 +7,8 @@ const tradeLook = 60
 type PlayerTrader interface {
 	Mob
 	Trader
-	// TradeInterrupted reports that the entity at Actor +776 still exists;
-	// the engine clears +776 once it is gone.
+	// TradeInterrupted reports that the entity still exists;
+	// the engine clears once it is gone.
 	TradeInterrupted() bool
 }
 
@@ -18,8 +18,7 @@ type TradeWithPlayerConfig struct {
 	MaxDistanceFromPlayer float32 `json:"max_distance_from_player"`
 }
 
-// DefaultTradeWithPlayer returns the goal's BDS defaults (TypeSchema
-// 0xE0F1D40).
+// DefaultTradeWithPlayer returns the goal's BDS defaults (TypeSchema).
 func DefaultTradeWithPlayer() TradeWithPlayerConfig {
 	return TradeWithPlayerConfig{MaxDistanceFromPlayer: 8}
 }
@@ -32,12 +31,12 @@ type TradeWithPlayer struct {
 	cfg TradeWithPlayerConfig
 }
 
-// NewTradeWithPlayer makes the goal (0x54E9C20).
+// NewTradeWithPlayer makes the goal.
 func NewTradeWithPlayer(w World, m PlayerTrader, c TradeWithPlayerConfig) *TradeWithPlayer {
 	return &TradeWithPlayer{base: base{mob: m, world: w, flags: flagsMove | flagsJump}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x569FBE0).
+// CanUse implements goal.Goal.
 func (g *TradeWithPlayer) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil || g.actor(m.TradingPlayer()) == nil || m.TradeInterrupted() {
@@ -46,7 +45,7 @@ func (g *TradeWithPlayer) CanUse() bool {
 	return g.cfg.Filters == nil || g.cfg.Filters(m, nil)
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x569FDA0).
+// CanContinueToUse implements goal.Goal.
 func (g *TradeWithPlayer) CanContinueToUse() bool {
 	if !g.CanUse() {
 		return false
@@ -56,7 +55,7 @@ func (g *TradeWithPlayer) CanContinueToUse() bool {
 	return p != nil && dist2(g.mob.Pos(), p.Pos()) <= d*d
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x569FE80).
+// Start implements goal.Goal.
 func (g *TradeWithPlayer) Start() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -73,7 +72,7 @@ func (g *TradeWithPlayer) Tick() {}
 // Mob. The trade table and the items are the engine's.
 type TradeInterested interface {
 	Mob
-	// HasTradeTable reports a trade table (0xB3D2000).
+	// HasTradeTable reports a trade table.
 	HasTradeTable() bool
 	// HeldItem is the entity's selected item.
 	HeldItem(id ID) Item
@@ -89,11 +88,11 @@ type TradeInterested interface {
 	// MatchesItem is BDS's item match: the same item, and the same aux
 	// unless either is a wildcard.
 	MatchesItem(a, b Item) bool
-	// SetCarriedItem shows the item in the mob's hand (Actor vt+616, then
-	// vt+1312 with 0).
+	// SetCarriedItem shows the item in the mob's hand (then
+	// with 0).
 	SetCarriedItem(it Item)
 	// LooksAtMe reports the player looking at the mob's head and seeing it
-	// (the view test of canContinueToUse and 0xB3C3B50).
+	// (the view test of canContinueToUse).
 	LooksAtMe(player ID) bool
 }
 
@@ -109,14 +108,14 @@ type TradeInterestConfig struct {
 	LookedAtTime float32 `json:"-"`
 }
 
-// DefaultTradeInterest returns the goal's BDS defaults (the goal 0x5346840).
+// DefaultTradeInterest returns the goal's BDS defaults (the goal).
 func DefaultTradeInterest() TradeInterestConfig {
 	return TradeInterestConfig{InterestTime: 45, RemoveItemTime: 1, CarriedItemSwitchTime: 2, Cooldown: 2, LookedAtTime: 22.5}
 }
 
-// TradeInterest is TradeInterestGoal (BDS 1.26.60 canUse 0x569DCE0,
-// canContinueToUse 0x569EB20, start 0x569F4E0, stop 0x569F610, tick
-// 0x569F8D0): a villager shows what it would sell for the item a nearby
+// TradeInterest is TradeInterestGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, stop, tick):
+// a villager shows what it would sell for the item a nearby
 // player holds.
 type TradeInterest struct {
 	base
@@ -135,7 +134,7 @@ type TradeInterest struct {
 	players                              []Actor
 }
 
-// NewTradeInterest makes the goal (0x5346840).
+// NewTradeInterest makes the goal.
 func NewTradeInterest(w World, m TradeInterested, c TradeInterestConfig) *TradeInterest {
 	cool := int32(c.Cooldown * ticksPerSecond)
 	return &TradeInterest{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, player: NoID,

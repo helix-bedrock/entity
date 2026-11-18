@@ -14,7 +14,7 @@ type Bandwidth struct {
 	MaxDroppedTicks      int32
 }
 
-// DefaultBandwidth is the component's default (sub_737C5F0): 80 blocks
+// DefaultBandwidth is the component's default: 80 blocks
 // and 10 ticks. Every vanilla mob in a live BDS capture used it.
 func DefaultBandwidth() Bandwidth {
 	return Bandwidth{MaxOptimizedDistance: 80, MaxDroppedTicks: 10}
@@ -28,7 +28,7 @@ func Distance(entity, viewer mgl32.Vec3) float32 {
 }
 
 // Score is how many ticks a viewer at dist may wait between two movement
-// updates (ConditionalBandwidthOptimization, sub_8CE9D60):
+// updates (ConditionalBandwidthOptimization):
 // int(0.75 * maxDroppedTicks * min(dist, maxDist) / maxDist). With the
 // default values a far viewer scores 7. Checked against 4,764 live BDS
 // sends, all exact.

@@ -14,7 +14,7 @@ const (
 	depenEps = 1
 )
 
-// clipResult is the result of clip (0xD7814B0): the push-out depth when the
+// clipResult is the result of clip: the push-out depth when the
 // boxes overlap, the movement with the shape ignored (free) and with it
 // applied (clipped).
 type clipResult struct {
@@ -132,7 +132,7 @@ func clip(s, mov Box, v Vec3) clipResult {
 	return r
 }
 
-// sweep is the multi-step mover (0x72B7190): each step is clipped against
+// sweep is the multi-step mover: each step is clipped against
 // every shape, last to first, and a shape the box sinks into deeper than
 // the axis epsilon is ignored. It returns the total movement, the summed
 // push-out depth and the moved box.
@@ -197,7 +197,7 @@ func overlaps(a, b Box) bool {
 		a.Min.Z < b.Max.Z && b.Min.Z < a.Max.Z
 }
 
-// fetchBox is the region MoveCollisionSystem (0x748A6B0) gathers shapes
+// fetchBox is the region MoveCollisionSystem gathers shapes
 // for: the swept box, the step-up and step-down regions, and the box with
 // 0.2 below (plus the fall) and 0.08 above.
 func (b *Body) fetchBox() Box {
@@ -227,7 +227,7 @@ const (
 // of blocks toward the nearest space.
 const FlagPushTowardsClosestSpace = 109
 
-// moveCollide is the move pipeline 0x48921D0 from the block slowdown to the
+// moveCollide is the move pipeline from the block slowdown to the
 // velocity reset.
 func (b *Body) moveCollide(w World) {
 	if b.Slowdown != (Vec3{}) {
@@ -317,7 +317,7 @@ func (b *Body) moveSubBoxes(v Vec3) {
 	}
 }
 
-// autoStepWanted is AutoStepFilterSystem (0x6D4BD90): a mob blocked
+// autoStepWanted is AutoStepFilterSystem: a mob blocked
 // sideways steps up when on the ground, landing, able to fly or always
 // allowed.
 func (b *Body) autoStepWanted(req, done Vec3) bool {
@@ -327,7 +327,7 @@ func (b *Body) autoStepWanted(req, done Vec3) bool {
 	return b.CanFlyAbility || done.Y != req.Y && req.Y < 0 || b.OnGround || b.CanAlwaysAutoStep
 }
 
-// autoStep is AutoStepSystem (0x6D4DBC0): sweep up by the step height and
+// autoStep is AutoStepSystem: sweep up by the step height and
 // across, then back down, and keep it when it ends free and goes further
 // sideways than the plain move.
 func (b *Body) autoStep(start Box, req, done, epsv Vec3) Vec3 {
@@ -356,8 +356,8 @@ func (b *Body) autoStep(start Box, req, done, epsv Vec3) Vec3 {
 	return t
 }
 
-// finalize is FinalizeMoveSystem (0x756EC90) and the velocity resets
-// (0x7449830, 0x744A4B0) that follow it.
+// finalize is FinalizeMoveSystem and the velocity resets
+// that follow it.
 func (b *Body) finalize(w World, req, done Vec3) {
 	b.Pos = Vec3{
 		X: (b.Box.Min.X + b.Box.Max.X) * 0.5,
@@ -497,7 +497,7 @@ func centreDist(s Box, p Vec3) float32 {
 	return z*z + (x*x + y*y)
 }
 
-// fall is the fall distance update of Actor::checkFallDamage (0xB2DF080).
+// fall is the fall distance update of BDS's code.
 func (b *Body) fall() {
 	b.Landed = false
 	switch {

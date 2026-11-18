@@ -5,7 +5,7 @@ import "github.com/helix-bedrock/entity/definition"
 // SchedulerConfig is minecraft:scheduler.
 type SchedulerConfig struct {
 	// MinDelay and MaxDelay are min_delay_secs and max_delay_secs. BDS
-	// reads them (1.26.60 0x715A210) but the 1.21.3 tick does not use
+	// reads them but the 1.21.3 tick does not use
 	// them; they are kept for servers that do.
 	MinDelay, MaxDelay float32
 	// Events are scheduled_events: an event and the filters that pick it.

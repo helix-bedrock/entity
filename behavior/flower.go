@@ -5,9 +5,9 @@ package behavior
 // mob has held a flower out.
 type FlowerOfferer interface {
 	Mob
-	// HasGoal reports the entity has the named goal (Actor vt+56).
+	// HasGoal reports the entity has the named goal.
 	HasGoal(id ID, name string) bool
-	// OfferFlower adds the mob's OfferFlowerTickComponent at 0 (0x721C320).
+	// OfferFlower adds the mob's OfferFlowerTickComponent at 0.
 	OfferFlower()
 	// OfferFlowerTicks is the entity's OfferFlowerTickComponent; ok is
 	// false without one.
@@ -16,7 +16,7 @@ type FlowerOfferer interface {
 	// on the server, broadcasts the actor event to its viewers.
 	StopOfferingFlower(id ID, event int32)
 	// OfferDuration is the entity's offer_flower goal's
-	// max_offer_flower_duration in ticks (its +40); ok is false without the
+	// max_offer_flower_duration in ticks; ok is false without the
 	// goal.
 	OfferDuration(id ID) (ticks int32, ok bool)
 }
@@ -36,8 +36,8 @@ type OfferFlowerConfig struct {
 	StopEvent int32 `json:"-"`
 }
 
-// DefaultOfferFlower returns the goal's BDS defaults (TypeSchema
-// 0xE0E6880; the goal name and event from 0xBDC6990 and 0xBDC6E10).
+// DefaultOfferFlower returns the goal's BDS defaults (TypeSchema;
+// the goal name and event from).
 func DefaultOfferFlower() OfferFlowerConfig {
 	return OfferFlowerConfig{MaxOfferFlowerDuration: 20, ChanceToStart: 0.000125, SearchArea: Vec3{X: 6, Y: 2, Z: 6},
 		MaxRotationX: 30, MaxHeadRotationY: 30, TakeGoal: "minecraft:behavior.take_flower", StopEvent: 20}
@@ -55,12 +55,12 @@ type OfferFlower struct {
 	sorted []near
 }
 
-// NewOfferFlower makes the goal (0xBDC68E0).
+// NewOfferFlower makes the goal.
 func NewOfferFlower(w World, m FlowerOfferer, c OfferFlowerConfig) *OfferFlower {
 	return &OfferFlower{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID}
 }
 
-// CanUse implements goal.Goal (0xBDC6990).
+// CanUse implements goal.Goal.
 func (g *OfferFlower) CanUse() bool {
 	if g.world.ThreadRandom().NextFloat() > g.cfg.ChanceToStart {
 		return false
@@ -71,7 +71,7 @@ func (g *OfferFlower) CanUse() bool {
 		return false
 	}
 	// The candidates come nearest first from the sorted nearby query
-	// (BDS 1.26.60 canUse 0xBF9B4F0, 0xB3D4280 with the search area).
+	// (BDS 1.26.60 canUse, with the search area).
 	g.near, g.sorted = sortedNearBox(g.world, m, g.cfg.SearchArea, g.near, g.sorted)
 	found := false
 	for _, c := range g.near {
@@ -84,24 +84,24 @@ func (g *OfferFlower) CanUse() bool {
 	return found
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0xBF9B7E0).
+// CanContinueToUse implements goal.Goal.
 func (g *OfferFlower) CanContinueToUse() bool {
 	return g.actor(g.target) != nil && g.world.CurrentTick() < g.end
 }
 
-// Start implements goal.Goal (0xBF9B940).
+// Start implements goal.Goal.
 func (g *OfferFlower) Start() {
 	g.end = g.world.CurrentTick() + uint64(int32(g.cfg.MaxOfferFlowerDuration*ticksPerSecond))
 	g.m.OfferFlower()
 }
 
-// Stop implements goal.Goal (0xBF9B980).
+// Stop implements goal.Goal.
 func (g *OfferFlower) Stop() {
 	g.m.StopOfferingFlower(g.mob.ID(), g.cfg.StopEvent)
 	g.target = NoID
 }
 
-// Tick implements goal.Goal (0xBF9BA80).
+// Tick implements goal.Goal.
 func (g *OfferFlower) Tick() {
 	if t := g.actor(g.target); t != nil {
 		lookAtActor(g.mob, t, g.cfg.MaxHeadRotationY, g.cfg.MaxRotationX)
@@ -124,8 +124,7 @@ type TakeFlowerConfig struct {
 	StopEvent           int32    `json:"-"`
 }
 
-// DefaultTakeFlower returns the goal's BDS defaults (TypeSchema
-// 0xE0EFB30).
+// DefaultTakeFlower returns the goal's BDS defaults (TypeSchema).
 func DefaultTakeFlower() TakeFlowerConfig {
 	return TakeFlowerConfig{SpeedMultiplier: 0.5, MinWaitTime: 4, MaxWaitTime: 20, SearchArea: Vec3{X: 6, Y: 2, Z: 6},
 		MaxRotationX: 30, MaxHeadRotationY: 30, MinDistanceToTarget: 2, StopEvent: 20}
@@ -142,19 +141,19 @@ type TakeFlower struct {
 	walking bool
 	near    []Actor
 	// minWait and maxWait are the wait times in ticks, minDist2 is
-	// min_distance_to_target squared (BDS 1.26.60 init 0x5555740).
+	// min_distance_to_target squared (BDS 1.26.60 init).
 	minWait, maxWait int32
 	minDist2         float32
 }
 
-// NewTakeFlower makes the goal (BDS 1.26.60 0x581E4C0).
+// NewTakeFlower makes the goal.
 func NewTakeFlower(w World, m FlowerOfferer, c TakeFlowerConfig) *TakeFlower {
 	return &TakeFlower{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c, target: NoID,
 		minWait: int32(c.MinWaitTime * ticksPerSecond), maxWait: int32(c.MaxWaitTime * ticksPerSecond),
 		minDist2: c.MinDistanceToTarget * c.MinDistanceToTarget}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x569A470).
+// CanUse implements goal.Goal.
 func (g *TakeFlower) CanUse() bool {
 	m := g.m
 	if m.Nav() == nil || g.cfg.Filters != nil && !g.cfg.Filters(m, nil) {
@@ -174,7 +173,7 @@ func (g *TakeFlower) CanUse() bool {
 	return false
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x569A830).
+// CanContinueToUse implements goal.Goal.
 func (g *TakeFlower) CanContinueToUse() bool {
 	if g.actor(g.target) == nil {
 		return false
@@ -183,7 +182,7 @@ func (g *TakeFlower) CanContinueToUse() bool {
 	return ok
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x569AA20): the mob takes the
+// Start implements goal.Goal: the mob takes the
 // flower some way into the offer; the roll is on the thread random.
 func (g *TakeFlower) Start() {
 	g.walking = false
@@ -198,7 +197,7 @@ func (g *TakeFlower) Start() {
 	}
 }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x569AE30).
+// Stop implements goal.Goal.
 func (g *TakeFlower) Stop() {
 	if n := g.mob.Nav(); n != nil {
 		n.Stop()
@@ -206,7 +205,7 @@ func (g *TakeFlower) Stop() {
 	g.target = NoID
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x569AF60).
+// Tick implements goal.Goal.
 func (g *TakeFlower) Tick() {
 	t := g.actor(g.target)
 	if t == nil {

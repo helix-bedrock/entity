@@ -46,7 +46,7 @@ func NewDefendTrusted(w World, t Truster, c DefendTrustedConfig) *DefendTrusted 
 	return &DefendTrusted{NearestAttackable: NewNearestAttackable(w, t, c.NearestAttackableConfig), t: t, dcfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0xBF2ECB0; attacker search 0xBF2EF20).
+// CanUse implements goal.Goal (BDS 1.26.60; attacker search).
 func (g *DefendTrusted) CanUse() bool {
 	if g.t.Trusted() == nil || !g.scanDue() || g.actor(g.t.Target()) != nil {
 		return false
@@ -55,7 +55,7 @@ func (g *DefendTrusted) CanUse() bool {
 	return g.candidate != NoID
 }
 
-// attacker is the nearest entity that hurt a trusted entity (0xBDD51B0).
+// attacker is the nearest entity that hurt a trusted entity.
 // An attacker beyond the follow range clears the mob's target.
 func (g *DefendTrusted) attacker() ID {
 	trusted := g.t.Trusted()
@@ -85,13 +85,13 @@ func (g *DefendTrusted) attacker() ID {
 	return best
 }
 
-// Start implements goal.Goal (0xBF2F910).
+// Start implements goal.Goal.
 func (g *DefendTrusted) Start() {
 	if a := g.actor(g.candidate); a != nil {
 		g.t.SetTarget(a.ID())
 	}
-	// The aggro sound plays at the head attach point (BDS 1.26.60 start
-	// 0xBF2F910, attach 3).
+	// The aggro sound plays at the head attach point (BDS 1.26.60 start,
+	// attach 3).
 	if g.dcfg.AggroSound != NoSound {
 		g.t.PlaySoundAt(g.dcfg.AggroSound, g.t.AttachPos(attachHead))
 	}
@@ -135,7 +135,7 @@ func NewDefendVillage(w World, v VillageDefender, c DefendVillageConfig) *Defend
 	return &DefendVillage{NearestAttackable: NewNearestAttackable(w, v, c.NearestAttackableConfig), v: v, dcfg: c}
 }
 
-// valid is TargetGoal's target test (0xBDD60E0): canAttack, an entity_types
+// valid is TargetGoal's target test: canAttack, an entity_types
 // entry when there are any (else must_see on its own), and must_reach.
 func (g *DefendVillage) valid(a Actor) bool {
 	if !g.canAttack(a) {
@@ -147,7 +147,7 @@ func (g *DefendVillage) valid(a Actor) bool {
 	return !g.mustReach || g.canReach(a)
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x551C580). As in BDS, an aggressor whose
+// CanUse implements goal.Goal. As in BDS, an aggressor whose
 // filters fail is still tested, but start then clears the target.
 func (g *DefendVillage) CanUse() bool {
 	id, ok := g.v.VillageAggressor()
@@ -155,8 +155,7 @@ func (g *DefendVillage) CanUse() bool {
 		return false
 	}
 	a := g.actor(id)
-	// The roll is the mob's thread random (BDS 1.26.60 canUse 0x551C580,
-	// 0xB39C0F0).
+	// The roll is the mob's thread random (BDS 1.26.60 canUse,).
 	if g.dcfg.AttackChance <= g.world.ThreadRandom().NextFloat() {
 		return false
 	}
@@ -173,7 +172,7 @@ func (g *DefendVillage) CanUse() bool {
 	return g.valid(a)
 }
 
-// CanContinueToUse implements goal.Goal (0x551C8E0).
+// CanContinueToUse implements goal.Goal.
 func (g *DefendVillage) CanContinueToUse() bool {
 	c := g.actor(g.candidate)
 	if c == nil || c.Removed() {
@@ -186,7 +185,7 @@ func (g *DefendVillage) CanContinueToUse() bool {
 	return !g.mustReach || g.canReach(c)
 }
 
-// Start implements goal.Goal (0x551CB10).
+// Start implements goal.Goal.
 func (g *DefendVillage) Start() {
 	target := NoID
 	if c := g.actor(g.candidate); c != nil && !c.Removed() {

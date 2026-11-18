@@ -36,7 +36,7 @@ type TemptConfig struct {
 }
 
 // DefaultTempt returns BDS 1.26.60's tempt defaults (TemptBaseGoal
-// 0x569BE60 and its setup 0x5559F50): speed 1, stop_distance 1.5, no sound
+// and its setup): speed 1, stop_distance 1.5, no sound
 // and a 3 to 8 second sound interval. The interval matters without a sound
 // too: the goal still draws a random number each time it runs out.
 func DefaultTempt() TemptConfig {
@@ -74,10 +74,10 @@ func NewTempt(w World, m Mob, c TemptConfig) *Tempt {
 	return &Tempt{base: base{mob: m, world: w, flags: flagsMoveLook}, cfg: c, player: NoID}
 }
 
-// NewFloatTempt makes minecraft:behavior.float_tempt (FloatTemptGoal, vtable
-// 0xF7B34A8): tempt with the same JSON, but while the player is out of reach
+// NewFloatTempt makes minecraft:behavior.float_tempt (FloatTemptGoal,):
+// tempt with the same JSON, but while the player is out of reach
 // the mob's motion grows toward the player by movement speed times
-// speed_multiplier each tick (0x59F7CA0), and in reach it does nothing.
+// speed_multiplier each tick, and in reach it does nothing.
 func NewFloatTempt(w World, m Mob, c TemptConfig) *Tempt {
 	g := NewTempt(w, m, c)
 	g.float = true
@@ -86,8 +86,8 @@ func NewFloatTempt(w World, m Mob, c TemptConfig) *Tempt {
 
 // CanUse implements goal.Goal.
 //
-// float_tempt runs TemptBaseGoal::canUse (BDS 1.26.60 0x569C0F0), which
-// needs no navigation; only TemptGoal::canUse (0x569CE70) checks for it.
+// float_tempt runs BDS's code, which
+// needs no navigation; only BDS's code checks for it.
 func (g *Tempt) CanUse() bool {
 	if !g.float && g.mob.Nav() == nil {
 		return false
@@ -165,7 +165,7 @@ func (g *Tempt) Stop() {
 	if g.cfg.OnTemptEnd != "" {
 		g.mob.Event(g.cfg.OnTemptEnd, NoID)
 	}
-	// TemptBaseGoal::start/stop (0x569C430, 0x569C5D0) leave the navigation
+	// BDS's code/stop leave the navigation
 	// alone; only TemptGoal's touch it.
 	if n := g.mob.Nav(); n != nil && !g.float {
 		n.Stop()

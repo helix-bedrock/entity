@@ -87,7 +87,7 @@ type Body struct {
 	AirSpeed float32
 	// Speed is the mob's speed setting (MovementSpeedComponent).
 	Speed float32
-	// MoveSpeed is the speed the move control last chose (Mob::mSpeed).
+	// MoveSpeed is the speed the move control last chose.
 	MoveSpeed float32
 	// LocalMove is the move input: strafe, up and forward.
 	LocalMove Vec3
@@ -110,7 +110,7 @@ type Body struct {
 	Eye Vec3
 }
 
-// SetSpeed is Mob::setSpeed: the speed setting and the forward input.
+// SetSpeed matches BDS: the speed setting and the forward input.
 func (b *Body) SetSpeed(v float32) {
 	b.Speed = v
 	b.LocalMove.Z = v

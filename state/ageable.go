@@ -32,16 +32,16 @@ type AgeableConfig struct {
 }
 
 // DefaultAgeable is BDS's ageable: 1200 seconds as a baby (1.21.3
-// AgeableDefinition::buildSchema 0x14055F940).
+// BDS's code 0x14055F940).
 func DefaultAgeable() AgeableConfig { return AgeableConfig{Duration: 1200} }
 
 // DefaultFeedGrowth is a feed item's growth when it gives none (1.21.3
-// AgeableDefinition::addFeedItemByName 0x14055D380).
+// BDS's code 0x14055D380).
 func DefaultFeedGrowth() float32 { return 0.1 }
 
 // Ageable is minecraft:ageable: a baby's age counts up to 0, when the mob
 // grows up (1.21.3 _tickAgeableComponent 0x14015B630,
-// AgeableDefinition::initialize 0x140569800).
+// BDS's code 0x140569800).
 type Ageable struct {
 	cfg AgeableConfig
 	age int32
@@ -70,7 +70,7 @@ func (a *Ageable) SetConfig(c AgeableConfig) { a.cfg = c }
 // Age is the age in ticks: below 0 for a baby.
 func (a *Ageable) Age() int32 { return a.age }
 
-// SetAge sets the age, as AgeableComponent::setAge: never above 0.
+// SetAge sets the age, as BDS: never above 0.
 func (a *Ageable) SetAge(age int32) { a.age = min(age, 0) }
 
 // CanGrowUp reports a duration other than -1.
@@ -81,7 +81,7 @@ func (a *Ageable) TicksAsBaby() int32 { return int32(abs32(a.cfg.Duration) * tic
 
 // Tick ages a baby by one tick. On growing up it clears the baby flag,
 // fires grow_up and drops drop_items. BDS also makes a call with the value
-// 76 (vtable 592) whose meaning was not read; it is left out.
+// 76 whose meaning was not read; it is left out.
 func (a *Ageable) Tick(env *Env) {
 	m := env.Self
 	if !a.CanGrowUp() || a.age >= 0 && !m.Flag(behavior.FlagBaby) {

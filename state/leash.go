@@ -9,7 +9,7 @@ import (
 )
 
 // ChunkState is how far the chunks around a box are loaded, as BDS's
-// ChunksLoadedInfo::areAllChunksLoadedAndTicking (0x141EE26A0) answers.
+// BDS's code (0x141EE26A0) answers.
 type ChunkState uint8
 
 // The chunk states, by BDS number.
@@ -42,7 +42,7 @@ type LeashPreset struct {
 	RotationAdjustment                      float32
 }
 
-// DefaultLeashPreset is a preset's defaults (1.26.60 parser 0x71258E0:
+// DefaultLeashPreset is a preset's defaults (1.26.60 parser:
 // soft 4, hard 6, max 10). rotation_adjustment's default was not read.
 func DefaultLeashPreset() LeashPreset {
 	return LeashPreset{SoftDistance: 4, HardDistance: 6, MaxDistance: 10}
@@ -78,7 +78,7 @@ type LeashableConfig struct {
 	PathSpeed, PullFactor, ChunkMargin float32
 }
 
-// DefaultLeashable is BDS's leashable (1.26.60 parser 0x71258E0: can_be_cut,
+// DefaultLeashable is BDS's leashable (1.26.60 parser: can_be_cut,
 // can_be_stolen and unleash_on_removal true; the lead, texts, speed 1, pull
 // 0.2 and margin 16 from the 1.21.3 getInteraction 0x1405E2E80 and
 // _tickLeashableComponent 0x14015DA60).
@@ -94,7 +94,7 @@ func DefaultLeashable() LeashableConfig {
 }
 
 // Leashable is minecraft:leashable (1.21.3 _tickLeashableComponent
-// 0x14015DA60, LeashableComponent::leash 0x1405E7300, unleash 0x1405EDBF0,
+// 0x14015DA60, BDS's code 0x1405E7300, unleash 0x1405EDBF0,
 // getInteraction 0x1405E2E80). The leash holder itself is the engine's
 // (Mob.LeashHolder).
 type Leashable struct{ cfg LeashableConfig }
@@ -187,7 +187,7 @@ func (l *Leashable) playerPassenger(env *Env) bool {
 	return false
 }
 
-// drop breaks the leash. BDS's tick calls Actor::dropLeash directly; that
+// drop breaks the leash. BDS's tick calls BDS's code directly; that
 // a broken leash fires on_unleash (unless on_unleash_interact_only) is
 // read from the 1.26.60 member, not from code.
 func (l *Leashable) drop(env *Env, dropItem, interact bool) {
@@ -279,7 +279,7 @@ func (l *Leashable) Unleash(env *Env, interact bool) {
 }
 
 // LeashableToConfig is minecraft:leashable_to, which lets other mobs be
-// leashed to this one (1.26.60 parser 0x6FDCE40: can_retrieve_from false,
+// leashed to this one (1.26.60 parser: can_retrieve_from false,
 // unleash_on_removal true). Both are the engine's.
 type LeashableToConfig struct {
 	CanRetrieveFrom, UnleashOnRemoval bool

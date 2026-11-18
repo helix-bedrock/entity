@@ -46,8 +46,8 @@ type MingleConfig struct {
 	SoundMin, SoundSpan int32 `json:"-"`
 }
 
-// DefaultMingle returns the goal's BDS defaults (TypeSchema 0xDF74BB0,
-// the sound from the tick 0x5272A50).
+// DefaultMingle returns the goal's BDS defaults (TypeSchema,
+// the sound from the tick).
 func DefaultMingle() MingleConfig {
 	return MingleConfig{MoveToPOIConfig: DefaultMoveToPOI(), Duration: 1, MingleDistance: 2,
 		Sound: 122, SoundMin: 50, SoundSpan: 50}
@@ -59,14 +59,14 @@ type Mingle struct {
 	moveToPOI
 	m   Mingler
 	cfg MingleConfig
-	// waited, left, search and soundIn are +184, +192, +200 and +208.
+	// waited, left, search and soundIn are,, and.
 	waited, left, search, soundIn int32
 	cooldown, duration            int32
 	dist2                         float32
 	near                          []Actor
 }
 
-// NewMingle makes the goal (0x532D3C0).
+// NewMingle makes the goal.
 func NewMingle(w World, m Mingler, c MingleConfig) *Mingle {
 	g := &Mingle{m: m, cfg: c, cooldown: int32(c.CooldownTime * ticksPerSecond),
 		duration: int32(c.Duration * ticksPerSecond), dist2: c.MingleDistance * c.MingleDistance}
@@ -83,14 +83,14 @@ func (g *Mingle) state(id ID) MingleState {
 	return s
 }
 
-// CanUse implements goal.Goal (0x5272300).
+// CanUse implements goal.Goal.
 func (g *Mingle) CanUse() bool {
 	w := g.waited
 	g.waited++
 	return w >= g.cooldown && g.canUse()
 }
 
-// CanContinueToUse implements goal.Goal (0x52723F0).
+// CanContinueToUse implements goal.Goal.
 func (g *Mingle) CanContinueToUse() bool {
 	if g.left <= 0 || !g.keepLite() {
 		return false
@@ -111,7 +111,7 @@ func (g *Mingle) CanContinueToUse() bool {
 	return false
 }
 
-// partnerIs is 0x5272520: the partner is in the state with the mob as its
+// partnerIs is: the partner is in the state with the mob as its
 // partner, and near enough when near is set.
 func (g *Mingle) partnerIs(id ID, state int32, near bool) bool {
 	p := g.actor(id)
@@ -125,7 +125,7 @@ func (g *Mingle) partnerIs(id ID, state int32, near bool) bool {
 	return !near || g.dist2 > dist2(g.mob.Pos(), p.Pos())
 }
 
-// Start implements goal.Goal (0x52726F0).
+// Start implements goal.Goal.
 func (g *Mingle) Start() {
 	g.startPOI()
 	s := g.state(g.mob.ID())
@@ -135,7 +135,7 @@ func (g *Mingle) Start() {
 	g.soundIn = g.cfg.SoundMin + g.world.IRandom().NextInt(g.cfg.SoundSpan)
 }
 
-// Stop implements goal.Goal (0x5272840).
+// Stop implements goal.Goal.
 func (g *Mingle) Stop() {
 	id := g.mob.ID()
 	s := g.state(id)
@@ -154,7 +154,7 @@ func (g *Mingle) Stop() {
 	g.stopPOI()
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5434840): the chat sound plays
+// Tick implements goal.Goal: the chat sound plays
 // at the head attach point.
 func (g *Mingle) Tick() {
 	g.tickPOI()
@@ -236,7 +236,7 @@ func (g *Mingle) scan(s MingleState) {
 	}
 }
 
-// pair is 0x5273A50: the other waits for the mob, which walks over.
+// pair is: the other waits for the mob, which walks over.
 func (g *Mingle) pair(other ID) {
 	id := g.mob.ID()
 	o := g.state(other)
@@ -258,7 +258,7 @@ func (g *Mingle) stopNav() {
 	}
 }
 
-// lookAt is 0x5273920.
+// lookAt is.
 func (g *Mingle) lookAt(id ID) {
 	if p := g.actor(id); p != nil && !p.Removed() {
 		lookAtActor(g.mob, p, mingleLook, mingleLook)

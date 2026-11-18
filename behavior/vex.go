@@ -2,7 +2,7 @@ package behavior
 
 import "github.com/helix-bedrock/entity/path"
 
-// VexCopyOwnerTarget is VexCopyOwnerTargetGoal (vtable 0xFAEF5A8): the mob
+// VexCopyOwnerTarget is VexCopyOwnerTargetGoal: the mob
 // takes its owner's target as its own.
 type VexCopyOwnerTarget struct {
 	target
@@ -33,7 +33,7 @@ func (g *VexCopyOwnerTarget) ownerTarget() Actor {
 	return g.actor(o.Target())
 }
 
-// copyable is the narrow target test the goal calls (0xB399B30): no
+// copyable is the narrow target test the goal calls: no
 // cannot-target flag, and a target that cannot be attacked only when the
 // mob ignores that. It does not run the owner, team or reach checks of the
 // other target goals.
@@ -41,13 +41,13 @@ func (g *VexCopyOwnerTarget) copyable(a Actor) bool {
 	return a != nil && !a.Flag(FlagCannotTarget) && (a.Targetable() || g.c.IgnoresCannotBeAttacked(a))
 }
 
-// CanUse implements goal.Goal (0xBF32740).
+// CanUse implements goal.Goal.
 func (g *VexCopyOwnerTarget) CanUse() bool { return g.copyable(g.ownerTarget()) }
 
-// CanContinueToUse implements goal.Goal (the target goal's, 0xBF30AE0).
+// CanContinueToUse implements goal.Goal (the target goal's).
 func (g *VexCopyOwnerTarget) CanContinueToUse() bool { return g.keep(g.actor(g.m.Target())) }
 
-// Start implements goal.Goal (0xBF327C0): unlike the other target goals it
+// Start implements goal.Goal: unlike the other target goals it
 // keeps the sight and reach caches.
 func (g *VexCopyOwnerTarget) Start() {
 	if a := g.ownerTarget(); a != nil {
@@ -61,7 +61,7 @@ func (g *VexCopyOwnerTarget) Stop() {}
 // Tick implements goal.Goal.
 func (g *VexCopyOwnerTarget) Tick() {}
 
-// Bounder is a mob that may have a bound origin (Mob +1081, the spot a
+// Bounder is a mob that may have a bound origin (the spot a
 // summoned vex stays around).
 type Bounder interface {
 	Mob
@@ -82,12 +82,12 @@ type VexRandomMoveConfig struct {
 	LookYaw, LookPitch float32
 }
 
-// DefaultVexRandomMove returns the goal's BDS numbers (tick 0x56C4640).
+// DefaultVexRandomMove returns the goal's BDS numbers (tick).
 func DefaultVexRandomMove() VexRandomMoveConfig {
 	return VexRandomMoveConfig{Chance: 7, Tries: 3, Spread: Pos{X: 7, Y: 5, Z: 7}, Speed: 0.25, LookYaw: 180, LookPitch: 20}
 }
 
-// VexRandomMove is VexRandomMoveGoal (canUse 0x56C4530, tick 0x56C4640): a
+// VexRandomMove is VexRandomMoveGoal (canUse, tick): a
 // flying mob with a move control picks an air block near its bound origin
 // and flies there, looking at it while it has no target.
 type VexRandomMove struct {
@@ -107,7 +107,7 @@ func (g *VexRandomMove) Config() VexRandomMoveConfig { return g.cfg }
 // SetConfig replaces the goal's settings.
 func (g *VexRandomMove) SetConfig(c VexRandomMoveConfig) { g.cfg = c }
 
-// CanUse implements goal.Goal (0x56C4530): a move control with no wanted
+// CanUse implements goal.Goal: a move control with no wanted
 // position, then a 1 in Chance roll on the level random.
 func (g *VexRandomMove) CanUse() bool {
 	wanted, ok := g.m.MoveWanted()
@@ -126,7 +126,7 @@ func (g *VexRandomMove) Start() {}
 // Stop implements goal.Goal.
 func (g *VexRandomMove) Stop() {}
 
-// Tick implements goal.Goal (0x56C4640).
+// Tick implements goal.Goal.
 func (g *VexRandomMove) Tick() {
 	o, ok := g.m.BoundOrigin()
 	if !ok {

@@ -72,7 +72,7 @@ func (s *Selector) Add(priority int32, g Goal) {
 }
 
 // SetGoals replaces every goal, as a JSON event that adds or removes
-// component groups does (Mob::createAIGoals, 1.21.3 0x14190DC30): target
+// component groups does (1.21.3 0x14190DC30): target
 // goals are dropped as they are, running non-target goals are stopped,
 // then the new list is used. Called during a tick, the swap happens when
 // the pass ends.
@@ -104,7 +104,7 @@ func (s *Selector) SetNamedGoals(goals []Goal, priorities []int32, names []strin
 }
 
 // stopNonTarget stops the running goals that are not target goals, as
-// GoalSelectorComponent::stopNonTargetedGoals does before a rebuild.
+// BDS's code does before a rebuild.
 func stopNonTarget(entries []entry) {
 	for i := range entries {
 		e := &entries[i]

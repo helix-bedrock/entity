@@ -7,7 +7,7 @@ import (
 )
 
 // BuoyancyMovement is minecraft:buoyant's movement_type (1.26.60
-// serializer 0x7375900).
+// serializer).
 type BuoyancyMovement uint8
 
 // The movement types, by BDS number.
@@ -24,8 +24,7 @@ func BuoyancyMovementNames() []string { return []string{"none", "waves", "bobbin
 
 // BuoyantConfig is minecraft:buoyant. The member defaults are 1.21.3's
 // BuoyancyDefinition ctor (0x140598A30); the system numbers are from the
-// 1.26.60 BuoyancySystem (timer 0x7926630, gravity 0x79281E0, float
-// 0x7925140).
+// 1.26.60 BuoyancySystem (timer, gravity, float).
 type BuoyantConfig struct {
 	// BaseBuoyancy is how high in its block the mob floats (0 to 1).
 	BaseBuoyancy float32
@@ -81,7 +80,7 @@ func DefaultBuoyant() BuoyantConfig {
 // Liquids answers the liquid height buoyancy floats to.
 type Liquids interface {
 	// LiquidHeight is the world height of the top of the liquid in the
-	// block at p (BlockUtils::getLiquidBlockHeight), below p.Y when the
+	// block at p, below p.Y when the
 	// block holds none.
 	LiquidHeight(p behavior.Pos) float32
 }
@@ -160,7 +159,7 @@ func (b *Buoyant) Tick(env *Env, l Liquids) {
 	m.SetVelocity(v)
 }
 
-// tickTimer is IncreaseBuoyancyTimer (1.26.60 0x7926630): bobbing steps
+// tickTimer is IncreaseBuoyancyTimer: bobbing steps
 // evenly, the others with the horizontal speed and the odd big wave.
 func (b *Buoyant) tickTimer(env *Env, v behavior.Vec3) {
 	c := &b.cfg
@@ -175,7 +174,7 @@ func (b *Buoyant) tickTimer(env *Env, v behavior.Vec3) {
 	b.timer += float64(float32(speed * float64(c.TimerStep)))
 }
 
-// Removed is BuoyancyDefinition::uninitialize (1.21.3 0x1405BD210): the
+// Removed matches BDS (1.21.3 0x1405BD210): the
 // mob drops by drag_down_on_buoyancy_removed.
 func (b *Buoyant) Removed(m behavior.Mob) {
 	if m != nil && b.cfg.DragDownOnRemoved > 0 {

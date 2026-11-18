@@ -36,8 +36,8 @@ func NewRandomHover(w World, m Mob, c RandomHoverConfig) *RandomHover {
 	return &RandomHover{base: base{mob: m, world: w, flags: flagsMove}, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0xBF9CC30): the interval roll
-// is on Level::getRandom.
+// CanUse implements goal.Goal: the interval roll
+// is on BDS's code.
 func (g *RandomHover) CanUse() bool {
 	if g.mob.Nav() == nil || g.mob.Flag(FlagResting) {
 		return false
@@ -49,7 +49,7 @@ func (g *RandomHover) CanUse() bool {
 	return g.have
 }
 
-// find is the path search (BDS 1.26.60 0xBF9D3D0): a spot on the ground lifted by the
+// find is the path search: a spot on the ground lifted by the
 // hover height, then a spot in the air, each kept only when a path to it
 // exists.
 func (g *RandomHover) find() {
@@ -79,12 +79,12 @@ func viewDir(m Mob) Vec3 {
 	return Vec3{X: float32(-math.Sin(r)), Z: float32(math.Cos(r))}
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0xBF9D2D0).
+// CanContinueToUse implements goal.Goal.
 func (g *RandomHover) CanContinueToUse() bool {
 	return g.mob.Nav() != nil && !g.mob.Flag(FlagResting) && g.have
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0xBF9CDF0).
+// Start implements goal.Goal.
 func (g *RandomHover) Start() { g.move() }
 
 func (g *RandomHover) move() {
@@ -100,7 +100,7 @@ func (g *RandomHover) move() {
 // Stop implements goal.Goal.
 func (g *RandomHover) Stop() {}
 
-// Tick implements goal.Goal (BDS 1.26.60 0xBF9D130): on arrival it looks
+// Tick implements goal.Goal: on arrival it looks
 // for the next spot.
 func (g *RandomHover) Tick() {
 	if n := g.mob.Nav(); n != nil && n.Done() {
@@ -121,7 +121,7 @@ type HoverConfig struct {
 // DefaultHover returns the goal's BDS defaults.
 func DefaultHover() HoverConfig { return HoverConfig{Speed: 1} }
 
-// Hover is HoverGoal (vtable 0xF7B3B68, made in 0x54648C0): a flying mob
+// Hover is HoverGoal (made): a flying mob
 // holds the spot where the goal started, pointing its move control back at
 // it whenever the control has nowhere to go.
 type Hover struct {
@@ -141,7 +141,7 @@ func (g *Hover) Config() HoverConfig { return g.cfg }
 // SetConfig replaces the goal's settings.
 func (g *Hover) SetConfig(c HoverConfig) { g.cfg = c }
 
-// CanUse implements goal.Goal (0x5A04D90): the mob can fly, has a move
+// CanUse implements goal.Goal: the mob can fly, has a move
 // control and is not at the world origin.
 func (g *Hover) CanUse() bool {
 	if !g.mob.Flag(FlagCanFly) {
@@ -156,13 +156,13 @@ func (g *Hover) CanUse() bool {
 // CanContinueToUse implements goal.Goal: BaseGoal runs CanUse again.
 func (g *Hover) CanContinueToUse() bool { return g.CanUse() }
 
-// Start implements goal.Goal (0x5A04EA0).
+// Start implements goal.Goal.
 func (g *Hover) Start() { g.spot = g.mob.Pos() }
 
 // Stop implements goal.Goal.
 func (g *Hover) Stop() {}
 
-// Tick implements goal.Goal (0x5A04EC0).
+// Tick implements goal.Goal.
 func (g *Hover) Tick() {
 	if g.spot == (Vec3{}) {
 		return

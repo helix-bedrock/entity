@@ -34,7 +34,7 @@ func KindOf(component string) (Kind, bool) {
 	return k, ok
 }
 
-// flyReach is the reach fly navigation's constructor sets (component +12).
+// flyReach is the reach fly navigation's constructor sets (component).
 const flyReach = 1.0
 
 // NewKind returns a navigation of kind k for the JSON description d.

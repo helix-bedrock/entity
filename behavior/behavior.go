@@ -143,9 +143,9 @@ type Random interface {
 	NextInt(n int32) int32
 	// NextFloat returns a number in [0, 1).
 	NextFloat() float32
-	// NextBool is Random::nextBoolean.
+	// NextBool matches BDS.
 	NextBool() bool
-	// NextGaussian is Random::nextGaussian, which keeps the second number
+	// NextGaussian matches BDS, which keeps the second number
 	// of each pair for the next call.
 	NextGaussian() float32
 }
@@ -163,9 +163,9 @@ type Actor interface {
 	Alive() bool
 	// Removed reports that the entity is being removed.
 	Removed() bool
-	// Pickable is Actor::isPickable; false for entities goals must skip.
+	// Pickable matches BDS; false for entities goals must skip.
 	Pickable() bool
-	// Interacts is Actor::canInteractWithOtherEntitiesInGame: true for
+	// Interacts matches BDS: true for
 	// every entity but a spectator player, dead or not.
 	Interacts() bool
 	// IsMob reports that the entity is a mob (player or AI mob).
@@ -213,10 +213,10 @@ type Actor interface {
 	// LastHurtMob is the mob this entity last hurt and the time stamp of
 	// that hit, which changes with every hit.
 	LastHurtMob() (id ID, stamp int32)
-	// BlocksSpace is Actor::canBeCollidedWith for teleport checks (boats,
+	// BlocksSpace matches BDS for teleport checks (boats,
 	// shulkers).
 	BlocksSpace() bool
-	// AttachPos is Actor::getAttachPos for a BDS actor location number.
+	// AttachPos matches BDS for a BDS actor location number.
 	AttachPos(loc int) Vec3
 }
 
@@ -231,7 +231,7 @@ type Actor interface {
 // and must not share state with other mobs' goals. Random then is the
 // mob's own source, so results do not depend on the core count.
 type World interface {
-	// Random is the level's main random (Level::getRandom); IRandom and
+	// Random is the level's main random; IRandom and
 	// ThreadRandom are its other two sources. Each goal draws from the one
 	// BDS uses.
 	Random() Random
@@ -251,16 +251,16 @@ type World interface {
 	DefaultGameMode() int
 	// Peaceful reports a peaceful difficulty.
 	Peaceful() bool
-	// Brightness is BlockSource::getBrightness at p, 0 to 1.
+	// Brightness matches BDS at p, 0 to 1.
 	Brightness(p Pos) float32
 	// Block returns the block facts the goals use at p.
 	Block(p Pos) Block
 	// LiquidMaterial is the material of the liquid layer at p.
 	LiquidMaterial(p Pos) path.Material
 	// ClearLine reports that no block is hit on the straight line from a
-	// to b (BlockSource::clip without liquids).
+	// to b (without liquids).
 	ClearLine(a, b Vec3) bool
-	// Clip is BlockSource::clip from a to b without liquids, at most 200
+	// Clip matches BDS from a to b without liquids, at most 200
 	// blocks: the point where the line first hits a block.
 	Clip(a, b Vec3) (at Vec3, hit bool)
 	// IsDay is the sun test sun-avoiding mobs use: the sky darkening is
@@ -268,7 +268,7 @@ type World interface {
 	IsDay() bool
 	// RainLevel is the dimension's rain level, 0 to 1.
 	RainLevel() float32
-	// AboveTopSolid is BlockSource::getAboveTopSolidBlock: the height just
+	// AboveTopSolid matches BDS: the height just
 	// above the highest solid block of the column.
 	AboveTopSolid(x, z int32) int32
 	// AboveTopSolidAt is getAboveTopSolidBlock's BlockPos form: the same
@@ -280,14 +280,14 @@ type World interface {
 	// SkyVisible reports that p is at or above the height map, so it is
 	// out in the open.
 	SkyVisible(p Pos) bool
-	// LiquidBlock is BlockSource::getLiquidBlock: the block in the liquid
+	// LiquidBlock matches BDS: the block in the liquid
 	// layer at p, or the block itself when that layer is air.
 	LiquidBlock(p Pos) Block
-	// BoxHasLiquid is BlockSource::containsAnyLiquid: a liquid block in the
+	// BoxHasLiquid matches BDS: a liquid block in the
 	// cells floor(min) to ceil(max) of b; false when b is flat on an axis.
 	BoxHasLiquid(b Box) bool
 	// BoxCollides reports that a block collision box touches b
-	// (BlockSource::fetchAABBs, unloaded chunks included).
+	// (unloaded chunks included).
 	BoxCollides(b Box) bool
 	// HeightMap is the chunk height map at the column, MinHeight when the
 	// chunk is not loaded.
@@ -304,15 +304,14 @@ type World interface {
 	// the actor.
 	BreakBlock(p Pos, by ID)
 	// Passable is the block's pathing test at p for the mob: the block's
-	// cached answer when it has one, else BlockType::canBePathedThrough
+	// cached answer when it has one, else BDS's code
 	// (by default the material does not block motion).
 	Passable(p Pos, by ID) bool
 	// Particle spawns the named particle effect at p
-	// (Level::spawnParticleEffect).
 	Particle(name string, p Vec3)
-	// SeaLevel is the dimension's sea level (Dimension +172).
+	// SeaLevel is the dimension's sea level.
 	SeaLevel() int32
-	// BuiltOver is Block::canBeBuiltOver for the block at p.
+	// BuiltOver matches BDS for the block at p.
 	BuiltOver(p Pos) bool
 	// BlockState is the named state of the block at p (liquid_depth,
 	// head_piece_bit and the like); ok is false when the block has no such
@@ -321,9 +320,9 @@ type World interface {
 	// ChestOpen reports a chest block entity at p that someone has open.
 	ChestOpen(p Pos) bool
 	// ThunderLevel is the dimension's rain level times its lightning
-	// level, 0 in a dimension without weather (Dimension +224 off).
+	// level, 0 in a dimension without weather (off).
 	ThunderLevel() float32
-	// SetBlock is BlockSource::setBlock with update flags 3, followed by
+	// SetBlock matches BDS with update flags 3, followed by
 	// the block change game event sent by the actor.
 	SetBlock(p Pos, b PlacedBlock, by ID)
 	// GriefAllowed fires the cancellable gameplay event for an actor
@@ -358,43 +357,43 @@ type Block struct {
 	// Ground is the stroll ground test: a material that blocks motion, is
 	// not liquid, and the block's solid flag (block flag 0x40000).
 	Ground bool
-	// Solid is Material::isSolid.
+	// Solid matches BDS.
 	Solid bool
-	// Liquid is Material::isLiquid.
+	// Liquid matches BDS.
 	Liquid bool
 	// HasCollision is a non-empty collision shape.
 	HasCollision bool
-	// BlocksMotion is Material::getBlocksMotion.
+	// BlocksMotion matches BDS.
 	BlocksMotion bool
 	// Tree is random_fly's perch test: block type flag 0x20 or one of the
 	// two block groups BDS keeps for logs (VanillaBlockTypeGroups).
 	Tree bool
-	// BlockSolid is Block::isSolid, the block's own solid bit (Block +113),
-	// which is not Material::isSolid.
+	// BlockSolid matches BDS, the block's own solid bit,
+	// which is not BDS's code.
 	BlockSolid bool
-	// NoJumpStart is the unnamed block type flag 0x40000000 (BlockType
-	// +264) that keeps jump_around_target from starting on the block.
+	// NoJumpStart is the unnamed block type flag 0x40000000 (BlockType)
+	// that keeps jump_around_target from starting on the block.
 	NoJumpStart bool
 	// NoJumpLanding is the unnamed block type flag 0x400000 (BlockType
-	// +266 bit 0x40) that keeps jump_around_target from landing in the
+	// bit 0x40) that keeps jump_around_target from landing in the
 	// block.
 	NoJumpLanding bool
 	// ShapeTop is the top of the block's collision shape inside the block
-	// (BlockType::getCollisionShape max y), 0 for none.
+	// (max y), 0 for none.
 	ShapeTop float32
-	// ShapeHeight is the height of the block's AABB (BlockType vt+64, max y
+	// ShapeHeight is the height of the block's AABB (max y
 	// less min y), 0 for none.
 	ShapeHeight float32
 	// Stairs, Slab and Trapdoor are the block type property bits 0, 1 and
-	// 13 (BlockType +264).
+	// 13.
 	Stairs, Slab, Trapdoor bool
 	// Fence reports a block type of BDS's wooden and nether brick fence
 	// group.
 	Fence bool
-	// Infested is the infested block a silverfish turns this block into
-	// (BlockType vt+896), "" for blocks it cannot hide in.
+	// Infested is the infested block a silverfish turns this block into,
+	// "" for blocks it cannot hide in.
 	Infested string
-	// Host is the block an infested block hides (BlockType vt+904), "" for
+	// Host is the block an infested block hides, "" for
 	// other blocks.
 	Host string
 }
@@ -452,14 +451,14 @@ type Mob interface {
 	// goal holds while it runs and the is_panicking filter reads. It is not
 	// an actor flag and is never sent to clients.
 	SetPanicking(on bool)
-	// WalkTargetValue is Mob::getWalkTargetValue (see WalkTarget).
+	// WalkTargetValue matches BDS (see WalkTarget).
 	WalkTargetValue(p Pos) float32
 	// LookAt points the look control at p; it does nothing while a higher
 	// priority look is set this tick.
 	LookAt(p Vec3, yawMax, pitchMax float32)
 	// LookBusy reports a look request made earlier this tick.
 	LookBusy() bool
-	// MaxHeadXRot is Mob::getMaxHeadXRot (40 for most mobs).
+	// MaxHeadXRot matches BDS (40 for most mobs).
 	MaxHeadXRot() float32
 	SetTarget(id ID)
 	// LastHurtBy is the entity that last hurt the mob and the tick it did.
@@ -479,7 +478,6 @@ type Mob interface {
 	// Home is the mob's home restriction, when it has one in the mob's
 	// dimension. radius is restriction_radius, and 0 when the restriction
 	// type is none: BDS then walks home from any distance
-	// (MoveTowardsHomeRestrictionGoal::canUse 0x543D950).
 	Home() (centre Pos, radius int32, ok bool)
 	// Leash is the leash holder's box centre and the leash's maximum
 	// distance, when the mob is leashed.
@@ -513,7 +511,7 @@ type Mob interface {
 	CanSit() bool
 	// OnGround is OnGroundFlagComponent.
 	OnGround() bool
-	// OnFire is Actor::isOnFire.
+	// OnFire matches BDS.
 	OnFire() bool
 	// Velocity and SetVelocity are the mob's motion in blocks per tick.
 	Velocity() Vec3
@@ -523,7 +521,7 @@ type Mob interface {
 	// SetHijackable adds or removes CanBeHijackedByPassengerComponent: while
 	// it is on, the rider's navigation moves this mount.
 	SetHijackable(on bool)
-	// OverWater is Actor::isInWaterOrOverWater (1.26.60 0xB39C3B0): in water, or
+	// OverWater matches BDS: in water, or
 	// the first non-air block below the mob is water.
 	OverWater() bool
 	// NoActionTime is the ticks since the mob last did something
@@ -634,8 +632,8 @@ func boxCentre(b Box) Vec3 {
 	return Vec3{X: (b.Max.X-b.Min.X)*0.5 + b.Min.X, Y: (b.Max.Y-b.Min.Y)*0.5 + b.Min.Y, Z: (b.Max.Z-b.Min.Z)*0.5 + b.Min.Z}
 }
 
-// lookAtActor is the look control's look at an entity (BDS 1.26.60
-// 0x741FC40): nothing happens while another look is set this tick or the
+// lookAtActor is the look control's look at an entity (BDS 1.26.60):
+// nothing happens while another look is set this tick or the
 // entity is removed.
 func lookAtActor(m Mob, a Actor, yaw, pitch float32) {
 	if a == nil || a.Removed() || m.LookBusy() {
@@ -747,7 +745,7 @@ func scale(v Vec3, s float32) Vec3 { return Vec3{X: v.X * s, Y: v.Y * s, Z: v.Z 
 func length(v Vec3) float32 { return sqrt32(v.Z*v.Z + (v.X*v.X + v.Y*v.Y)) }
 
 // approachDegrees turns from towards to by at most limit degrees, by the
-// shorter way (0xED49160).
+// shorter way.
 func approachDegrees(from, to, limit float32) float32 {
 	d := float32(math.Mod(float64(to-from+180), 360))
 	if d < 0 {
@@ -756,7 +754,7 @@ func approachDegrees(from, to, limit float32) float32 {
 	return min(limit, max32(-limit, d-180)) + from
 }
 
-// normalize is Vec3::normalized: zero below minLength.
+// normalize matches BDS: zero below minLength.
 func normalize(v Vec3) Vec3 {
 	l := length(v)
 	if l < minLength {

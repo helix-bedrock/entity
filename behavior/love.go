@@ -20,29 +20,29 @@ const (
 )
 
 // Lover is the part of the mob make_love and receive_love need on top of
-// Mob. The BDS fields are the villager's (Mob +640, +1096, +1097).
+// Mob. The BDS fields are the villager's.
 type Lover interface {
 	Mob
 	// LovePartner is the entity's love partner, NoID for none.
 	LovePartner(id ID) ID
-	// SetLovePartner sets the entity's love partner and its in-love flag
-	// (0xB309560); NoID clears both.
+	// SetLovePartner sets the entity's love partner and its in-love flag;
+	// NoID clears both.
 	SetLovePartner(id, partner ID)
-	// LoveLeader reports the partner that started the pairing (+1096).
+	// LoveLeader reports the partner that started the pairing.
 	LoveLeader(id ID) bool
 	SetLoveLeader(id ID, on bool)
-	// Willing is the villager's willing flag (+1097).
+	// Willing is the villager's willing flag.
 	Willing(id ID) bool
 	SetWilling(id ID, on bool)
 	// HasBreedFood reports enough food in the inventory to breed
-	// (0xBB22DE0 finds a slot); UseBreedFood eats it (0xBB233B0).
+	// (finds a slot); UseBreedFood eats it.
 	HasBreedFood(id ID) bool
 	UseBreedFood(id ID)
-	// WakeBreedSensors is 0xBB23D70 on the partner: it resets the
+	// WakeBreedSensors is on the partner: it resets the
 	// sensing entries of component 0xADEC332E.
 	WakeBreedSensors(id ID)
 	// VillageWantsBabies reports the village of the dweller component and
-	// whether it has room for more villagers (0xBD13AB0); dweller is false
+	// whether it has room for more villagers; dweller is false
 	// when the mob has no dweller component.
 	VillageWantsBabies() (wants, dweller bool)
 	// SpawnBaby spawns a baby of the mob's type with the partner as its
@@ -67,13 +67,13 @@ func NewReceiveLove(w World, m Lover) *ReceiveLove {
 	return &ReceiveLove{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x542FE30).
+// CanUse implements goal.Goal.
 func (g *ReceiveLove) CanUse() bool { return g.m.Flag(FlagInLove) }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x542FE50).
+// CanContinueToUse implements goal.Goal.
 func (g *ReceiveLove) CanContinueToUse() bool { return g.m.Flag(FlagInLove) }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x542FE70): the hearts roll is on
+// Tick implements goal.Goal: the hearts roll is on
 // the thread random.
 func (g *ReceiveLove) Tick() {
 	m := g.m
@@ -113,7 +113,7 @@ func (g *MakeLove) villageOK() bool {
 	return !dweller || wants
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x542EB60): the 1 in 500 roll
+// CanUse implements goal.Goal: the 1 in 500 roll
 // is on the thread random.
 func (g *MakeLove) CanUse() bool {
 	m := g.m
@@ -141,7 +141,7 @@ func (g *MakeLove) CanUse() bool {
 // ready reports a villager that can breed now: willing, or with food.
 func (g *MakeLove) ready(id ID) bool { return g.m.Willing(id) || g.m.HasBreedFood(id) }
 
-// find is BDS 1.26.60 0x542EF40: a villager already paired with this one, or else the
+// find is BDS 1.26.60: a villager already paired with this one, or else the
 // nearest free one the mob can walk to. Walking there starts on the way.
 func (g *MakeLove) find() Actor {
 	m := g.m
@@ -181,7 +181,7 @@ func pathEndsUnder(n Navigator, a Actor) bool {
 	return ok && end.X == floorInt(p.X) && end.Z == floorInt(p.Z)
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x542F460).
+// CanContinueToUse implements goal.Goal.
 func (g *MakeLove) CanContinueToUse() bool {
 	m := g.m
 	if g.timer < 0 || m.Flag(FlagBaby) || !m.Flag(FlagInLove) || !g.villageOK() {
@@ -204,10 +204,10 @@ func (g *MakeLove) CanContinueToUse() bool {
 	return n.MoveToActor(p, lovePathSpeed) && pathEndsUnder(n, p)
 }
 
-// Start implements goal.Goal (BDS 1.26.60 0x542F3E0).
+// Start implements goal.Goal.
 func (g *MakeLove) Start() { g.timer = loveTime }
 
-// Stop implements goal.Goal (BDS 1.26.60 0x542F3F0): both villagers fall out of love.
+// Stop implements goal.Goal: both villagers fall out of love.
 func (g *MakeLove) Stop() {
 	m := g.m
 	if p := m.LovePartner(m.ID()); g.actor(p) != nil {
@@ -216,7 +216,7 @@ func (g *MakeLove) Stop() {
 	m.SetLovePartner(m.ID(), NoID)
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x542F7D0).
+// Tick implements goal.Goal.
 func (g *MakeLove) Tick() {
 	m := g.m
 	g.timer--
@@ -240,7 +240,7 @@ func (g *MakeLove) Tick() {
 	}
 }
 
-// The base Goal methods ReceiveLove keeps (1.26.60 vtable: start and stop are no-ops).
+// The base Goal methods ReceiveLove keeps (start and stop are no-ops).
 
 // Start implements goal.Goal.
 func (g *ReceiveLove) Start() {}

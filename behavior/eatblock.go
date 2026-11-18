@@ -11,7 +11,7 @@ type BlockEater interface {
 	Mob
 	// ActorEvent broadcasts an actor event of the mob.
 	ActorEvent(id, data int32)
-	// StandingOn is Actor::getBlockPosCurrentlyStandingOn.
+	// StandingOn matches BDS.
 	StandingOn() Pos
 	// EatGameEvent posts the eat game event at p.
 	EatGameEvent(p Vec3)
@@ -72,7 +72,7 @@ func (g *EatBlock) replacement(p Pos) (string, bool) {
 	return "", false
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5525EF0): the chance is drawn first.
+// CanUse implements goal.Goal: the chance is drawn first.
 func (g *EatBlock) CanUse() bool {
 	if g.m.Nav() == nil {
 		return false
@@ -92,10 +92,10 @@ func (g *EatBlock) CanUse() bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (0x5526450).
+// CanContinueToUse implements goal.Goal.
 func (g *EatBlock) CanContinueToUse() bool { return g.timer > 0 }
 
-// Start implements goal.Goal (0x5526310).
+// Start implements goal.Goal.
 func (g *EatBlock) Start() {
 	g.timer = int32(g.cfg.TimeUntilEat * ticksPerSecond)
 	g.m.ActorEvent(actorEventEatGrass, 0)
@@ -104,10 +104,10 @@ func (g *EatBlock) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x5526440).
+// Stop implements goal.Goal.
 func (g *EatBlock) Stop() { g.timer = 0 }
 
-// Tick implements goal.Goal (0x5526460): when the timer runs out the block
+// Tick implements goal.Goal: when the timer runs out the block
 // in the mob, or else the one under its feet, is eaten. The block only
 // changes with mobGriefing, but the mob counts as having eaten either way.
 func (g *EatBlock) Tick() {
@@ -118,7 +118,7 @@ func (g *EatBlock) Tick() {
 	m, w := g.m, g.world
 	p := blockOf(m.Pos())
 	// The dust is drawn at the mob's own block height even when the block
-	// under it is the one eaten (BDS 1.26.60 tick 0x5526460 keeps the
+	// under it is the one eaten (BDS 1.26.60 tick keeps the
 	// first y for the level event).
 	dustY := float32(p.Y) + 0.5
 	rep, ok := g.replacement(p)

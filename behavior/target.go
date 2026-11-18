@@ -55,7 +55,7 @@ type Targeter interface {
 	RuntimeID() uint64
 	// CanSee is the sensing component's line of sight (cached per tick).
 	CanSee(a Actor) bool
-	// CanAttack is Actor::canAttack: families, peaceful rules and the like.
+	// CanAttack matches BDS: families, peaceful rules and the like.
 	CanAttack(a Actor) bool
 	// Admiring is the admire item state, which switches attacking off.
 	Admiring() bool
@@ -97,7 +97,7 @@ type target struct {
 // IsTargetGoal implements goal.Goal.
 func (t *target) IsTargetGoal() bool { return true }
 
-// canAttack is TargetGoal::_canAttack (0xBDD87A0) without the entry match,
+// canAttack matches BDS without the entry match,
 // as every goal calls it: invulnerable players are not targets.
 func (t *target) canAttack(a Actor) bool {
 	m := t.m
@@ -143,7 +143,7 @@ func (t *target) canReach(a Actor) bool {
 	return t.reached == reachYes
 }
 
-// reachable is TargetGoal's path test (1.26.60 0xBF32400): without
+// reachable is TargetGoal's path test: without
 // navigation it fails before the recheck time is drawn, from the thread
 // random.
 func (t *target) reachable(a Actor) bool {
@@ -161,7 +161,7 @@ func (t *target) reachable(a Actor) bool {
 	return dx*dx+dz*dz < reachClose2
 }
 
-// keep is the base target goal's canContinue (1.26.60 0xBF30AE0): when the target is
+// keep is the base target goal's canContinue: when the target is
 // there but no longer a fit one (dead, out of range, unseen too long...), it also clears
 // the mob's target, as BDS does here rather than in stop. A target already gone is left.
 func (t *target) keep(a Actor) bool {
@@ -206,7 +206,7 @@ func (t *target) keepCheck(a Actor) bool {
 	return !(a.IsPlayer() && a.Invulnerable())
 }
 
-// match is TargetGoal's entry match (1.26.60 0xBF31DC0): the entry index taken (-1 for none) and
+// match is TargetGoal's entry match: the entry index taken (-1 for none) and
 // whether the candidate passes. An entry with must_see sets the goal's
 // must_see from itself; otherwise mustSee (the goal's own) is checked.
 func (g *target) match(a Actor, mustSee bool) (int, bool) {
@@ -295,7 +295,7 @@ func visibilityScale(m Mob, a Actor, v visibility) float32 {
 	return s
 }
 
-// inRange is the entry range check (1.26.60 0xBF31000): the distance within
+// inRange is the entry range check: the distance within
 // maxDist and the height difference within maxHeight, both scaled by
 // sneaking and invisibility; a player wearing the mob's head halves the
 // distance only. A negative limit is no limit.
@@ -354,9 +354,9 @@ func (g *NearestAttackable) vis() visibility {
 	return visibility{sneak: g.cfg.SneakMultiplier, invisible: g.cfg.InvisibleMultiplier}
 }
 
-// NearestAttackable is NearestAttackableTargetGoal (BDS 1.26.60 canUse
-// 0xBF2FFE0, canContinueToUse 0xBF30920, start 0xBF2FAD0, _findTarget
-// 0xBF313F0, the entry match 0xBF31DC0; stop is TargetGoal's, empty): it
+// NearestAttackable is NearestAttackableTargetGoal (BDS 1.26.60 canUse,
+// canContinueToUse, start, _findTarget,
+// the entry match; stop is TargetGoal's, empty): it
 // picks the nearest entity that passes every check as the mob's target.
 type NearestAttackable struct {
 	target
@@ -412,7 +412,7 @@ func (g *NearestAttackable) candidates() {
 		g.sorted = append(g.sorted, near{a: a, d2: dist2(p, a.Pos())})
 	}
 	clear(g.cand)
-	// libc++'s std::sort, as BDS sorts the query (0xB3D4280), so equal
+	// libc++'s std::sort, as BDS sorts the query, so equal
 	// distances keep BDS's order.
 	stdSort(g.sorted, nearer)
 }
@@ -559,7 +559,7 @@ func (g *NearestAttackable) Start() {
 	}
 }
 
-// Stop implements goal.Goal. BDS's stop is empty (0xBF321A0): the target
+// Stop implements goal.Goal. BDS's stop is empty: the target
 // stays, so a goal of better priority taking over keeps the target.
 func (g *NearestAttackable) Stop() {}
 
@@ -581,8 +581,8 @@ type HurtByConfig struct {
 // DefaultHurtBy returns the goal's BDS defaults.
 func DefaultHurtBy() HurtByConfig { return HurtByConfig{MustSeeForget: 60} }
 
-// HurtBy is HurtByTargetGoal (BDS 1.26.60 canUse 0xBF2FD30, start
-// 0xBF2FE60; canContinueToUse, stop and tick are TargetGoal's): the mob
+// HurtBy is HurtByTargetGoal (BDS 1.26.60 canUse, start;
+// canContinueToUse, stop and tick are TargetGoal's): the mob
 // targets the mob that last hurt it. alert_same_type is not built: no
 // vanilla entity uses it.
 type HurtBy struct {
@@ -635,8 +635,8 @@ func (g *HurtBy) Start() {
 	}
 }
 
-// Stop implements goal.Goal. BDS's stop is empty (1.26.60 HurtByTargetGoal vtable
-// 0xFAEF428, stop 0xBF321A0): stopping, as when nearest_attackable_target takes over,
+// Stop implements goal.Goal. BDS's stop is empty (1.26.60,
+// stop): stopping, as when nearest_attackable_target takes over,
 // keeps the target. Clearing it here reset a creeper's fuse every scan.
 func (g *HurtBy) Stop() {}
 

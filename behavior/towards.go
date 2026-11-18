@@ -51,7 +51,7 @@ func (g *MoveTowardsTarget) CanUse() bool {
 	return ok
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5503230): the target
+// CanContinueToUse implements goal.Goal: the target
 // must still be alive.
 func (g *MoveTowardsTarget) CanContinueToUse() bool {
 	t := g.actor(g.target)

@@ -330,7 +330,7 @@ func (c *Context) difficulty(j Object, k string) int32 {
 	return int32(c.enum(j, k, difficulties(), 0))
 }
 
-// LookedAtConfig reads minecraft:looked_at as BDS's parser (sub_6FDD2B0):
+// LookedAtConfig reads minecraft:looked_at as BDS's parser:
 // an unknown set_target or line_of_sight_obstruction_type keeps the
 // default, as BDS logs it and keeps its own.
 func (c *Context) LookedAtConfig(j Object) state.LookedAtConfig {

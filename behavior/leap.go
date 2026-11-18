@@ -2,9 +2,9 @@ package behavior
 
 // The leap goal's fixed numbers.
 const (
-	leapMin2     = 4  // the target must be 2 to 4 blocks away
-	leapMax2     = 16 //
-	leapChance   = 5  // one tick in five
+	leapMin2     = 4 // the target must be 2 to 4 blocks away
+	leapMax2     = 16
+	leapChance   = 5 // one tick in five
 	leapPush     = 0.5
 	leapPushKeep = 0.8
 	leapDrag     = 0.2
@@ -24,8 +24,8 @@ func DefaultLeap() LeapConfig {
 	return LeapConfig{MustBeOnGround: true}
 }
 
-// Leap is LeapAtTargetGoal (BDS 1.26.60 canUse 0x54272F0, canContinueToUse
-// 0x5427640, start 0x5427700): the mob jumps at a target 2 to 4 blocks away.
+// Leap is LeapAtTargetGoal (BDS 1.26.60 canUse, canContinueToUse,
+// start): the mob jumps at a target 2 to 4 blocks away.
 // The 1 in 5 roll draws from the thread random.
 type Leap struct {
 	base

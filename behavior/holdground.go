@@ -11,7 +11,7 @@ type Holder interface {
 	Mob
 	// HasLookControl reports LookControlComponent.
 	HasLookControl() bool
-	// AmbientSound plays the mob's ambient sound (Mob::playAmbientSound).
+	// AmbientSound plays the mob's ambient sound.
 	AmbientSound()
 	// LastHurtByPlayer is the player that last hurt the mob, NoID for
 	// none.
@@ -60,7 +60,7 @@ func (g *HoldGround) fighting(a Actor) bool {
 	return p != nil && p.ID() == a.ID()
 }
 
-// CanUse implements goal.Goal (0x574A270).
+// CanUse implements goal.Goal.
 func (g *HoldGround) CanUse() bool {
 	if t := g.actor(g.h.Target()); t != nil && !g.fighting(t) &&
 		dist2(g.h.Pos(), t.Pos()) > g.min2 && t.ID() != g.target {
@@ -70,7 +70,7 @@ func (g *HoldGround) CanUse() bool {
 	return t != nil && !t.Removed()
 }
 
-// CanContinueToUse implements goal.Goal (BDS 1.26.60 0x5A04280).
+// CanContinueToUse implements goal.Goal.
 func (g *HoldGround) CanContinueToUse() bool {
 	t := g.actor(g.target)
 	if t == nil || !t.Alive() {
@@ -102,7 +102,7 @@ func (g *HoldGround) kin(self ID) []Actor {
 	return g.near[:n]
 }
 
-// Start implements goal.Goal (0x574A680).
+// Start implements goal.Goal.
 func (g *HoldGround) Start() {
 	if n := g.h.Nav(); n != nil {
 		n.Stop()
@@ -116,7 +116,7 @@ func (g *HoldGround) Start() {
 	clear(g.near)
 }
 
-// Stop implements goal.Goal (0x574AA10): with broadcast on and the target
+// Stop implements goal.Goal: with broadcast on and the target
 // inside min_radius, the mob and its kind nearby fire within_radius_event.
 func (g *HoldGround) Stop() {
 	t := g.actor(g.target)
@@ -138,7 +138,7 @@ func (g *HoldGround) Stop() {
 	clear(g.near)
 }
 
-// Tick implements goal.Goal (BDS 1.26.60 0x5A04B10): the mob looks at the
+// Tick implements goal.Goal: the mob looks at the
 // target's head attach point while the look control is free.
 func (g *HoldGround) Tick() {
 	t := g.actor(g.target)

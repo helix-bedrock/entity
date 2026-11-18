@@ -67,7 +67,7 @@ func (i Item) one() Item {
 // slots of the equipment container.
 type ItemHolder interface {
 	Mob
-	// Slot is the item in a hand slot; SlotMainhand is Mob::getCarriedItem.
+	// Slot is the item in a hand slot; SlotMainhand is BDS's code.
 	Slot(slot int) Item
 	// SetSlot puts the item in a hand slot (setCarriedItem or
 	// setOffhandSlot) and sends the hand to the viewers (MobEquipment).
@@ -77,14 +77,14 @@ type ItemHolder interface {
 // ItemUser is the part of the mob the drink goals need on top of ItemHolder.
 type ItemUser interface {
 	ItemHolder
-	// UseDuration is Item::getMaxUseDuration for the stack, 0 for none.
+	// UseDuration matches BDS for the stack, 0 for none.
 	UseDuration(it Item) int32
 	// ActorEvent broadcasts the actor event with its data to the viewers
-	// (Level 0xC89E7D0).
+	// (Level).
 	ActorEvent(id, data int32)
 }
 
-// startUsing is 0x720D0F0: it puts the item in the hand and starts using
+// startUsing is: it puts the item in the hand and starts using
 // it, setting end to the tick the use is over. False when the hand ended up
 // empty.
 func startUsing(w World, m ItemUser, it Item, end *uint64) bool {
@@ -98,7 +98,7 @@ func startUsing(w World, m ItemUser, it Item, end *uint64) bool {
 	return true
 }
 
-// stopUsing is 0x720D1C0: the hand is emptied and the use forgotten.
+// stopUsing is: the hand is emptied and the use forgotten.
 func stopUsing(m ItemUser, end *uint64) {
 	m.SetSlot(SlotMainhand, Item{})
 	*end = 0
@@ -107,7 +107,7 @@ func stopUsing(m ItemUser, end *uint64) {
 // matchesAny reports an item in the list, matched by name.
 func matchesAny(list []string, it Item) bool { return !it.Empty() && contains(list, it.Name) }
 
-// handSlotFor is the hand an item goes into (0xB2EBD10): the offhand for a
+// handSlotFor is the hand an item goes into: the offhand for a
 // shield, else the main hand.
 func handSlotFor(it Item) int {
 	if it.Name == itemShield {
@@ -118,8 +118,8 @@ func handSlotFor(it Item) int {
 
 // Hurter is the part of the mob that knows when it was last hurt.
 type Hurter interface {
-	// RecentlyHurt reports a last-hurt stamp (Mob +816) that is set and
-	// less than ticks old by the mob's tick count (Mob +400).
+	// RecentlyHurt reports a last-hurt stamp that is set and
+	// less than ticks old by the mob's tick count.
 	RecentlyHurt(ticks int32) bool
 }
 

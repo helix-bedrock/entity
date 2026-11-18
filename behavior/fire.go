@@ -72,7 +72,7 @@ func NewFireAtTarget(w World, m Firer, c FireAtTargetConfig) *FireAtTarget {
 	return &FireAtTarget{base: base{mob: m, world: w, flags: flagsMoveLook}, m: m, cfg: c}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x59F6E10).
+// CanUse implements goal.Goal.
 func (g *FireAtTarget) CanUse() bool {
 	if g.world.CurrentTick() < g.cooldown || g.cfg.ProjectileDef == "" {
 		return false
@@ -89,12 +89,12 @@ func (g *FireAtTarget) CanUse() bool {
 	return d < hi*hi && lo*lo < d
 }
 
-// CanContinueToUse implements goal.Goal (0x59F6F70).
+// CanContinueToUse implements goal.Goal.
 func (g *FireAtTarget) CanContinueToUse() bool {
 	return g.actor(g.m.Target()) != nil && g.world.CurrentTick() <= g.end
 }
 
-// Start implements goal.Goal (0x59F6FD0).
+// Start implements goal.Goal.
 func (g *FireAtTarget) Start() {
 	now := g.world.CurrentTick()
 	g.shoot = now + uint64(g.cfg.PreShootDelay)
@@ -102,14 +102,14 @@ func (g *FireAtTarget) Start() {
 	g.m.SetFlag(FlagRangedAttacking, true)
 }
 
-// Stop implements goal.Goal (0x59F7020).
+// Stop implements goal.Goal.
 func (g *FireAtTarget) Stop() {
 	g.shoot, g.fired = 0, false
 	g.cooldown = g.world.CurrentTick() + uint64(g.cfg.AttackCooldown)
 	g.m.SetFlag(FlagRangedAttacking, false)
 }
 
-// Tick implements goal.Goal (0x59F7170).
+// Tick implements goal.Goal.
 func (g *FireAtTarget) Tick() {
 	t := g.actor(g.m.Target())
 	if t == nil || t.Removed() || !t.Alive() {
@@ -133,10 +133,10 @@ func (g *FireAtTarget) Tick() {
 	g.m.PlaySoundAt(fireSound, g.m.AttachPos(attachWeapon))
 }
 
-// anchorPos is fire_at_target's anchor and offset point (BDS 1.26.60
-// 0x59F7070): the anchor's attach position plus the offset scaled by the box
+// anchorPos is fire_at_target's anchor and offset point (BDS 1.26.60):
+// the anchor's attach position plus the offset scaled by the box
 // size. BDS only applies the x and y of the offset; z only feeds the
-// rotation, which turns by the ActorRotationComponent yaw (+568 +4), not the
+// rotation, which turns by the ActorRotationComponent yaw (+4), not the
 // head yaw.
 func anchorPos(a Actor, anchor int32, off Vec3, rotate bool) Vec3 {
 	x := off.X
@@ -156,7 +156,7 @@ func anchorPos(a Actor, anchor int32, off Vec3, rotate bool) Vec3 {
 	return Vec3{X: (b.Max.X-b.Min.X)*x + p.X, Y: (b.Max.Y-b.Min.Y)*off.Y + p.Y, Z: p.Z}
 }
 
-// inViewCone is the shot's view test (0x7267140): the angle between the
+// inViewCone is the shot's view test: the angle between the
 // view vector from the eyes and the line to p is below fov degrees. BDS
 // takes the previous pitch and the yaw at partial tick 0.
 func inViewCone(m Mob, p Vec3, fov float32) bool {

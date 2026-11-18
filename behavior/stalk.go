@@ -27,13 +27,13 @@ const (
 // of Attacker.
 type Pouncer interface {
 	Attacker
-	// FaceActor is Mob::lookAt: turn the head and body towards a by at
+	// FaceActor matches BDS: turn the head and body towards a by at
 	// most yawMax and pitchMax degrees.
 	FaceActor(a Actor, yawMax, pitchMax float32)
-	// JumpMultiplier is Mob::getJumpMultiplier.
+	// JumpMultiplier matches BDS.
 	JumpMultiplier() float32
 	// JumpPrevented emits the jump prevented event when the mob's jump is
-	// blocked (Mob::getJumpPrevention, emitJumpPreventedEvent).
+	// blocked (emitJumpPreventedEvent).
 	JumpPrevented()
 	// SetFallImmune adds or removes CurrentlyImmuneToFallDamageComponent.
 	SetFallImmune(on bool)
@@ -79,7 +79,7 @@ func NewStalkAndPounce(w World, m Pouncer, c StalkAndPounceConfig) *StalkAndPoun
 	return &StalkAndPounce{base: base{mob: m, world: w, flags: flagsMoveLook | flagsJump}, m: m, cfg: c, state: stalkDone}
 }
 
-// CanUse implements goal.Goal (BDS 1.26.60 0x5B09FA0).
+// CanUse implements goal.Goal.
 func (g *StalkAndPounce) CanUse() bool {
 	if !g.m.OnGround() || g.m.Nav() == nil {
 		return false
@@ -98,7 +98,7 @@ func (g *StalkAndPounce) CanUse() bool {
 	return true
 }
 
-// CanContinueToUse implements goal.Goal (0x5B0A1D0).
+// CanContinueToUse implements goal.Goal.
 func (g *StalkAndPounce) CanContinueToUse() bool {
 	switch g.state {
 	case stalkDone:
@@ -117,13 +117,13 @@ func (g *StalkAndPounce) CanContinueToUse() bool {
 	return n != nil && !n.Done()
 }
 
-// CanBeInterrupted implements goal.Goal (0x5935760): not in the air or
+// CanBeInterrupted implements goal.Goal: not in the air or
 // stuck.
 func (g *StalkAndPounce) CanBeInterrupted() bool {
 	return g.state != stalkLeaping && g.state != stalkStuck
 }
 
-// Start implements goal.Goal (0x5B0A390).
+// Start implements goal.Goal.
 func (g *StalkAndPounce) Start() {
 	g.state = stalkStalking
 	g.m.SetFlag(FlagStalking, true)
@@ -139,7 +139,7 @@ func (g *StalkAndPounce) Start() {
 	}
 }
 
-// Stop implements goal.Goal (0x5B0A520).
+// Stop implements goal.Goal.
 func (g *StalkAndPounce) Stop() {
 	g.m.SetFallImmune(false)
 	g.m.SetFlag(FlagStunned, false)
@@ -147,7 +147,7 @@ func (g *StalkAndPounce) Stop() {
 	g.m.SetFlag(FlagStalking, false)
 }
 
-// Tick implements goal.Goal (0x5B0A5F0).
+// Tick implements goal.Goal.
 func (g *StalkAndPounce) Tick() {
 	p := g.m.Pos()
 	if t := g.actor(g.m.Target()); t != nil {
