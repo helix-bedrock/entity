@@ -6,7 +6,7 @@ import "github.com/helix-bedrock/entity/nav"
 const (
 	followRepath      = 10
 	followLookYaw     = 10
-	followTeleport2   = 1.8 // squared distance past which a pet with no path teleports (1.26.60 0x59FB877)
+	followTeleport2   = 144 // squared distance past which a pet with no path teleports (1.26.60 0x59FB877, constant at 0x1117DB4)
 	vibrationTicks    = 600 // a heard vibration stops follow_owner this long
 	teleportRing      = 3   // the teleport spots are 3 to 4 blocks out
 	teleportTries     = 9
