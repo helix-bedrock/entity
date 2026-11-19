@@ -79,6 +79,10 @@ type Block struct {
 	JumpFromBelow bool
 	// Restitution is how bouncy the block is (slime, beds); 0 for none.
 	Restitution float32
+	// StandSlow slows a mob standing on it (slime and honey's onStandOn).
+	StandSlow bool
+	// Honey slows a mob inside its cell and lets it slide down its sides.
+	Honey bool
 }
 
 // World answers physics' questions about the blocks around a mob. It is

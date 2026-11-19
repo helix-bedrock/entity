@@ -38,6 +38,7 @@ func (b *Body) Tick(w World) {
 	b.fall()
 	b.afterMove(w)
 	b.traceStep(w, trace.StepAfter)
+	b.stickyBlocks(w)
 }
 
 // traceStep records the velocity and what the body touches after a step.
