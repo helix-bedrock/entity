@@ -106,6 +106,9 @@ type BlockInfo struct {
 	Open bool
 	// Extinguished is the state of a campfire.
 	Extinguished bool
+	// Arms are the sides a fence, pane or bar joins (the connection states), as Arm
+	// bits. A mob that starts inside a fence uses them to find its way out.
+	Arms uint8
 	// NoWaterRise is the block flag (byte 184 bit 0 in BDS) that stops a
 	// floating swimmer's start from rising through water.
 	NoWaterRise bool

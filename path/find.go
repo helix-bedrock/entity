@@ -250,7 +250,13 @@ func (f *Finder) nearestPathable(start Pos) (Pos, bool) {
 			return up, true
 		}
 	case NodeFence:
-		// TODO: BDS tries the fence's escape positions.
+		var esc [4]Pos
+		k := fenceEscapes(f.info(f.world.Block(start)).Arms, start, s.Pos.X, s.Pos.Z, &esc)
+		for _, c := range esc[:k] {
+			if f.isFree(start, c, f.size, false, true) >= NodeOpen {
+				return c, true
+			}
+		}
 	}
 	by := floorInt(s.Box.Min.Y)
 	x0, x1 := floorInt(s.Box.Min.X), floorInt(s.Box.Max.X)
