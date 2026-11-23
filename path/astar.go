@@ -91,7 +91,7 @@ func (f *Finder) add(n *node) bool {
 	return f.count < len(f.buf)
 }
 
-// search is _findPath's A* loop from start to target.
+// search is BDS's A* loop from start to target.
 func (f *Finder) search(start, target *node) *Path {
 	f.target = target
 	start.g = 0

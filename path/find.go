@@ -235,8 +235,8 @@ func (f *Finder) distToMob(p Pos) float32 {
 	return float32(dz*dz) + (float32(dx*dx) + float32(dy*dy))
 }
 
-// nearestPathable is _findNearestPathableNeighbor: the start itself when
-// free, else a free block next to it.
+// nearestPathable is BDS's search for where a path starts: the start itself
+// when free, else a free block next to it.
 func (f *Finder) nearestPathable(start Pos) (Pos, bool) {
 	s := f.s
 	t := f.freeStart(start)

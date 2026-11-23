@@ -71,8 +71,8 @@ type Settings struct {
 
 	// Avoid is blocks_to_avoid.
 	Avoid func(Block) bool
-	// ClimbPowderSnow lets the mob climb powder snow (BDS: components
-	// 0xB639C3B7 or 0x4EAC501F). ClimbScaffolding lets it climb scaffolding
+	// ClimbPowderSnow lets the mob climb powder snow (in BDS, mobs with either
+	// of two internal components). ClimbScaffolding lets it climb scaffolding
 	// standing on something other than air or water; in BDS only players
 	// can (the player component).
 	ClimbPowderSnow, ClimbScaffolding bool
