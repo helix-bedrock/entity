@@ -19,7 +19,7 @@ func (f *Finder) getNode(from, p Pos, canClimb bool, stepUp float32) *node {
 		if t != NodeOpen && t != NodeWalkable && t != NodeAir {
 			return nil
 		}
-		if f.flags&FlagAvoidDamage != 0 && f.propertyNear(p, f.world.Block(p), PropHurts, ceilInt(s.Height), false, true) {
+		if f.flags&FlagAvoidDamage != 0 && f.propertyNear(p, f.world.Block(p), PropHurts, ceilInt(s.Width), false, true) {
 			return nil
 		}
 		n := f.nodeAt(p, t)
@@ -125,7 +125,7 @@ func (f *Finder) drop(n *node, from Pos, canClimb bool) *node {
 			return f.finishNode(f.nodeAt(below, NodeBlocked), from)
 		}
 		b := f.world.Block(below)
-		if f.flags&FlagAvoidDamage != 0 && f.propertyNear(below, b, PropHurts, ceilInt(s.Height), s.BreakBlocks, true) {
+		if f.flags&FlagAvoidDamage != 0 && f.propertyNear(below, b, PropHurts, ceilInt(s.Width), s.BreakBlocks, true) {
 			n = f.nodeAt(below, NodeBlocked)
 			if t == NodeLava {
 				n = f.nodeAt(cur, NodeLava)
