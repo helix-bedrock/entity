@@ -8,6 +8,11 @@ attacks, genetics, the warden's anger and the rest, plus the attribute, equipmen
 hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
 `netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
 
+2026-11-26: swimming mobs no longer drift up out of the water. BDS's sway and generic swimming controls add their
+0.02 lift only when liquid gravity would pull the mob (both its middle top and bottom out of solid water, or a sinking
+navigation), now `physics.Body.LiquidPulls`, which hosts pass as `move.Body.InWater`; `move.Body.Eye` is documented as
+the head attach point the swimming controls aim the look from.
+
 2026-11-26: walking navigation's path update and wanted position were compared with BDS 1.26.60 and match, except
 that the corner-cutting check for swimmers and fliers is as high as the mob's height rounded down plus one, not
 rounded up (fixed). `physics.Body.MovementSpeed` is now documented as BDS's speed setting, which a host fills from

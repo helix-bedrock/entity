@@ -135,10 +135,22 @@ func (b *Body) airGravity() bool {
 	return true
 }
 
-// liquidGravity is the water and lava rule: a mob
-// whose middle top and bottom are both in a non-air block floats unless its
-// navigation sinks it or, without navigation, it has gravity or no physics.
+// liquidGravity is the water and lava rule: liquid gravity pulls the mob
+// when LiquidPulls says so.
 func (b *Body) liquidGravity(w World) bool {
+	if !b.LiquidPulls(w) {
+		return false
+	}
+	b.gravity = liquidGravity
+	return true
+}
+
+// LiquidPulls reports whether liquid gravity pulls the mob: a mob whose
+// middle top and bottom are both in a non-air block floats unless its
+// navigation sinks it or, without navigation, it has gravity or no physics.
+// BDS's swimming move controls (sway and generic) lift a mob it pulls by as
+// much, so they ask it too.
+func (b *Body) LiquidPulls(w World) bool {
 	switch {
 	case b.Nav.Present && b.Nav.CanSink:
 	case !b.Nav.Present && (!b.HasPhysics || b.Flags.Has(FlagHasGravity)):
@@ -151,7 +163,6 @@ func (b *Body) liquidGravity(w World) bool {
 			return false
 		}
 	}
-	b.gravity = liquidGravity
 	return true
 }
 

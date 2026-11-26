@@ -76,8 +76,8 @@ type Body struct {
 	Flags                        Flags
 
 	OnGround, WasOnGround, WasInWater bool
-	// InWater is BDS's "in water for swimming up" test, which also counts
-	// bubble columns; the host answers it.
+	// InWater is the swimming controls' lift test: whether liquid gravity
+	// pulls the mob (the physics Body's LiquidPulls); the host answers it.
 	InWater bool
 
 	// MovementSpeed is the movement attribute's current value.
@@ -106,7 +106,9 @@ type Body struct {
 	Target *Vec3
 	// PathEnd is the last node of the mob's navigation path, nil without one.
 	PathEnd *path.Pos
-	// Eye is the mob's eye position.
+	// Eye is the height the swimming controls aim the look target from: BDS's
+	// head attach point, which is the feet of a mob whose class sets no head
+	// offset (fish, tadpoles, drowned, guardians).
 	Eye Vec3
 }
 
