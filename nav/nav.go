@@ -88,6 +88,9 @@ type Description struct {
 	CanJump             bool `json:"can_jump"`
 	UsingDoorAnnotation bool `json:"using_door_annotation"`
 	CanPathFromAir      bool `json:"can_path_from_air"`
+	// BlocksToAvoid is blocks_to_avoid: block descriptors, a name string or an
+	// object with name or tags, kept as written for the engine to match.
+	BlocksToAvoid []json.RawMessage `json:"blocks_to_avoid"`
 }
 
 // DefaultDescription returns the switches a minecraft:navigation.*
@@ -116,6 +119,24 @@ func ParseDescription(raw []byte) (Description, error) {
 		err = fmt.Errorf("nav: description: %w", err)
 	}
 	return d, err
+}
+
+// AvoidDescriptors returns blocks_to_avoid as descriptor strings: a JSON
+// string's value, else the entry's JSON text.
+func (d *Description) AvoidDescriptors() []string {
+	if len(d.BlocksToAvoid) == 0 {
+		return nil
+	}
+	out := make([]string, 0, len(d.BlocksToAvoid))
+	for _, raw := range d.BlocksToAvoid {
+		var s string
+		if json.Unmarshal(raw, &s) == nil {
+			out = append(out, s)
+			continue
+		}
+		out = append(out, string(raw))
+	}
+	return out
 }
 
 // Flags returns the component switches d sets.

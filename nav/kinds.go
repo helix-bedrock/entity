@@ -48,6 +48,7 @@ func NewKind(k Kind, d *Description) *Navigation {
 		gravity:        true,
 		canWalk:        d.CanWalk,
 		canSwim:        d.CanSwim,
+		BlocksToAvoid:  d.AvoidDescriptors(),
 	}
 	if k == KindSwim {
 		n.Flags = n.Flags&^(FlagAvoidDamageBlocks|FlagAvoidWater) | FlagCanFloat

@@ -37,6 +37,10 @@ type Navigation struct {
 	// navigation stops, so it stays zero unless a plugin sets it.
 	EndOffset path.Vec3
 
+	// BlocksToAvoid is blocks_to_avoid as descriptors (Description's
+	// AvoidDescriptors); the engine turns them into the pathfinder's Avoid.
+	BlocksToAvoid []string
+
 	// climbing and climbTarget are the climbing navigation's walk to a
 	// target without a path.
 	climbing    bool
