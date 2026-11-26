@@ -54,10 +54,9 @@ const (
 	// PropInnerFloor is bit 28: blocks with a floor inside them (cauldron,
 	// composter). A mob standing in one aims at the top of its box.
 	PropInnerFloor Props = 1 << 28
-	// PropNoStepBox is bit 30: the step-up test skips the block's box.
+	// PropNoStepBox is bit 30 (honey): a mob in the block, or standing on it with
+	// nothing or a carpet at its feet, cannot step up.
 	PropNoStepBox Props = 1 << 30
-	// PropNoStepUp is bit 38: standing on it, a mob cannot step up.
-	PropNoStepUp Props = 1 << 38
 )
 
 // Material is a BDS MaterialType number.

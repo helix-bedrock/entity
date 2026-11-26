@@ -45,7 +45,7 @@ func (f *Finder) getNode(from, p Pos, canClimb bool, stepUp float32) *node {
 			return nil
 		}
 		if !box.HasVolume() || fi.Props&PropCarpet != 0 {
-			if f.info(f.world.Block(Pos{from.X, from.Y - 1, from.Z})).Props&PropNoStepUp != 0 {
+			if f.info(f.world.Block(Pos{from.X, from.Y - 1, from.Z})).Props&PropNoStepBox != 0 {
 				return nil
 			}
 		}

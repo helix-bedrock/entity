@@ -9,7 +9,8 @@ hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in 
 `netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
 
 2026-11-25: the pathfinder's node classification and box check were compared line by line with BDS 1.26.60 and match,
-except that BDS sizes the hurt-block search around a node by the mob's width rounded up, not its height (fixed).
+except that BDS sizes the hurt-block search around a node by the mob's width rounded up, not its height, and that
+only honey stops a step up from the block below (both fixed). The neighbour, step-up, drop and water node code match.
 
 2026-11-15: ports can now be checked against BDS itself. `physics/oracle_test.go` reads a file from the private
 BDS component oracle (BDS's own functions run on generated inputs) and requires the same answer bit for bit; collision
