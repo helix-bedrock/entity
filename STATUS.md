@@ -1,12 +1,17 @@
 # What entity does
 
-Status as of 2026-11-25: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
+Status as of 2026-11-26: **the AI core runs, all 178 vanilla goals are built** (BDS lists 7 more names it no longer runs),
 entity definitions load and run their events, a mob's goals are built from its definition, its sensors and timers fire
 its events, and its own state (age, breeding, taming, anger, healing, despawning, interactions, riding, transforming,
 breathing, burning, leashing, attack cooldowns, floating, pushing and rail sensing, timers, teleporting, trails, area
 attacks, genetics, the warden's anger and the rest, plus the attribute, equipment, physics, item and trading settings it
 hands the engine) runs, ported from BDS 1.26.52 and 1.26.60. Every component in Mojang's vanilla entity files is read.
 `netsync` sends a mob's packets the way BDS 1.26.60 does, with the engine deciding who sees what.
+
+2026-11-26: walking navigation's path update and wanted position were compared with BDS 1.26.60 and match, except
+that the corner-cutting check for swimmers and fliers is as high as the mob's height rounded down plus one, not
+rounded up (fixed). `physics.Body.MovementSpeed` is now documented as BDS's speed setting, which a host fills from
+the move control's chosen speed rather than the movement attribute.
 
 2026-11-25: the pathfinder's node classification and box check were compared line by line with BDS 1.26.60 and match,
 except that BDS sizes the hurt-block search around a node by the mob's width rounded up, not its height, and that

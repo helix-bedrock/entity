@@ -182,7 +182,9 @@ type Body struct {
 
 	// Input is the move input the move control set (strafe, up, forward).
 	Input Vec3
-	// MovementSpeed is the movement attribute; AirSpeed the
+	// MovementSpeed is the speed ground and water travel move by: for a mob, the speed
+	// setting its move control last chose (the movement attribute times the speed
+	// modifier), not the attribute itself, as BDS reads it. AirSpeed is the
 	// minecraft:flying_speed value.
 	MovementSpeed, AirSpeed float32
 	Attrs                   Attributes

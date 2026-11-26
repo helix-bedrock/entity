@@ -218,7 +218,7 @@ func (n *Navigation) walkUpdatePath(w World, m *Mob, water bool) {
 			sw = max(sw, 2)
 		}
 		sw += sw / 2
-		sh := ceilInt(m.Height) + 1
+		sh := floorInt(m.Height) + 1
 		for j := end - 1; j >= start; j-- {
 			if canMoveDirectly(w, m, mob, nodeCentre(m, n.path, j), sw, sh, sw) {
 				n.index = j
