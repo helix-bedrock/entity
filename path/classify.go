@@ -266,7 +266,8 @@ func (f *Finder) classify(from Pos, b Block, p Pos, canJump, canClimb bool) Node
 	if in.Kind == KindMagma {
 		return NodeHurtsStanding
 	}
-	height := ceilInt(s.Height)
+	// BDS sizes the hurt-block search by the mob's width rounded up, not its height.
+	height := ceilInt(s.Width)
 	if in.Kind == KindCampfire && !in.Extinguished {
 		return NodeHurtsStanding
 	}
